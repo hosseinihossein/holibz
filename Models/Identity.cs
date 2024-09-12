@@ -23,7 +23,7 @@ public class Identity_UserModel : IdentityUser
     public int ProfileImageVersion { get; set; } = 0;
     public bool Active { get; set; } = true;
     public List<string> Notifications { get; set; } = new();
-    public string Description { get; set; } = string.Empty;
+    public string Description { get; set; } = "Description..";
     //public virtual List<string> LoggedInDevices { get; set; } = new();
     //public int NumberOfLogins { get; set; } = 0;
     //[Unicode]
@@ -46,14 +46,14 @@ public class Identity_LoginModel
 
 public class Identity_SignupModel
 {
-    [StringLength(40, MinimumLength = 8)]
+    [StringLength(50, MinimumLength = 8)]
     public string Username { get; set; } = string.Empty;
 
-    [StringLength(50, MinimumLength = 8)]
+    [StringLength(100, MinimumLength = 8)]
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [StringLength(40, MinimumLength = 8)]
+    [StringLength(50, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
     [Compare(nameof(Password))]

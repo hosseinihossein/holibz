@@ -1,0 +1,747 @@
+@model WebComponents_ItemModel
+
+<!----------------------------------------------------------------->
+<div style="width: fit-content;position: relative;margin: auto;top: 0px;">
+    <div class="slide-menu-box">
+        <style>
+            #slidemenu78b93485ae6545fc802af479a9599851 button,
+            #slidemenu78b93485ae6545fc802af479a9599851 a {
+                display: block;
+                border: none;
+                position: absolute;
+                right: -40px;
+                transition: 0.3s;
+                padding: 15px 5px;
+                width: 200px;
+                text-decoration: none;
+                font-size: 16px;
+                color: white;
+                border-radius: 0 10px 10px 0;
+                cursor: pointer;
+                z-index: 1;
+                text-align: left;
+            }
+
+            #slidemenu78b93485ae6545fc802af479a9599851 button:hover,
+            #slidemenu78b93485ae6545fc802af479a9599851 a:hover {
+                right: -200px;
+            }
+
+            #slidemenu78b93485ae6545fc802af479a9599851 .slider-1 {
+                top: 20px;
+                background-color: rgb(163, 0, 0);
+            }
+
+            #slidemenu78b93485ae6545fc802af479a9599851 .slider-2 {
+                top: 80px;
+                background-color: rgb(42, 0, 97);
+            }
+
+            #slidemenu78b93485ae6545fc802af479a9599851 .slider-3 {
+                top: 140px;
+                background-color: #353535
+            }
+
+            #slidemenu78b93485ae6545fc802af479a9599851 .slider-4 {
+                top: 200px;
+                background-color: #000000
+            }
+
+            #slidemenu78b93485ae6545fc802af479a9599851 button i,
+            #slidemenu78b93485ae6545fc802af479a9599851 a i {
+                float: right;
+                padding-left: 0px;
+                font-size: 20px;
+            }
+        </style>
+        <div style="position: relative;" id="slidemenu78b93485ae6545fc802af479a9599851">
+            <button onclick="setWidthOfIframe(375)" class="slider-1 clearfix">
+                iPhone SE <i class="fa-solid fa-mobile-screen-button"></i>
+            </button>
+            <button onclick="setWidthOfIframe(430)" class="slider-2 clearfix">
+                iPhone 14 pro max <i class="fa-solid fa-mobile-screen-button"></i>
+            </button>
+            <button onclick="setWidthOfIframe(360)" class="slider-3 clearfix" style="font-size: 13px;">
+                Samsung Galaxy S8+ <i class="fa-solid fa-mobile-screen"></i>
+            </button>
+            <button onclick="setWidthOfIframe(412)" class="slider-4 clearfix" style="font-size: 12px;">
+                Samsung Galaxy S20 Ultra <i class="fa-solid fa-mobile-screen"></i>
+            </button>
+
+            <script>
+                function setWidthOfIframe(width) {
+                    document.getElementById("frameb6ceae1ad5cc486c9819739a37de1ded").style.width = `${width}px`;
+                }
+            </script>
+        </div>
+    </div>
+    <div id="frameBox2bbec9afd8dd4f0caf8347fef612949d">
+        <style>
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d {
+                width: fit-content;
+                position: relative;
+                left: 0px;
+                z-index: 1;
+                background-color: rgb(8, 0, 39);
+                padding: 5px 10px;
+                border-radius: 10px;
+                box-shadow: 5px 5px 20px rgba(8, 0, 39, 0.5);
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d iframe {
+                position: relative;
+                max-width: calc(100vw - 120px);
+                height: calc(100vh - 120px);
+                max-height: calc(100vh - 60px);
+                min-height: 250px;
+                min-width: 320px;
+                width: 320px;
+                border-radius: 5px 5px 0 5px;
+                resize: both;
+                z-index: 1;
+                background-color: white;
+                margin: 0;
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d .resize-mark {
+                position: absolute;
+                bottom: -10px;
+                right: -13px;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background-color: orange;
+                z-index: 0;
+                text-align: center;
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d .resize-mark i {
+                position: absolute;
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d .header {
+                padding: 2px 10px;
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d .header p {
+                margin: 0;
+                color: white;
+                font-size: 14px;
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d .header .enlarge {
+                float: right;
+                padding: 5px;
+                background-color: white;
+                border-radius: 10px;
+                cursor: pointer;
+                color: #555;
+                transition: all 0.2s;
+                font-size: 14px;
+                margin: 0 5px;
+            }
+
+            #frameBox2bbec9afd8dd4f0caf8347fef612949d .header .enlarge:hover {
+                color: black;
+                padding: 5px 10px;
+                font-size: 18px;
+            }
+        </style>
+        <div class="header clearfix">
+            <div style="float: left;">
+                <p>Width:
+                    <span class="frame-width"></span>
+                </p>
+                <p>Height:
+                    <span class="frame-height"></span>
+                </p>
+            </div>
+            <span class="enlarge" onclick="enlarge_carda0cf0ba794a348809064580fc6d55f6c()">
+                <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+            </span>
+            <span class="enlarge" onclick="shorten_carda0cf0ba794a348809064580fc6d55f6c()">
+                <i class="fa-solid fa-down-left-and-up-right-to-center"></i>
+            </span>
+            <style>
+                #tooltip9e736e8356f345cb823a3a2901f7cc62 {
+                    position: relative;
+                    float: right;
+                    margin: 0 20px;
+                    font-size: 25px;
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+                #tooltip9e736e8356f345cb823a3a2901f7cc62:hover {
+                    color: rgba(255, 255, 255, 1);
+                }
+
+                #tooltip9e736e8356f345cb823a3a2901f7cc62 .tooltiptext {
+                    visibility: hidden;
+                    width: 80px;
+                    background-color: rgb(8, 0, 39);
+                    color: #fff;
+                    text-align: center;
+                    border-radius: 6px;
+                    padding: 5px 0;
+                    position: absolute;
+                    z-index: 2;
+                    top: 150%;
+                    left: -90%;
+                    opacity: 0;
+                    transition: opacity 1s;
+                    font-size: 12px;
+                    color: white;
+                }
+
+                #tooltip9e736e8356f345cb823a3a2901f7cc62 .tooltiptext::after {
+                    content: "";
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    margin-left: -5px;
+                    border-width: 5px;
+                    border-style: solid;
+                    border-color: transparent transparent black transparent;
+                }
+
+                #tooltip9e736e8356f345cb823a3a2901f7cc62:hover .tooltiptext {
+                    visibility: visible;
+                    opacity: 1;
+                }
+            </style>
+            <a id="tooltip9e736e8356f345cb823a3a2901f7cc62" class="live-demo"
+                href="/WebComponents/ItemSource/@(Model.Guid)/index.html" target="_blank">
+                <i class="fa-solid fa-desktop"></i>
+                <span class="tooltiptext">Live Demo</span>
+            </a>
+            <script>
+                function enlarge_carda0cf0ba794a348809064580fc6d55f6c() {
+                    let myFrame = document.getElementById("frameb6ceae1ad5cc486c9819739a37de1ded");
+                    myFrame.style.transition = "all 0.5s";
+                    myFrame.style.width = "calc(99vw - 93px)";/*"92vw";*/
+                    myFrame.style.height = "calc(100vh - 120px)";
+                    setTimeout(() => { myFrame.style.transition = "none"; }, 500);
+                }
+                function shorten_carda0cf0ba794a348809064580fc6d55f6c() {
+                    let myFrame = document.getElementById("frameb6ceae1ad5cc486c9819739a37de1ded");
+                    myFrame.style.transition = "all 0.5s";
+                    myFrame.style.width = "320px";
+                    myFrame.style.height = "calc(100vh - 120px)";
+                    setTimeout(() => { myFrame.style.transition = "none"; }, 500);
+                }
+            </script>
+        </div>
+        <iframe src="/WebComponents/ItemSource/@(Model.Guid)/index.html" frameborder="0"
+            id="frameb6ceae1ad5cc486c9819739a37de1ded"
+            onload="showWidthHeight_carda0cf0ba794a348809064580fc6d55f6c(this);"></iframe>
+        <div class="resize-mark">
+            <i class="fa-solid fa-left-right" style="right: 0px;top: 10px;"></i>
+            <i class="fa-solid fa-up-down" style="left: 15px;bottom: 0px;"></i>
+        </div>
+        <script>
+            function showWidthHeight_carda0cf0ba794a348809064580fc6d55f6c(myFrame) {
+                myFrame.parentElement.getElementsByClassName("frame-width")[0].innerHTML = myFrame.clientWidth + "px";
+                myFrame.parentElement.getElementsByClassName("frame-height")[0].innerHTML = myFrame.clientHeight + "px";
+                myFrame.contentWindow.addEventListener("resize", (event) => {
+                    myFrame.parentElement.getElementsByClassName("frame-width")[0].innerHTML = myFrame.clientWidth + "px";
+                    myFrame.parentElement.getElementsByClassName("frame-height")[0].innerHTML = myFrame.clientHeight + "px";
+                });
+            }
+        </script>
+    </div>
+</div>
+
+<!--------------------- info hr -------------------->
+<style>
+    .myHr {
+        width: 90%;
+        margin-top: calc(100px);
+        margin-bottom: 50px;
+        border: 1px solid gray;
+        position: relative;
+        overflow: visible;
+    }
+
+    .myHr:after {
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 1px solid gray;
+        padding: 5px 10px;
+        background-color: white;
+    }
+
+    #hr7cf5301a0a0c4901acf7b49df49800f8:after {
+        content: "Info";
+    }
+</style>
+<hr class="myHr" id="hr7cf5301a0a0c4901acf7b49df49800f8">
+
+<div id="info-div">
+    <style>
+        #info-div {
+            width: 90%;
+            margin: auto;
+        }
+
+        #info-div .header {
+            width: fit-content;
+            margin: auto;
+        }
+
+        #info-div .header #title {
+            font-size: 35px;
+            margin: 0 20px;
+        }
+
+        #info-div #developer {
+            margin: 0 20px;
+        }
+
+        #info-div #developer a {
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        #info-div #developer img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            top: 10px;
+        }
+
+        #info-div #description {
+            max-height: 200px;
+            overflow-y: auto;
+            text-wrap: wrap;
+        }
+
+        #info-div .edit-btn {
+            background-color: rgb(195, 248, 255);
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #info-div .edit-btn:hover {
+            background-color: rgb(157, 244, 255);
+        }
+    </style>
+    <div class="header clearfix">
+        <p>
+            @if (User.Identity is not null && User.Identity.IsAuthenticated
+            && (User.IsInRole("WebComponents_Admins") || User.Identity.Name == Model.Developer?.UserName))
+            {
+                <button class="edit-btn" onclick="document.getElementById('title-form-modal').style.display='block';">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+            }
+            <span id="title">@Model.Title</span> by
+            <span id="developer">
+                <a asp-controller="Account" asp-action="Profile" asp-route-username="@Model.Developer?.UserName">
+                    <img src="/Account/ClientImage?username=@Model.Developer?.UserName&v=@Model.Developer?.ProfileImageVersion"
+                        alt=""> @Model.Developer?.UserName
+                </a>
+            </span>
+        </p>
+    </div>
+
+    @if (User.Identity is not null && User.Identity.IsAuthenticated
+    && (User.IsInRole("WebComponents_Admins") || User.Identity.Name == Model.Developer?.UserName))
+    {
+        <button class="edit-btn" onclick="document.getElementById('description-form-modal').style.display='block';">
+            <i class="fa-solid fa-pen"></i>
+        </button>
+    }
+    <pre id="description">@Model.Description</pre>
+
+    @if (User.Identity is not null && User.Identity.IsAuthenticated
+    && (User.IsInRole("WebComponents_Admins") || User.Identity.Name == Model.Developer?.UserName))
+    {
+        <a class="edit-btn" asp-action="EditItemTags" asp-route-itemGuid="@Model.Guid"><i class="fa-solid fa-pen"></i></a>
+    }
+    <p>
+        @foreach (string tag in Model.Tags)
+        {
+            <a asp-action="Index" asp-route-SelectedTags="@tag">#@tag</a>
+
+            <span>, </span>
+        }
+    </p>
+
+    @if (User.Identity is not null && User.Identity.IsAuthenticated
+    && (User.IsInRole("WebComponents_Admins") || User.Identity.Name == Model.Developer?.UserName))
+    {
+        <div id="delete-box">
+            <style>
+                #delete-box #delete-btn {
+                    border: 1px solid red;
+                    border-radius: 5px;
+                    color: red;
+                    padding: 10px 20px;
+                    background-color: white;
+                    float: right;
+                    cursor: pointer;
+                    font-size: 16px;
+                    margin-left: 30px;
+                }
+
+                #delete-box #delete-btn:hover {
+                    color: white;
+                    background-color: red;
+                }
+            </style>
+            <button id="delete-btn"
+                onclick="document.getElementById('confirm-deletion-modal').style.display='block';">Delete
+                Component</button>
+            <div id="confirm-deletion-modal" onclick="if(event.target == this) this.style.display = 'none';">
+                <style>
+                    #confirm-deletion-modal {
+                        position: fixed;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        backdrop-filter: blur(5px);
+                        z-index: 9;
+                        display: none;
+                    }
+                </style>
+                <!-- FileName: cardsf0077ba41cf647a2a6d5fe0933d128a3.html -->
+                <!-- Category: Cards -->
+                <!-- Developer: admin -->
+
+                <style>
+                    #card625c1f7d063d41998cb93ddc83e9add8 {
+                        position: relative;
+                        background-color: rgba(20, 20, 20, 1);
+                        width: 30vw;
+                        min-width: 320px;
+                        border-radius: 10px;
+                        color: white;
+                        overflow: hidden;
+                        margin: 25vh auto;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 span.close {
+                        position: absolute;
+                        padding: 0;
+                        margin: 0;
+                        top: 2px;
+                        right: 5px;
+                        color: gray;
+                        font-size: 25px;
+                        cursor: pointer;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 span.close:hover {
+                        color: red;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .left {
+                        float: left;
+                        width: 20%;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .left i {
+                        font-size: 25px;
+                        display: block;
+                        text-align: center;
+                        padding: 40px 0 30px;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .left .light {
+                        border-radius: 50%;
+                        padding: 2vw;
+                        /*27px 35px;*/
+                        display: inline;
+                        position: relative;
+                        top: 60px;
+                        left: 0px;
+                        filter: blur(3vw);
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .bg-green {
+                        background-color: rgba(124, 252, 0, 1);
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .green {
+                        color: rgba(124, 252, 0, 1);
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .bg-red {
+                        background-color: red;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .red {
+                        color: red;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .bg-blue {
+                        background-color: rgb(0, 132, 255);
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .blue {
+                        color: rgb(0, 132, 255);
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .right {
+                        float: right;
+                        width: 80%;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .right h4 {
+                        margin-bottom: 0;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .right p {
+                        font-size: 13px;
+                        padding-right: 20px;
+                        color: lightgray;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .button-box {
+                        width: fit-content;
+                        margin: 0px auto 20px;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .button-box button,
+                    #card625c1f7d063d41998cb93ddc83e9add8 .button-box a {
+                        padding: 7px 20px;
+                        margin: 0 5px;
+                        border: 1px solid rgba(0, 0, 0, 0);
+                        border-radius: 5px;
+                        background-color: rgb(50, 50, 50);
+                        color: white;
+                        opacity: 0.8;
+                        cursor: pointer;
+                        text-decoration: none;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .button-box button:hover,
+                    #card625c1f7d063d41998cb93ddc83e9add8 .button-box a:hover {
+                        opacity: 1;
+                    }
+
+                    #card625c1f7d063d41998cb93ddc83e9add8 .pb-box {
+                        width: 70%;
+                        float: left;
+                        padding-left: 30px;
+                    }
+
+                    @@media screen and (max-width:400px) {
+                        #card625c1f7d063d41998cb93ddc83e9add8 {
+                            width: 100%;
+                        }
+                    }
+                </style>
+                <div id="card625c1f7d063d41998cb93ddc83e9add8">
+                    <span class="close"
+                        onclick="document.getElementById('confirm-deletion-modal').style.display='none';">&times;</span>
+                    <div class="clearfix">
+                        <div class="left">
+                            <div class="bg-red light"></div>
+                            <i class="fa-solid fa-circle-xmark red"></i>
+                        </div>
+                        <div class="right">
+                            <h4>Deletion</h4>
+                            <p>Are you sure you want to permanently delete this component?</p>
+                        </div>
+                    </div>
+                    <div class="button-box">
+                        <a asp-action="DeleteItem" asp-route-itemGuid="@Model.Guid"
+                            style="color: red;border-color: red;">Yes, Delete</a>
+                        <button
+                            onclick="document.getElementById('confirm-deletion-modal').style.display='none';">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+    <div id="download-box">
+        <style>
+            #download-box #download-btn {
+                border: 1px solid lawngreen;
+                border-radius: 5px;
+                color: lawngreen;
+                padding: 10px 20px;
+                background-color: white;
+                float: right;
+                cursor: pointer;
+                font-size: 16px;
+                margin-left: 30px;
+                text-decoration: none;
+            }
+
+            #download-box #download-btn:hover {
+                color: white;
+                background-color: lawngreen;
+            }
+        </style>
+        <a id="download-btn" href="/WebComponents/ItemSource/@(Model.Guid)/@(Model.Guid).zip"><i
+                class="fa-solid fa-file-arrow-down"></i> Download
+        </a>
+    </div>
+
+    <div id="rawCode-box">
+        <style>
+            #rawCode-box #rawCode-btn {
+                border: 1px solid skyblue;
+                border-radius: 5px;
+                color: skyblue;
+                padding: 10px 20px;
+                background-color: white;
+                float: right;
+                cursor: pointer;
+                font-size: 16px;
+                margin-left: 30px;
+                text-decoration: none;
+            }
+
+            #rawCode-box #rawCode-btn:hover {
+                color: white;
+                background-color: skyblue;
+            }
+        </style>
+        <a id="rawCode-btn" asp-action="CodeText" asp-route-itemGuid="@Model.Guid" target="_blank">
+            <i class="fa-solid fa-code"></i> See Code Text
+        </a>
+    </div>
+
+    <div id="title-form-modal" onclick="if(event.target == this) this.style.display = 'none';">
+        <style>
+            #title-form-modal {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(5px);
+                z-index: 9;
+                display: none;
+            }
+        </style>
+        <div id="title-form-box">
+            <style>
+                #title-form-box {
+                    width: fit-content;
+                    margin: 25vh auto;
+                }
+
+                #title-form-box form {
+                    background-color: white;
+                    padding: 50px;
+                    border-radius: 10px;
+                }
+
+                #title-form-box form input {
+                    min-width: 30vw;
+                    padding: 5px 10px;
+                    font-size: 16px;
+                }
+
+                #title-form-box form button {
+                    display: block;
+                    width: fit-content;
+                    margin: 30px auto 0;
+                    background-color: white;
+                    border: 1px solid rgb(96, 236, 255);
+                    border-radius: 5px;
+                    padding: 5px 10px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
+
+                #title-form-box form button:hover {
+                    background-color: rgb(157, 244, 255);
+
+                }
+            </style>
+            <form asp-action="SubmitTitle" method="get">
+                <input type="hidden" name="itemGuid" value="@Model.Guid">
+                <label for="title-input">Title:</label>
+                <input type="text" name="title" id="title-input" value="@Model.Title">
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="description-form-modal" onclick="if(event.target == this) this.style.display = 'none';">
+        <style>
+            #description-form-modal {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(5px);
+                z-index: 9;
+                display: none;
+            }
+        </style>
+        <div id="description-form-box">
+            <style>
+                #description-form-box {
+                    width: fit-content;
+                    margin: 15vh auto;
+                }
+
+                #description-form-box form {
+                    background-color: white;
+                    padding: 50px;
+                    border-radius: 10px;
+                }
+
+                #description-form-box form textarea {
+                    min-width: 60vw;
+                    height: 30vh;
+                    padding: 5px 10px;
+                    font-size: 16px;
+                    display: block;
+                }
+
+                #description-form-box form button {
+                    display: block;
+                    width: fit-content;
+                    margin: 30px auto 0;
+                    background-color: white;
+                    border: 1px solid rgb(96, 236, 255);
+                    border-radius: 5px;
+                    padding: 5px 10px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
+
+                #description-form-box form button:hover {
+                    background-color: rgb(157, 244, 255);
+
+                }
+            </style>
+            <form asp-action="SubmitDescription" method="post">
+                <input type="hidden" name="itemGuid" value="@Model.Guid">
+                <label for="description-input">Description:</label>
+                <textarea name="description" id="description-input">@Model.Description</textarea>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--------------------- reviews hr -------------------->
+<style>
+    #hrf0a073f0a9cb439f9d275d99617e3357:after {
+        content: "Reviews";
+    }
+</style>
+<hr class="myHr" id="hrf0a073f0a9cb439f9d275d99617e3357">

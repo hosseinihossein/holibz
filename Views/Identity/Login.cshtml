@@ -1,0 +1,240 @@
+@model Identity_LoginModel
+
+<!----------------------------------------------->
+<!----------------------------------------------------------------->
+<div id="formdfbde85c00554cf9b81e3299c9fa3204">
+    <style>
+        #formdfbde85c00554cf9b81e3299c9fa3204 {
+            width: 60%;
+            min-width: 600px;
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            position: absolute;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .color-layout {
+            background-color: rgba(0, 37, 31, 0.8);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container {
+            color: white;
+            width: 50%;
+            margin: 10% auto 5%;
+            text-align: center;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container .header h1 {
+            margin-bottom: 0;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container .header p {
+            margin-top: 0;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form {
+            padding: 0 10%;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form>div {
+            position: relative;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form input {
+            padding: 10px 5px 10px 50px;
+            font-size: 16px;
+            background-color: rgba(0, 0, 0, 0);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2px;
+            width: 100%;
+            margin: 15px auto;
+            color: white;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form input:focus {
+            border: 2px solid rgba(255, 255, 255, 1);
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form i {
+            position: absolute;
+            left: 5%;
+            top: 23px;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 5px 10px 5px 0;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form button i {
+            position: static;
+            border-right: none;
+            padding: 0;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form button {
+            padding: 10px 20%;
+            background-color: rgba(0, 0, 0, 0);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form button:hover {
+            border: 2px solid white;
+        }
+
+        @@media screen and (max-width:700px) {
+            #formdfbde85c00554cf9b81e3299c9fa3204 {
+                width: 100%;
+                min-width: 100px;
+            }
+
+            #formdfbde85c00554cf9b81e3299c9fa3204 .form-container {
+                width: 80%;
+            }
+        }
+
+        @@media screen and (max-width:600px) {
+            #formdfbde85c00554cf9b81e3299c9fa3204 .form-container form {
+                padding: 0 1%;
+            }
+        }
+    </style>
+
+    <img src="/Images/matrixGreenCode.webp" alt="">
+    <div class="color-layout"></div>
+    <div class="form-container">
+        <div>
+            <!--h1>LOGO</h1-->
+            <a asp-controller="Home" asp-action="Index">
+                <img style="width: 50px;height:50px;object-fit:cover;background-color:white;border-radius:50%;opacity:0.7;transform:translate(-50%, -100%);"
+                    src="/Images/MG logo 001.png" alt="mglogo">
+            </a>
+        </div>
+        <div class="header">
+            <h1>Welcome Back!</h1>
+            <p>Please login with your registered username or email address</p>
+        </div>
+        <form asp-action="SubmitLogin" method="post">
+            <div asp-validation-summary="All" style="color: red;"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div><span asp-validation-for="UsernameOrEmail" style="color: red;"></span></div>
+            <div>
+                <input asp-for="UsernameOrEmail" type="text" placeholder="Username or Email">
+                <i class="fa-regular fa-envelope"></i>
+            </div>
+            <div><span asp-validation-for="Password" style="color: red;"></span></div>
+            <div>
+                <input type="password" asp-for="Password" placeholder="Password">
+                <i class="fa-solid fa-unlock-keyhole" onclick="this.previousElementSibling.type='text';"></i>
+            </div>
+            <div class="clearfix" style="margin: 10px auto;">
+                <div style="float: left;">
+                    <style>
+                        /* Customize the label (the container) */
+                        #form2e6835bef3e147f0abe325bb1eeaeb44 .container {
+                            display: block;
+                            position: relative;
+                            padding: 5px 0 5px 35px;
+                            margin-bottom: 12px;
+                            cursor: pointer;
+                            font-size: 12px;
+                            -webkit-user-select: none;
+                            -moz-user-select: none;
+                            -ms-user-select: none;
+                            user-select: none;
+                            text-align: left;
+                        }
+
+                        /* Hide the browser's default checkbox */
+                        #form2e6835bef3e147f0abe325bb1eeaeb44 .container input {
+                            position: absolute;
+                            opacity: 0;
+                            cursor: pointer;
+                            height: 0;
+                            width: 0;
+                        }
+
+                        /* Create a custom checkbox */
+                        #form2e6835bef3e147f0abe325bb1eeaeb44 .checkmark {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            height: 25px;
+                            width: 25px;
+                            /*background-color: #eee;*/
+                            border: 2px solid #eee;
+                        }
+
+                        /* Create the checkmark/indicator (hidden when not checked) */
+                        #form2e6835bef3e147f0abe325bb1eeaeb44 .checkmark:after {
+                            content: "";
+                            position: absolute;
+                            display: none;
+                        }
+
+                        /* Show the checkmark when checked */
+                        #form2e6835bef3e147f0abe325bb1eeaeb44 .container input:checked~.checkmark:after {
+                            display: block;
+                        }
+
+                        /* Style the checkmark/indicator */
+                        #form2e6835bef3e147f0abe325bb1eeaeb44 .container .checkmark:after {
+                            left: 7px;
+                            top: 3px;
+                            width: 5px;
+                            height: 10px;
+                            border: solid white;
+                            border-width: 0 3px 3px 0;
+                            -webkit-transform: rotate(45deg);
+                            -ms-transform: rotate(45deg);
+                            transform: rotate(45deg);
+                        }
+                    </style>
+
+                    <div id="form2e6835bef3e147f0abe325bb1eeaeb44">
+                        <label asp-for="IsPersistent" class="container">Stay logged in
+                            <input asp-for="IsPersistent" id="IsPersistent" type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                </div>
+                <div style="float: right; text-align: right;padding: 3px 0;">
+                    <a asp-controller="Home" asp-action="ContactUs" style="font-size: 12px; color: white;">I've
+                        forgotten my password</a>
+                </div>
+            </div>
+            <div>
+                <button type="submit">SIGN IN <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </form>
+        <div class="link-container">
+            <style>
+                #formdfbde85c00554cf9b81e3299c9fa3204 .link-container .create-account-link {
+                    text-decoration: none;
+                    color: lightgray;
+                    font-size: 12px;
+                    cursor: pointer;
+                }
+
+                #formdfbde85c00554cf9b81e3299c9fa3204 .link-container .create-account-link:hover {
+                    color: white;
+                }
+            </style>
+            <p style="font-size: 12px;">or</p>
+            <a asp-controller="Identity" asp-action="Signup" class="create-account-link">Create a new account</a>
+        </div>
+    </div>
+</div>

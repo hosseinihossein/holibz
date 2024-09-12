@@ -1,0 +1,448 @@
+@model WebComponents_IndexModel
+
+<!-------------------------------------------------- tag --------------------------------------------->
+<div id="formb67b4ca537be41928633b5b4be1578f9">
+
+    <style>
+        #formb67b4ca537be41928633b5b4be1578f9 {
+            width: 100%;
+            margin: auto;
+            background-color: rgba(200, 200, 200, 0.1);
+            border-radius: 20px;
+            padding: 0 20px;
+            border: 1px solid lightgray;
+            position: relative;
+        }
+
+        @@media screen and (max-width:1000px) {
+            #formb67b4ca537be41928633b5b4be1578f9 {
+                width: 80%;
+            }
+        }
+
+        @@media screen and (max-width:800px) {
+            #formb67b4ca537be41928633b5b4be1578f9 {
+                width: 100%;
+            }
+        }
+
+        @@media screen and (max-width:400px) {
+            #formb67b4ca537be41928633b5b4be1578f9 {
+                padding-top: 120px;
+            }
+        }
+    </style>
+    <div>
+        <style>
+            #me208048ac4d746fea9e0cc2063d62aef {
+                border-radius: 10px;
+                margin: 10px auto;
+                background-color: var(--lightGreen);
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef #myDIV {
+                width: 50%;
+                margin: auto;
+            }
+
+            /* Remove margins and padding from the list */
+            #me208048ac4d746fea9e0cc2063d62aef ul {
+                margin: 0;
+                padding: 0;
+                list-style-type: none;
+                background-color: var(--lightGreen);
+                /*border-radius: 10px;*/
+                overflow: hidden;
+                float: left;
+            }
+
+            /* Style the list items */
+            #me208048ac4d746fea9e0cc2063d62aef ul li {
+                /*cursor: pointer;*/
+                position: relative;
+                padding: 10px 60px 10px 10px;
+                /*background: #eee;*/
+                /*background-color: rgb(207, 255, 159);*/
+                opacity: 0.9;
+                color: #111;
+                font-size: 16px;
+                /*transition: 0.2s;*/
+
+                /* make the list items unselectable */
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+
+                overflow: hidden;
+                border: 1px solid lightgray;
+                border-radius: 10px;
+                width: fit-content;
+                display: inline-block;
+                margin: 0 5px;
+            }
+
+            /* Set all odd list items to a different color (zebra-stripes) */
+            /*#me208048ac4d746fea9e0cc2063d62aef ul li:nth-child(odd) {
+                    background-color: rgb(172, 255, 90);
+                }*/
+
+            /* Darker background-color on hover */
+            #me208048ac4d746fea9e0cc2063d62aef ul li:hover {
+                /*background: #ddd;*/
+                opacity: 1;
+                /*background-color: rgb(0, 167, 0);
+                    color: white;*/
+                /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);*/
+                border: 1px solid #333;
+            }
+
+            /* Style the close button */
+            #me208048ac4d746fea9e0cc2063d62aef .close {
+                position: absolute;
+                right: 0;
+                top: -7px;
+                padding: 12px;
+                font-size: 25px;
+                cursor: pointer;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .close:hover {
+                background-color: #f44336;
+                color: white;
+            }
+
+            /* Style the header */
+            #me208048ac4d746fea9e0cc2063d62aef .header {
+                /*background-color: rgb(174, 255, 174);*/
+                padding: 20px 40px;
+                color: #333;
+                text-align: center;
+                border-radius: 10px 10px 0 0;
+            }
+
+            /* Style the input */
+            #me208048ac4d746fea9e0cc2063d62aef input {
+                margin: 0;
+                border: 1px solid #eee;
+                border-radius: 0;
+                width: 100%;
+                padding: 10px;
+                /*float: left;*/
+                font-size: 16px;
+            }
+
+            /* Style the "Add" button */
+            #me208048ac4d746fea9e0cc2063d62aef .addBtn {
+                padding: 10px;
+                width: 25%;
+                background-color: white;
+                color: #111;
+                float: left;
+                text-align: center;
+                font-size: 16px;
+                cursor: pointer;
+                border-radius: 0;
+                border: 1px solid #eee;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .addBtn:hover {
+                background-color: #eee;
+            }
+
+            /********************************************* autocomplete *****************************************/
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete {
+                /*the container must be positioned relative:*/
+                position: relative;
+                display: inline-block;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-items {
+                position: absolute;
+                border: 1px solid #d4d4d4;
+                border-bottom: none;
+                border-top: none;
+                z-index: 99;
+                /*position the autocomplete items to be the same width as the container:*/
+                top: 100%;
+                left: 0;
+                right: 0;
+                max-height: 300px;
+                overflow: auto;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-items div {
+                padding: 10px;
+                cursor: pointer;
+                background-color: #fff;
+                border-bottom: 1px solid #d4d4d4;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-items div:hover {
+                /*when hovering an item:*/
+                background-color: #e9e9e9;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-active {
+                /*when navigating through the items using the arrow keys:*/
+                background-color: DodgerBlue !important;
+                color: #ffffff;
+            }
+
+            /**************************************************************************************/
+
+            @@media screen and (max-width:600px) {
+                #me208048ac4d746fea9e0cc2063d62aef #myDIV {
+                    width: 90%;
+                }
+            }
+        </style>
+
+        <div id="me208048ac4d746fea9e0cc2063d62aef" class="clearfix">
+            <div id="myDIV" class="header clearfix">
+                <input type="text" placeholder="Search.." value="@Model.SearchPhrase"
+                    oninput="document.getElementById('search-input').value=this.value;">
+
+                <input type="text" placeholder="Developer" value="@Model.DeveloperUserName"
+                    oninput="document.getElementById('developer-input').value=this.value;">
+
+                <div class="autocomplete" style="float: left;width: 75%;">
+                    <input type="text" id="myInput" placeholder="tag.." autocomplete="off">
+                </div>
+                <span onclick="addToList_me208048ac4d746fea9e0cc2063d62aef(this)" class="addBtn">
+                    <i class="fa-solid fa-plus"></i>
+                </span>
+
+                <script>
+                    let tags_me208048ac4d746fea9e0cc2063d62aef = JSON.parse(`@Html.Raw(Model.TagsJson)`);
+
+                    let mainElement_me208048ac4d746fea9e0cc2063d62aef = document.getElementById("me208048ac4d746fea9e0cc2063d62aef");
+                    let selectedTags_me208048ac4d746fea9e0cc2063d62aef = "@Model.SelectedTags".split(',');
+                    let mySelectedTags_me208048ac4d746fea9e0cc2063d62aef = [];
+                    for (let st of selectedTags_me208048ac4d746fea9e0cc2063d62aef) {
+                        mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.push(st.trim().trim(','));
+                    }
+
+                    autocomplete_me208048ac4d746fea9e0cc2063d62aef(mainElement_me208048ac4d746fea9e0cc2063d62aef.querySelector("#myInput"), tags_me208048ac4d746fea9e0cc2063d62aef);
+
+                    function autocomplete_me208048ac4d746fea9e0cc2063d62aef(inp, arr) {
+                        /*the autocomplete function takes two arguments,
+                        the text field element and an array of possible autocompleted values:*/
+                        let currentFocus;
+                        /*execute a function when someone writes in the text field:*/
+                        inp.addEventListener("input", function (e) {
+                            let listDiv, itemDiv, i, val = this.value;
+                            /*close any already open lists of autocompleted values*/
+                            closeAllLists();
+                            if (!val) { return false; }
+                            currentFocus = -1;
+                            /*create a DIV element that will contain the items (values):*/
+                            listDiv = document.createElement("DIV");
+                            listDiv.setAttribute("id", this.id + "autocomplete-list");
+                            listDiv.setAttribute("class", "autocomplete-items");
+                            /*append the DIV element as a child of the autocomplete container:*/
+                            this.parentNode.appendChild(listDiv);
+                            /*for each item in the array...*/
+                            for (i = 0; i < arr.length; i++) {
+                                /*check if the item starts with the same letters as the text field value:*/
+                                /*arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()*/
+                                if (arr[i].toUpperCase().includes(val.toUpperCase())
+                                    && !mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.includes(arr[i].toLowerCase())) {
+                                    /*create a DIV element for each matching element:*/
+                                    itemDiv = document.createElement("DIV");
+                                    /*make the matching letters bold:*/
+                                    let indexOfIncludedLetter = arr[i].toUpperCase().indexOf(val.toUpperCase());
+                                    itemDiv.innerHTML = arr[i].substr(0, indexOfIncludedLetter);
+                                    itemDiv.innerHTML += "<strong>" + arr[i].substr(indexOfIncludedLetter, val.length) + "</strong>";
+                                    itemDiv.innerHTML += arr[i].substr(indexOfIncludedLetter + val.length);
+                                    /*insert a input field that will hold the current array item's value:*/
+                                    itemDiv.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                                    /*execute a function when someone clicks on the item value (DIV element):*/
+                                    itemDiv.addEventListener("click", function (e) {
+                                        /*insert the value for the autocomplete text field:*/
+                                        inp.value = this.getElementsByTagName("input")[0].value;
+                                        /*close the list of autocompleted values,
+                                        (or any other open lists of autocompleted values:*/
+                                        closeAllLists();
+                                    });
+                                    listDiv.appendChild(itemDiv);
+                                }
+                            }
+                        });
+                        /*execute a function presses a key on the keyboard:*/
+                        inp.addEventListener("keydown", function (e) {
+                            let x = mainElement_me208048ac4d746fea9e0cc2063d62aef.querySelector("#" + this.id + "autocomplete-list");
+                            if (x) x = x.getElementsByTagName("div");
+                            if (e.keyCode == 40) {
+                                /*If the arrow DOWN key is pressed,
+                                increase the currentFocus letiable:*/
+                                currentFocus++;
+                                /*and and make the current item more visible:*/
+                                addActive(x);
+                            } else if (e.keyCode == 38) { //up
+                                /*If the arrow UP key is pressed,
+                                decrease the currentFocus variable:*/
+                                currentFocus--;
+                                /*and and make the current item more visible:*/
+                                addActive(x);
+                            } else if (e.keyCode == 13) {
+                                /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                                e.preventDefault();
+                                if (currentFocus > -1) {
+                                    /*and simulate a click on the "active" item:*/
+                                    if (x) x[currentFocus].click();
+                                }
+                            }
+                        });
+                        function addActive(x) {
+                            /*a function to classify an item as "active":*/
+                            if (!x) return false;
+                            /*start by removing the "active" class on all items:*/
+                            removeActive(x);
+                            if (currentFocus >= x.length) currentFocus = 0;
+                            if (currentFocus < 0) currentFocus = (x.length - 1);
+                            /*add class "autocomplete-active":*/
+                            x[currentFocus].classList.add("autocomplete-active");
+                        }
+                        function removeActive(x) {
+                            /*a function to remove the "active" class from all autocomplete items:*/
+                            for (let i = 0; i < x.length; i++) {
+                                x[i].classList.remove("autocomplete-active");
+                            }
+                        }
+                        function closeAllLists(elmnt) {
+                            /*close all autocomplete lists in the document,
+                            except the one passed as an argument:*/
+                            let x = mainElement_me208048ac4d746fea9e0cc2063d62aef.getElementsByClassName("autocomplete-items");
+                            for (let i = 0; i < x.length; i++) {
+                                if (elmnt != x[i] && elmnt != inp) {
+                                    x[i].parentNode.removeChild(x[i]);
+                                }
+                            }
+                        }
+                        /*execute a function when someone clicks in the document:*/
+                        document.addEventListener("click", function (e) {
+                            closeAllLists(e.target);
+                        });
+                    }
+                </script>
+            </div>
+
+            <ul id="myUL">
+                @foreach (string tag in Model.SelectedTags.Split(',', StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries))
+                {
+                    <li style="background-color: rgb(205, 255, 155);">
+                        @tag
+                        <span class="close"><i class="fa-solid fa-xmark"></i></span>
+                    </li>
+                }
+            </ul>
+
+            <style>
+                #myformb3406396f4494383ab2fde80f6abb7f8 {
+                    float: right;
+                }
+
+                #myformb3406396f4494383ab2fde80f6abb7f8 button {
+                    border: none;
+                    background-color: rgb(138, 255, 22);
+                    color: #111;
+                    cursor: pointer;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    transition: 0.3s;
+                    font-size: 16px;
+                }
+
+                #myformb3406396f4494383ab2fde80f6abb7f8 button:hover {
+                    background-color: green;
+                    color: white;
+                }
+            </style>
+            <form asp-controller="WebComponents" asp-action="Index" id="myformb3406396f4494383ab2fde80f6abb7f8"
+                method="get">
+                <input class="tags-input" hidden asp-for="SelectedTags" type="text">
+                <input type="text" id="developer-input" hidden asp-for="DeveloperUserName">
+                <input type="text" id="search-input" hidden asp-for="SearchPhrase">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Find</button>
+            </form>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.SelectedTags))
+        {
+            <script>
+                let tagsInput = document.getElementById("myformb3406396f4494383ab2fde80f6abb7f8").getElementsByClassName("tags-input")[0];
+
+                let closeSpans = document.getElementById("myUL").getElementsByClassName("close");
+
+                for (let closeSpan of closeSpans) {
+                    closeSpan.addEventListener("click", (event) => {
+                        let inputValue = closeSpan.parentElement.innerText;
+                        /*console.log("innerText: '" + inputValue + "'");
+                        if (tagsInput.value.includes(' ' + inputValue + ',')) {
+                            console.log("tagsInput contains '" + ' ' + inputValue + ',' + "'");
+                        }*/
+                        tagsInput.value = tagsInput.value.replace(' ' + inputValue + ',', "");
+                        //tagsInput.value = tagsInput.value.replace(inputValue, "");
+                        let indexOfInputvalue = mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.indexOf(inputValue.toLowerCase());
+                        mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.splice(indexOfInputvalue, 1);
+                        closeSpan.parentElement.remove();
+
+                    });
+                }
+            </script>
+        }
+        <script>
+            function addToList_me208048ac4d746fea9e0cc2063d62aef(element) {
+                let tagsInput = document.getElementById("myformb3406396f4494383ab2fde80f6abb7f8").getElementsByClassName("tags-input")[0];
+                let li = document.createElement("li");
+                let inputValue = element.previousElementSibling.getElementsByTagName("input")[0].value;
+                inputValue = inputValue?.trim();
+                /*console.log("selectedTags: '" + mySelectedTags_me208048ac4d746fea9e0cc2063d62aef + "'");
+                console.log("inputValue: '" + inputValue.toLowerCase() + ',' + "'");*/
+                if (inputValue === '' || !tags_me208048ac4d746fea9e0cc2063d62aef.includes(inputValue)) {
+                    alert("Choose a tag from a list please!");
+                    return;
+                }
+                else if (mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.includes(inputValue.toLowerCase())) {
+                    alert(`'${inputValue}' has already been chosen!`);
+                    return;
+                }
+                else {
+                    let textNode = document.createTextNode(inputValue);
+
+                    li.appendChild(textNode);
+
+                    let closeSpan = document.createElement("SPAN");
+                    let closeSign = document.createTextNode("\u00D7");
+                    closeSpan.className = "close";
+                    closeSpan.appendChild(closeSign);
+                    closeSpan.addEventListener("click", (event) => {
+                        //removeFromList_me208048ac4d746fea9e0cc2063d62aef(event.target);
+                        event.target.parentElement.remove();
+                        /*console.log("closespan clicked")
+                        if (tagsInput.value.includes(' ' + inputValue + ',')) {
+                            console.log("tagsInput contains '" + ' ' + inputValue + ',' + "'");
+                        }*/
+                        tagsInput.value = tagsInput.value.replace(' ' + inputValue + ',', "");
+                        let indexOfInputvalue = mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.indexOf(inputValue.toLowerCase());
+                        mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.splice(indexOfInputvalue, 1);
+
+                    });
+
+                    li.appendChild(closeSpan);
+
+                    document.getElementById("me208048ac4d746fea9e0cc2063d62aef").querySelector("#myUL").appendChild(li);
+                    element.previousElementSibling.getElementsByTagName("input")[0].value = "";
+
+                    tagsInput.value += ' ' + inputValue + ',';
+                    mySelectedTags_me208048ac4d746fea9e0cc2063d62aef.push(inputValue.toLowerCase());
+                }
+            }
+        </script>
+    </div>
+</div>
+
+<!--------------------------------- Web Components Gallery ----------------------------------->
+<partial name="WebComponentsGallery" model="@(Model.Items ?? new List<WebComponents_ItemModel>())" />

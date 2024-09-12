@@ -1,0 +1,693 @@
+@model WebComponents_NewItemFormModel
+<!------------------------------------------------------------------------------------------------>
+
+<style>
+    #formb67b4ca537be41928633b5b4be1578f9 {
+        width: 60%;
+        margin: auto;
+        background-color: rgba(200, 200, 200, 0.1);
+        border-radius: 20px;
+        padding: 100px 20px 20px 20px;
+        border: 1px solid lightgray;
+        position: relative;
+    }
+
+    @@media screen and (max-width:1000px) {
+        #formb67b4ca537be41928633b5b4be1578f9 {
+            width: 80%;
+        }
+    }
+
+    @@media screen and (max-width:800px) {
+        #formb67b4ca537be41928633b5b4be1578f9 {
+            width: 100%;
+        }
+    }
+
+    @@media screen and (max-width:400px) {
+        #formb67b4ca537be41928633b5b4be1578f9 {
+            padding-top: 120px;
+        }
+    }
+</style>
+<div id="formb67b4ca537be41928633b5b4be1578f9">
+    <!------------------------------------- form banner ------------------------------------->
+
+    <div>
+        <h1 style="background-color: var(--lightGreen);text-align: center;color: #333;
+            padding: 30px 5px;position: absolute;top: 0;left: 0;width: 100%;
+            border-radius: 20px 20px 0 0;margin: 0;z-index: -1;">Adding A New
+            Web Component
+        </h1>
+    </div>
+
+    <!------------------------------------------------ form ---------------------------------------------->
+    <div style="padding: 5px 0;">
+        <style>
+            #formb67b4ca537be41928633b5b4be1578f9 .zipfile-container label.choose-file-label {
+                background-color: lightgray;
+                /*background-color: #04AA6D;*/
+                border: none;
+                color: #333;
+                padding: 20px 32px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 16px;
+                margin: 20px auto;
+                cursor: pointer;
+                display: block;
+                width: 70%;
+                border-radius: 5px;
+                opacity: 1;
+                border: 1px solid lightgray;
+                text-wrap: wrap;
+                word-wrap: break-word;
+            }
+
+            #formb67b4ca537be41928633b5b4be1578f9 .zipfile-container label.choose-file-label:hover {
+                /*background-color: rgba(128, 128, 128, 0.7);*/
+                background-color: var(--lightGreen);
+                border-color: rgb(190, 190, 190);
+                color: black;
+                /*background-color: #06c981;*/
+            }
+
+            #formb67b4ca537be41928633b5b4be1578f9 .showcase-container label.choose-file-label {
+                background-color: lightgray;
+                /*background-color: #04AA6D;*/
+                border: none;
+                color: #333;
+                padding: 40px 32px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 16px;
+                margin: 20px auto;
+                cursor: pointer;
+                display: block;
+                width: 50%;
+                border-radius: 5px;
+                opacity: 1;
+                border: 1px solid lightgray;
+                text-wrap: wrap;
+                word-wrap: break-word;
+            }
+
+            #formb67b4ca537be41928633b5b4be1578f9 .showcase-container label.choose-file-label:hover {
+                /*background-color: rgba(128, 128, 128, 0.7);*/
+                background-color: var(--lightGreen);
+                border-color: rgb(190, 190, 190);
+                color: black;
+                /*background-color: #06c981;*/
+            }
+
+            #formb67b4ca537be41928633b5b4be1578f9 .showcase-container label.choose-file-label img {
+                width: 100%;
+                object-fit: contain;
+                margin-bottom: 10px;
+            }
+
+            @@media screen and (max-width:600px) {
+                #formb67b4ca537be41928633b5b4be1578f9 .zipfile-container label.choose-file-label {
+                    width: 90%;
+                    font-size: 14px;
+                }
+
+                #formb67b4ca537be41928633b5b4be1578f9 .showcase-container label.choose-file-label {
+                    width: 80%;
+                    font-size: 14px;
+                }
+            }
+        </style>
+        <form id="myformb3406396f4494383ab2fde80f6abb7f8" asp-action="SubmitNewItem" enctype="multipart/form-data"
+            method="post">
+            <!------------------------------------------------------------------------------------------------>
+
+            <div class="zipfile-container" style="border-bottom: 1px dashed lightgray;">
+                <p style="text-align: center;">
+                    <span style="color: red;">*</span>
+                    <i class="fa-regular fa-file-zipper"></i> Zip file :
+                </p>
+                <label for="zipfile" class="choose-file-label">
+                    <i class="fa-regular fa-file-zipper"></i>
+                    <span class="zipfilename">Select the project zip file</span>
+                    <p class="zipfilesize" style="display: none;margin-bottom: 0;"></p>
+                    <!--pre class="code-text" style="display: none;"></pre-->
+                </label>
+                <input class="zipfile-input" id="zipfile" style="display: none;" type="file" required asp-for="ZipFile"
+                    oninput="setLabelSpanInnerHtml_formb67b4ca537be41928633b5b4be1578f9(this);">
+
+                <div><span asp-validation-for="ZipFile" style="color: red;"></span></div>
+
+                <div class="form-section-description">
+                    <style>
+                        #myformb3406396f4494383ab2fde80f6abb7f8 .form-section-description {
+                            background-color: var(--lightGreen);
+                            padding: 10px;
+                            border-radius: 10px;
+                            margin-bottom: 20px;
+                        }
+
+                        #myformb3406396f4494383ab2fde80f6abb7f8 .form-section-description ul {
+                            font-size: 14px;
+                        }
+
+                        #myformb3406396f4494383ab2fde80f6abb7f8 .form-section-description ul li {
+                            margin-top: 10px;
+                        }
+                    </style>
+                    <h4>The project zip file needs to include:</h4>
+                    <ul>
+                        <li>'<strong>.zip</strong>' extension type</li>
+                        <li>A folder <i class="fa-regular fa-folder-open"></i> named '<strong>statics</strong>'
+                            containing static
+                            files like fonts, images and videos <i class="fa-solid fa-photo-film"></i> if there are
+                            any</li>
+                        <li>An HTML file <i class="fa-regular fa-file-code"></i> named '<strong>index.html</strong>'
+                            containing all
+                            the HTML, CSS and JavaScript codes
+                            that are used in the web component</li>
+                        <li>Less than <strong>2 MB</strong> in size</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!------------------------------------------------------------------------------------------------>
+
+            <div class="project-title" style="border-bottom: 1px dashed lightgray;">
+                <p style="text-align: center;">
+                    <span style="color: red;">*</span>
+                    <i class="fa-solid fa-pen"></i> Title (<span id="title-counter">50</span> characters):
+                </p>
+                <style>
+                    #myformb3406396f4494383ab2fde80f6abb7f8 .project-title {
+                        padding: 20px 0;
+                    }
+
+                    #myformb3406396f4494383ab2fde80f6abb7f8 .project-title #project-title-input {
+                        width: 50%;
+                        margin: auto;
+                        display: block;
+                        padding: 5px;
+                        font-size: 14px;
+                        color: #333;
+                        resize: none;
+                        border: 1px solid lightgray;
+                        border-radius: 5px;
+                        text-align: center;
+                    }
+
+                    @@media screen and (max-width:800px) {
+                        #myformb3406396f4494383ab2fde80f6abb7f8 .project-title #project-title-input {
+                            width: 80%;
+                        }
+                    }
+
+                    @@media screen and (max-width:600px) {
+                        #myformb3406396f4494383ab2fde80f6abb7f8 .project-title #project-title-input {
+                            width: 100%;
+                        }
+                    }
+                </style>
+                <input type="text" required id="project-title-input" maxlength="50"
+                    placeholder="Title of the web component.." asp-for="Title"
+                    oninput="document.getElementById('title-counter').innerHTML=50-this.value.length;"></input>
+            </div>
+
+            <!------------------------------------------------------------------------------------------------>
+
+            <div class="project-description" style="border-bottom: 1px dashed lightgray;">
+                <p style="text-align: center;">
+                    <span style="color: red;">*</span>
+                    <i class="fa-regular fa-pen-to-square"></i> Description (<span id="description-counter">1000</span>
+                    characters):
+                </p>
+                <style>
+                    #myformb3406396f4494383ab2fde80f6abb7f8 .project-description {
+                        padding: 20px 0;
+                    }
+
+                    #myformb3406396f4494383ab2fde80f6abb7f8 .project-description #project-description-text {
+                        width: 100%;
+                        margin: auto;
+                        display: block;
+                        padding: 5px;
+                        font-size: 14px;
+                        color: #333;
+                        /*resize: none;*/
+                        border: 1px solid lightgray;
+                        border-radius: 5px;
+                    }
+                </style>
+                <textarea required id="project-description-text" cols="50" rows="10" maxlength="1000"
+                    placeholder="Write a description about the web component here.." asp-for="Description"
+                    oninput="document.getElementById('description-counter').innerHTML=1000-this.value.length;"></textarea>
+            </div>
+
+            <!------------------------------------------------------------------------------------------------>
+            <input class="tags-input" readonly hidden style="width: 100%;padding: 5px 10px;margin-top: 10px;"
+                type="text" asp-for="SelectedTags">
+        </form>
+        <script>
+            function setLabelSpanInnerHtml_formb67b4ca537be41928633b5b4be1578f9(element) {
+                let zipFileNameSpan = element.previousElementSibling.getElementsByClassName("zipfilename")[0];
+                if (!element.files[0]) {
+                    element.value = "";
+                    element.files = null;
+                    zipFileNameSpan.innerHTML = "Select the project zip file";
+                    zipFileNameSpan.nextElementSibling.style.display = "none";
+                    element.previousElementSibling.style.backgroundColor = "lightgray";
+                    element.previousElementSibling.style.color = "#333";
+                    element.previousElementSibling.style.fontWeight = "normal";
+                    element.previousElementSibling.style.borderColor = "lightgray";
+                    return;
+                }
+                let file = element.files[0];
+                let fileSize = file.size;
+
+                if (fileSize > 2 * 1024 * 1024) {
+                    alert("Zip file size need to be less than 2 MB!");
+                    element.value = "";
+                    element.files = null;
+                    zipFileNameSpan.innerHTML = "Select the project zip file";
+                    zipFileNameSpan.nextElementSibling.style.display = "none";
+                    element.previousElementSibling.style.backgroundColor = "lightgray";
+                    element.previousElementSibling.style.color = "#333";
+                    element.previousElementSibling.style.fontWeight = "normal";
+                    element.previousElementSibling.style.borderColor = "lightgray";
+                    return;
+                }
+
+
+                zipFileNameSpan.innerHTML = `${element.files[0].name}`;
+                zipFileNameSpan.nextElementSibling.innerHTML = `${(fileSize / 1024).toFixed(2)} "KB"`;
+                zipFileNameSpan.nextElementSibling.style.display = "block";
+                element.previousElementSibling.style.backgroundColor = "rgb(216, 255, 216)";
+                element.previousElementSibling.style.color = "#333";
+                element.previousElementSibling.style.fontWeight = "bold";
+                element.previousElementSibling.style.borderColor = "lawngreen";
+            }
+
+        </script>
+    </div>
+
+    <!-------------------------------------------------- tag --------------------------------------------->
+    <div style="border-bottom: 1px dashed lightgray;">
+        <style>
+            #me208048ac4d746fea9e0cc2063d62aef {
+                border-radius: 10px;
+                margin: 20px auto;
+                background-color: var(--lightGreen);
+            }
+
+            /* Remove margins and padding from the list */
+            #me208048ac4d746fea9e0cc2063d62aef ul {
+                margin: 0;
+                padding: 0;
+                list-style-type: none;
+                background-color: var(--lightGreen);
+                border-radius: 0 0 10px 10px;
+                overflow: hidden;
+            }
+
+            /* Style the list items */
+            #me208048ac4d746fea9e0cc2063d62aef ul li {
+                /*cursor: pointer;*/
+                position: relative;
+                padding: 12px 8px 12px 40px;
+                /*background: #eee;*/
+                /*background-color: rgb(207, 255, 159);*/
+                opacity: 0.9;
+                color: #111;
+                font-size: 18px;
+                /*transition: 0.2s;*/
+
+                /* make the list items unselectable */
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+
+                overflow: hidden;
+                border: 1px solid lightgray;
+            }
+
+            /* Set all odd list items to a different color (zebra-stripes) */
+            #me208048ac4d746fea9e0cc2063d62aef ul li:nth-child(odd) {
+                /*background: #f9f9f9;*/
+                background-color: rgb(172, 255, 90);
+                /*opacity: 0.9;*/
+            }
+
+            /* Darker background-color on hover */
+            #me208048ac4d746fea9e0cc2063d62aef ul li:hover {
+                /*background: #ddd;*/
+                opacity: 1;
+                /*background-color: rgb(0, 167, 0);
+                    color: white;*/
+                /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);*/
+                border: 1px solid #333;
+            }
+
+            /* Style the close button */
+            #me208048ac4d746fea9e0cc2063d62aef .close {
+                position: absolute;
+                right: 0;
+                top: -5px;
+                padding: 12px 16px 12px 16px;
+                font-size: 30px;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .close:hover {
+                background-color: #f44336;
+                color: white;
+            }
+
+            /* Style the header */
+            #me208048ac4d746fea9e0cc2063d62aef .header {
+                /*background-color: rgb(174, 255, 174);*/
+                padding: 30px 40px;
+                color: #333;
+                text-align: center;
+                border-radius: 10px 10px 0 0;
+            }
+
+            /* Style the input */
+            #me208048ac4d746fea9e0cc2063d62aef input {
+                margin: 0;
+                border: none;
+                border-radius: 0;
+                width: 100%;
+                padding: 10px;
+                /*float: left;*/
+                font-size: 16px;
+            }
+
+            /* Style the "Add" button */
+            #me208048ac4d746fea9e0cc2063d62aef .addBtn {
+                padding: 10px;
+                width: 25%;
+                background-color: rgb(216, 255, 177);
+                color: green;
+                float: left;
+                text-align: center;
+                font-size: 14px;
+                cursor: pointer;
+                transition: 0.3s;
+                border-radius: 0;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .addBtn:hover {
+                /*background-color: #bbb;*/
+                background-color: green;
+                color: white;
+            }
+
+            /********************************************* autocomplete *****************************************/
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete {
+                /*the container must be positioned relative:*/
+                position: relative;
+                display: inline-block;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-items {
+                position: absolute;
+                border: 1px solid #d4d4d4;
+                border-bottom: none;
+                border-top: none;
+                z-index: 99;
+                /*position the autocomplete items to be the same width as the container:*/
+                top: 100%;
+                left: 0;
+                right: 0;
+                max-height: 300px;
+                overflow: auto;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-items div {
+                padding: 10px;
+                cursor: pointer;
+                background-color: #fff;
+                border-bottom: 1px solid #d4d4d4;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-items div:hover {
+                /*when hovering an item:*/
+                background-color: #e9e9e9;
+            }
+
+            #me208048ac4d746fea9e0cc2063d62aef .autocomplete-active {
+                /*when navigating through the items using the arrow keys:*/
+                background-color: DodgerBlue !important;
+                color: #ffffff;
+            }
+
+            /**************************************************************************************/
+
+            @@media screen and (max-width:600px) {
+                #me208048ac4d746fea9e0cc2063d62aef {
+                    font-size: 14px;
+                }
+
+                #me208048ac4d746fea9e0cc2063d62aef ul li {
+                    font-size: 14px;
+                }
+
+                #me208048ac4d746fea9e0cc2063d62aef input {
+                    font-size: 14px;
+                }
+
+                #me208048ac4d746fea9e0cc2063d62aef .header {
+                    padding: 30px 5px;
+                }
+            }
+        </style>
+
+        <div id="me208048ac4d746fea9e0cc2063d62aef">
+            <div id="myDIV" class="header clearfix">
+                <h2>
+                    <span style="color: red;">*</span>
+                    <i class="fa-solid fa-hashtag"></i> Tag List
+                </h2>
+                <p>Choose appropriate tags that describes the web component</p>
+                <div><span asp-validation-for="SelectedTags" style="color: red;"></span></div>
+                <div class="autocomplete" style="float: left;width: 75%;">
+                    <input type="text" id="myInput" placeholder="#..." autocomplete="off">
+                </div>
+                <span onclick="addToList_me208048ac4d746fea9e0cc2063d62aef(this)" class="addBtn">
+                    <i class="fa-solid fa-plus"></i> Add
+                </span>
+
+                <script>
+                    let tags_me208048ac4d746fea9e0cc2063d62aef = JSON.parse(`@Html.Raw(Model.TagsJson)`);
+
+                    let mainElement_me208048ac4d746fea9e0cc2063d62aef = document.getElementById("me208048ac4d746fea9e0cc2063d62aef");
+                    let selectedTags_me208048ac4d746fea9e0cc2063d62aef = [];
+
+                    autocomplete_me208048ac4d746fea9e0cc2063d62aef(mainElement_me208048ac4d746fea9e0cc2063d62aef.querySelector("#myInput"), tags_me208048ac4d746fea9e0cc2063d62aef);
+
+                    function autocomplete_me208048ac4d746fea9e0cc2063d62aef(inp, arr) {
+                        /*the autocomplete function takes two arguments,
+                        the text field element and an array of possible autocompleted values:*/
+                        let currentFocus;
+                        /*execute a function when someone writes in the text field:*/
+                        inp.addEventListener("input", function (e) {
+                            let listDiv, itemDiv, i, val = this.value;
+                            /*close any already open lists of autocompleted values*/
+                            closeAllLists();
+                            if (!val) { return false; }
+                            currentFocus = -1;
+                            /*create a DIV element that will contain the items (values):*/
+                            listDiv = document.createElement("DIV");
+                            listDiv.setAttribute("id", this.id + "autocomplete-list");
+                            listDiv.setAttribute("class", "autocomplete-items");
+                            /*append the DIV element as a child of the autocomplete container:*/
+                            this.parentNode.appendChild(listDiv);
+                            /*for each item in the array...*/
+                            for (i = 0; i < arr.length; i++) {
+                                /*check if the item starts with the same letters as the text field value:*/
+                                /*arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()*/
+                                if (arr[i].toUpperCase().includes(val.toUpperCase())
+                                    && !selectedTags_me208048ac4d746fea9e0cc2063d62aef.includes(arr[i].toUpperCase())) {
+                                    /*create a DIV element for each matching element:*/
+                                    itemDiv = document.createElement("DIV");
+                                    /*make the matching letters bold:*/
+                                    let indexOfIncludedLetter = arr[i].toUpperCase().indexOf(val.toUpperCase());
+                                    itemDiv.innerHTML = arr[i].substr(0, indexOfIncludedLetter);
+                                    itemDiv.innerHTML += "<strong>" + arr[i].substr(indexOfIncludedLetter, val.length) + "</strong>";
+                                    itemDiv.innerHTML += arr[i].substr(indexOfIncludedLetter + val.length);
+                                    /*insert a input field that will hold the current array item's value:*/
+                                    itemDiv.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                                    /*execute a function when someone clicks on the item value (DIV element):*/
+                                    itemDiv.addEventListener("click", function (e) {
+                                        /*insert the value for the autocomplete text field:*/
+                                        inp.value = this.getElementsByTagName("input")[0].value;
+                                        /*close the list of autocompleted values,
+                                        (or any other open lists of autocompleted values:*/
+                                        closeAllLists();
+                                    });
+                                    listDiv.appendChild(itemDiv);
+                                }
+                            }
+                        });
+                        /*execute a function presses a key on the keyboard:*/
+                        inp.addEventListener("keydown", function (e) {
+                            let x = mainElement_me208048ac4d746fea9e0cc2063d62aef.querySelector("#" + this.id + "autocomplete-list");
+                            if (x) x = x.getElementsByTagName("div");
+                            if (e.keyCode == 40) {
+                                /*If the arrow DOWN key is pressed,
+                                increase the currentFocus letiable:*/
+                                currentFocus++;
+                                /*and and make the current item more visible:*/
+                                addActive(x);
+                            } else if (e.keyCode == 38) { //up
+                                /*If the arrow UP key is pressed,
+                                decrease the currentFocus variable:*/
+                                currentFocus--;
+                                /*and and make the current item more visible:*/
+                                addActive(x);
+                            } else if (e.keyCode == 13) {
+                                /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                                e.preventDefault();
+                                if (currentFocus > -1) {
+                                    /*and simulate a click on the "active" item:*/
+                                    if (x) x[currentFocus].click();
+                                }
+                            }
+                        });
+                        function addActive(x) {
+                            /*a function to classify an item as "active":*/
+                            if (!x) return false;
+                            /*start by removing the "active" class on all items:*/
+                            removeActive(x);
+                            if (currentFocus >= x.length) currentFocus = 0;
+                            if (currentFocus < 0) currentFocus = (x.length - 1);
+                            /*add class "autocomplete-active":*/
+                            x[currentFocus].classList.add("autocomplete-active");
+                        }
+                        function removeActive(x) {
+                            /*a function to remove the "active" class from all autocomplete items:*/
+                            for (let i = 0; i < x.length; i++) {
+                                x[i].classList.remove("autocomplete-active");
+                            }
+                        }
+                        function closeAllLists(elmnt) {
+                            /*close all autocomplete lists in the document,
+                            except the one passed as an argument:*/
+                            let x = mainElement_me208048ac4d746fea9e0cc2063d62aef.getElementsByClassName("autocomplete-items");
+                            for (let i = 0; i < x.length; i++) {
+                                if (elmnt != x[i] && elmnt != inp) {
+                                    x[i].parentNode.removeChild(x[i]);
+                                }
+                            }
+                        }
+                        /*execute a function when someone clicks in the document:*/
+                        document.addEventListener("click", function (e) {
+                            closeAllLists(e.target);
+                        });
+                    }
+                </script>
+            </div>
+
+            <ul id="myUL">
+            </ul>
+        </div>
+
+        <script>
+            function addToList_me208048ac4d746fea9e0cc2063d62aef(element) {
+                let tagsInput = document.getElementById("myformb3406396f4494383ab2fde80f6abb7f8").getElementsByClassName("tags-input")[0];
+                let li = document.createElement("li");
+                let inputValue = element.previousElementSibling.getElementsByTagName("input")[0].value;
+                inputValue = inputValue?.trim();
+
+                if (inputValue === '' || !tags_me208048ac4d746fea9e0cc2063d62aef.includes(inputValue)) {
+                    alert("Choose a tag from a list please!");
+                    return;
+                }
+                else if (selectedTags_me208048ac4d746fea9e0cc2063d62aef.includes(inputValue.toUpperCase())) {
+                    alert(`'${inputValue}' has already been chosen!`);
+                    return;
+                } else {
+                    let textNode = document.createTextNode(inputValue);
+
+                    li.appendChild(textNode);
+
+                    let closeSpan = document.createElement("SPAN");
+                    let closeSign = document.createTextNode("\u00D7");
+                    closeSpan.className = "close";
+                    closeSpan.appendChild(closeSign);
+                    closeSpan.addEventListener("click", (event) => {
+                        //removeFromList_me208048ac4d746fea9e0cc2063d62aef(event.target);
+                        event.target.parentElement.remove();
+                        tagsInput.value = tagsInput.value.replace(inputValue + ',', "");
+                        let indexOfInputvalue = selectedTags_me208048ac4d746fea9e0cc2063d62aef.indexOf(inputValue.toUpperCase());
+                        selectedTags_me208048ac4d746fea9e0cc2063d62aef.splice(indexOfInputvalue, 1);
+                        if (selectedTags_me208048ac4d746fea9e0cc2063d62aef.length == 0) {
+                            document.getElementById("formb67b4ca537be41928633b5b4be1578f9").getElementsByClassName("submitBtn")[0].classList.remove("active");
+                        }
+                    });
+
+                    li.appendChild(closeSpan);
+
+                    document.getElementById("me208048ac4d746fea9e0cc2063d62aef").querySelector("#myUL").appendChild(li);
+                    element.previousElementSibling.getElementsByTagName("input")[0].value = "";
+
+                    tagsInput.value += inputValue + ',';
+                    selectedTags_me208048ac4d746fea9e0cc2063d62aef.push(inputValue.toUpperCase());
+                }
+            }
+        </script>
+    </div>
+
+    <!----------------------------------------------- submit ----------------------------------------------->
+    <div>
+        <style>
+            #formb67b4ca537be41928633b5b4be1578f9 .submitBtn {
+                border: none;
+                background-color: gray;
+                display: block;
+                width: 50%;
+                padding: 20px;
+                border-radius: 10px;
+                font-size: 16px;
+                margin: 20px auto 50px;
+                cursor: not-allowed;
+                color: white;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+
+            #formb67b4ca537be41928633b5b4be1578f9 .submitBtn.active {
+                cursor: pointer;
+            }
+
+            #formb67b4ca537be41928633b5b4be1578f9 .submitBtn.active:hover {
+                background-color: rgb(100, 255, 100);
+                color: #222;
+                box-shadow: inset 0 0 20px white;
+                width: 90%;
+            }
+        </style>
+        <div asp-validation-summary="All" style="color: red;"></div>
+        <button class="submitBtn" type="submit" form="myformb3406396f4494383ab2fde80f6abb7f8"
+            onmouseover="setActive_myformb3406396f4494383ab2fde80f6abb7f8(this)">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Submit
+        </button>
+        <script>
+            function setActive_myformb3406396f4494383ab2fde80f6abb7f8(element) {
+                let myForm = document.getElementById("myformb3406396f4494383ab2fde80f6abb7f8");
+                let zipFileInput = myForm.getElementsByClassName("zipfile-input")[0];
+
+                if (zipFileInput.files?.length > 0) {
+                    element.classList.add("active");
+                    element.type = "submit";
+                }
+                else {
+                    element.classList.remove("active");
+                    element.type = "button";
+                }
+            }
+        </script>
+    </div>
+
+</div>

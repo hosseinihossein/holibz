@@ -1,0 +1,350 @@
+@model List<WebComponents_ItemModel>
+
+
+<!----------------------------------------------------------------->
+<!------------------------ pagination --------------------------->
+<!--partial name="Pagination" /-->
+<!--------------------------------------------------------------->
+
+<div id="flexContainere455df6c4ffb433fae9631e9ae040cf5">
+    <style>
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            width: 100%;
+            /*border: 1px solid gray;*/
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item {
+            width: 30vw;
+            height: 31vh;
+            position: relative;
+            margin: 20px 0;
+            transition: all 0.2s;
+            box-shadow: 0 0 5px gray;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.half {
+            width: 45vw;
+            height: 46vh;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.large {
+            width: 80vw;
+            height: 81vh;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover {
+            box-shadow: 0 0 10px gray;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item iframe {
+            position: absolute;
+            left: -34vw;
+            top: -35vh;
+            width: 98vw;
+            height: 100vh;
+            transform: scale(30%, 30%);
+            z-index: 1;
+            background-color: white;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.half iframe {
+            transform: scale(45%, 45%);
+            left: -26.5vw;
+            top: -27vh;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.large iframe {
+            transform: scale(80%, 80%);
+            left: -9vw;
+            top: -9.5vh;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div {
+            position: relative;
+
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div button,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div a {
+            font-size: 25px;
+            background-color: rgba(255, 255, 255, 1);
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            position: relative;
+            margin: 10px 0 10px 10px;
+            opacity: 0.5;
+            text-decoration: none;
+            color: black;
+            display: inline-block;
+            padding: 0 5px;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div span {
+            font-size: 12px;
+            background-color: black;
+            color: white;
+            border-radius: 10px;
+            padding: 5px 10px;
+            position: relative;
+            display: none;
+            width: fit-content;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item p {
+            position: relative;
+            background-color: #333;
+            color: white;
+            width: fit-content;
+            margin: auto;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: block;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .developer-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 50%;
+            overflow: hidden;
+            position: absolute;
+            right: 10px;
+            top: -20px;
+            cursor: pointer;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .developer-img+span {
+            position: absolute;
+            right: 0px;
+            top: -50px;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover button,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover a,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover p,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover .developer-img,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover .developer-img img {
+            z-index: 1;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item button:hover,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item a:hover {
+            opacity: 1;
+        }
+
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item button:hover+span,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item a:hover+span,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .developer-img:hover+span {
+            z-index: 1;
+            display: inline;
+        }
+    </style>
+    @foreach (WebComponents_ItemModel item in Model)
+    {
+        <div class="flex-item half">
+            <iframe src="/WebComponents/ItemSource/@(item.Guid)/index.html" frameborder="0"></iframe>
+            <div>
+                <button
+                    onclick="showModalFrame('@item.Guid', '@item.Developer?.UserName', '@item.Developer?.ProfileImageVersion', '@item.Title')">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+                <span>Zoom In</span>
+            </div>
+            <div>
+                <a asp-controller="WebComponents" asp-action="ItemDetail" asp-route-itemGuid="@item.Guid">
+                    <i class="fa-solid fa-circle-info"></i>
+                </a>
+                <span>More</span>
+            </div>
+            <div>
+                <a href="/WebComponents/ItemSource/@(item.Guid)/@(item.Guid).zip" style="padding: 0 8px;"><i
+                        class="fa-solid fa-file-arrow-down"></i>
+                </a>
+                <span>Download</span>
+            </div>
+            <div class="clearfix" style="position: absolute;bottom: 10px;left: 10px;right: 10px;">
+                <p>@item.Title</p>
+                <img src="/Account/ClientImage?username=@item.Developer?.UserName&v=@item.Developer?.ProfileImageVersion"
+                    alt="" class="developer-img"
+                    onclick="window.location.href='/Account/Profile?username=@item.Developer?.UserName'">
+                <span>@item.Developer?.UserName</span>
+            </div>
+        </div>
+    }
+</div>
+<div id="modala1148ffdb9b54fdf961ac961938daf26" onclick="if(event.target == this) this.classList.remove('open');">
+    <style>
+        #modala1148ffdb9b54fdf961ac961938daf26 {
+            position: fixed;
+            top: 50px;
+            left: 50vw;
+            bottom: 0;
+            width: 0;
+            /*height: 100vh;*/
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2;
+            transition: all 0.2s;
+            overflow: auto;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26.open {
+            left: 0;
+            width: 100%;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #modal-frame {
+            width: 98vw;
+            height: 98vh;
+            transform: scale(80%, 80%);
+            box-shadow: 0 0 20px gray;
+            background-color: white;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #modal-close-btn {
+            color: red;
+            font-size: 40px;
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            cursor: pointer;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #modal-close-btn:hover {
+            color: rgb(206, 0, 0);
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 a {
+            text-decoration: none;
+            /*position: absolute;*/
+            /*right: 50px;*/
+            left: 20px;
+            color: #333;
+            font-size: 30px;
+            opacity: 0.7;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 a:hover {
+            opacity: 1;
+            /*z-index: 1;*/
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 .tag-info {
+            display: inline;
+            visibility: hidden;
+            padding: 5px 10px;
+            background-color: black;
+            color: white;
+            position: relative;
+            left: 10px;
+            width: fit-content;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 a:hover+.tag-info {
+            /*display: block;*/
+            visibility: visible;
+            z-index: 1;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #developer-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #info-box {
+            text-align: center;
+            width: 90%;
+            margin: 0px auto 50px;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #info-box #title-header {
+            margin-top: 0px;
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #links-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: fit-content;
+            /*z-index: 1;*/
+        }
+
+        #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div {
+            position: relative;
+            /*border: 1px solid gray;*/
+            height: 100px;
+            padding: 20px;
+        }
+
+        @@media screen and (max-width:1000px) {
+            #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div {
+                float: left;
+                padding: 20px 0;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div:last-child {
+                top: -10px;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #modal-frame {
+                translate: 0 50px;
+            }
+        }
+    </style>
+    <span id="modal-close-btn" onclick="this.parentElement.classList.remove('open');">&times;</span>
+
+    <div id="links-box">
+        <div>
+            <a id="more-link" href="#"><i class="fa-solid fa-circle-info"></i></a>
+            <span class="tag-info">More</span>
+        </div>
+        <div>
+            <a id="download-link" href="#" style="padding: 0 5px;"><i class="fa-solid fa-file-arrow-down"></i></a>
+            <span class="tag-info">Download</span>
+        </div>
+        <div>
+            <a id="developer-link" href="#"><img id="developer-img" src="" alt=""></a>
+            <span id="developer-username" class="tag-info">username</span>
+        </div>
+    </div>
+
+    <iframe id="modal-frame" src="" frameborder="0"></iframe>
+
+    <div id="info-box">
+        <h2 id="title-header">Title of the component</h2>
+        <!--p>Description</p-->
+    </div>
+</div>
+<script>
+    function showModalFrame(itemGuid, developerUserName, developerProfileVersion, title) {
+        let modal = document.getElementById("modala1148ffdb9b54fdf961ac961938daf26");
+        //let sourceFrame = element.parentElement.parentElement.getElementsByTagName("iframe")[0];
+        modal.querySelector("#modal-frame").src = `/WebComponents/ItemSource/${itemGuid}/index.html`;
+        modal.querySelector("#more-link").href = `/WebComponents/ItemDetail?itemGuid=${itemGuid}`;
+        modal.querySelector("#download-link").href = `/WebComponents/ItemSource/${itemGuid}/${itemGuid}.zip`;
+        modal.querySelector("#developer-link").href = `/Account/Profile?username=${developerUserName}`;
+        modal.querySelector("#developer-img").src = `/Account/ClientImage?username=${developerUserName}&v=${developerProfileVersion}`;
+        modal.querySelector("#developer-username").innerHTML = developerUserName;
+        modal.querySelector("#title-header").innerHTML = title;
+        modal.classList.add("open");
+    }
+</script>
+
+<!------------------------ pagination --------------------------->
+<partial name="Pagination" />
+<!--------------------------------------------------------------->
+<!-------------------- display inventory tools ------------------>
+<script>
+    let displayInventoryToolsInNavBar = true;
+</script>
+<!--------------------------------------------------------------->

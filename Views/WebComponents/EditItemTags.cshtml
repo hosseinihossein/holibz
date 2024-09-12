@@ -1,0 +1,261 @@
+@model WebComponents_EditItemTagsModel
+@{
+    string currentTags = string.Empty;
+    foreach (string tagName in Model.CurrentTags)
+    {
+        currentTags += " " + tagName + ",";
+    }
+}
+
+<style>
+    #m8e2f779657284664b4ca85c81e653123 {
+        width: 0vw;
+        /*max-height: 700px;*/
+        border-radius: 5px;
+        overflow-x: hidden;
+        /*overflow-y: auto;*/
+        margin: auto;
+        position: fixed;
+        transition: all 0.3s;
+        left: 25vw;
+        top: 60px;
+        right: 25vw;
+        /*z-index: 10;*/
+    }
+
+    #m8e2f779657284664b4ca85c81e653123.open {
+        width: 50vw;
+    }
+
+    /* Remove margins and padding from the list */
+    #m8e2f779657284664b4ca85c81e653123 ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        overflow-y: auto;
+        max-height: 500px;
+        min-height: 200px;
+    }
+
+    /* Style the list items */
+    #m8e2f779657284664b4ca85c81e653123 ul li {
+        cursor: pointer;
+        position: relative;
+        padding: 12px 8px 12px 40px;
+        background: #eee;
+        font-size: 18px;
+        transition: 0.2s;
+
+        /* make the list items unselectable */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+
+        overflow: hidden;
+    }
+
+    /* Set all odd list items to a different color (zebra-stripes) */
+    #m8e2f779657284664b4ca85c81e653123 ul li:nth-child(odd) {
+        background: #f9f9f9;
+    }
+
+    /* Darker background-color on hover */
+    #m8e2f779657284664b4ca85c81e653123 ul li:hover {
+        background: #ddd;
+    }
+
+    /* When clicked on, add a background color and strike out text */
+    #m8e2f779657284664b4ca85c81e653123 ul li.checked {
+        background: rgb(167, 255, 171);
+        color: #646464;
+        /*text-decoration: line-through;*/
+    }
+
+    /* Add a "checked" mark when clicked on */
+    #m8e2f779657284664b4ca85c81e653123 ul li.checked::before {
+        content: '\2713';
+        position: absolute;
+        /*border-color: #fff;
+                    border-style: solid;
+                    border-width: 0 2px 2px 0;*/
+        top: 10px;
+        left: 16px;
+        /*transform: rotate(45deg);*/
+        height: 15px;
+        width: 7px;
+    }
+
+    /* Style the close button */
+    #m8e2f779657284664b4ca85c81e653123 .close {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        padding: 12px 16px 12px 16px;
+        font-size: 30px;
+    }
+
+    #m8e2f779657284664b4ca85c81e653123 .close:hover {
+        background-color: #f44336;
+        color: white;
+    }
+
+    /* Style the header */
+    #m8e2f779657284664b4ca85c81e653123 .header {
+        background-color: rgba(8, 0, 121, 0.5);
+        padding: 30px 40px;
+        color: white;
+        text-align: center;
+    }
+
+    /* Style the input */
+    #m8e2f779657284664b4ca85c81e653123 input#myInputInEdit {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        width: 75%;
+        padding: 11px;
+        float: left;
+        font-size: 14px;
+    }
+
+    /* Style the "Add" button */
+    #m8e2f779657284664b4ca85c81e653123 .searchBtn {
+        padding: 10px;
+        width: 25%;
+        background: #d9d9d9;
+        color: #3f3f3f;
+        float: left;
+        text-align: center;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+        border-radius: 0;
+        border: none;
+    }
+
+    #m8e2f779657284664b4ca85c81e653123 .searchBtn:hover {
+        background-color: #bbb;
+    }
+
+    #m8e2f779657284664b4ca85c81e653123 #mySearchInput {
+        background-image: url('/Icons/icons8-search-50.png');
+        background-size: 1.5rem;
+        /* Add a search icon to input */
+        background-position: 5px 10px;
+        /* Position the search icon */
+        background-repeat: no-repeat;
+        /* Do not repeat the icon image */
+        width: 100%;
+        /* Full-width */
+        font-size: 16px;
+        /* Increase font-size */
+        padding: 12px 20px 12px 40px;
+        /* Add some padding */
+        border: 1px solid #ddd;
+        /* Add a grey border */
+        margin-bottom: 0px;
+        /* Add some space below the input */
+    }
+
+    @@media screen and (max-width:800px) {
+        #m8e2f779657284664b4ca85c81e653123 .searchBtn {
+            float: none;
+            width: 90%;
+            margin-top: 5px;
+        }
+
+        #m8e2f779657284664b4ca85c81e653123 input#myInputInEdit {
+            float: none;
+            width: 90%;
+        }
+    }
+
+    @@media screen and (max-width:600px) {
+        #m8e2f779657284664b4ca85c81e653123.open {
+            width: 80vw;
+            left: 10vw;
+            right: 10vw;
+        }
+    }
+</style>
+<!--span onclick="this.nextElementSibling.classList.add('open');">open</span-->
+<div id="m8e2f779657284664b4ca85c81e653123" class="open">
+    <!--span style="color:red;cursor:pointer;font-size:25px;position:absolute;right:10px;top:5px;"
+        onclick="this.parentElement.classList.remove('open')">&times;</span-->
+    <div id="myDIV" class="header clearfix">
+        <h3>Edit Items Tags</h3>
+        <form asp-controller="WebComponents" asp-action="SubmitEditItemTags" method="get">
+            <input type="text" name="selectedTags" id="myInputInEdit" readonly value="@currentTags">
+            <input hidden name="itemGuid" value="@Model.ItemGuid">
+            <button type="submit" class="searchBtn">Submit</button>
+        </form>
+    </div>
+
+    <input type="text" id="mySearchInput" onkeyup="filter_Script_a0d21024282f453f8247fefa6ec435f2(this)"
+        placeholder="Search for tags..">
+
+    <ul id="myUL" class="filterContainer">
+        @foreach (string tagName in Model.AllTags)
+        {
+            @if (Model.CurrentTags.Contains(tagName))
+            {
+                <li class="filterItems checked">@tagName</li>
+            }
+            else
+            {
+                <li class="filterItems">@tagName</li>
+            }
+        }
+    </ul>
+</div>
+<script>
+    let mainElement_m8e2f779657284664b4ca85c81e653123 = document.getElementById("m8e2f779657284664b4ca85c81e653123");
+    let myInputInEdit = document.getElementById("myInputInEdit");
+    addCheckedEvent_m8e2f779657284664b4ca85c81e653123();
+    //addCloseEvent_m8e2f779657284664b4ca85c81e653123();
+
+    function addCheckedEvent_m8e2f779657284664b4ca85c81e653123() {
+        let lists = mainElement_m8e2f779657284664b4ca85c81e653123.getElementsByTagName("LI");
+        for (let i = 0; i < lists.length; i++) {
+            //lists[i].previousElementSibling
+            lists[i].addEventListener("click", (event) => {
+                if (event.target.tagName === 'LI') {
+                    event.target.classList.toggle('checked');
+                    if (event.target.classList.contains("checked")) {
+                        if (!myInputInEdit.value.includes(" " + event.target.innerHTML + ",")) {
+                            myInputInEdit.value += " " + event.target.innerHTML + ",";
+                        }
+                    }
+                    else {
+                        myInputInEdit.value = myInputInEdit.value.replaceAll(" " + event.target.innerHTML + ",", '');
+                    }
+                }
+            });
+        }
+    }
+</script>
+<script>/*
+Script_a0d21024282f453f8247fefa6ec435f2
+*/
+    function filter_Script_a0d21024282f453f8247fefa6ec435f2(inputElement) {
+        let mainElement = inputElement.parentElement;
+        // Declare variables
+        let filter, filteredContainer, filteredItems, innerFilteredItem, i, txtValue;
+        //inputElement = mainElement_searche62f342a43f0412baf7908d6236c65ec.querySelector('#myInput');
+        filter = inputElement.value.toUpperCase();
+        filteredContainer = mainElement.getElementsByClassName("filterContainer")[0];
+        filteredItems = filteredContainer.getElementsByClassName('filterItems');
+
+        // Loop through all list items, and hide those who don't match the search query
+        for (i = 0; i < filteredItems.length; i++) {
+            innerFilteredItem = filteredItems[i];//.getElementsByClassName("innerFilterItem")[0];
+            txtValue = innerFilteredItem.textContent || innerFilteredItem.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                filteredItems[i].style.display = "";
+            } else {
+                filteredItems[i].style.display = "none";
+            }
+        }
+    }
+</script>

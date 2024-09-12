@@ -56,12 +56,18 @@
         Profile</a>
     @if (User.IsInRole("Identity_Admins"))
     {
-            <a asp-action="UsersList" asp-controller="Identity">
-                <i class="fa-solid fa-list-ul"></i> Users List
-            </a>
-            <a asp-action="RolesList" asp-controller="Identity">
-                <i class="fa-solid fa-list-check"></i> Roles List
-            </a>
+        <a asp-action="UsersList" asp-controller="Identity">
+            <i class="fa-solid fa-list-ul"></i> Users List
+        </a>
+        <a asp-action="RolesList" asp-controller="Identity">
+            <i class="fa-solid fa-list-check"></i> Roles List
+        </a>
+    }
+    @if (User.IsInRole("WebComponents_Admins"))
+    {
+        <a asp-controller="WebComponents" asp-action="TagList">
+            <i class="fa-solid fa-hashtag"></i> Tags
+        </a>
     }
 </div>
 <p style="font-size:30px;cursor:pointer;width:fit-content;margin: 10px 0"

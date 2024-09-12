@@ -287,30 +287,7 @@
                                             Dashborad
                                     </li>
                                         </a>
-                                    @if (User.IsInRole("Identity_Admins"))
-                                    {
-                                            <a asp-controller="Identity" asp-action="UsersList">
-                                        <li>
-                                                <i class="fa-solid fa-list-ul"></i>
-                                                Users
-                                        </li>
-                                            </a>
-                                            <a asp-controller="Identity" asp-action="RolesList">
-                                        <li>
-                                                <i class="fa-solid fa-list-ol"></i>
-                                                Roles
-                                        </li>
-                                            </a>
-                                    }
-                                    @if (User.IsInRole("WebComponents_Admins"))
-                                    {
-                                            <a asp-controller="WebComponents" asp-action="TagList">
-                                        <li>
-                                                <i class="fa-solid fa-hashtag"></i>
-                                                Tags
-                                        </li>
-                                            </a>
-                                    }
+                                    
                                         <a asp-controller="Identity" asp-action="Settings">
                                     <li>
                                             <i class="fa-solid fa-gear"></i>
@@ -326,7 +303,7 @@
                                 </ul>
                             </div>
                             <div class="work-div">
-                                <ul>Work
+                                <ul>Library
                                         <a asp-controller="WebComponents" asp-action="NewItem">
                                     <li>
                                             <i class="fa-regular fa-newspaper"></i>

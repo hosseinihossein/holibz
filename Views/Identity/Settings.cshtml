@@ -212,7 +212,7 @@
         </div>
     </div>
     <div class="showcase-div clearfix">
-        <img src="/Identity/ClientShowcase?username=@Model.UserName" alt="User Profile Showcase">
+        <img src="/Identity/UserShowcase?username=@Model.UserName" alt="User Profile Showcase">
         <button class="changeShowcase-btn change-btn" style="float: right; margin-right: 0px;"
             onclick="document.getElementById('card7724cc1dd56c415ba1884d5626e55d9e').getElementsByClassName('showcaseImg-form')[0].classList.add('open');/*style.display = 'block';*/">
             <i class="fa-regular fa-image"></i> Change
@@ -276,7 +276,7 @@
                 <span class="close-span" onclick="this.parentElement.parentElement.classList.remove('open');">&times;
                 </span>
             </div>
-            <a asp-controller="Identity" asp-action="RemoveUserImage" class="remove">
+            <a asp-controller="Identity" asp-action="RemoveProfileImage" class="remove">
                 <i class="fa-solid fa-eraser"></i> Remove profile image
             </a>
             <p>or</p>
@@ -440,7 +440,7 @@
                 </span>
             </div>
             <form asp-controller="Identity" asp-action="SubmitDescription" method="get">
-                <textarea name="description" id="aboutme" cols="30" rows="10" maxlength="1000"
+                <textarea name="description" id="aboutme" cols="30" rows="10" maxlength="500"
                     placeholder="@(string.IsNullOrEmpty(Model.Description) ? " Introduce yourself and your Identity here.." : Model.Description)"
                     oninput="document.getElementById('card7724cc1dd56c415ba1884d5626e55d9e').getElementsByClassName('about-me')[0].innerHTML = this.value;"></textarea>
                 <button type=" submit"><i class="fa-solid fa-cloud-arrow-up"></i> Update Profile</button>
@@ -590,7 +590,7 @@
                 <i class="fa-solid fa-eraser"></i> Remove showcase image
             </a>
             <p>or</p>
-            <form asp-controller="Identity" asp-action="SubmitClientShowcase" method="post"
+            <form asp-controller="Identity" asp-action="SubmitShowcaseImage" method="post"
                 enctype="multipart/form-data">
                 <div>
                     <label for="showcaseImg" class="choose-file-label">

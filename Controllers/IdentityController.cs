@@ -234,7 +234,7 @@ public class IdentityController : Controller
     }
 
     [Authorize]
-    public /*async Task<*/IActionResult Dashboard()
+    public IActionResult Dashboard()
     {
         /*Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
         if (user is null)
@@ -294,8 +294,30 @@ public class IdentityController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> SubmitUsername(string username)
+    public async Task<IActionResult> Settings()
     {
+        string username = User.Identity!.Name!;
+        Identity_UserModel? user = await userManager.FindByNameAsync(username);
+        if (user is null)
+        {
+            object o = $"Couldn't find the user with name: {username}";
+            ViewBag.ResultState = "danger";
+            return View("Result", o);
+        }
+
+        return View(user);
+    }
+
+    [Authorize]
+    public async Task<IActionResult> SubmitUsername([StringLength(50)] string username)
+    {
+        if (!ModelState.IsValid)
+        {
+            object o1 = "Username must be less than 50 characters!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
         Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
         if (user is null)
         {
@@ -315,15 +337,62 @@ public class IdentityController : Controller
         {
             ModelState.AddModelError("", error.Description);
         }
-        object o = "There's a problem in changing username!";
+        object o = "There're some problem in changing username!";
         ViewBag.ResultState = "danger";
         return View("Result", o);
     }
 
     [Authorize]
-    public async Task<IActionResult> SubmitNewPassword(string currentPassword, string newPassword,
+    public async Task<IActionResult> SubmitDescription([StringLength(500)] string description)
+    {
+        if (!ModelState.IsValid)
+        {
+            object o1 = "Description must be less than 500 characters!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
+        Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
+        if (user is null)
+        {
+            object o1 = "user not found!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
+        user.Description = description;
+        IdentityResult result = await userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        foreach (IdentityError error in result.Errors)
+        {
+            ModelState.AddModelError("", error.Description);
+        }
+        object o = "There're some problem in changing description!";
+        ViewBag.ResultState = "danger";
+        return View("Result", o);
+    }
+
+    [Authorize]
+    public IActionResult ChangePassword()
+    {
+        return View();
+    }
+
+    [Authorize]
+    public async Task<IActionResult> SubmitNewPassword(string currentPassword, [StringLength(50)] string newPassword,
     string repeatNewPassword)
     {
+        if (!ModelState.IsValid)
+        {
+            object o1 = "Password must be less than 50 characters!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
         Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
         if (user is null)
         {
@@ -352,14 +421,21 @@ public class IdentityController : Controller
         {
             ModelState.AddModelError("", error.Description);
         }
-        object o = "There's a problem in changing username!";
+        object o = "There're some problem in changing password!";
         ViewBag.ResultState = "danger";
         return View("Result", o);
     }
 
     [Authorize]
-    public async Task<IActionResult> SubmitNewEmail(string email)
+    public async Task<IActionResult> SubmitNewEmail([StringLength(100)] string email)
     {
+        if (!ModelState.IsValid)
+        {
+            object o1 = "Email must be less than 100 characters!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
         Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
         if (user is null)
         {
@@ -458,6 +534,72 @@ public class IdentityController : Controller
         using (FileStream fs = System.IO.File.Create(userImagePath))
         {
             await imgFile.CopyToAsync(fs);
+        }
+
+        return RedirectToAction(nameof(Dashboard));
+    }
+
+    [Authorize]
+    public async Task<IActionResult> RemoveProfileImage()
+    {
+        Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
+        if (user is null)
+        {
+            object o1 = "user not found!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
+        user.ProfileImageVersion++;
+        IdentityResult result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            foreach (IdentityError error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            object o = "There's a problem in updating user identity!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o);
+        }
+        string userImageDirectoryPath = env.WebRootPath + ds + "Images" + ds + "Users" + ds + user.UserGuid;
+        string userImagePath = userImageDirectoryPath + ds + "profileImage";
+        if (System.IO.File.Exists(userImagePath))
+        {
+            System.IO.File.Delete(userImagePath);
+        }
+
+        return RedirectToAction(nameof(Dashboard));
+    }
+
+    [Authorize]
+    public async Task<IActionResult> RemoveProfileShowcase()
+    {
+        Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
+        if (user is null)
+        {
+            object o1 = "user not found!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+
+        user.ProfileImageVersion++;
+        IdentityResult result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            foreach (IdentityError error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            object o = "There's a problem in updating user identity!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o);
+        }
+        string userImageDirectoryPath = env.WebRootPath + ds + "Images" + ds + "Users" + ds + user.UserGuid;
+        string userImagePath = userImageDirectoryPath + ds + "profileShowcase";
+        if (System.IO.File.Exists(userImagePath))
+        {
+            System.IO.File.Delete(userImagePath);
         }
 
         return RedirectToAction(nameof(Dashboard));

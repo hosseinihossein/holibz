@@ -56,8 +56,8 @@ public class Identity_SignupModel
     [StringLength(50, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
-    [Compare(nameof(Password))]
-    public string RepeatPassword { get; set; } = string.Empty;
+    /*[Compare(nameof(Password))]
+    public string RepeatPassword { get; set; } = string.Empty;*/
 }
 
 public class Identity_ProfileModel

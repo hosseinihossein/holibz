@@ -17,6 +17,7 @@ public class Program
         builder.Services.AddDbContext<Identity_DbContext>(opts =>
         {
             opts.UseSqlServer(builder.Configuration["WindowsConnectionStrings:IdentityConnection"]);
+            //opts.UseSqlServer(builder.Configuration["UbuntuConnectionStrings:IdentityConnection"]);
         });
         builder.Services.AddIdentity<Identity_UserModel, Identity_RoleModel>(options =>
         {
@@ -30,6 +31,7 @@ public class Program
         builder.Services.AddDbContext<WebComponents_DbContext>(opts =>
         {
             opts.UseSqlServer(builder.Configuration["WindowsConnectionStrings:WebComponentsConnection"],
+            //opts.UseSqlServer(builder.Configuration["UbuntuConnectionStrings:WebComponentsConnection"],
             o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
         });
 

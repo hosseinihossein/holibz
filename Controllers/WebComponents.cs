@@ -254,7 +254,7 @@ namespace holibz.Controllers
             {
                 //***** create item dir *****
                 string guid = Guid.NewGuid().ToString().Replace("-", "");
-                string itemDirectory = $"{env.ContentRootPath}{ds}WebComponents{ds}{guid}";
+                string itemDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{guid}";
                 Directory.CreateDirectory(itemDirectory);
 
                 //************* zip file *************
@@ -357,7 +357,7 @@ namespace holibz.Controllers
             await webComponentsDb.SaveChangesAsync();
 
             //***** Item directory *****
-            string itemDirectory = $"{env.ContentRootPath}{ds}WebComponents{ds}{itemGuid}";
+            string itemDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}";
             Directory.Delete(itemDirectory, true);
 
             //user.ProjectsNumber--;
@@ -379,7 +379,7 @@ namespace holibz.Controllers
 
         public async Task<IActionResult> ItemDetail(string itemGuid)
         {
-            string itemDirectory = $"{env.ContentRootPath}{ds}WebComponents{ds}{itemGuid}";
+            string itemDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}";
             if (!System.IO.Directory.Exists(itemDirectory))
             {
                 ViewBag.ResultState = "danger";
@@ -673,7 +673,7 @@ namespace holibz.Controllers
         [Route("/WebComponents/ItemSource/{itemGuid}/statics/{fileName}")]
         public IActionResult GetItemStatics(string itemGuid, string fileName)
         {
-            string filePath = $"{env.ContentRootPath}{ds}WebComponents{ds}{itemGuid}{ds}statics{ds}{fileName}";
+            string filePath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}{ds}statics{ds}{fileName}";
             if (!System.IO.File.Exists(filePath))
             {
                 /*ViewBag.ResultState = "danger";

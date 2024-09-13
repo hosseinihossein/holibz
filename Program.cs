@@ -16,7 +16,7 @@ public class Program
         //***** Identity *****
         builder.Services.AddDbContext<Identity_DbContext>(opts =>
         {
-            opts.UseSqlServer(builder.Configuration["ConnectionStrings:IdentityConnection"]);
+            opts.UseSqlServer(builder.Configuration["WindowsConnectionStrings:IdentityConnection"]);
         });
         builder.Services.AddIdentity<Identity_UserModel, Identity_RoleModel>(options =>
         {
@@ -29,7 +29,7 @@ public class Program
         //***** WebComponents *****
         builder.Services.AddDbContext<WebComponents_DbContext>(opts =>
         {
-            opts.UseSqlServer(builder.Configuration["ConnectionStrings:WebComponentsConnection"],
+            opts.UseSqlServer(builder.Configuration["WindowsConnectionStrings:WebComponentsConnection"],
             o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
         });
 

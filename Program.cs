@@ -40,8 +40,9 @@ public class Program
         {
             return new ElasticsearchClient(
                 new ElasticsearchClientSettings(new Uri("https://localhost:9200"))
-                .CertificateFingerprint("b8e2f502856cd163d3a43cbe30f0344b811ef05813ea31099544a3df375717f6")
-                .Authentication(new BasicAuthentication("elastic", "cg_R=r*g-*QwYNZFWQdR"))
+                .CertificateFingerprint(builder.Configuration["ElasticSearch:CertificateFingerprint"]!)
+                .Authentication(new BasicAuthentication(builder.Configuration["ElasticSearch:Username"]!,
+                builder.Configuration["ElasticSearch:Password"]!))
             );
         });
 
@@ -73,7 +74,7 @@ public class Program
                 Email = "admin@MyCompany.com",
                 EmailConfirmed = true,
                 UserGuid = "admin",
-                PasswordLiteral = "P@ssw0rd"
+                PasswordLiteral = builder.Configuration["Identity:AdminPassword"]!
             };
             IdentityResult result = await userManager.CreateAsync(admin, admin.PasswordLiteral);
             if (!result.Succeeded)

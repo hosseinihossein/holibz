@@ -3,6 +3,7 @@ using Elastic.Transport;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using holibz.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace holibz;
 
@@ -46,6 +47,11 @@ public class Program
                 .Authentication(new BasicAuthentication(builder.Configuration["ElasticSearch:Username"]!,
                 builder.Configuration["ElasticSearch:Password"]!))
             );
+        });
+        builder.Services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opts =>
+        {
+            opts.AccessDeniedPath = "/Identity/AccessDenied";
+            opts.LoginPath = "/Identity/Login";
         });
 
         //******************************** app ********************************

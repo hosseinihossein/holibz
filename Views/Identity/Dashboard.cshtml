@@ -119,7 +119,7 @@
             }
         </style>
         <!------------------------- Email Validation ------------------------->
-        @if (Model.EmailConfirmed)
+        @if (!Model.EmailConfirmed)
         {
             <partial name="EmailVerification" />
         }

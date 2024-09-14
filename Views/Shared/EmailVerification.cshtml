@@ -1,0 +1,69 @@
+<!--------------- verification code ----------------->
+<div style="width: fit-content;margin:auto;background-color: rgba(255, 0, 0, 0.2);border:1px solid gray;padding:20px;">
+    Your email address has not been verified yet!
+    <p>We have already sent a code to your registered email address. Please enter the code below and click on
+        the Confirm button.</p>
+    <div>
+        <style>
+            /* Style the form - display items horizontally */
+            #form14c17562f8904c278828d921d8495bea .form-inline {
+                display: flex;
+                flex-direction: row;
+                /*flex-flow: row wrap;*/
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Add some margins for each label */
+            #form14c17562f8904c278828d921d8495bea .form-inline label {
+                margin: 5px 5px 5px 0;
+            }
+
+            /* Style the input fields */
+            #form14c17562f8904c278828d921d8495bea .form-inline input {
+                vertical-align: middle;
+                margin: 5px 10px 5px 0;
+                padding: 5px;
+                background-color: #fff;
+                border: 1px solid #ddd;
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+
+            /* Style the submit button */
+            #form14c17562f8904c278828d921d8495bea .form-inline button {
+                padding: 10px 15px;
+                background-color: dodgerblue;
+                border: 1px solid #ddd;
+                color: white;
+                cursor: pointer;
+            }
+
+            #form14c17562f8904c278828d921d8495bea .form-inline button:hover {
+                background-color: royalblue;
+            }
+
+            /* Add responsiveness - display the form controls vertically instead of horizontally on screens that are less than 800px wide */
+            @@media screen and (max-width: 600px) {
+                #form14c17562f8904c278828d921d8495bea .form-inline input {
+                    margin: 10px 0;
+                }
+
+                #form14c17562f8904c278828d921d8495bea .form-inline {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+            }
+        </style>
+
+        <div id="form14c17562f8904c278828d921d8495bea">
+            <form class="form-inline" asp-controller="Identity" asp-action="ConfirmEmail" method="get">
+                <label for="evc">Verification Code:</label>
+                <input type="text" placeholder="Enter code here.." name="evc" id="evc">
+                <button type="submit">Confirm</button>
+            </form>
+        </div>
+    </div>
+    <p>You haven't got the code? <a asp-controller="Identity" asp-action="SendEmailValidationCode">Resend Code</a>
+    </p>
+</div>

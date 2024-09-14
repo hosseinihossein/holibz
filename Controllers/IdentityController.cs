@@ -234,16 +234,16 @@ public class IdentityController : Controller
     }
 
     [Authorize]
-    public IActionResult Dashboard()
+    public async Task<IActionResult> Dashboard()
     {
-        /*Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
+        Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
         if (user is null)
         {
             object o = $"Couldn't find the user with name: {User.Identity?.Name}";
             ViewBag.ResultState = "danger";
             return View("Result", o);
-        }*/
-        return View(/*user*/);
+        }
+        return View(user);
     }
 
     public async Task<IActionResult> Profile(string username)

@@ -3,3 +3,4 @@ obj/
 .vscode/
 todo.txt
 appsettings.json
+SpecificStorage/

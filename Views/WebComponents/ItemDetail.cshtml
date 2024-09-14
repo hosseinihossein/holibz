@@ -344,8 +344,8 @@
             }
             <span id="title">@Model.Title</span> by
             <span id="developer">
-                <a asp-controller="Account" asp-action="Profile" asp-route-username="@Model.Developer?.UserName">
-                    <img src="/Account/ClientImage?username=@Model.Developer?.UserName&v=@Model.Developer?.ProfileImageVersion"
+                <a asp-controller="Identity" asp-action="Profile" asp-route-username="@Model.Developer?.UserName">
+                    <img src="/Identity/UserImage?username=@Model.Developer?.UserName&v=@Model.Developer?.ProfileImageVersion"
                         alt=""> @Model.Developer?.UserName
                 </a>
             </span>

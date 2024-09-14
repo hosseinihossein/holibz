@@ -652,7 +652,8 @@ namespace holibz.Controllers
         public async Task<IActionResult> GetItemSource(string itemGuid, string fileName)
         {
             string filePath =
-            env.ContentRootPath + ds + "WebComponents" + ds + itemGuid + ds + fileName;
+            //env.ContentRootPath + ds + "WebComponents" + ds + itemGuid + ds + fileName;
+	    $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}{ds}{fileName}";
             if (!System.IO.File.Exists(filePath))
             {
                 /*ViewBag.ResultState = "danger";

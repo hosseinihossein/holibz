@@ -651,14 +651,9 @@ namespace holibz.Controllers
         [Route("/WebComponents/ItemSource/{itemGuid}/{fileName}")]
         public async Task<IActionResult> GetItemSource(string itemGuid, string fileName)
         {
-            string filePath =
-            //env.ContentRootPath + ds + "WebComponents" + ds + itemGuid + ds + fileName;
-	    $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}{ds}{fileName}";
+            string filePath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}{ds}{fileName}";
             if (!System.IO.File.Exists(filePath))
             {
-                /*ViewBag.ResultState = "danger";
-                object o = $"Can't find {itemGuid}/{fileName}!";
-                return View("Result", o);*/
                 return NotFound();
             }
 
@@ -674,12 +669,10 @@ namespace holibz.Controllers
         [Route("/WebComponents/ItemSource/{itemGuid}/statics/{fileName}")]
         public IActionResult GetItemStatics(string itemGuid, string fileName)
         {
-            string filePath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}{ds}statics{ds}{fileName}";
+            string filePath =
+            $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemGuid}{ds}statics{ds}{fileName}";
             if (!System.IO.File.Exists(filePath))
             {
-                /*ViewBag.ResultState = "danger";
-                object o = 
-                return View("Result", $"Can't find {itemGuid}/statics/{fileName}!");*/
                 return NotFound();
             }
 
@@ -689,7 +682,7 @@ namespace holibz.Controllers
         public async Task<IActionResult> CodeText(string itemGuid)
         {
             string itemPath =
-            env.ContentRootPath + ds + "WebComponents" + ds + itemGuid;
+            env.ContentRootPath + ds + "SpecificStorage" + ds + "WebComponents" + ds + "Library" + ds + itemGuid;
             if (!System.IO.Directory.Exists(itemPath))
             {
                 ViewBag.ResultState = "danger";

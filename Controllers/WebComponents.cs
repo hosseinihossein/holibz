@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 using Org.BouncyCastle.Crypto.Agreement.Srp;
 using holibz.Models;
+using System.Text;
 
 namespace holibz.Controllers
 {
@@ -169,44 +170,6 @@ namespace holibz.Controllers
             return View(indexModel);
         }
 
-        //********************************* Tag *********************************
-        [Authorize(Roles = "WebComponents_Admins")]
-        public async Task<IActionResult> TagList()
-        {
-            List<string> tagList = (await webComponentsDb.Tags.ToListAsync()).Select(t => t.Name).ToList();
-            return View(tagList);
-        }
-
-        [Authorize(Roles = "WebComponents_Admins")]
-        public async Task<IActionResult> SubmitNewTag(string tagname)
-        {
-            tagname = tagname.Replace(" ", "_").ToLower().Trim();
-
-            if (await webComponentsDb.Tags.FirstOrDefaultAsync(t => t.Name == tagname) is null)
-            {
-                WebComponents_TagDbModel tagDbModel = new()
-                {
-                    Name = tagname
-                };
-                await webComponentsDb.Tags.AddAsync(tagDbModel);
-                await webComponentsDb.SaveChangesAsync();
-            }
-            return RedirectToAction(nameof(TagList));
-        }
-
-        [Authorize(Roles = "WebComponents_Admins")]
-        public async Task<IActionResult> DeleteTag(string tagname)
-        {
-            WebComponents_TagDbModel? tagDbModel = await webComponentsDb.Tags.FirstOrDefaultAsync(t => t.Name == tagname);
-            if (tagDbModel is not null)
-            {
-                webComponentsDb.Tags.Remove(tagDbModel);
-                await webComponentsDb.SaveChangesAsync();
-            }
-
-            return RedirectToAction(nameof(TagList));
-        }
-        //************************************************************************
         //********************************* Item *********************************
         [Authorize]
         public async Task<IActionResult> NewItem()
@@ -700,6 +663,216 @@ namespace holibz.Controllers
             }
 
             return View("CodeText", content);
+        }
+
+        //******************************* Backup *********************************
+        [Authorize(Roles = "WebComponents_Admins")]
+        public IActionResult Backup()
+        {
+            string backupDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
+            string backupZipFilePath = $"{backupDirectory}{ds}backup.zip";
+            if (System.IO.File.Exists(backupZipFilePath))
+            {
+                ViewBag.BackupDate = System.IO.File.GetCreationTime(backupZipFilePath);
+            }
+
+            ViewBag.ControllerName = "WebComponents";
+            return View();
+        }
+
+        [Authorize(Roles = "WebComponents_Admins")]
+        public async Task<IActionResult> RenewBackup()
+        {
+            string mainDirectoryPath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
+            if (!Directory.Exists(mainDirectoryPath))
+            {
+                Directory.CreateDirectory(mainDirectoryPath);
+            }
+
+            string dataDirectoryPath = $"{mainDirectoryPath}{ds}Data";
+            if (Directory.Exists(dataDirectoryPath))
+            {
+                Directory.Delete(dataDirectoryPath, true);
+            }
+            Directory.CreateDirectory(dataDirectoryPath);
+
+            string backupZipFilePath = $"{mainDirectoryPath}{ds}backup.zip";
+            if (System.IO.File.Exists(backupZipFilePath))
+            {
+                System.IO.File.Delete(backupZipFilePath);
+            }
+
+            foreach (WebComponents_ItemDbModel item in await webComponentsDb.Items.Include(item => item.TagDbModels).ToListAsync())
+            {
+                WebComponents_BackupItemModel model = new()
+                {
+                    Guid = item.Guid,
+                    DeveloperGuid = item.DeveloperGuid,
+                    Title = item.Title,
+                    Description = item.Description,
+                    Tags = item.TagDbModels.Select(t => t.Name).ToList(),
+                    Date = item.Date
+                };
+                string json = JsonSerializer.Serialize(model);
+
+                string itemDirectoryPath = $"{dataDirectoryPath}{ds}{item.Guid}";
+                Directory.CreateDirectory(itemDirectoryPath);
+
+                string jsonDataFilePath = $"{itemDirectoryPath}{ds}data.json";
+                await System.IO.File.WriteAllTextAsync(jsonDataFilePath, json);
+
+                string itemSourceZipFilePath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{item.Guid}{ds}{item.Guid}.zip";
+                if (System.IO.File.Exists(itemSourceZipFilePath))
+                {
+                    string itemDestinationZipFilePath = $"{itemDirectoryPath}{ds}{item.Guid}.zip";
+                    using (FileStream fsSource = System.IO.File.Open(itemSourceZipFilePath, FileMode.Open, FileAccess.Read))
+                    {
+                        using (FileStream fsDestination = System.IO.File.Create(itemDestinationZipFilePath))
+                        {
+                            await fsSource.CopyToAsync(fsDestination);
+                        }
+                    }
+                }
+            }
+
+            ZipFile.CreateFromDirectory(dataDirectoryPath, backupZipFilePath);
+
+            return RedirectToAction(nameof(Backup));
+        }
+
+        [Authorize(Roles = "WebComponents_Admins")]
+        public IActionResult DownloadBackup()
+        {
+            string backupDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
+            if (Directory.Exists(backupDirectory))
+            {
+                string backupZipFilePath = $"{backupDirectory}{ds}backup.zip";
+                if (System.IO.File.Exists(backupZipFilePath))
+                {
+                    return PhysicalFile(backupZipFilePath, "Application/zip", "WebComponentsBackup.zip");
+                }
+            }
+            object o = "backup file Not found!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o);
+        }
+
+        [Authorize(Roles = "WebComponents_Admins")]
+        public IActionResult DeleteBackup()
+        {
+            string backupDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
+            if (Directory.Exists(backupDirectory))
+            {
+                string backupDataDirectoryPath = $"{backupDirectory}{ds}Data";
+                if (Directory.Exists(backupDataDirectoryPath))
+                {
+                    Directory.Delete(backupDataDirectoryPath, true);
+                }
+
+                string backupZipFilePath = $"{backupDirectory}{ds}backup.zip";
+                if (System.IO.File.Exists(backupZipFilePath))
+                {
+                    System.IO.File.Delete(backupZipFilePath);
+                }
+            }
+
+            return RedirectToAction(nameof(Backup));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "WebComponents_Admins")]
+        public async Task<IActionResult> UploadBackup(IFormFile backupZipFile)
+        {
+            if (ModelState.IsValid)
+            {
+                string mainDirectoryPath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
+                if (!Directory.Exists(mainDirectoryPath))
+                {
+                    Directory.CreateDirectory(mainDirectoryPath);
+                }
+
+                string dataDirectoryPath = $"{mainDirectoryPath}{ds}Data";
+                if (Directory.Exists(dataDirectoryPath))
+                {
+                    Directory.Delete(dataDirectoryPath, true);
+                }
+                Directory.CreateDirectory(dataDirectoryPath);
+
+                string backupZipFilePath = $"{mainDirectoryPath}{ds}backup.zip";
+                if (System.IO.File.Exists(backupZipFilePath))
+                {
+                    System.IO.File.Delete(backupZipFilePath);
+                }
+
+                using (FileStream fs = System.IO.File.Create(backupZipFilePath))
+                {
+                    await backupZipFile.CopyToAsync(fs);
+                }
+
+                ZipFile.ExtractToDirectory(backupZipFilePath, dataDirectoryPath);
+            }
+            return RedirectToAction(nameof(Backup));
+        }
+
+        [Authorize(Roles = "WebComponents_Admins")]
+        public async Task<IActionResult> RecoverLastBackup()
+        {
+            string mainDirectoryPath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
+            string dataDirectoryPath = $"{mainDirectoryPath}{ds}Data";
+            DirectoryInfo dataDirectoryInfo = new DirectoryInfo(dataDirectoryPath);
+            foreach (DirectoryInfo itemDirInfo in dataDirectoryInfo.EnumerateDirectories())
+            {
+                string jsonPath = $"{itemDirInfo.FullName}{ds}data.json";
+                string json = await System.IO.File.ReadAllTextAsync(jsonPath, Encoding.UTF8);
+                WebComponents_BackupItemModel? model = JsonSerializer.Deserialize<WebComponents_BackupItemModel>(json);
+                if (model is null)
+                {
+                    continue;
+                }
+                WebComponents_ItemDbModel? itemDbModel = await webComponentsDb.Items.FirstOrDefaultAsync(item => item.Guid == model.Guid);
+                if (itemDbModel != null)
+                {
+                    continue;
+                }
+                List<WebComponents_TagDbModel> tagDbModels = new();
+                foreach (string tag in model.Tags)
+                {
+                    WebComponents_TagDbModel? tagDbModel = await webComponentsDb.Tags.FirstOrDefaultAsync(t => t.Name == tag);
+                    if (tagDbModel is not null)
+                    {
+                        tagDbModels.Add(tagDbModel);
+                    }
+                }
+                itemDbModel = new()
+                {
+                    Guid = model.Guid,
+                    DeveloperGuid = model.DeveloperGuid,
+                    Title = model.Title,
+                    Description = model.Description,
+                    TagDbModels = tagDbModels,
+                    Date = model.Date,
+
+                };
+                await webComponentsDb.Items.AddAsync(itemDbModel);
+                string itemDestinationZipFilePath = $"{itemDirInfo.FullName}{ds}{itemDbModel.Guid}.zip";
+                if (System.IO.File.Exists(itemDestinationZipFilePath))
+                {
+                    string itemSourceDirectoryPath = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{itemDbModel.Guid}";
+                    string itemSourceZipFilePath = $"{itemSourceDirectoryPath}{ds}{itemDbModel.Guid}.zip";
+                    using (FileStream fsSource = System.IO.File.Open(itemDestinationZipFilePath, FileMode.Open, FileAccess.Read))
+                    {
+                        using (FileStream fsDestination = System.IO.File.Create(itemSourceZipFilePath))
+                        {
+                            await fsSource.CopyToAsync(fsDestination);
+                        }
+                    }
+                    ZipFile.ExtractToDirectory(itemSourceZipFilePath, itemSourceDirectoryPath);
+                }
+            }
+
+            ViewBag.ResultState = "success";
+            object o = $"Identity recovery completed successfully.";
+            return View("Result", o);
         }
         //************************************************************************
     }

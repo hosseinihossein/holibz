@@ -117,3 +117,13 @@ public class WebComponents_IndexModel
     public string DeveloperUserName { get; set; } = string.Empty;
     public string SearchPhrase { get; set; } = string.Empty;
 }
+
+public class WebComponents_BackupItemModel
+{
+    public string Guid { get; set; } = string.Empty;
+    public string DeveloperGuid { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public List<string> Tags { get; set; } = new();
+    public DateTime Date { get; set; } = DateTime.Now;
+}

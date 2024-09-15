@@ -72,6 +72,12 @@
             background-color: #eee;
             /* Add a hover effect to all links, except for headers */
         }
+
+        @@media screen and (max-width:700px) {
+            #searche62f342a43f0412baf7908d6236c65ec #myInput {
+                width: 100%;
+            }
+        }
     </style>
 
     <div id="searche62f342a43f0412baf7908d6236c65ec">
@@ -80,7 +86,8 @@
     </div>
 
     <style>
-        #add-tag-form button {
+        #add-tag-form button,
+        #add-tag-form a {
             text-decoration: none;
             font-size: 16px;
             color: #333;
@@ -93,20 +100,43 @@
             opacity: 0.8;
             float: right;
             cursor: pointer;
+            margin: 0 5px;
+            text-decoration: none;
         }
 
-        #add-tag-form button:hover {
+        #add-tag-form button:hover,
+        #add-tag-form a:hover {
             opacity: 1;
             background-color: green;
             color: white;
         }
     </style>
     <div id="add-tag-form">
+        <a asp-action="BackupTags"><i class="fa-solid fa-database"></i> Backup</a>
         <button type="submit"><i class="fa-solid fa-plus"></i> Add as a new tag</button>
     </div>
 </form>
 
-<hr>
+<style>
+    #e8813f129b12403cb81f1972752d4856 {
+        position: relative;
+        overflow: visible;
+        margin: 20px 0;
+    }
+
+    #e8813f129b12403cb81f1972752d4856::after {
+        content: "Tags(@Model.Count)";
+        position: absolute;
+        /*top: -10px;*/
+        right: 50%;
+        translate: 50% -50%;
+        background-color: white;
+        border: 1px solid gray;
+        padding: 5px 10px;
+
+    }
+</style>
+<hr id="e8813f129b12403cb81f1972752d4856">
 <br>
 
 <!------------------------------ Table ------------------------------>
@@ -226,11 +256,19 @@
     #table12dd5b5c7e54455e85a83c209d1d5bb0 td {
         border: none;
         margin: 0;
-        padding: 10px 10px;
+        padding: 5px 10px 5px 100px;
+    }
+
+    @@media screen and (max-width:600px) {
+
+        #table12dd5b5c7e54455e85a83c209d1d5bb0 th,
+        #table12dd5b5c7e54455e85a83c209d1d5bb0 td {
+            padding: 5px 10px 5px 10px;
+        }
     }
 
     #table12dd5b5c7e54455e85a83c209d1d5bb0 th {
-        padding: 10px;
+        /*padding: 10px;*/
         color: gray;
         font-weight: normal;
     }
@@ -320,7 +358,13 @@
     #table12dd5b5c7e54455e85a83c209d1d5bb0 th span.triangle.down {
         font-size: 20px;
         position: absolute;
-        left: 5px;
+        left: 95px;
+    }
+
+    @@media screen and (max-width:600px) {
+        #table12dd5b5c7e54455e85a83c209d1d5bb0 th span.triangle.down {
+            left: 5px;
+        }
     }
 
     #table12dd5b5c7e54455e85a83c209d1d5bb0 th.clickable {

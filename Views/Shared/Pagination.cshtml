@@ -71,7 +71,7 @@
         asp-route-DeveloperUserName="@Context.Request.Query["DeveloperUserName"].ToString()"
         asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()"
         asp-route-username="@Context.Request.Query["username"].ToString()">1</a>
-    <form asp-action="Index" method="get">
+    <form asp-action="@ViewBag.Action" method="get">
         <label for="current-page">Page:</label>
         <input type="number" min="1" max="@ViewBag.LastPage" required name="page" id="current-page"
             value="@ViewBag.CurrentPage"

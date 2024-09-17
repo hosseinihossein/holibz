@@ -246,7 +246,7 @@ public class IdentityController : Controller
         return View(user);
     }
 
-    public async Task<IActionResult> Profile(string username)
+    public async Task<IActionResult> Profile(string username, int page = 1)
     {
         Identity_UserModel? user = await userManager.FindByNameAsync(username);
         if (user is null)
@@ -260,6 +260,7 @@ public class IdentityController : Controller
         .Include(item => item.TagDbModels)
         .Where(item => item.DeveloperGuid == user.UserGuid)
         .OrderByDescending(item => item.Date)
+        .Skip((page - 1) * 12).Take(12)
         .ToListAsync();
 
         List<WebComponents_ItemModel> itemModels = new();
@@ -288,7 +289,10 @@ public class IdentityController : Controller
             ViewBag.HasShowcase = true;
         }
 
-        ViewBag.ProjectsNumber = userItemDbModels.Count;
+        ViewBag.ProjectsNumber = //userItemDbModels.Count;
+        await webComponentsDb.Items.Where(item => item.DeveloperGuid == user.UserGuid).CountAsync();
+        ViewBag.CurrentPage = page;
+        ViewBag.LastPage = (int)Math.Ceiling((double)ViewBag.ProjectsNumber / 12.0);
 
         return View(profileModel);
     }

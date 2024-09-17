@@ -63,11 +63,13 @@
         <a id="previous" asp-route-page="@(ViewBag.CurrentPage - 1)"
             asp-route-SelectedTags="@Context.Request.Query["SelectedTags"].ToString()"
             asp-route-DeveloperUserName="@Context.Request.Query["DeveloperUserName"].ToString()"
-            asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()">«</a>
+            asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()"
+            asp-route-username="@Context.Request.Query["username"].ToString()">«</a>
     }
     <a id="first" asp-route-page="1" asp-route-SelectedTags="@Context.Request.Query["SelectedTags"].ToString()"
         asp-route-DeveloperUserName="@Context.Request.Query["DeveloperUserName"].ToString()"
-        asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()">1</a>
+        asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()"
+        asp-route-username="@Context.Request.Query["username"].ToString()">1</a>
     <form asp-action="Index" method="get">
         <label for="current-page">Page:</label>
         <input type="number" min="1" max="@ViewBag.LastPage" required name="page" id="current-page"
@@ -76,16 +78,19 @@
         <input hidden value="@Context.Request.Query["SelectedTags"].ToString()" name="SelectedTags">
         <input hidden value="@Context.Request.Query["DeveloperUserName"].ToString()" name="DeveloperUserName">
         <input hidden value="@Context.Request.Query["SearchPhrase"].ToString()" name="SearchPhrase">
+        <input hidden value="@Context.Request.Query["username"].ToString()" name="username">
     </form>
     <a id="last" asp-route-page="@ViewBag.LastPage"
         asp-route-SelectedTags="@Context.Request.Query["SelectedTags"].ToString()"
         asp-route-DeveloperUserName="@Context.Request.Query["DeveloperUserName"].ToString()"
-        asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()">@ViewBag.LastPage</a>
+        asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()"
+        asp-route-username="@Context.Request.Query["username"].ToString()">@ViewBag.LastPage</a>
     @if (ViewBag.LastPage > ViewBag.CurrentPage)
     {
         <a id="next" asp-route-page="@(ViewBag.CurrentPage + 1)"
             asp-route-SelectedTags="@Context.Request.Query["SelectedTags"].ToString()"
             asp-route-DeveloperUserName="@Context.Request.Query["DeveloperUserName"].ToString()"
-            asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()">»</a>
+            asp-route-SearchPhrase="@Context.Request.Query["SearchPhrase"].ToString()"
+            asp-route-username="@Context.Request.Query["username"].ToString()">»</a>
     }
 </div>

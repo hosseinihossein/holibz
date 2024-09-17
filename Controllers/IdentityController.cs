@@ -293,6 +293,7 @@ public class IdentityController : Controller
         await webComponentsDb.Items.Where(item => item.DeveloperGuid == user.UserGuid).CountAsync();
         ViewBag.CurrentPage = page;
         ViewBag.LastPage = (int)Math.Ceiling((double)ViewBag.ProjectsNumber / 12.0);
+        ViewBag.Action = "Profile";
 
         return View(profileModel);
     }

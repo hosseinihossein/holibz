@@ -741,7 +741,7 @@ namespace holibz.Controllers
         }
 
         [Authorize(Roles = "WebComponents_Admins")]
-        public PhysicalFileResult? DownloadBackup()
+        public IActionResult DownloadBackup()
         {
             string backupDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Backup";
             if (Directory.Exists(backupDirectory))
@@ -749,13 +749,13 @@ namespace holibz.Controllers
                 string backupZipFilePath = $"{backupDirectory}{ds}backup.zip";
                 if (System.IO.File.Exists(backupZipFilePath))
                 {
-                    return PhysicalFile(backupZipFilePath, "File/zip", "WebComponentsBackup.zip");
+                    return PhysicalFile(backupZipFilePath, "File/zip");
                 }
             }
-            /*object o = "backup file Not found!";
+            object o = "backup file Not found!";
             ViewBag.ResultState = "danger";
-            return View("Result", o);*/
-            return null;
+            return View("Result", o);
+            //return null;
         }
 
         [Authorize(Roles = "WebComponents_Admins")]

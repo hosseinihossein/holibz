@@ -1103,7 +1103,7 @@ public class IdentityController : Controller
             string backupZipFilePath = $"{backupDirectory}{ds}backup.zip";
             if (System.IO.File.Exists(backupZipFilePath))
             {
-                return PhysicalFile(backupZipFilePath, "Application/zip", "IdentityBackup.zip");
+                return PhysicalFile(backupZipFilePath, "Application/zip");
             }
         }
         object o = "backup file Not found!";

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using holibz.Models;
 using System.IO.Compression;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 
 namespace holibz.Controllers;
 
@@ -56,6 +57,22 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
+            var formDictionary = new Dictionary<string, StringValues>
+            {
+                { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
+                { "response", loginModel.CfTurnstileResponse },
+                //{ "remoteip", ip }
+            };
+            var formData = new FormCollection(formDictionary);
+            string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+            var client = new HttpClient();
+            var response = await client.PostAsJsonAsync(url, formData);
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
+                return View("Login");
+            }
+
             if (User.Identity?.IsAuthenticated ?? false)
             {
                 await signInManager.SignOutAsync();
@@ -127,6 +144,22 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
+            var formDictionary = new Dictionary<string, StringValues>
+            {
+                { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
+                { "response", signupModel.CfTurnstileResponse },
+                //{ "remoteip", ip }
+            };
+            var formData = new FormCollection(formDictionary);
+            string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+            var client = new HttpClient();
+            var response = await client.PostAsJsonAsync(url, formData);
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
+                return View("Login");
+            }
+
             if (User.Identity?.IsAuthenticated ?? false)
             {
                 await signInManager.SignOutAsync();

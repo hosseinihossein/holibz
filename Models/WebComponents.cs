@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace holibz.Models;
@@ -89,6 +90,9 @@ public class WebComponents_NewItemFormModel
     [Required]
     public IFormFile? ZipFile { get; set; }
     public string? TagsJson { get; set; }
+
+    [FromForm(Name = "cf-turnstile-response")]
+    public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class WebComponents_ItemModel

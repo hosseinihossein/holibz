@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace holibz.Models;
 
@@ -42,6 +43,9 @@ public class Identity_LoginModel
     public string UsernameOrEmail { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public bool IsPersistent { get; set; } = false;
+
+    [FromForm(Name = "cf-turnstile-response")]
+    public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_SignupModel
@@ -58,6 +62,9 @@ public class Identity_SignupModel
 
     /*[Compare(nameof(Password))]
     public string RepeatPassword { get; set; } = string.Empty;*/
+
+    [FromForm(Name = "cf-turnstile-response")]
+    public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_ProfileModel

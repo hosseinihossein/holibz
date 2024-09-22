@@ -14,6 +14,7 @@ using Microsoft.Net.Http.Headers;
 using Org.BouncyCastle.Crypto.Agreement.Srp;
 using holibz.Models;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 
 namespace holibz.Controllers
 {
@@ -215,6 +216,22 @@ namespace holibz.Controllers
 
             if (ModelState.IsValid)
             {
+                var formDictionary = new Dictionary<string, StringValues>
+            {
+                { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
+                { "response", formModel.CfTurnstileResponse },
+                //{ "remoteip", ip }
+            };
+                var formData = new FormCollection(formDictionary);
+                string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+                var client = new HttpClient();
+                var response = await client.PostAsJsonAsync(url, formData);
+                if (!response.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
+                    return View("Login");
+                }
+
                 //***** create item dir *****
                 string guid = Guid.NewGuid().ToString().Replace("-", "");
                 string itemDirectory = $"{env.ContentRootPath}{ds}SpecificStorage{ds}WebComponents{ds}Library{ds}{guid}";

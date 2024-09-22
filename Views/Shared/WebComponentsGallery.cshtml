@@ -19,21 +19,23 @@
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item {
             width: 30vw;
-            height: 31vh;
+            height: calc(31vh + 43px);
             position: relative;
             margin: 20px 0;
             transition: all 0.2s;
             box-shadow: 0 0 5px gray;
+            border-radius: 5px;
+            overflow: hidden;
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.half {
             width: 45vw;
-            height: 46vh;
+            height: calc(46vh + 43px);
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.large {
             width: 80vw;
-            height: 81vh;
+            height: calc(81vh + 43px);
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover {
@@ -42,9 +44,9 @@
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item iframe {
             position: absolute;
-            left: -34vw;
+            left: calc(-34vw - 10px);
             top: -35vh;
-            width: 98vw;
+            width: 99vw;
             height: 100vh;
             transform: scale(30%, 30%);
             z-index: 1;
@@ -53,23 +55,22 @@
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.half iframe {
             transform: scale(45%, 45%);
-            left: -26.5vw;
-            top: -27vh;
+            left: calc(-27vw - 3px);
+            top: calc(-27vh - 3px);
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.large iframe {
-            transform: scale(80%, 80%);
-            left: -9vw;
-            top: -9.5vh;
+            transform: scale(80.4%, 80%);
+            left: calc(-10vw + 3px);
+            top: calc(-9vh - 5px);
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div {
             position: relative;
-
         }
 
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div button,
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div a {
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .dropdown-content button,
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .dropdown-content a {
             font-size: 25px;
             background-color: rgba(255, 255, 255, 1);
             cursor: pointer;
@@ -80,19 +81,22 @@
             opacity: 0.5;
             text-decoration: none;
             color: black;
-            display: inline-block;
+            display: block;
             padding: 0 5px;
         }
 
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div span {
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item div span.tooltip {
             font-size: 12px;
             background-color: black;
             color: white;
             border-radius: 10px;
             padding: 5px 10px;
-            position: relative;
+            position: absolute;
+            right: 40px;
+            top: 0;
             display: none;
             width: fit-content;
+            text-wrap: nowrap;
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item p {
@@ -107,28 +111,19 @@
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .developer-img {
-            width: 50px;
-            height: 50px;
+            width: 20px;
+            height: 20px;
             object-fit: contain;
             border-radius: 50%;
             overflow: hidden;
-            position: absolute;
-            right: 10px;
-            top: -20px;
-            cursor: pointer;
-        }
-
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .developer-img+span {
-            position: absolute;
-            right: 0px;
-            top: -50px;
+            position: relative;
+            margin: 0 10px;
         }
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover button,
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover a,
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover p,
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover .developer-img,
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover .developer-img img {
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item:hover img {
             z-index: 1;
         }
 
@@ -139,41 +134,181 @@
 
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item button:hover+span,
         #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item a:hover+span,
-        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item .developer-img:hover+span {
-            z-index: 1;
+        #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item img:hover+span {
+            z-index: 2;
             display: inline;
         }
     </style>
     @foreach (WebComponents_ItemModel item in Model)
     {
         <div class="flex-item half">
-            <iframe src="/WebComponents/ItemSource/@(item.Guid)/index.html" frameborder="0"></iframe>
-            <div>
-                <button
-                    onclick="showModalFrame('@item.Guid', '@item.Developer?.UserName', '@item.Developer?.ProfileImageVersion', '@item.Title')">
-                    <i class="fa-solid fa-magnifying-glass-plus"></i>
-                </button>
-                <span>Zoom In</span>
+            <!----------------------------------------------------------------->
+            <div id="a853327e226cb4ad891cf1362463e6edf">
+                <style>
+                    #a853327e226cb4ad891cf1362463e6edf {
+                        width: 100%;
+                        /*min-width: 300px;*/
+                        margin: auto;
+                    }
+
+                    /* The browser window */
+                    #a853327e226cb4ad891cf1362463e6edf .container {
+                        border: 3px solid #f1f1f1;
+                        border-top-left-radius: 4px;
+                        border-top-right-radius: 4px;
+                        height: calc(31vh + 43px);
+                    }
+
+                    #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.half #a853327e226cb4ad891cf1362463e6edf .container {
+                        height: calc(46vh + 43px);
+                    }
+
+                    #flexContainere455df6c4ffb433fae9631e9ae040cf5 .flex-item.large #a853327e226cb4ad891cf1362463e6edf .container {
+                        height: calc(81vh + 43px);
+                    }
+
+                    /* Container for columns and the top "toolbar" */
+                    #a853327e226cb4ad891cf1362463e6edf .row {
+                        padding: 10px;
+                        background: #f1f1f1;
+                        border-top-left-radius: 4px;
+                        border-top-right-radius: 4px;
+                    }
+
+                    /* Create three unequal columns that floats next to each other */
+                    #a853327e226cb4ad891cf1362463e6edf .column {
+                        float: left;
+                    }
+
+                    #a853327e226cb4ad891cf1362463e6edf .left {
+                        width: 15%;
+                    }
+
+                    #a853327e226cb4ad891cf1362463e6edf .right {
+                        width: fit-content;
+                        float: right;
+                    }
+
+                    #a853327e226cb4ad891cf1362463e6edf .middle {
+                        width: 65%;
+                    }
+
+                    /* Clear floats after the columns */
+                    #a853327e226cb4ad891cf1362463e6edf .row:after {
+                        content: "";
+                        display: table;
+                        clear: both;
+                    }
+
+                    /* Three dots */
+                    #a853327e226cb4ad891cf1362463e6edf .dot {
+                        margin-top: 4px;
+                        height: 12px;
+                        width: 12px;
+                        background-color: #bbb;
+                        border-radius: 50%;
+                        display: inline-block;
+                    }
+
+                    /* Style the input field */
+                    #a853327e226cb4ad891cf1362463e6edf input[type=text] {
+                        width: 100%;
+                        border-radius: 3px;
+                        border: none;
+                        background-color: white;
+                        margin-top: -8px;
+                        height: 25px;
+                        color: #666;
+                        padding: 5px;
+                    }
+
+                    /* Three bars (hamburger menu) */
+                    #a853327e226cb4ad891cf1362463e6edf .bar {
+                        width: 17px;
+                        height: 3px;
+                        background-color: #aaa;
+                        margin: 3px 0;
+                        display: block;
+                    }
+
+                    #a853327e226cb4ad891cf1362463e6edf .dropdown-btn {
+                        position: relative;
+                    }
+
+                    #a853327e226cb4ad891cf1362463e6edf .dropdown-content {
+                        display: none;
+                        background-color: white;
+                        position: absolute;
+                        top: 20px;
+                        right: 0;
+                    }
+
+                    #a853327e226cb4ad891cf1362463e6edf .dropdown-btn:hover .dropdown-content {
+                        display: block;
+                        z-index: 2;
+                    }
+
+                    /* Page content */
+                    #a853327e226cb4ad891cf1362463e6edf .content {
+                        padding: 10px;
+                    }
+                </style>
+
+                <div class="container">
+                    <div class="row">
+                        <div class="column left">
+                            <span class="dot" style="background:#ED594A;"></span>
+                            <span class="dot" style="background:#FDD800;"></span>
+                            <span class="dot" style="background:#5AC05A;"></span>
+                        </div>
+                        <div class="column middle">
+                            <input type="text" value="@item.Title">
+                        </div>
+                        <div class="column right">
+                            <div style="float: left;">
+                                <img src="/Identity/UserImage?username=@item.Developer?.UserName&v=@item.Developer?.ProfileImageVersion"
+                                    alt="" class="developer-img"
+                                    onclick="window.location.href='/Identity/Profile?username=@item.Developer?.UserName'">
+                                <span>@item.Developer?.UserName</span>
+                            </div>
+                            <div style="float:right" class="dropdown-btn">
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+
+                                <div class="dropdown-content" style="position: absolute;">
+                                    <div style="position: relative;">
+                                        <button
+                                            onclick="showModalFrame('@item.Guid', '@item.Developer?.UserName', '@item.Developer?.ProfileImageVersion', '@item.Title')">
+                                            <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                        </button>
+                                        <span class="tooltip">Zoom In</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <a asp-controller="WebComponents" asp-action="ItemDetail"
+                                            asp-route-itemGuid="@item.Guid">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        </a>
+                                        <span class="tooltip">More</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <a href="/WebComponents/ItemSource/@(item.Guid)/@(item.Guid).zip"
+                                            style="padding: 0 8px;"><i class="fa-solid fa-file-arrow-down"></i>
+                                        </a>
+                                        <span class="tooltip">Download</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content">
+                        <iframe src="/WebComponents/ItemSource/@(item.Guid)/index.html" frameborder="0"></iframe>
+                    </div>
+                </div>
+
             </div>
-            <div>
-                <a asp-controller="WebComponents" asp-action="ItemDetail" asp-route-itemGuid="@item.Guid">
-                    <i class="fa-solid fa-circle-info"></i>
-                </a>
-                <span>More</span>
-            </div>
-            <div>
-                <a href="/WebComponents/ItemSource/@(item.Guid)/@(item.Guid).zip" style="padding: 0 8px;"><i
-                        class="fa-solid fa-file-arrow-down"></i>
-                </a>
-                <span>Download</span>
-            </div>
-            <div class="clearfix" style="position: absolute;bottom: 10px;left: 10px;right: 10px;">
-                <p>@item.Title</p>
-                <img src="/Identity/UserImage?username=@item.Developer?.UserName&v=@item.Developer?.ProfileImageVersion"
-                    alt="" class="developer-img"
-                    onclick="window.location.href='/Identity/Profile?username=@item.Developer?.UserName'">
-                <span>@item.Developer?.UserName</span>
-            </div>
+            <!------------------------------------------------------------------------>
         </div>
     }
 </div>
@@ -213,6 +348,7 @@
             top: 20px;
             right: 30px;
             cursor: pointer;
+            z-index: 3;
         }
 
         #modala1148ffdb9b54fdf961ac961938daf26 #modal-close-btn:hover {
@@ -241,7 +377,9 @@
             background-color: black;
             color: white;
             position: relative;
-            left: 10px;
+            left: 50%;
+            top: 5px;
+            transform: translateX(-50%);
             width: fit-content;
             border-radius: 10px;
             font-size: 12px;
@@ -259,6 +397,9 @@
             object-fit: contain;
             border-radius: 50%;
             overflow: hidden;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         #modala1148ffdb9b54fdf961ac961938daf26 #info-box {
@@ -268,7 +409,7 @@
         }
 
         #modala1148ffdb9b54fdf961ac961938daf26 #info-box #title-header {
-            margin-top: 0px;
+            margin: 0px;
         }
 
         #modala1148ffdb9b54fdf961ac961938daf26 #links-box {
@@ -281,24 +422,17 @@
 
         #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div {
             position: relative;
+            float: left;
+            margin: 20px;
+            z-index: 1;
+            width: 100px;
             /*border: 1px solid gray;*/
-            height: 100px;
-            padding: 20px;
+            /*height: 100px;
+                padding: 20px;*/
         }
 
-        @@media screen and (max-width:1000px) {
-            #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div {
-                float: left;
-                padding: 20px 0;
-            }
-
-            #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div:last-child {
-                top: -10px;
-            }
-
-            #modala1148ffdb9b54fdf961ac961938daf26 #modal-frame {
-                translate: 0 50px;
-            }
+        #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div * {
+            display: block;
         }
     </style>
     <span id="modal-close-btn" onclick="this.parentElement.classList.remove('open');">&times;</span>

@@ -269,7 +269,7 @@
                                 <img src="/Identity/UserImage?username=@item.Developer?.UserName&v=@item.Developer?.ProfileImageVersion"
                                     alt="" class="developer-img"
                                     onclick="window.location.href='/Identity/Profile?username=@item.Developer?.UserName'">
-                                <span>@item.Developer?.UserName</span>
+                                <span class="tooltip">@item.Developer?.UserName</span>
                             </div>
                             <div style="float:right" class="dropdown-btn">
                                 <span class="bar"></span>
@@ -361,7 +361,7 @@
             /*right: 50px;*/
             left: 20px;
             color: #333;
-            font-size: 30px;
+            font-size: 47px;
             opacity: 0.7;
         }
 
@@ -452,12 +452,12 @@
         </div>
     </div>
 
-    <iframe id="modal-frame" src="" frameborder="0"></iframe>
-
     <div id="info-box">
         <h2 id="title-header">Title of the component</h2>
         <!--p>Description</p-->
     </div>
+
+    <iframe id="modal-frame" src="" frameborder="0"></iframe>
 </div>
 <script>
     function showModalFrame(itemGuid, developerUserName, developerProfileVersion, title) {

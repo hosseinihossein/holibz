@@ -110,16 +110,16 @@ namespace holibz.Controllers
             var searchResponse = await esClient.SearchAsync<WebComponents_ElasticsearchModel>(s =>
             {
                 s.Index("webcomponents_index")
-                .From((page - 1) * 12)
-                .Size(12)
                 //.Sort(i => i.Doc(d => d.Order(SortOrder.Desc)).Field(Field.FromString("date")!))
                 .TrackScores(true)
-                .Sort(sort => sort.Doc(d => d.Order(SortOrder.Desc)))
                 .Query(q =>
                 q.Bool(b =>
                 {
                     b.Must(actionList.ToArray());
                 }))
+                .Sort(sort => sort.Score(score => score.Order(SortOrder.Desc)))//(sort => sort.Doc(d => d.Order(SortOrder.Desc)))
+                .From((page - 1) * 12)
+                .Size(12)
                 .Source(new SourceConfig(false));
             });
 

@@ -913,6 +913,8 @@ public class IdentityController : Controller
             Identity_UserAndRolesModel userModel = new(user, [.. (await userManager.GetRolesAsync(user))]);
             return View(nameof(EditUser), userModel);
         }
+
+        await userManager.UpdateSecurityStampAsync(user);
         return RedirectToAction(nameof(EditUser), new { userGuid });
     }
 

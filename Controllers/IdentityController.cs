@@ -70,7 +70,7 @@ public class IdentityController : Controller
             if (!response.IsSuccessStatusCode)
             {
                 ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
-                return View("Login");
+                return View(nameof(Login));
             }
 
             if (User.Identity?.IsAuthenticated ?? false)
@@ -157,7 +157,7 @@ public class IdentityController : Controller
             if (!response.IsSuccessStatusCode)
             {
                 ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
-                return View("Login");
+                return View(nameof(Signup));
             }
 
             if (User.Identity?.IsAuthenticated ?? false)

@@ -39,9 +39,10 @@ public class Program
         //****************************** Services *****************************
         builder.Services.AddControllersWithViews();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
-        string elasticServerAddress = builder.Configuration["ElasticSearch:ServerAddress"]!;
+        builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
         builder.Services.AddSingleton<ElasticsearchClient>((sp) =>
         {
+            string elasticServerAddress = builder.Configuration["ElasticSearch:ServerAddress"]!;
             return new ElasticsearchClient(
                 new ElasticsearchClientSettings(new Uri($"https://{elasticServerAddress}:9200"))
                 .CertificateFingerprint(builder.Configuration["ElasticSearch:CertificateFingerprint"]!)

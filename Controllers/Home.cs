@@ -10,10 +10,14 @@ namespace holibz.Controllers;
 public class HomeController : Controller
 {
     readonly IWebHostEnvironment env;
+    readonly IEmailSender emailSender;
+    readonly IConfiguration configManager;
 
-    public HomeController(IWebHostEnvironment _env)
+    public HomeController(IWebHostEnvironment _env, IEmailSender emailSender, IConfiguration configManager)
     {
         env = _env;
+        this.emailSender = emailSender;
+        this.configManager = configManager;
     }
 
     public /*async Task<IActionResult>*/ IActionResult Index()
@@ -41,11 +45,17 @@ public class HomeController : Controller
             if (!response.IsSuccessStatusCode)
             {
                 ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
-                return View("Login");
+                return View(nameof(ContactUs));
             }
 
-            object o = $"<p>Name: {contactUsModel.Name}</p><p>Email: {contactUsModel.Email}</p><p>Message: {contactUsModel.Message}</p>";
-            ViewBag.ResultState = "info";
+            //***** Sending Email *****
+            string emailMessage = $"<p>Name: {contactUsModel.Name}</p><p>Email: {contactUsModel.Email}</p><p>Message: {contactUsModel.Message}</p>";
+            string contactUsAdminEmail = configManager["ContactUsAdminEmail"]!;
+            await emailSender.SendEmailAsync("ContactUs Admin", contactUsAdminEmail,
+            "HoLibz ContactUs", emailMessage);
+
+            object o = $"<p>Your message sent successfully!</p><p>Name: {contactUsModel.Name}</p><p>Email: {contactUsModel.Email}</p><p>Message: {contactUsModel.Message}</p>";
+            ViewBag.ResultState = "success";
             return View("Result", o);
         }
         return View("ContactUs");

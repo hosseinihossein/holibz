@@ -183,7 +183,7 @@ public class IdentityController : Controller
                 //***** Sending Email *****
                 string emailMessage = $"<h4>Hi dear {signupModel.Username}</h4>" +
                 $"<h4>Your Validation Code: {validationCode}</h4>" +
-                "<p>The validation code expires in 10 minutes.</p>";
+                "<p>The validation code expires in 30 minutes.</p>";
                 /*await*/
                 _ = emailSender.SendEmailAsync(signupModel.Username, signupModel.Email,
                 "Email Validation", emailMessage);
@@ -221,10 +221,11 @@ public class IdentityController : Controller
 
             string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
                     $"<h4>Your Validation Code: {validationCode}</h4>" +
-                    "<p>The validation code expires in 10 minutes.</p>";
+                    "<p>The validation code expires in 30 minutes.</p>";
             /*await*/
             await emailSender.SendEmailAsync(user.UserName!, user!.Email!, "Email Validation", emailMessage);
 
+            await signInManager.SignOutAsync();
             object o1 = "<h2>A Validation code is sent to your registered Email.</h2>" +
             "<p>Please check your email and go to <a href=\"/Identity/Dashboard\">Dashboard</a> to activate your account</p>";
             ViewBag.ResultState = "success";
@@ -237,8 +238,24 @@ public class IdentityController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> ConfirmEmail(string evc)
+    public async Task<IActionResult> ConfirmEmail(string evc,
+    [FromQuery(Name = "cf-turnstile-response")] string CfTurnstileResponse)
     {
+        var formDictionary = new Dictionary<string, StringValues>
+        {
+            { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
+            { "response", CfTurnstileResponse }
+        };
+        var formData = new FormCollection(formDictionary);
+        string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+        var client = new HttpClient();
+        var response = await client.PostAsJsonAsync(url, formData);
+        if (!response.IsSuccessStatusCode)
+        {
+            ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
+            return View(nameof(Dashboard));
+        }
+
         Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
         if (user is not null)
         {
@@ -248,14 +265,17 @@ public class IdentityController : Controller
                 ViewBag.ResultState = "info";
                 return View("Result", o1);
             }
-            IdentityResult result = await userManager.ConfirmEmailAsync(user, evc);
-            if (result.Succeeded)
+            if (DateTime.Now - (user.EmailValidationDate ?? DateTime.MinValue) <= TimeSpan.FromMinutes(30.0))
             {
-                user.EmailValidationCode = null;
-                user.EmailValidationDate = null;
-                object successMessage = "<h1>Your Email hass Successfully Confirmed And Your Account is Active.</h1>";
-                ViewBag.ResultState = "success";
-                return View("Result", successMessage);
+                IdentityResult result = await userManager.ConfirmEmailAsync(user, evc);
+                if (result.Succeeded)
+                {
+                    user.EmailValidationCode = null;
+                    user.EmailValidationDate = null;
+                    object successMessage = "<h1>Your Email hass Successfully Confirmed And Your Account is Active.</h1>";
+                    ViewBag.ResultState = "success";
+                    return View("Result", successMessage);
+                }
             }
             object incorrectVal = "<h1>Your Validation Code Is Incorrect or Expired!</h1>";
             ViewBag.ResultState = "danger";
@@ -363,11 +383,18 @@ public class IdentityController : Controller
             ViewBag.ResultState = "danger";
             return View("Result", o1);
         }
+        if (!user.EmailConfirmed)
+        {
+            ViewBag.ResultState = "danger";
+            object o2 = "Please Validate your Email first!";
+            return View("Result", o2);
+        }
 
         user.UserName = username;
         IdentityResult result = await userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
+            await signInManager.SignOutAsync();
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -397,11 +424,18 @@ public class IdentityController : Controller
             ViewBag.ResultState = "danger";
             return View("Result", o1);
         }
+        if (!user.EmailConfirmed)
+        {
+            ViewBag.ResultState = "danger";
+            object o2 = "Please Validate your Email first!";
+            return View("Result", o2);
+        }
 
         user.Description = description;
         IdentityResult result = await userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
+            await signInManager.SignOutAsync();
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -415,8 +449,21 @@ public class IdentityController : Controller
     }
 
     [Authorize]
-    public IActionResult ChangePassword()
+    public async Task<IActionResult> ChangePassword()
     {
+        Identity_UserModel? user = await userManager.FindByNameAsync(User.Identity!.Name!);
+        if (user is null)
+        {
+            object o1 = "user not found!";
+            ViewBag.ResultState = "danger";
+            return View("Result", o1);
+        }
+        if (!user.EmailConfirmed)
+        {
+            ViewBag.ResultState = "danger";
+            object o2 = "Please Validate your Email first!";
+            return View("Result", o2);
+        }
         return View();
     }
 
@@ -438,6 +485,12 @@ public class IdentityController : Controller
             ViewBag.ResultState = "danger";
             return View("Result", o1);
         }
+        if (!user.EmailConfirmed)
+        {
+            ViewBag.ResultState = "danger";
+            object o2 = "Please Validate your Email first!";
+            return View("Result", o2);
+        }
 
         if (newPassword != repeatNewPassword)
         {
@@ -452,6 +505,7 @@ public class IdentityController : Controller
         {
             user.PasswordLiteral = newPassword;
             await userManager.UpdateAsync(user);
+            await signInManager.SignOutAsync();
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -484,6 +538,8 @@ public class IdentityController : Controller
 
         user.Email = email;
         user.EmailConfirmed = false;
+        user.EmailValidationCode = null;
+        user.EmailValidationDate = null;
         IdentityResult result = await userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
@@ -511,6 +567,12 @@ public class IdentityController : Controller
             ViewBag.ResultState = "danger";
             return View("Result", o1);
         }
+        if (!user.EmailConfirmed)
+        {
+            ViewBag.ResultState = "danger";
+            object o2 = "Please Validate your Email first!";
+            return View("Result", o2);
+        }
 
         user.ProfileImageVersion++;
         IdentityResult result = await userManager.UpdateAsync(user);
@@ -535,6 +597,7 @@ public class IdentityController : Controller
             await imgFile.CopyToAsync(fs);
         }
 
+        await signInManager.SignOutAsync();
         return RedirectToAction(nameof(Dashboard));
     }
 
@@ -549,6 +612,12 @@ public class IdentityController : Controller
             object o1 = "user not found!";
             ViewBag.ResultState = "danger";
             return View("Result", o1);
+        }
+        if (!user.EmailConfirmed)
+        {
+            ViewBag.ResultState = "danger";
+            object o2 = "Please Validate your Email first!";
+            return View("Result", o2);
         }
 
         user.ProfileImageVersion++;
@@ -574,6 +643,7 @@ public class IdentityController : Controller
             await imgFile.CopyToAsync(fs);
         }
 
+        await signInManager.SignOutAsync();
         return RedirectToAction(nameof(Dashboard));
     }
 

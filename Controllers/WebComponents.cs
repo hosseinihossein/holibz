@@ -15,6 +15,9 @@ using Org.BouncyCastle.Crypto.Agreement.Srp;
 using holibz.Models;
 using System.Text;
 using Microsoft.Extensions.Primitives;
+using System.Text.Json.Serialization;
+using System.Net.Http.Json;
+using Newtonsoft.Json;
 
 namespace holibz.Controllers
 {
@@ -59,7 +62,7 @@ namespace holibz.Controllers
                     WebComponents_IndexModel indexModel01 = new()
                     {
                         Items = [],
-                        TagsJson = JsonSerializer.Serialize((await webComponentsDb.Tags.ToListAsync()).Select(t => t.Name).ToArray()),
+                        TagsJson = System.Text.Json.JsonSerializer.Serialize((await webComponentsDb.Tags.ToListAsync()).Select(t => t.Name).ToArray()),
                         SelectedTags = SelectedTags ?? string.Empty,
                         DeveloperUserName = DeveloperUserName ?? string.Empty,
                         SearchPhrase = SearchPhrase ?? string.Empty,
@@ -160,7 +163,7 @@ namespace holibz.Controllers
             WebComponents_IndexModel indexModel = new()
             {
                 Items = itemModels,
-                TagsJson = JsonSerializer.Serialize((await webComponentsDb.Tags.ToListAsync()).Select(t => t.Name).ToArray()),
+                TagsJson = System.Text.Json.JsonSerializer.Serialize((await webComponentsDb.Tags.ToListAsync()).Select(t => t.Name).ToArray()),
                 SelectedTags = SelectedTags ?? string.Empty,
                 DeveloperUserName = DeveloperUserName ?? string.Empty,
                 SearchPhrase = SearchPhrase ?? string.Empty,
@@ -193,7 +196,7 @@ namespace holibz.Controllers
 
             WebComponents_NewItemFormModel newItemFormModel = new()
             {
-                TagsJson = JsonSerializer.Serialize(await webComponentsDb.Tags.Select(tag => tag.Name).ToArrayAsync())
+                TagsJson = System.Text.Json.JsonSerializer.Serialize(await webComponentsDb.Tags.Select(tag => tag.Name).ToArrayAsync())
             };
             return View(newItemFormModel);
         }
@@ -218,17 +221,13 @@ namespace holibz.Controllers
 
             if (ModelState.IsValid)
             {
-                var formDictionary = new Dictionary<string, StringValues>
-            {
-                { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
-                { "response", formModel.CfTurnstileResponse },
-                //{ "remoteip", ip }
-            };
-                var formData = new FormCollection(formDictionary);
+                var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = formModel.CfTurnstileResponse };
                 string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
                 var client = new HttpClient();
                 var response = await client.PostAsJsonAsync(url, formData);
-                if (!response.IsSuccessStatusCode)
+                string responseContentString = await response.Content.ReadAsStringAsync();
+                dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
+                if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
                 {
                     ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
                     return View(nameof(NewItem));
@@ -302,7 +301,7 @@ namespace holibz.Controllers
 
             WebComponents_NewItemFormModel newItemFormModel = new()
             {
-                TagsJson = JsonSerializer.Serialize(await webComponentsDb.Tags.Select(tag => tag.Name).ToArrayAsync())
+                TagsJson = System.Text.Json.JsonSerializer.Serialize(await webComponentsDb.Tags.Select(tag => tag.Name).ToArrayAsync())
             };
             return View(nameof(NewItem), newItemFormModel);
         }
@@ -315,6 +314,12 @@ namespace holibz.Controllers
             {
                 ViewBag.ResultState = "danger";
                 object o = $"Couldn't find user with name \'{User.Identity.Name ?? "unkown"}\'";
+                return View("Result", o);
+            }
+            if (!user.EmailConfirmed)
+            {
+                ViewBag.ResultState = "danger";
+                object o = "Please Validate your Email first!";
                 return View("Result", o);
             }
 
@@ -354,9 +359,10 @@ namespace holibz.Controllers
                 Console.WriteLine("***********************************************************");
             }
 
-            ViewBag.ResultState = "success";
+            /*ViewBag.ResultState = "success";
             object o1 = $"Item with guid \'{itemGuid}\' has been removed successfully.";
-            return View("Result", o1);
+            return View("Result", o1);*/
+            return RedirectToAction("Logout", "Identity", new { returnUrl = $"/WebComponents/ItemDetail?itemGuid={itemGuid}" });
         }
 
         public async Task<IActionResult> ItemDetail(string itemGuid)
@@ -419,6 +425,12 @@ namespace holibz.Controllers
                 object o = "Can't recognize user identity";
                 return View("Result", o);
             }
+            if (!user.EmailConfirmed)
+            {
+                ViewBag.ResultState = "danger";
+                object o = "Please Validate your Email first!";
+                return View("Result", o);
+            }
 
             if (!await userManager.IsInRoleAsync(user, "WebComponents_Admins") && itemDbModel.DeveloperGuid != user.UserGuid)
             {
@@ -440,8 +452,21 @@ namespace holibz.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> SubmitEditItemTags(string itemGuid, string selectedTags)
+        public async Task<IActionResult> SubmitEditItemTags(string itemGuid, string selectedTags,
+        [FromQuery(Name = "cf-turnstile-response")] string CfTurnstileResponse)
         {
+            var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = CfTurnstileResponse };
+            string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+            var client = new HttpClient();
+            var response = await client.PostAsJsonAsync(url, formData);
+            string responseContentString = await response.Content.ReadAsStringAsync();
+            dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
+            if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
+            {
+                ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
+                return View(nameof(EditItemTags));
+            }
+
             WebComponents_ItemDbModel? itemDbModel = await webComponentsDb.Items
                 .Include(item => item.TagDbModels)
                 .FirstOrDefaultAsync(item => item.Guid == itemGuid);
@@ -457,6 +482,12 @@ namespace holibz.Controllers
             {
                 ViewBag.ResultState = "danger";
                 object o = "Can't recognize user identity";
+                return View("Result", o);
+            }
+            if (!user.EmailConfirmed)
+            {
+                ViewBag.ResultState = "danger";
+                object o = "Please Validate your Email first!";
                 return View("Result", o);
             }
 
@@ -525,6 +556,12 @@ namespace holibz.Controllers
                 object o = "Can't recognize user identity";
                 return View("Result", o);
             }
+            if (!user.EmailConfirmed)
+            {
+                ViewBag.ResultState = "danger";
+                object o = "Please Validate your Email first!";
+                return View("Result", o);
+            }
 
             if (!await userManager.IsInRoleAsync(user, "WebComponents_Admins") && itemDbModel.DeveloperGuid != user.UserGuid)
             {
@@ -564,7 +601,8 @@ namespace holibz.Controllers
                 }
             }
 
-            return RedirectToAction(nameof(ItemDetail), new { itemGuid });
+            return RedirectToAction("Logout", "Identity", new { returnUrl = $"/WebComponents/ItemDetail?itemGuid={itemGuid}" });
+            //return RedirectToAction(nameof(ItemDetail), new { itemGuid });
         }
 
         [Authorize]
@@ -585,6 +623,12 @@ namespace holibz.Controllers
             {
                 ViewBag.ResultState = "danger";
                 object o = "Can't recognize user identity";
+                return View("Result", o);
+            }
+            if (!user.EmailConfirmed)
+            {
+                ViewBag.ResultState = "danger";
+                object o = "Please Validate your Email first!";
                 return View("Result", o);
             }
 
@@ -626,7 +670,8 @@ namespace holibz.Controllers
                 }
             }
 
-            return RedirectToAction(nameof(ItemDetail), new { itemGuid });
+            return RedirectToAction("Logout", "Identity", new { returnUrl = $"/WebComponents/ItemDetail?itemGuid={itemGuid}" });
+            //return RedirectToAction(nameof(ItemDetail), new { itemGuid });
         }
 
         //********** source **********
@@ -732,7 +777,7 @@ namespace holibz.Controllers
                     Tags = item.TagDbModels.Select(t => t.Name).ToList(),
                     Date = item.Date
                 };
-                string json = JsonSerializer.Serialize(model);
+                string json = System.Text.Json.JsonSerializer.Serialize(model);
 
                 string itemDirectoryPath = $"{dataDirectoryPath}{ds}{item.Guid}";
                 Directory.CreateDirectory(itemDirectoryPath);
@@ -844,7 +889,7 @@ namespace holibz.Controllers
             {
                 string jsonPath = $"{itemDirInfo.FullName}{ds}data.json";
                 string json = await System.IO.File.ReadAllTextAsync(jsonPath, Encoding.UTF8);
-                WebComponents_BackupItemModel? model = JsonSerializer.Deserialize<WebComponents_BackupItemModel>(json);
+                WebComponents_BackupItemModel? model = System.Text.Json.JsonSerializer.Deserialize<WebComponents_BackupItemModel>(json);
                 if (model is null)
                 {
                     continue;

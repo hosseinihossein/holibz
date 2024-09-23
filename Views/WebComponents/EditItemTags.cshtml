@@ -188,6 +188,7 @@
         <form asp-controller="WebComponents" asp-action="SubmitEditItemTags" method="get">
             <input type="text" name="selectedTags" id="myInputInEdit" readonly value="@currentTags">
             <input hidden name="itemGuid" value="@Model.ItemGuid">
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAAkeZ2wTzJxqgC_K"></div>
             <button type="submit" class="searchBtn">Submit</button>
         </form>
     </div>

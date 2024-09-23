@@ -57,17 +57,13 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
-            var formDictionary = new Dictionary<string, StringValues>
-            {
-                { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
-                { "response", loginModel.CfTurnstileResponse },
-                //{ "remoteip", ip }
-            };
-            var formData = new FormCollection(formDictionary);
+            var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = loginModel.CfTurnstileResponse };
             string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
             var client = new HttpClient();
             var response = await client.PostAsJsonAsync(url, formData);
-            if (!response.IsSuccessStatusCode)
+            string responseContentString = await response.Content.ReadAsStringAsync();
+            dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
+            if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
             {
                 ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
                 return View(nameof(Login));
@@ -144,17 +140,13 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
-            var formDictionary = new Dictionary<string, StringValues>
-            {
-                { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
-                { "response", signupModel.CfTurnstileResponse },
-                //{ "remoteip", ip }
-            };
-            var formData = new FormCollection(formDictionary);
+            var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = signupModel.CfTurnstileResponse };
             string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
             var client = new HttpClient();
             var response = await client.PostAsJsonAsync(url, formData);
-            if (!response.IsSuccessStatusCode)
+            string responseContentString = await response.Content.ReadAsStringAsync();
+            dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
+            if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
             {
                 ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
                 return View(nameof(Signup));
@@ -241,16 +233,13 @@ public class IdentityController : Controller
     public async Task<IActionResult> ConfirmEmail(string evc,
     [FromQuery(Name = "cf-turnstile-response")] string CfTurnstileResponse)
     {
-        var formDictionary = new Dictionary<string, StringValues>
-        {
-            { "secret", "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw" },
-            { "response", CfTurnstileResponse }
-        };
-        var formData = new FormCollection(formDictionary);
+        var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = CfTurnstileResponse };
         string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
         var client = new HttpClient();
         var response = await client.PostAsJsonAsync(url, formData);
-        if (!response.IsSuccessStatusCode)
+        string responseContentString = await response.Content.ReadAsStringAsync();
+        dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
+        if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
         {
             ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
             return View(nameof(Dashboard));

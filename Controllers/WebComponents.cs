@@ -113,6 +113,8 @@ namespace holibz.Controllers
                 .From((page - 1) * 12)
                 .Size(12)
                 //.Sort(i => i.Doc(d => d.Order(SortOrder.Desc)).Field(Field.FromString("date")!))
+                .TrackScores(true)
+                .Sort(sort => sort.Doc(d => d.Order(SortOrder.Desc)))
                 .Query(q =>
                 q.Bool(b =>
                 {

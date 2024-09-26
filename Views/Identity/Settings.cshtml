@@ -158,7 +158,8 @@
 <div id="card7724cc1dd56c415ba1884d5626e55d9e" class="clearfix">
     <div class="profile-info">
         <div>
-            <img src="/Identity/UserImage?username=@Model.UserName" alt="User Profile Image">
+            <img src="/Identity/UserImage?username=@(Model.UserName)&v=@(Model.ProfileImageVersion)"
+                alt="User Profile Image">
             <button class="changeImg-btn change-btn"
                 onclick="document.getElementById('card7724cc1dd56c415ba1884d5626e55d9e').getElementsByClassName('profileImg-form')[0].classList.add('open');/*style.display = 'block';*/"><i
                     class="fa-regular fa-image"></i> Change</button>
@@ -212,7 +213,8 @@
         </div>
     </div>
     <div class="showcase-div clearfix">
-        <img src="/Identity/UserShowcase?username=@Model.UserName" alt="User Profile Showcase">
+        <img src="/Identity/UserShowcase?username=@(Model.UserName)&v=@(Model.ProfileImageVersion)"
+            alt="User Profile Showcase">
         <button class="changeShowcase-btn change-btn" style="float: right; margin-right: 0px;"
             onclick="document.getElementById('card7724cc1dd56c415ba1884d5626e55d9e').getElementsByClassName('showcaseImg-form')[0].classList.add('open');/*style.display = 'block';*/">
             <i class="fa-regular fa-image"></i> Change

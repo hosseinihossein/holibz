@@ -29,19 +29,20 @@ public class HomeController : Controller
     {
         List<WebComponents_ItemDbModel> itemDbModels =
         await webComponentsDb.Items.OrderByDescending(item => item.Date).Take(9).ToListAsync();
-        List<WebComponents_ItemModel> itemModels = new(9);
+        List<WebComponents_ItemModel> itemModels =
+        [
+            new(),new(),new(),new(),new(),new(),new(),new(),new(),
+        ];
         int indexCounter = 3;
         foreach (WebComponents_ItemDbModel itemDbModel in itemDbModels)
         {
             Identity_UserModel? developer =
             await identityDb.Users.FirstOrDefaultAsync(u => u.UserGuid == itemDbModel.DeveloperGuid);
-            WebComponents_ItemModel itemModel = new()
-            {
-                Guid = itemDbModel.Guid,
-                Developer = developer,
-                Title = itemDbModel.Title,
-            };
-            itemModels.Insert(indexCounter, itemModel);
+
+            itemModels[indexCounter].Guid = itemDbModel.Guid;
+            itemModels[indexCounter].Title = itemDbModel.Title;
+            itemModels[indexCounter].Developer = developer;
+
             indexCounter++;
             if (indexCounter >= 9) indexCounter = 0;
         }

@@ -15,3 +15,8 @@ public class Home_ContactUsModel
     [FromForm(Name = "cf-turnstile-response")]
     public string CfTurnstileResponse { get; set; } = string.Empty;
 }
+
+public class Home_IndexModel
+{
+    public List<WebComponents_ItemModel> RecentlyAddedComponents { get; set; } = new();
+}

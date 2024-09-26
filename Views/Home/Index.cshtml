@@ -1,1 +1,675 @@
-<h1>this is home</h1>
+@model Home_IndexModel
+
+<!----------------------------------------------------------------->
+<h2 style="background-color:  rgb(35, 59, 59);color: white;width: fit-content;margin: auto;
+    padding: 15px 30px;border-radius: 10px;position: relative;top: 20px;z-index: 1;">Recntly Added
+    Components</h2>
+<div id="a4cfae93e514e49329578e445b2562084">
+    <style>
+        #a4cfae93e514e49329578e445b2562084 {
+            position: relative;
+            width: 100%;
+            margin: auto;
+            border: 1px solid gray;
+            overflow-x: hidden;
+            height: calc(31vh + 70px + 50px);
+            border-radius: 10px;
+            background-color: rgb(35, 59, 59);
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable {
+            position: absolute;
+            top: 50px;
+            bottom: 20px;
+            /*height: calc(100% - 40px);*/
+            width: 31%;
+            cursor: grab;
+            box-shadow: 0 0 10px white;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o-2 {
+            left: 100%;
+            opacity: 0;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o-1 {
+            left: 133%;
+            opacity: 0;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o0 {
+            left: 166%;
+            opacity: 0;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o1 {
+            left: -98%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o2 {
+            left: -65%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o3 {
+            left: -32%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o4 {
+            left: 1%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o5 {
+            left: 34%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o6 {
+            left: 67%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o7 {
+            left: 100%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o8 {
+            left: 133%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o9 {
+            left: 166%;
+            opacity: 1;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o10 {
+            left: -98%;
+            opacity: 0;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o11 {
+            left: -65%;
+            opacity: 0;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable.o12 {
+            left: -32%;
+            opacity: 0;
+        }
+
+        /********** contents ***********/
+        .a853327e226cb4ad891cf1362463e6edf {
+            width: 100%;
+            height: 100%;
+            /*margin: 50px auto 0;*/
+            margin: auto;
+        }
+
+        /* The browser window */
+        .a853327e226cb4ad891cf1362463e6edf .container {
+            border: 3px solid #f1f1f1;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            height: calc(100%);
+        }
+
+        /* Container for columns and the top "toolbar" */
+        .a853327e226cb4ad891cf1362463e6edf .row {
+            padding: 10px;
+            background: #f1f1f1;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        /* Create three unequal columns that floats next to each other */
+        .a853327e226cb4ad891cf1362463e6edf .column {
+            float: left;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .left {
+            width: 15%;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .right {
+            width: fit-content;
+            float: right;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .middle {
+            width: 65%;
+        }
+
+        /* Clear floats after the columns */
+        .a853327e226cb4ad891cf1362463e6edf .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .dropdown-content button,
+        .a853327e226cb4ad891cf1362463e6edf .dropdown-content a {
+            font-size: 25px;
+            background-color: rgba(255, 255, 255, 1);
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            position: relative;
+            margin: 10px 0 10px 10px;
+            opacity: 0.5;
+            text-decoration: none;
+            color: black;
+            display: block;
+            padding: 0 5px;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf button:hover,
+        .a853327e226cb4ad891cf1362463e6edf a:hover {
+            opacity: 1;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .developer-img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            object-fit: contain;
+            margin: 0 10px;
+            /*position: relative;*/
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf span.tooltip {
+            font-size: 12px;
+            background-color: black;
+            color: white;
+            border-radius: 10px;
+            padding: 5px 10px;
+            position: absolute;
+            right: 40px;
+            top: 0;
+            display: none;
+            width: fit-content;
+            text-wrap: nowrap;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf button:hover+span.tooltip,
+        .a853327e226cb4ad891cf1362463e6edf a:hover+span.tooltip,
+        .a853327e226cb4ad891cf1362463e6edf img:hover+span.tooltip {
+            z-index: 2;
+            display: inline;
+        }
+
+        /* Three dots */
+        .a853327e226cb4ad891cf1362463e6edf .dot {
+            margin-top: 4px;
+            height: 12px;
+            width: 12px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Style the input field */
+        .a853327e226cb4ad891cf1362463e6edf input[type=text] {
+            width: 100%;
+            border-radius: 3px;
+            border: none;
+            background-color: white;
+            margin-top: -8px;
+            height: 25px;
+            color: #666;
+            padding: 5px;
+        }
+
+        /* Three bars (hamburger menu) */
+        .a853327e226cb4ad891cf1362463e6edf .bar {
+            width: 17px;
+            height: 3px;
+            background-color: #aaa;
+            margin: 3px 0;
+            display: block;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .dropdown-btn {
+            position: relative;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .dropdown-content {
+            display: none;
+            background-color: white;
+            position: absolute;
+            top: 20px;
+            right: 0;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf .dropdown-btn:hover .dropdown-content {
+            display: block;
+            z-index: 2;
+        }
+
+        /* Page content */
+        .a853327e226cb4ad891cf1362463e6edf .content {
+            padding: 10px;
+            position: relative;
+        }
+
+        .a853327e226cb4ad891cf1362463e6edf iframe {
+            position: absolute;
+            left: calc(-34vw - 6px);
+            top: calc(-35vh + 2px);
+            width: 99vw;
+            height: 100vh;
+            transform: scale(30.5%, 30.7%);
+            z-index: 1;
+            background-color: white;
+        }
+    </style>
+
+    @for (int i = 0; i < Model.RecentlyAddedComponents.Count; i++)
+    {
+        <div class="dragable o@(i+1)">
+            <div class="a853327e226cb4ad891cf1362463e6edf">
+                <div class="container">
+                    <div class="row">
+                        <div class="column left">
+                            <span class="dot" style="background:#ED594A;"></span>
+                            <span class="dot" style="background:#FDD800;"></span>
+                            <span class="dot" style="background:#5AC05A;"></span>
+                        </div>
+                        <div class="column middle">
+                            <input type="text" value="title of the component">
+                        </div>
+                        <div class="column right">
+                            <div style="float: left;position: relative;">
+                                <a href="" style="display: block;">
+                                    <img src="/Identity/UserImage?username=@(Model.RecentlyAddedComponents[i].Developer?.UserName)&v=@(Model.RecentlyAddedComponents[i].Developer?.ProfileImageVersion)"
+                                        alt="" class="developer-img">
+                                </a>
+                                <span class="tooltip">@(Model.RecentlyAddedComponents[i].Developer?.UserName)</span>
+                            </div>
+                            <div style="float:right" class="dropdown-btn">
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+
+                                <div class="dropdown-content" style="position: absolute;">
+                                    <div style="position: relative;">
+                                        <button
+                                            onclick="showModalFrame('@Model.RecentlyAddedComponents[i].Guid', '@Model.RecentlyAddedComponents[i].Developer?.UserName', '@Model.RecentlyAddedComponents[i].Developer?.ProfileImageVersion', '@Model.RecentlyAddedComponents[i].Title')">
+                                            <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                        </button>
+                                        <span class="tooltip">Zoom In</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <a asp-controller="WebComponents" asp-action="ItemDetail"
+                                            asp-route-itemGuid="@(Model.RecentlyAddedComponents[i].Guid)"
+                                            style="display: block;">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        </a>
+                                        <span class="tooltip">More</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <a href="/WebComponents/ItemSource/@(Model.RecentlyAddedComponents[i].Guid)/@(Model.RecentlyAddedComponents[i].Guid).zip"
+                                            style="padding: 0 8px;display: block;">
+                                            <i class="fa-solid fa-file-arrow-down"></i>
+                                        </a>
+                                        <span class="tooltip">Download</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content">
+                        <iframe src="/WebComponents/ItemSource/@(Model.RecentlyAddedComponents[i].Guid)/index.html"
+                            frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <script>
+        let mainElements_a4cfae93e514e49329578e445b2562084 =
+            document.getElementById("a4cfae93e514e49329578e445b2562084");
+        let dragables_a4cfae93e514e49329578e445b2562084 =
+            mainElements_a4cfae93e514e49329578e445b2562084.getElementsByClassName("dragable");
+        for (let dragable of dragables_a4cfae93e514e49329578e445b2562084) {
+            dragElement_a4cfae93e514e49329578e445b2562084(dragable);
+        }
+
+        function dragElement_a4cfae93e514e49329578e445b2562084(element) {
+            element.addEventListener("mousedown", e => dragMouseDown(e));
+
+            function dragMouseDown(e) {
+                e.preventDefault();
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+
+                for (let dragable of dragables_a4cfae93e514e49329578e445b2562084) {
+                    dragable.style.transition = null;
+                    dragable.style.cursor = "grabbing";
+                }
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+
+                let mainWidth = mainElements_a4cfae93e514e49329578e445b2562084.offsetWidth;
+                for (let dragable of dragables_a4cfae93e514e49329578e445b2562084) {
+                    dragable.style.left = (dragable.offsetLeft + e.movementX) + "px";
+                    if (dragable.offsetLeft < (mainWidth * (-164 - 16) / 100)) {
+                        dragable.className = "dragable o-2";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (-131 - 16) / 100)) {
+                        dragable.className = "dragable o-1";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (-98 - 16) / 100)) {
+                        dragable.className = "dragable o0";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (-65 - 16) / 100)) {
+                        dragable.className = "dragable o1";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (-32 - 16) / 100)) {
+                        dragable.className = "dragable o2";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (1 - 16) / 100)) {
+                        dragable.className = "dragable o3";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (34 - 16) / 100)) {
+                        dragable.className = "dragable o4";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (67 - 16) / 100)) {
+                        dragable.className = "dragable o5";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (100 - 16) / 100)) {
+                        dragable.className = "dragable o6";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (133 - 16) / 100)) {
+                        dragable.className = "dragable o7";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (166 - 16) / 100)) {
+                        dragable.className = "dragable o8";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (199 - 16) / 100)) {
+                        dragable.className = "dragable o9";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (232 - 16) / 100)) {
+                        dragable.className = "dragable o10";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (265 - 16) / 100)) {
+                        dragable.className = "dragable o11";
+                    }
+                    else if (dragable.offsetLeft < (mainWidth * (298 - 16) / 100)) {
+                        dragable.className = "dragable o12";
+                    }
+                }
+            }
+
+            function closeDragElement() {
+                // stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+
+                for (let dragable of dragables_a4cfae93e514e49329578e445b2562084) {
+                    dragable.style.cursor = "grab";
+                    if (dragable.classList.contains("o-2")) {
+                        dragable.style.left = "100%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o-1")) {
+                        dragable.style.left = "133%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o0")) {
+                        dragable.style.left = "166%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o1")) {
+                        dragable.style.left = "-98%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o2")) {
+                        dragable.style.left = "-65%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o3")) {
+                        dragable.style.left = "-32%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o4")) {
+                        dragable.style.left = "1%";
+                        dragable.style.transition = "0.3s";
+                        dragable.style.zIndex = 1;
+                    }
+                    else if (dragable.classList.contains("o5")) {
+                        dragable.style.left = "34%";
+                        dragable.style.transition = "0.3s";
+                        dragable.style.zIndex = 1;
+                    }
+                    else if (dragable.classList.contains("o6")) {
+                        dragable.style.left = "67%";
+                        dragable.style.transition = "0.3s";
+                        dragable.style.zIndex = 1;
+                    }
+                    else if (dragable.classList.contains("o7")) {
+                        dragable.style.left = "100%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o8")) {
+                        dragable.style.left = "133%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o9")) {
+                        dragable.style.left = "166%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o10")) {
+                        dragable.style.left = "-98%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o11")) {
+                        dragable.style.left = "-65%";
+                        dragable.style.transition = "0.3s";
+                    }
+                    else if (dragable.classList.contains("o12")) {
+                        dragable.style.left = "-32%";
+                        dragable.style.transition = "0.3s";
+                    }
+                }
+
+                setTimeout(resetOrders, 300);
+
+
+            }
+            function resetOrders() {
+                for (let dragable of dragables_a4cfae93e514e49329578e445b2562084) {
+                    if (dragable.classList.contains("o-2")) {
+                        dragable.className = "dragable o7";
+                    }
+                    else if (dragable.classList.contains("o-1")) {
+                        dragable.className = "dragable o8";
+                    }
+                    else if (dragable.classList.contains("o0")) {
+                        dragable.className = "dragable o9";
+                    }
+                    else if (dragable.classList.contains("o10")) {
+                        dragable.className = "dragable o1";
+                    }
+                    else if (dragable.classList.contains("o11")) {
+                        dragable.className = "dragable o2";
+                    }
+                    else if (dragable.classList.contains("o12")) {
+                        dragable.className = "dragable o3";
+                    }
+                }
+            }
+        }
+    </script>
+
+    <div id="modala1148ffdb9b54fdf961ac961938daf26" onclick="if(event.target == this) this.classList.remove('open');">
+        <style>
+            #modala1148ffdb9b54fdf961ac961938daf26 {
+                position: fixed;
+                top: 50px;
+                left: 50vw;
+                bottom: 0;
+                width: 0;
+                /*height: 100vh;*/
+                background-color: rgba(255, 255, 255, 0.5);
+                backdrop-filter: blur(5px);
+                z-index: 2;
+                transition: all 0.2s;
+                overflow: auto;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26.open {
+                left: 0;
+                width: 100%;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #modal-frame {
+                width: 100vw;
+                height: 100vh;
+                transform: scale(80%, 80%);
+                box-shadow: 0 0 20px gray;
+                background-color: white;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #modal-close-btn {
+                color: red;
+                font-size: 40px;
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                cursor: pointer;
+                z-index: 3;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #modal-close-btn:hover {
+                color: rgb(206, 0, 0);
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 a {
+                text-decoration: none;
+                /*position: absolute;*/
+                /*right: 50px;*/
+                /*left: 20px;*/
+                color: #333;
+                font-size: 47px;
+                opacity: 0.7;
+                text-align: center;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 a:hover {
+                opacity: 1;
+                /*z-index: 1;*/
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 .tag-info {
+                display: inline;
+                visibility: hidden;
+                padding: 5px 10px;
+                background-color: black;
+                color: white;
+                position: relative;
+                left: 50%;
+                top: 5px;
+                transform: translateX(-50%);
+                width: fit-content;
+                border-radius: 10px;
+                font-size: 12px;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 a:hover+.tag-info {
+                /*display: block;*/
+                visibility: visible;
+                z-index: 1;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #developer-img {
+                width: 50px;
+                height: 50px;
+                object-fit: contain;
+                border-radius: 50%;
+                overflow: hidden;
+                position: relative;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #info-box {
+                text-align: center;
+                width: 90%;
+                margin: 0px auto 50px;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #info-box #title-header {
+                margin: 0px;
+                position: relative;
+                top: 30px;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #links-box {
+                position: relative;
+                /*top: 0;
+            left: 0;*/
+                width: fit-content;
+                /*z-index: 1;*/
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div {
+                position: relative;
+                float: left;
+                margin: 20px;
+                z-index: 1;
+                width: 100px;
+            }
+
+            #modala1148ffdb9b54fdf961ac961938daf26 #links-box>div * {
+                display: block;
+            }
+        </style>
+        <span id="modal-close-btn" onclick="this.parentElement.classList.remove('open');">&times;</span>
+
+        <div id="links-box" class="clearfix">
+            <div>
+                <a id="more-link" href="#"><i class="fa-solid fa-circle-info"></i></a>
+                <span class="tag-info">More</span>
+            </div>
+            <div>
+                <a id="download-link" href="#" style="padding: 0 5px;"><i class="fa-solid fa-file-arrow-down"></i></a>
+                <span class="tag-info">Download</span>
+            </div>
+            <div>
+                <a id="developer-link" href="#"><img id="developer-img" src="" alt=""></a>
+                <span id="developer-username" class="tag-info">username</span>
+            </div>
+        </div>
+
+        <div id="info-box">
+            <h2 id="title-header">Title of the component</h2>
+        </div>
+
+        <iframe id="modal-frame" src="" frameborder="0"></iframe>
+    </div>
+    <script>
+        function showModalFrame(itemGuid, developerUserName, developerProfileVersion, title) {
+            let modal = document.getElementById("modala1148ffdb9b54fdf961ac961938daf26");
+            //let sourceFrame = element.parentElement.parentElement.getElementsByTagName("iframe")[0];
+            modal.querySelector("#modal-frame").src = `/WebComponents/ItemSource/${itemGuid}/index.html`;
+            modal.querySelector("#more-link").href = `/WebComponents/ItemDetail?itemGuid=${itemGuid}`;
+            modal.querySelector("#download-link").href = `/WebComponents/ItemSource/${itemGuid}/${itemGuid}.zip`;
+            modal.querySelector("#developer-link").href = `/Identity/Profile?username=${developerUserName}`;
+            modal.querySelector("#developer-img").src = `/Identity/UserImage?username=${developerUserName}&v=${developerProfileVersion}`;
+            modal.querySelector("#developer-username").innerHTML = developerUserName;
+            modal.querySelector("#title-header").innerHTML = title;
+            modal.classList.add("open");
+        }
+    </script>
+</div>

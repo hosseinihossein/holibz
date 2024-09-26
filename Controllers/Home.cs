@@ -29,7 +29,8 @@ public class HomeController : Controller
     {
         List<WebComponents_ItemDbModel> itemDbModels =
         await webComponentsDb.Items.OrderByDescending(item => item.Date).Take(9).ToListAsync();
-        List<WebComponents_ItemModel> itemModels = new();
+        List<WebComponents_ItemModel> itemModels = new(9);
+        int indexCounter = 3;
         foreach (WebComponents_ItemDbModel itemDbModel in itemDbModels)
         {
             Identity_UserModel? developer =
@@ -40,7 +41,9 @@ public class HomeController : Controller
                 Developer = developer,
                 Title = itemDbModel.Title,
             };
-            itemModels.Add(itemModel);
+            itemModels.Insert(indexCounter, itemModel);
+            indexCounter++;
+            if (indexCounter >= 9) indexCounter = 0;
         }
         Home_IndexModel indexModel = new() { RecentlyAddedComponents = itemModels };
         return View(indexModel);

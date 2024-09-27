@@ -1,30 +1,55 @@
 @model Home_IndexModel
 
 <!----------------------------------------------------------------->
-<h2 style="background-color:  rgb(35, 59, 59);color: white;width: fit-content;margin: auto;
-    padding: 15px 30px;border-radius: 10px;position: relative;top: 20px;z-index: 1;">Recntly Added
-    Components</h2>
+<hr style="width: 80%;margin: 50px auto;border: 1px solid #ccc;">
+
+<style>
+    #recentlu-added-header {
+        /*background-color: #eee;*/
+        color: #555;
+        width: fit-content;
+        /*margin: auto;*/
+        margin-bottom: 0px;
+        margin-left: 30px;
+        padding: 15px 30px;
+        /*border: 1px solid gray;*/
+        /*border-top: 1px solid gray;
+            border-left: 1px solid gray;
+            border-right: 1px solid gray;*/
+        border-radius: 10px;
+        position: relative;
+        /*top: 20px;*/
+        z-index: 1;
+    }
+</style>
+<h3 id="recentlu-added-header">Recntly Added Components</h3>
+
 <div id="a4cfae93e514e49329578e445b2562084">
     <style>
         #a4cfae93e514e49329578e445b2562084 {
             position: relative;
             width: 100%;
+            left: 0px;
             margin: auto;
-            border: 1px solid gray;
-            overflow-x: hidden;
-            height: calc(31vh + 70px + 50px);
-            border-radius: 10px;
-            background-color: rgb(35, 59, 59);
+            /*border: 1px solid gray;*/
+            height: calc(31vh + 40px + 50px + 50px);
         }
 
         #a4cfae93e514e49329578e445b2562084 .dragable {
             position: absolute;
-            top: 50px;
-            bottom: 20px;
-            /*height: calc(100% - 40px);*/
+            top: 20px;
+            bottom: 70px;
             width: 31%;
             cursor: grab;
-            box-shadow: 0 0 10px white;
+            box-shadow: 0 0 10px gray;
+        }
+
+        #a4cfae93e514e49329578e445b2562084 .dragable .content-description {
+            font-size: 16px;
+            text-wrap: wrap;
+            padding: 0 10px;
+            max-height: 50px;
+            overflow: hidden;
         }
 
         #a4cfae93e514e49329578e445b2562084 .dragable.o-2 {
@@ -281,7 +306,7 @@
                             <span class="dot" style="background:#5AC05A;"></span>
                         </div>
                         <div class="column middle">
-                            <input type="text" value="title of the component">
+                            <input type="text" value="@(Model.RecentlyAddedComponents[i].Title)">
                         </div>
                         <div class="column right">
                             <div style="float: left;position: relative;">
@@ -330,6 +355,7 @@
                     </div>
                 </div>
             </div>
+            <p class="content-description">@(Model.RecentlyAddedComponents[i].Description)</p>
         </div>
     }
 

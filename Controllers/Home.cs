@@ -42,6 +42,7 @@ public class HomeController : Controller
             itemModels[indexCounter].Guid = itemDbModel.Guid;
             itemModels[indexCounter].Title = itemDbModel.Title;
             itemModels[indexCounter].Developer = developer;
+            itemModels[indexCounter].Description = itemDbModel.Description;
 
             indexCounter++;
             if (indexCounter >= 9) indexCounter = 0;

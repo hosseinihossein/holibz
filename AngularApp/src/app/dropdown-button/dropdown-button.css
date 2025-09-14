@@ -1,0 +1,6 @@
+button.open{
+    background-color: var(--mat-sys-primary-container);
+}
+button.open mat-icon{
+    rotate: 90deg;
+}

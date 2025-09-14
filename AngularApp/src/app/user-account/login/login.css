@@ -1,0 +1,30 @@
+form{
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 24px;
+    padding: 24px;
+    width: fit-content;
+    margin: auto;
+    box-shadow: 0 5px 5px var(--mat-sys-outline-variant);
+}
+
+mat-form-field{
+    display: block;
+    width: 300px;
+    margin: auto;
+}
+
+#login-btn{
+    margin: 0 0 16px 0;
+    display: block;
+    width: 100%;
+    margin: auto;
+}
+
+#signup-btn{
+    float: right;
+    font-size: 12px;
+}
+
+mat-error::before{
+    content: "*";
+}

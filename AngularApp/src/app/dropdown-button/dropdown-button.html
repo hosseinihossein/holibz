@@ -1,0 +1,7 @@
+<button matButton #myBtn style="padding-bottom: 6px;" [matMenuTriggerFor]="menu()" (menuOpened)="open()"
+    (menuClosed)="close()">
+    <ng-content />
+    <span>
+        <mat-icon style="position: relative;top: 6px;">arrow_right</mat-icon>
+    </span>
+</button>

@@ -1,0 +1,89 @@
+<form [formGroup]="newDocumentForm()" (ngSubmit)="onSubmit()">
+    <h2>
+        <mat-icon>newsstand</mat-icon>
+        Creating a new document
+    </h2>
+    <mat-form-field>
+        <mat-label>Library Category</mat-label>
+        <mat-select required formControlName="library">
+            <mat-optgroup label="Frontend">
+                <mat-option value="HtmlCssJs">Html Css JavaScript</mat-option>
+                <mat-option value="Angular">Angular</mat-option>
+                <mat-option value="React">React</mat-option>
+            </mat-optgroup>
+            <mat-optgroup label="Backend">
+                <mat-option value="AspNetCore">Asp.net Core</mat-option>
+            </mat-optgroup>
+        </mat-select>
+        @if(library()?.invalid && (library()?.dirty || library()?.touched) && library()?.hasError("required")){
+        <mat-error>
+            Library is required!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-label>Shelf</mat-label>
+        <mat-select formControlName="shelf">
+            <mat-option value="default">Default</mat-option>
+            <mat-option value="one">Shelf one title</mat-option>
+            <mat-option value="two">Shelf two title</mat-option>
+            <mat-option value="three">Shelf three title</mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-label>Title</mat-label>
+        <input matInput type="text" required maxlength="50" formControlName="title" />
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("required")){
+        <mat-error>
+            Title is required!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-label>Brief Description</mat-label>
+        <textarea name="" matInput required maxlength="500" formControlName="description"></textarea>
+        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
+        description()?.hasError("required")){
+        <mat-error>
+            Description is required!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <div id="img-box" class="clearfix">
+        <button matButton="elevated" type="button" id="selectButton" (click)="fileInput.click()">
+            Select an image <span style="font-size: 12px;">(optional)</span>
+        </button>
+
+        <input type="file" #fileInput (change)="onSelectImage($event)" />
+        @if(image()?.value){
+        <div style="position: relative;width: fit-content;margin: 24px auto 0;">
+            <img [src]="previewImgSrc()" #previewImg>
+            <button matIconButton type="button" class="noPaddingBtn" id="delete-img-btn" (click)="clearImgInput()"
+                matTooltip="Delete image">
+                <mat-icon>cancel</mat-icon>
+            </button>
+        </div>
+        }
+    </div>
+
+    <div style="float: right;margin-top: 50px;">
+        <button type="submit" matButton="elevated" style="width: fit-content;float: right;"
+            [disabled]="!newDocumentForm().valid">
+            Submit
+        </button>
+    </div>
+</form>
+<div>
+    {{ {
+    library:library()?.value ?? "",
+    shelf:shelf()?.value ?? "",
+    title:title()?.value ?? "",
+    description:description()?.value ?? "",
+    image:image()?.value?.name ?? "",
+    } | json}}
+</div>
+<div>{{newDocumentForm().value | json}}</div>

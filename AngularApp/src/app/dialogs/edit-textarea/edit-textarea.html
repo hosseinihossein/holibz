@@ -1,0 +1,11 @@
+<mat-dialog-content>
+    <mat-form-field>
+        <mat-label>{{data.label}}</mat-label>
+        <textarea matInput [value]="data.value" #paragraphInput placeholder="Write your text here.."
+            rows="5"></textarea>
+    </mat-form-field>
+    <mat-dialog-actions>
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="paragraphInput.value">Save</button>
+    </mat-dialog-actions>
+</mat-dialog-content>

@@ -1,0 +1,27 @@
+<mat-dialog-content>
+    <mat-form-field>
+        <mat-label>Tags</mat-label>
+        <mat-chip-grid #chipGrid>
+            @for(tag of tags(); track tag){
+            <mat-chip-row (removed)="removeTag(tag)">
+                {{tag}}
+                <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                </button>
+            </mat-chip-row>
+            }
+        </mat-chip-grid>
+        <input placeholder="search tag.." #tagInput [matChipInputFor]="chipGrid" [matAutocomplete]="autoComplete" />
+        <mat-autocomplete #autoComplete (optionSelected)="selectTag($event);tagInput.value=''">
+            @for(tag of documentService.allTags(); track tag){
+            @if(!tags().includes(tag)){
+            <mat-option [value]="tag">{{tag}}</mat-option>
+            }
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+    <mat-dialog-actions>
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="tags()">Save</button>
+    </mat-dialog-actions>
+</mat-dialog-content>

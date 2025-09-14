@@ -1,0 +1,28 @@
+<div class="mainDiv" [class.editMode]="singletonModes.editMode()">
+    @if(singletonModes.editMode()){
+    <app-edit-box [sectionModel]="sectionModel()"></app-edit-box>
+    }
+    @switch (sectionModel().type) {
+    @case("h1"){
+    <app-h1-section [sectionModel]="sectionModel()"></app-h1-section>
+    }
+    @case("h2"){
+    <app-h2-section [sectionModel]="sectionModel()"></app-h2-section>
+    }
+    @case("p"){
+    <app-p-section [sectionModel]="sectionModel()"></app-p-section>
+    }
+    @case("img"){
+    <app-img-section [sectionModel]="sectionModel()"></app-img-section>
+    }
+    @case("code"){
+    <app-code-section [sectionModel]="sectionModel()"></app-code-section>
+    }
+    @case("file"){
+    <app-file-section [sectionModel]="sectionModel()"></app-file-section>
+    }
+    @case("link"){
+    <app-link-section [sectionModel]="sectionModel()"></app-link-section>
+    }
+    }
+</div>

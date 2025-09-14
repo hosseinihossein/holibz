@@ -1,0 +1,10 @@
+<mat-dialog-content>
+    <mat-form-field>
+        <mat-label>{{data.label}}</mat-label>
+        <input matInput [value]="data.value" #headerInput>
+    </mat-form-field>
+    <mat-dialog-actions>
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="headerInput.value">Save</button>
+    </mat-dialog-actions>
+</mat-dialog-content>

@@ -1,0 +1,10 @@
+
+.headerSection{
+    font-weight: 400;
+}
+
+.hsScrollLocator{
+    position: absolute;
+    top: -64px;
+    width: 100%;
+}

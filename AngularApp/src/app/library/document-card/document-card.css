@@ -1,0 +1,89 @@
+mat-card {
+    height: 400px;
+    transition: all 150ms;
+    position: relative;
+}
+mat-card.alone{
+    width: 300px;
+    margin: 12px 0;
+}
+mat-card.raised{
+    border: 1px solid var(--mat-sys-outline-variant);
+}
+mat-card.mini{
+    width: 100px;
+    height: 200px;
+}
+mat-card.mini:hover{
+    width: 150px;
+}
+
+#remove-btn{
+    position: absolute;
+    top: -16px;
+    right: -16px;
+}
+#remove-btn:hover{
+    color: red;
+}
+
+mat-card.mini #avatar-img,
+mat-card.mini mat-card-subtitle,
+mat-card.mini mat-card-actions,
+mat-card.mini mat-card-content ul{
+    display: none;
+}
+
+mat-card.mini mat-card-title{
+    font-size: 14px;
+    line-height: 16px;
+}
+mat-card.mini:hover mat-card-title{
+    font-weight: bold;
+}
+
+mat-card.mini mat-card-content{
+    padding: 0;
+}
+
+mat-card.mini mat-card-content p,
+mat-card.mini mat-card-content h3{
+    font-size: 12px;
+    line-height: 14px;
+    margin: 0;
+}
+
+#avatar-img {
+    width: 50px;
+    height: 50px;
+    background-size: contain;
+    border-radius: 50%;
+}
+mat-card-title{
+    font-size: 16px;
+}
+mat-card-subtitle{
+    font-size: 12px;
+}
+
+mat-card-content{
+    height: 200px;
+    overflow: auto;
+    padding: 0;
+    flex: 1 1 auto;
+}
+
+mat-card-content #main-img {
+    width: 100%;
+    object-fit: contain;
+}
+mat-card-content p,
+mat-card-content h3{
+    padding: 0 8px;
+}
+mat-card-content p{
+    font-size: 14px;
+}
+mat-card-content h3{
+    margin: 8px;
+}

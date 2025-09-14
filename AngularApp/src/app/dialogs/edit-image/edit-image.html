@@ -1,0 +1,19 @@
+<mat-dialog-content>
+
+    <div id="img-box" class="clearfix">
+        <img [src]="previewImgSrc()" alt="user profile image" #previewImg>
+        <button matButton="elevated" id="selectButton" (click)="fileInput.click()">Select New Image</button>
+        <!--span>{{selectedFile()?.name}}</span-->
+        <!-- set two way binding between image input value and the previewImgSrc -->
+        <input type="file" #fileInput (change)="onSelectImage($event)">
+    </div>
+
+    <mat-dialog-actions align="end" style="float: right;">
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [mat-dialog-close]="{file:selectedFile()}">Save</button>
+    </mat-dialog-actions>
+    <mat-dialog-actions align="start">
+        <button matButton="filled" class="warning" mat-dialog-close="delete">Delete</button>
+    </mat-dialog-actions>
+
+</mat-dialog-content>

@@ -1,0 +1,73 @@
+<form [formGroup]="signupForm()">
+    <mat-form-field>
+        <mat-label>Username</mat-label>
+        <input matInput type="text" required placeholder="Enter your username" formControlName="username" />
+        <button type="button" matIconButton matSuffix (click)="checkUsernameValidation()" matTooltip="Check Validity">
+            <mat-icon>{{usernameValid() ? "check" : "search_check_2"}}</mat-icon>
+        </button>
+        @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("required")){
+        <mat-error>
+            username is required!
+        </mat-error>
+        }
+        @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("maxlength")){
+        <mat-error>
+            username must be less than 60 characters long!
+        </mat-error>
+        }
+        @if(username()?.invalid && (username()?.dirty || username()?.touched) &&
+        username()?.hasError("uniqueusername")){
+        <mat-error>
+            this username has already been taken, please try another one!
+        </mat-error>
+        }
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput type="email" required placeholder="Enter your email" formControlName="email" />
+        @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("required")){
+        <mat-error>
+            email is required!
+        </mat-error>
+        }
+        @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("maxlength")){
+        <mat-error>
+            email must be less than 60 characters long!
+        </mat-error>
+        }
+        @if(email()?.invalid && (email()?.dirty || email()?.touched) &&
+        email()?.hasError("uniqueemail")){
+        <mat-error>
+            another account has already been created by this email!
+        </mat-error>
+        }
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Password</mat-label>
+        <input matInput required [type]="hide() ? 'password' : 'text'" placeholder="Enter your password"
+            formControlName="password" />
+        <button type="button" matIconButton matSuffix (click)="changeVisibility()" [attr.aria-label]="'Hide password'"
+            [attr.aria-pressed]="hide()">
+            <mat-icon>{{hide() ? 'visibility' : 'visibility_off'}}</mat-icon>
+        </button>
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("required")){
+        <mat-error>
+            password is required!
+        </mat-error>
+        }
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("maxlength")){
+        <mat-error>
+            password must be less than 60 characters long!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <div class="clearfix">
+        <button matButton="filled" type="submit" id="signup-btn" [disabled]="!signupForm().valid">Signup</button>
+    </div>
+    <div style="text-align: center;font-size: 12px;margin: 16px 0;">or</div>
+    <div class="clearfix">
+        <a matButton id="login-btn">Already have an account</a>
+    </div>
+</form>
+<div>{{signupForm().value| json}}</div>

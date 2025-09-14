@@ -1,0 +1,46 @@
+<mat-card [appearance]="appearance()" class="document-card" [class.alone]="alone()" [class.mini]="mini()"
+    (mouseenter)="raiseCard()" (mouseleave)="outlineCard()">
+    @if(singletonModes.editMode()){
+    <button matIconButton class="noPaddingBtn" id="remove-btn" matTooltip="Remove from shelf">
+        <mat-icon>cancel</mat-icon>
+    </button>
+    }
+    <mat-card-header style="padding: 4px;">
+        <a href="" mat-card-avatar>
+            <img id="avatar-img" [src]="avatarSrc()" alt="default profile image">
+        </a>
+        <mat-card-title>{{title()}}</mat-card-title>
+        <mat-card-subtitle>by <a href="">{{ownerUsername()}}</a></mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        @if(imgSrc()){
+        <img mat-card-image id="main-img" [src]="imgSrc()" alt="Photo of a computer">
+        }
+        <p>{{description()}}</p>
+        <ul style="margin: 0px;">
+            <h4 style="margin-bottom: 0;">Contents:</h4>
+            <li>
+                <h3>header one</h3>
+            </li>
+            <li>
+                <h3>header two header two header two header two</h3>
+            </li>
+            <!--li>
+                <h3>header three</h3>
+            </li>
+            <li>
+                <h3>header four</h3>
+            </li>
+            <li>
+                <h3>header five</h3>
+            </li-->
+        </ul>
+    </mat-card-content>
+
+    <!--span style="flex: 1 1 auto;"></span-->
+
+    <mat-card-actions align="end">
+        <button matButton>Open</button>
+    </mat-card-actions>
+</mat-card>

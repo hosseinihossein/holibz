@@ -1,0 +1,53 @@
+<form [formGroup]="newShelfForm()">
+    <h2>
+        <mat-icon>shelves</mat-icon>
+        Creating a new Shelf
+    </h2>
+    <mat-form-field>
+        <mat-label>Library Category</mat-label>
+        <mat-select required formControlName="library">
+            <mat-optgroup label="Frontend">
+                <mat-option value="HtmlCssJs">Html Css JavaScript</mat-option>
+                <mat-option value="Angular">Angular</mat-option>
+                <mat-option value="React">React</mat-option>
+            </mat-optgroup>
+            <mat-optgroup label="Backend">
+                <mat-option value="AspNetCore">Asp.net Core</mat-option>
+            </mat-optgroup>
+        </mat-select>
+        @if(library()?.invalid && (library()?.dirty || library()?.touched) && library()?.hasError("required")){
+        <mat-error>
+            Library is required!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-label>Title</mat-label>
+        <input matInput type="text" required maxlength="50" formControlName="title" />
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("required")){
+        <mat-error>
+            Title is required!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-label>Brief Description</mat-label>
+        <textarea name="" matInput required maxlength="500" formControlName="description"></textarea>
+        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
+        description()?.hasError("required")){
+        <mat-error>
+            Description is required!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <div style="float: right;margin-top: 50px;">
+        <button type="submit" matButton="elevated" style="width: fit-content;float: right;"
+            [disabled]="!newShelfForm().valid">
+            Submit
+        </button>
+    </div>
+</form>
+<div>{{newShelfForm().value | json}}</div>

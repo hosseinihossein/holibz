@@ -1,0 +1,8 @@
+mat-dialog-content{
+    max-height: 95vh;
+}
+@media screen and (max-width:800px) {
+    mat-dialog-content{
+        max-height: 80vh;
+    }
+}

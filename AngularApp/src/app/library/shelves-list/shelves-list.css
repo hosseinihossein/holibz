@@ -1,0 +1,22 @@
+mat-sidenav{
+    width: 340px;
+    border-right: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 0;
+    padding-right: 10px;
+    padding-top: 10px;
+}
+@media screen and (max-width:700px) {
+    mat-sidenav{
+        display: none;
+    }
+}
+
+mat-sidenav-content{
+    padding: 8px;
+}
+mat-sidenav-content app-shelf-card{
+    margin: 0px 0px;
+    width: 100%;
+    min-width: 256px;
+    /*flex: 1 1 auto;*/
+}

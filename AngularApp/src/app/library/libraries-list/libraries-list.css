@@ -1,0 +1,53 @@
+.top-box{
+    padding: 16px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    box-shadow: 0 1px 5px var(--mat-sys-outline-variant);
+}
+
+.top-box .icon-box{
+    width: 56px;
+    height: 56px;
+    float: left;
+    margin: 0 16px;
+    border-radius: 50%;
+}
+
+.top-box .icon-box:hover{
+    background-color: var(--mat-sys-primary-container);
+}
+
+.top-box #library-icon{
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    float: left;
+    /*margin: 0 24px;*/
+}
+.top-box .icon-box mat-icon{
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+    text-align: center;
+    position: relative;
+    top: 14px;
+    float: left;
+    /*margin: 0 24px;*/
+}
+
+.top-box button{
+    margin: 8px;
+    float: right;
+}
+
+.list{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 8px 0;
+}
+
+app-library-card{
+    margin: 8px;
+}

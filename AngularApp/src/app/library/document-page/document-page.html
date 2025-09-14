@@ -1,0 +1,143 @@
+<mat-sidenav-container>
+
+    <!--------------------- shelves accordion -------------------->
+    <mat-sidenav id="startSideNav" mode="side" opened position="start" fixedInViewport fixedTopGap="56"
+        fixedBottomGap="16">
+        <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;"
+            matTooltip="This document is included in these shelves" matTooltipShowDelay="500">Shelves:</p>
+        <mat-accordion>
+            @for(shelf of documentService.shelves(); track shelf.guid){
+            <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                    <mat-panel-title [matTooltip]="shelf.description">
+                        {{shelf.title}}
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                @for(doc of shelf.documentsGuids; track doc){
+                <a matButton class="siblingDocs" matTooltip="document description" matTooltipShowDelay="500">{{doc}}</a>
+                }
+            </mat-expansion-panel>
+            }
+        </mat-accordion>
+    </mat-sidenav>
+
+    <!--------------------- content overview -------------------->
+    <mat-sidenav id="endSideNav" mode="side" opened position="end" fixedInViewport fixedTopGap="80" fixedBottomGap="16">
+        <p style="font-weight: 500;color: var(--mat-sys-on-surface);margin: 3px;">Contents:</p>
+        @for(section of documentService.allSectionModels(); track section.guid){
+        @if(section.type === "h1" || section.type === "h2"){
+        <a href="./#{{section.guid}}" id="overview-header{{section.guid}}"
+            [style.paddingLeft.px]="section.type === 'h2' ? 12 : 4">{{section.value}}</a>
+        }
+        }
+    </mat-sidenav>
+
+    <mat-sidenav-content [class.editMode]="singletonModes.editMode()">
+
+        <!--------------------- top action box -------------------->
+        <div class="actionDiv clearfix">
+            <a matButton="elevated" href="" id="userProfile" class="noPaddingBtn" matTooltip="Owner">
+                <img src="defaultProfile.jpg" alt="">
+                <span id="username">hossein</span>
+            </a>
+            <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version of the document">
+                <mat-icon>arrow_drop_down</mat-icon>
+                {{documentService.documentInfo().version}}
+            </button>
+            @if(singletonModes.editMode()){
+            <button matButton="elevated" [matMenuTriggerFor]="sectionMenu"
+                matTooltip="Add a new section to the document" class="noPaddingBtn">
+                <mat-icon>arrow_drop_down</mat-icon>
+                <mat-icon>add</mat-icon>
+            </button>
+            <button matButton="elevated" matTooltip="Exit edit mode" class="noPaddingBtn"
+                (click)="singletonModes.toggleEditMode()">
+                <mat-icon>edit_off</mat-icon>
+            </button>
+
+            <button matButton="filled" matTooltip="Delete this document" class="warning noPaddingBtn"
+                (click)="confirmDelete()" style="margin-left: 24px; float: right;">
+                <mat-icon>contract_delete</mat-icon>
+            </button>
+            }
+            @else {
+            <button matButton="elevated" matTooltip="Enter edit mode" class="noPaddingBtn"
+                (click)="singletonModes.toggleEditMode()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
+        </div>
+
+        <!--------------------- matmenu -------------------->
+        <mat-menu #version>
+            @if(singletonModes.editMode()){
+            <button mat-menu-item matTooltipPosition="left" matTooltip="Add a new version">
+                <mat-icon>difference</mat-icon> New
+            </button>
+            }
+            @for(version of documentService.getDocumentVersions(documentGuid()); track version){
+            <button mat-menu-item>{{version}}</button>
+            }
+        </mat-menu>
+        <mat-menu #sectionMenu>
+            <button mat-menu-item (click)="addNewSection('h1')" matTooltipPosition="left" matTooltip="Add a main title">
+                <mat-icon>format_h1</mat-icon>
+                Header1
+            </button>
+            <button mat-menu-item (click)="addNewSection('h2')" matTooltipPosition="left"
+                matTooltip="Add an subset header">
+                <mat-icon>format_h2</mat-icon>
+                Header2
+            </button>
+            <button mat-menu-item (click)="addNewSection('p')" matTooltipPosition="left" matTooltip="Add a paragraph">
+                <mat-icon>subject</mat-icon>
+                Paragraph
+            </button>
+            <button mat-menu-item (click)="addNewSection('img')" matTooltipPosition="left" matTooltip="Add an image">
+                <mat-icon>image</mat-icon>
+                Image
+            </button>
+            <button mat-menu-item (click)="addNewSection('code')" matTooltipPosition="left"
+                matTooltip="Add a code snippet">
+                <mat-icon>code_blocks</mat-icon>
+                Code
+            </button>
+            <button mat-menu-item (click)="addNewSection('link')" matTooltipPosition="left" matTooltip="Add a link">
+                <mat-icon>link</mat-icon>
+                Link
+            </button>
+            <button mat-menu-item (click)="addNewSection('file')" matTooltipPosition="left"
+                matTooltip="Attach a new file">
+                <mat-icon>file_present</mat-icon>
+                File
+            </button>
+        </mat-menu>
+        <!-------------------------------------------------->
+
+        <!--------------------- tags box -------------------->
+        <div id="tags-box" [class.editMode]="singletonModes.editMode()">
+            <h3>
+                Tags:
+                @if(singletonModes.editMode()){
+                <button matButton="elevated" class="noPaddingBtn" matTooltip="Edit tags" matTooltipPosition="after"
+                    (click)="editTags()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+            </h3>
+            <mat-chip-set>
+                @for(tag of documentService.documentInfo().tags; track tag){
+                <mat-chip>{{tag}}</mat-chip>
+                }
+            </mat-chip-set>
+        </div>
+        <!-------------------------------------------------->
+
+        <!--------------------- sections -------------------->
+        @for(section of sortedSectoins(); track section.guid){
+        <app-section [sectionModel]="section"></app-section>
+        }
+
+    </mat-sidenav-content>
+
+</mat-sidenav-container>

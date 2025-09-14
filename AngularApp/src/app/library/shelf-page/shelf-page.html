@@ -1,0 +1,35 @@
+<app-documents-list>
+    <mat-card appearance="raised">
+        <mat-card-header>
+            <button matButton="elevated" class="noPaddingBtn" id="edit-mode-btn"
+                (click)="signletonModes.toggleEditMode()">
+                <mat-icon>{{signletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
+            </button>
+            <div matCardAvatar matBadge="25" matBadgePosition="above">
+                <mat-icon id="shelf-logo">shelves</mat-icon>
+            </div>
+            <mat-card-title>
+                {{shelfTitle()}}
+                @if(signletonModes.editMode()){
+                <button matIconButton class="noPaddingBtn" matTooltip="Edit title" (click)="openEditTitleDialog()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+            </mat-card-title>
+            <mat-card-subtitle>
+                Created by username
+            </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+            <p>
+                {{shelfDescription()}}
+                @if(signletonModes.editMode()){
+                <button matIconButton class="noPaddingBtn" matTooltip="Edit description"
+                    (click)="openEditDescriptionDialog()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+            </p>
+        </mat-card-content>
+    </mat-card>
+</app-documents-list>

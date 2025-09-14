@@ -1,0 +1,43 @@
+mat-accordion{
+    margin: 0px 0;
+    display: block;
+    padding: 0;
+}
+
+mat-expansion-panel{
+    padding: 0;
+    border: 1px solid var(--mat-sys-outline-variant);
+}
+
+mat-expansion-panel .listOfDocs{
+    display: flex;
+    justify-content: start;;
+}
+
+mat-expansion-panel .listOfDocs app-document-card{
+    margin: 8px;
+}
+
+mat-expansion-panel-header{
+    padding: 8px 0px 8px 4px;
+}
+
+mat-panel-title{
+    width: fit-content;
+}
+
+mat-panel-description{
+    font-size: 14px;
+}
+
+#owner-username{
+    width: 50px;
+    height:50px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+mat-action-row{
+    padding: 8px;
+    border-top: none;
+}

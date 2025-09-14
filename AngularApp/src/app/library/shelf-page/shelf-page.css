@@ -1,0 +1,17 @@
+mat-card{
+    margin: 24px;
+    position: relative;
+}
+
+#edit-mode-btn{
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+mat-icon#shelf-logo{
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+}

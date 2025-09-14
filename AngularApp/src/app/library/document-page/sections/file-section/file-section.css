@@ -1,0 +1,15 @@
+div.MainDiv{
+    position: relative;
+}
+
+div.editMode{
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 16px;
+    padding: 3px;
+    margin: 4px;
+}
+
+a{
+    margin: 10px;
+    overflow: hidden;
+}

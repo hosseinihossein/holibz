@@ -1,0 +1,16 @@
+
+img{
+    display: block;
+    max-width: 70%;
+    max-height: 90vh;
+    margin: auto;
+    cursor: zoom-in;
+    border: 3px solid var(--mat-sys-outline-variant);
+    border-radius: 5px;
+    transition: box-shadow 200ms;
+    object-fit: contain;
+}
+
+img:hover{
+    box-shadow: 0px 5px 10px 0 var(--mat-sys-outline);
+}

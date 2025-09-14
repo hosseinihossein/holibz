@@ -1,0 +1,11 @@
+mat-form-field{
+    width: 100%;
+}
+mat-dialog-content{
+    width: 50vw;
+    min-width: 400px;
+}
+mat-dialog-content textarea{
+    font-family: 'Courier New', Courier, monospace;
+    text-wrap: nowrap;
+}

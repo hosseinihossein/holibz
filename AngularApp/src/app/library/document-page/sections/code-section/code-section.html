@@ -1,0 +1,7 @@
+<div class="codeSection">
+    <button matIconButton class="copyBtn" matTooltip="Copy to clipboard" matTooltipPosition="left"
+        (click)="copyCode($event)">
+        <mat-icon>content_copy</mat-icon>
+    </button>
+    <pre>{{sectionModel().value}}</pre>
+</div>

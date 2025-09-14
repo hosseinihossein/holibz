@@ -1,0 +1,24 @@
+mat-sidenav{
+    width: 340px;
+    border-right: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 0;
+    padding-right: 10px;
+    padding-top: 10px;
+}
+@media screen and (max-width:700px) {
+    mat-sidenav{
+        display: none;
+    }
+}
+
+mat-sidenav-content{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+mat-sidenav-content app-document-card{
+    margin: 16px 8px;
+    width: 20%;
+    min-width: 256px;
+    flex: 1 1 auto;
+}

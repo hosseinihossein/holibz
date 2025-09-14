@@ -1,0 +1,55 @@
+<mat-card appearance="outlined">
+    <mat-card-header>
+        <div style="float: left;position: relative;">
+            <img [src]="'/'+userImgSrc()" alt="user image" id="user-profile-img">
+            @if(singletonModes.editMode()){
+            <button matIconButton class="edit-btn" style="bottom: -8px;left: -8px;" matTooltip="Edit user image"
+                (click)="openEditImageDialog()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
+        </div>
+
+        <div style="float: left;position: relative;">
+            <mat-card-title>
+                {{username()}}
+                @if(singletonModes.editMode()){
+                <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit username"
+                    (click)="openEditUsernameDialog()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+            </mat-card-title>
+
+            <mat-card-subtitle>
+                {{email()}}
+                @if(singletonModes.editMode()){
+                <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit email"
+                    (click)="openEditEmailDialog()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+            </mat-card-subtitle>
+        </div>
+
+    </mat-card-header>
+
+    <mat-card-content>
+        <p>
+            {{description()}}
+            @if(singletonModes.editMode()){
+            <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit description"
+                (click)="openEditDescriptionDialog()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
+        </p>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+        <button matButton="elevated" class="noPaddingBtn" (click)="singletonModes.toggleEditMode()"
+            [matTooltip]="singletonModes.editMode() ? 'Exit from edit mode' : 'Enter edit mode'">
+            <mat-icon>{{singletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
+        </button>
+    </mat-card-actions>
+</mat-card>

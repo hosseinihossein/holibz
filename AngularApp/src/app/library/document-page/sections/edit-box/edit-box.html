@@ -1,0 +1,13 @@
+<div>
+    <button matButton="elevated" class="noPaddingBtn" (click)="openDialog()">
+        <mat-icon>edit</mat-icon>
+    </button>
+    <button matButton="elevated" class="noPaddingBtn"
+        (click)="documentService.decreaseSectionOrder(sectionModel().guid)">
+        <mat-icon>arrow_warm_up</mat-icon>
+    </button>
+    <button matButton="elevated" class="noPaddingBtn"
+        (click)="documentService.increaseSectionOrder(sectionModel().guid)">
+        <mat-icon>arrow_cool_down</mat-icon>
+    </button>
+</div>

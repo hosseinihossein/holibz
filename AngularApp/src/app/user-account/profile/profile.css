@@ -1,0 +1,26 @@
+mat-card{
+    width: 80%;
+    max-width: 800px;
+    min-width: 350px;
+    margin: 50px auto;
+}
+
+img#user-profile-img{
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+mat-card-title{
+    margin: 16px 0;
+}
+
+button.edit-btn{
+    position: absolute;
+}
+
+mat-card-content{
+    position: relative;
+}

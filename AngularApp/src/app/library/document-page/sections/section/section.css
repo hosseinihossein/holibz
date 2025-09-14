@@ -1,0 +1,15 @@
+div.mainDiv{
+    position: relative;
+}
+
+div.editMode{
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 16px;
+    padding: 3px;
+    margin: 4px;
+    transition: /*box-shadow*/all 200ms;
+}
+div.editMode:hover{
+    /*background-color: var(--mat-sys-outline-variant);*/
+    box-shadow: 0 1px 5px var(--mat-sys-outline);
+}

@@ -1,10 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AspNetCoreApp.Models;
 
@@ -69,7 +75,7 @@ public class IdentityDb : IdentityDbContext<Identity_UserDbModel, Identity_RoleD
 }
 
 /******************************** EmailTokenProvider *******************************/
-public class Identity_EmailTokenProvider : AuthenticatorTokenProvider<Identity_UserDbModel>
+/*public class Identity_EmailTokenProvider : AuthenticatorTokenProvider<Identity_UserDbModel>
 {
     public override Task<bool> CanGenerateTwoFactorTokenAsync(UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
     {
@@ -96,5 +102,98 @@ public class Identity_EmailTokenProvider : AuthenticatorTokenProvider<Identity_U
         }
         return isValid;
     }
-}
+}*/
 
+/******************************** Custom Token Provider *******************************/
+public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbModel>
+{
+    readonly IConfiguration _configuration;
+    public CustomTokenProvider(
+        IDataProtectionProvider dataProtectionProvider,
+        IOptions<DataProtectionTokenProviderOptions> options,
+        ILogger<DataProtectorTokenProvider<Identity_UserDbModel>> logger,
+        IConfiguration configuration)
+    : base(dataProtectionProvider, options, logger)
+    {
+        _configuration = configuration;
+    }
+
+    public override async Task<string> GenerateAsync(string purpose, UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
+    {
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserGuid),
+            new Claim("AspNet.Identity.SecurityStamp", await userManager.GetSecurityStampAsync(user))
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings["Key"]!));
+        var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(double.Parse(jwtSettings["DurationInHours"] ?? "10")),
+            signingCredentials: signingCredentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public override async Task<bool> ValidateAsync(string purpose, string token, UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
+    {
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings["Key"]!)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        ClaimsPrincipal principal;
+        SecurityToken validatedToken;
+
+        var validationResult = await tokenHandler.ValidateTokenAsync(token, tokenValidationParameters);
+        if (!validationResult.IsValid)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Validate the token and return the claims principal
+            principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out validatedToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Token validation failed: {ex.Message}");
+            return false;
+        }
+
+        // Ensure the token is a valid JWT
+        if (validatedToken is JwtSecurityToken jwtToken &&
+            jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase) &&
+            principal is not null)
+        {
+            string? userGuid = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userGuid is null || user.UserGuid != userGuid)
+            {
+                return false;
+            }
+
+            string? securityStamp = principal?.FindFirst("AspNet.Identity.SecurityStamp")?.Value;
+            if (securityStamp is null || user.SecurityStamp != securityStamp)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+}

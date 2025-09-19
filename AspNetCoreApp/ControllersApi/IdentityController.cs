@@ -50,11 +50,14 @@ public class IdentityController : ControllerBase
             else
             {
                 Microsoft.AspNetCore.Identity.SignInResult result =
-                await signInManager.PasswordSignInAsync(user, loginModel.Password, loginModel.IsPersistent, false);
+                //await signInManager.PasswordSignInAsync(user, loginModel.Password, loginModel.IsPersistent, false);
+                await signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
 
                 if (result.Succeeded)
                 {
-                    return Redirect(loginModel.ReturnUrl ?? "/");
+                    //return Redirect(loginModel.ReturnUrl ?? "/");
+                    string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
+                    return Ok(new { token });
                 }
                 else
                 {

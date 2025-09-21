@@ -11,20 +11,20 @@ public class IdentityController : ControllerBase
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
     readonly IWebHostEnvironment env;
-    readonly IEmailSender emailSender;
+    //readonly IEmailSender emailSender;
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager, UserManager<Identity_UserDbModel> userManager,
-    IWebHostEnvironment env, IEmailSender _emailSender/*, RoleManager<Identity_RoleModel> roleManager,
+    IWebHostEnvironment env/*, IEmailSender _emailSender/*, RoleManager<Identity_RoleModel> roleManager,
     WebComponents_DbContext webComponentsDb*/)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
         this.env = env;
-        emailSender = _emailSender;
+        //emailSender = _emailSender;
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(Identity_LoginModel loginModel)
+    public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel)
     {
         if (User.Identity?.IsAuthenticated ?? false)
         {
@@ -50,12 +50,10 @@ public class IdentityController : ControllerBase
             else
             {
                 Microsoft.AspNetCore.Identity.SignInResult result =
-                //await signInManager.PasswordSignInAsync(user, loginModel.Password, loginModel.IsPersistent, false);
                 await signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
 
                 if (result.Succeeded)
                 {
-                    //return Redirect(loginModel.ReturnUrl ?? "/");
                     string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                     return Ok(new { token });
                 }
@@ -73,9 +71,10 @@ public class IdentityController : ControllerBase
         return BadRequest(ModelState);
     }
 
-    [HttpPost("signup")]
-    public async Task<IActionResult> CreateNewAccount()
+    /*[HttpPost("signup")]
+    public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
+    [FromServices] IEmailSender emailSender)
     {
 
-    }
+    }*/
 }

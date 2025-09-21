@@ -43,13 +43,13 @@ public class Identity_LoginModel
 {
     public string? ReturnUrl { get; set; } = string.Empty;
 
-    [StringLength(50, MinimumLength = 8)]
+    //[StringLength(50, MinimumLength = 8)]
     public string UsernameOrEmail { get; set; } = string.Empty;
 
-    [StringLength(50, MinimumLength = 8)]
+    //[StringLength(50, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
-    public bool IsPersistent { get; set; } = false;
+    //public bool IsPersistent { get; set; } = false;
 }
 
 public class Identity_SignupModel
@@ -69,9 +69,9 @@ public class Identity_SignupModel
 }
 
 /*********************************** IdentityDb ************************************/
-public class IdentityDb : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
+public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
 {
-    public IdentityDb(DbContextOptions<IdentityDb> options) : base(options) { }
+    public Identity_DbContext(DbContextOptions<Identity_DbContext> options) : base(options) { }
 }
 
 /******************************** EmailTokenProvider *******************************/

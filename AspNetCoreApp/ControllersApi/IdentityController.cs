@@ -10,17 +10,12 @@ public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
-    readonly IWebHostEnvironment env;
-    //readonly IEmailSender emailSender;
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager, UserManager<Identity_UserDbModel> userManager,
-    IWebHostEnvironment env/*, IEmailSender _emailSender/*, RoleManager<Identity_RoleModel> roleManager,
-    WebComponents_DbContext webComponentsDb*/)
+    IWebHostEnvironment env)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
-        this.env = env;
-        //emailSender = _emailSender;
     }
 
     [HttpPost("login")]

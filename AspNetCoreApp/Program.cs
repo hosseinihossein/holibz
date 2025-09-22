@@ -1,11 +1,10 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -62,8 +61,14 @@ public class Program
             options.ValidationInterval = TimeSpan.Zero;
         });
 
-        builder.Services.AddControllersWithViews();
-        builder.Services.AddControllers();
+        builder.Services.AddControllersWithViews(options =>
+        {
+            options.Filters.Add(new RequireHttpsAttribute());
+        });
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add(new RequireHttpsAttribute());
+        });
 
         //builder.Services.AddScoped<Identity_Process>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
@@ -76,6 +81,18 @@ public class Program
         })
         .AddCookie(options =>
         {
+            options.ExpireTimeSpan = TimeSpan.FromHours(10);
+            options.Cookie.Expiration = TimeSpan.FromHours(10);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.SlidingExpiration = true;
+            options.AccessDeniedPath = "/Identity/AccessDenied";
+            options.LoginPath = "/Identity/Login";
+            //options.LogoutPath = "";
+            //options.ReturnUrlParameter = "";
+
             options.Events = new CookieAuthenticationEvents
             {
                 OnRedirectToLogin = redirectContext =>

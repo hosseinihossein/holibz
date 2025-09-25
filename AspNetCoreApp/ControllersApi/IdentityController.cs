@@ -1,4 +1,5 @@
 using AspNetCoreApp.Models;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,16 @@ public class IdentityController : ControllerBase
         this.userManager = userManager;
     }
 
+    [HttpGet("csrft")]
+    public IActionResult GetAntiForgeryToken(IAntiforgery antiforgery)
+    {
+        // Generate and return the anti-forgery token
+        var tokens = antiforgery.GetAndStoreTokens(HttpContext);
+        return Ok(new { csrft = tokens.RequestToken });
+    }
+
     [HttpPost("login")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel)
     {
         if (User.Identity?.IsAuthenticated ?? false)
@@ -67,6 +77,7 @@ public class IdentityController : ControllerBase
     }
 
     /*[HttpPost("signup")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
     [FromServices] IEmailSender emailSender)
     {

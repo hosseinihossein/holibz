@@ -8,11 +8,10 @@ export class AuthService {
   private httpClient = inject(HttpClient);
 
   login(usernameOrEmail: string, password: string){
-    return this.httpClient.post<{token:string}>("/api/Identity/login", {usernameOrEmail, password})
+    this.httpClient.post<{token:string}>("/api/Identity/login", {usernameOrEmail, password})
       .subscribe({
-        next: res => localStorage.setItem("jwt_token", res.token),
-        error: err => 
-      })
+        next: res => localStorage.setItem("jwt_token", res.token)
+      });
   }
 
   private saveJwtToken(token:string){

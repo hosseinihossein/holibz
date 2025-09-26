@@ -1,10 +1,13 @@
 import { JsonPipe } from '@angular/common';
-import { AfterViewInit, Component, computed, signal, viewChildren } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, signal, viewChildren } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from "@angular/material/input";
+import { AuthService } from '../../services/auth-service';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { throwError } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -22,6 +25,8 @@ export class Login implements AfterViewInit {
   }));
   user = computed(()=>this.loginForm().get("user"));
   password = computed(()=>this.loginForm().get("password"));
+
+  authService = inject(AuthService);
   
   formFields = viewChildren(MatFormField);
   
@@ -39,4 +44,30 @@ export class Login implements AfterViewInit {
       this.hide.set(true);
     }
   }
+
+  login(){
+    if(this.loginForm().valid){
+      let formValue = this.loginForm().value;
+      this.authService.login(formValue.user!, formValue.password!).subscribe({
+        next: res => console.log("token: ", res.token),
+        error: err => {
+          if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
+            if(err.error.Activity){
+              this.user()?.setErrors({loginError: "err.error.Activity"});
+            }
+            else if(err.error.Username){
+              this.user()?.setErrors({loginError: "err.error.Username"});
+            }
+            else if(err.error.Password){
+              this.password()?.setErrors({loginError: "err.error.Password"});
+            }
+          }
+          else{
+            throwError(()=>err);
+          }
+        },
+      });
+    }
+  }
+
 }

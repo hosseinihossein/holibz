@@ -50,7 +50,7 @@ public class IdentityController : ControllerBase
         {
             if (!user.ActivityAllowed)
             {
-                ModelState.AddModelError("", "Your Account is inactive! Contact to admin.");
+                ModelState.AddModelError("Activity", "Your Account is inactive! Contact to admin.");
             }
             else
             {
@@ -64,13 +64,13 @@ public class IdentityController : ControllerBase
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Invalid Credentials");
+                    ModelState.AddModelError("Password", "Invalid Credentials");
                 }
             }
         }
         else
         {
-            ModelState.AddModelError("", "Invalid Username or Email");
+            ModelState.AddModelError("Username", "Invalid Username or Email");
         }
 
         return BadRequest(ModelState);

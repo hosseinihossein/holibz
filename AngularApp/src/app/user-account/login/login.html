@@ -7,13 +7,14 @@
             username or email is required!
         </mat-error>
         }
-        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("required")){
+        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("maxlength")){
         <mat-error>
             username or email must be less than 60 characters long!
         </mat-error>
         }
-        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("maxlength")){
+        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("loginError")){
         <mat-error>
+            login error: {{user()?.getError("loginError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -25,14 +26,19 @@
             [attr.aria-pressed]="hide()">
             <mat-icon>{{hide() ? 'visibility' : 'visibility_off'}}</mat-icon>
         </button>
-        @if(password()?.invalid && (password()?.dirty || password()?.touched)){
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("required")){
         <mat-error>
-            @if(password()?.hasError("required")){
             password is required!
-            }
-            @if(password()?.hasError("maxlength")){
+        </mat-error>
+        }
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("maxlength")){
+        <mat-error>
             password must be less than 60 characters long!
-            }
+        </mat-error>
+        }
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("loginError")){
+        <mat-error>
+            login error: {{password()?.getError("loginError")}}
         </mat-error>
         }
     </mat-form-field>

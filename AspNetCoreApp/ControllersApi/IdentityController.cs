@@ -29,7 +29,8 @@ public class IdentityController : ControllerBase
 
     [HttpPost("login")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel)
+    public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel,
+    [FromServices] IConfiguration configuration)
     {
         if (User.Identity?.IsAuthenticated ?? false)
         {
@@ -60,7 +61,8 @@ public class IdentityController : ControllerBase
                 if (result.Succeeded)
                 {
                     string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
-                    return Ok(new { token });
+                    var jwtSettings = configuration.GetSection("JwtSettings");
+                    return Ok(new { token, expiresInHours = jwtSettings["DurationInHours"] ?? "10" });
                 }
                 else
                 {

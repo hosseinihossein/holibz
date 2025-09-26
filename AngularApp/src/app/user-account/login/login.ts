@@ -8,6 +8,7 @@ import { MatInput } from "@angular/material/input";
 import { AuthService } from '../../services/auth-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -27,6 +28,8 @@ export class Login implements AfterViewInit {
   password = computed(()=>this.loginForm().get("password"));
 
   authService = inject(AuthService);
+  router = inject(Router);
+  activatedRoute = inject(ActivatedRoute);
   
   formFields = viewChildren(MatFormField);
   
@@ -49,7 +52,11 @@ export class Login implements AfterViewInit {
     if(this.loginForm().valid){
       let formValue = this.loginForm().value;
       this.authService.login(formValue.user!, formValue.password!).subscribe({
-        next: res => console.log("token: ", res.token),
+        next: res => {
+          console.log("token: ", res.token);
+          let returnUrl = this.activatedRoute.snapshot.queryParamMap.get("returnUrl") || "/";
+          this.router.navigateByUrl(returnUrl);
+        },
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             if(err.error.Activity){

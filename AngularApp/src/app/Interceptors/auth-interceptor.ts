@@ -6,9 +6,9 @@ import { AuthService } from "../services/auth-service";
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
     const authService = inject(AuthService);
 
-    if(authService.isLogin()){
+    if(authService.isAuthenticated()){
         let token = authService.getToken();
-        let cloned = req.clone({headers: req.headers.set("Authorization", "Bearer " + token)});
+        let cloned = req.clone({setHeaders: {Authorization: "Bearer " + token}});
         return next(cloned);
     }
     else{

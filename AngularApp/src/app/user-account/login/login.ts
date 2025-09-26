@@ -59,14 +59,14 @@ export class Login implements AfterViewInit {
         },
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
-            if(err.error.Activity){
-              this.user()?.setErrors({loginError: "err.error.Activity"});
+            if(err.error.Inactive){
+              this.user()?.setErrors({loginError: err.error.Inactive});
             }
             else if(err.error.Username){
-              this.user()?.setErrors({loginError: "err.error.Username"});
+              this.user()?.setErrors({loginError: err.error.Username});
             }
             else if(err.error.Password){
-              this.password()?.setErrors({loginError: "err.error.Password"});
+              this.password()?.setErrors({loginError: err.error.Password});
             }
           }
           else{

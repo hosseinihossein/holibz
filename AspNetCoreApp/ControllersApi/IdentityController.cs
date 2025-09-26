@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreApp.ControllersApi;
 
@@ -51,7 +53,7 @@ public class IdentityController : ControllerBase
         {
             if (!user.ActivityAllowed)
             {
-                ModelState.AddModelError("Activity", "Your Account is inactive! Contact to admin.");
+                ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
             }
             else
             {
@@ -85,4 +87,18 @@ public class IdentityController : ControllerBase
     {
 
     }*/
+
+    [HttpGet("CheckUsername")]
+    public async Task<IActionResult> UsernameExist([FromQuery][StringLength(60)] string username)
+    {
+        /*Identity_UserDbModel? user = await userManager.FindByNameAsync(username);
+        if (user is null)
+        {
+            return Ok(new { isTaken = false });
+        }
+        return Ok(new { isTaken = false });*/
+
+        bool userExist = await userManager.Users.AnyAsync(u => u.UserName == username);
+        return Ok(new { isTaken = userExist });
+    }
 }

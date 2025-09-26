@@ -4,7 +4,7 @@ import { dashboardRoutes } from "./dashboard/dashboard.routes";
 import { Login } from "./login/login";
 import { Profile } from "./profile/profile";
 import { Signup } from "./signup/signup";
-import { authGuard } from "../Guards/auth-guard";
+import { authGuard } from "../guards/auth-guard";
 
 export const userAccountRoutes : Routes = [
     {path: "login", component: Login},

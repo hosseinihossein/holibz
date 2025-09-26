@@ -1,10 +1,17 @@
-<form [formGroup]="signupForm()">
+<form [formGroup]="signupForm()" (ngSubmit)="signup()">
     <mat-form-field>
         <mat-label>Username</mat-label>
         <input matInput type="text" required placeholder="Enter your username" formControlName="username" />
-        <button type="button" matIconButton matSuffix (click)="checkUsernameValidation()" matTooltip="Check Validity">
+        <!--button type="button" matIconButton matSuffix (click)="checkUsernameValidation()" matTooltip="Check Validity">
             <mat-icon>{{usernameValid() ? "check" : "search_check_2"}}</mat-icon>
-        </button>
+        </button-->
+        @if(username()?.invalid && username()?.dirty && username()?.hasError("usernameTaken")){
+        <mat-icon matSuffix>unpublished</mat-icon>
+        }
+        @else if (!username()?.invalid && username()?.dirty) {
+        <mat-icon matSuffix>check_circle</mat-icon>
+        }
+
         @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("required")){
         <mat-error>
             username is required!
@@ -15,8 +22,8 @@
             username must be less than 60 characters long!
         </mat-error>
         }
-        @if(username()?.invalid && (username()?.dirty || username()?.touched) &&
-        username()?.hasError("uniqueusername")){
+        @if(username()?.invalid && username()?.dirty &&
+        username()?.hasError("usernameTaken")){
         <mat-error>
             this username has already been taken, please try another one!
         </mat-error>
@@ -36,7 +43,7 @@
         </mat-error>
         }
         @if(email()?.invalid && (email()?.dirty || email()?.touched) &&
-        email()?.hasError("uniqueemail")){
+        email()?.hasError("emailTaken")){
         <mat-error>
             another account has already been created by this email!
         </mat-error>

@@ -10,8 +10,18 @@ export class AuthService {
   private tokenExpiration_StorageKey = "token_expire";
   private httpClient = inject(HttpClient);
 
+  signup(username: string, email:string, password: string){
+    return this.httpClient.post(
+      "/api/Identity/signup", 
+      {username, email, password}
+    );
+  }
+
   login(usernameOrEmail: string, password: string){
-    return this.httpClient.post<{token:string, expiresInHours:string}>("/api/Identity/login", {usernameOrEmail, password}).pipe(
+    return this.httpClient.post<{token:string, expiresInHours:string}>(
+      "/api/Identity/login", 
+      {usernameOrEmail, password}
+    ).pipe(
       tap({
         next: res => {
           localStorage.setItem(this.token_StorageKey, res.token);

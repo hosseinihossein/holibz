@@ -54,14 +54,14 @@ public class Identity_LoginModel
 
 public class Identity_SignupModel
 {
-    [StringLength(50, MinimumLength = 8)]
+    [StringLength(60, MinimumLength = 8)]
     public string Username { get; set; } = string.Empty;
 
-    [StringLength(50, MinimumLength = 8)]
+    [StringLength(60, MinimumLength = 8)]
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [StringLength(50, MinimumLength = 8)]
+    [StringLength(60, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
     [Compare(nameof(Password))]

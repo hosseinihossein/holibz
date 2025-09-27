@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SpaServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -181,15 +182,52 @@ public class Program
             options.HeaderName = "X-CSRF-TOKEN";
         });
 
+        //********************** app **********************
         var app = builder.Build();
+
+        //**************************** app.Use ************************
+        /*app.UseSpaStaticFiles();
+        app.UseSpa(spaConfig =>
+        {
+            spaConfig.Options.SourcePath = Path.Combine(app.Environment.WebRootPath, "AngularApp");
+        });*/
 
         app.UseStaticFiles(new StaticFileOptions { ServeUnknownFileTypes = true });
 
         app.UseAuthentication();
         app.UseAuthorization();
 
+        //**************************** app.Map ************************
         app.MapControllers();
         app.MapDefaultControllerRoute();
+
+        app.MapGet("/angular/{app}.js", async context =>
+        {
+            context.Response.ContentType = "text-avascript";
+            await context.Response.SendFileAsync(
+                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser",
+                $"{context.Request.RouteValues["app"]}.js")
+            );
+        });
+
+        app.MapGet("/angular/{*file}", async context =>
+        {
+            context.Response.ContentType = "text-avascript";
+            await context.Response.SendFileAsync(
+                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser",
+                $"{context.Request.RouteValues["app"]}.js")
+            );
+        });
+
+        app.MapGet("/angular", async context =>
+        {
+            context.Response.ContentType = "text-html";
+            await context.Response.SendFileAsync(
+                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser", "index.html")
+            );
+        });
+
+        app.Map("/", () => "Hello World");
 
 
         /********************** migrate pending databases **********************/
@@ -245,8 +283,8 @@ public class Program
             Console.WriteLine("** Seeding Account Service Completed! **");
         }*/
 
-        app.Map("/", () => "Hello World");
 
+        //******************* app.Run ******************
         app.Run();
     }
 }

@@ -59,6 +59,7 @@ export class Login implements AfterViewInit {
         },
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
+            //console.error("BadRequest err: "+err.error);
             if(err.error.Inactive){
               this.user()?.setErrors({loginError: err.error.Inactive});
             }

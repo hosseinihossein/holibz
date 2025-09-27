@@ -10,5 +10,5 @@ import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 })
 export class AccountDropdown {
   menu = input.required<MatMenu>();
-  imgSrc = input("/defaultProfile.jpg");
+  imgSrc = input("defaultProfile.jpg");
 }

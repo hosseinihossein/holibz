@@ -38,6 +38,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "../AspNetCoreApp/wwwroot/AngularApp",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"

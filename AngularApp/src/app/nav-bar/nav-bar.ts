@@ -9,11 +9,13 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { DropdownButton } from '../dropdown-button/dropdown-button';
 import { WindowService } from '../services/window-service';
 import { SingletonModes } from '../services/singleton-modes';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../services/auth-service';
 
 @Component({
   selector: 'app-nav-bar',
   imports: [MatIcon, MatToolbar, MatButton, MatIconButton, MatActionList, MatMenu, MatMenuTrigger, MatMenuItem,
-    DropdownButton, AccountDropdown, MatTooltip],
+    DropdownButton, AccountDropdown, MatTooltip, RouterLink],
   templateUrl: './nav-bar.html',
   styleUrl: './nav-bar.css'
 })
@@ -21,6 +23,7 @@ export class NavBar {
   windowService = inject(WindowService);
   document = inject(DOCUMENT);
   singletonModes = inject(SingletonModes);
+  authService = inject(AuthService);
   
   displayShadow = signal(false);
 

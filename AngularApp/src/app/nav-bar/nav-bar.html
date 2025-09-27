@@ -63,18 +63,30 @@
     </mat-menu>
 
     <mat-menu #account class="navbar-matMenu">
+        @if(authService.isAuthenticated()){
         <a mat-menu-item>
-            <mat-icon>login</mat-icon>
-            Login
+            <mat-icon>space_dashboard</mat-icon>
+            Dashboard
         </a>
         <a mat-menu-item>
             <mat-icon>article_person</mat-icon>
             Profile
         </a>
-        <a mat-menu-item>
+        <a mat-menu-item (click)="authService.logout()">
             <mat-icon>logout</mat-icon>
             Logout
         </a>
+        }
+        @else{
+        <a mat-menu-item [routerLink]="['login']">
+            <mat-icon>login</mat-icon>
+            Login
+        </a>
+        <a mat-menu-item [routerLink]="['signup']">
+            <mat-icon>person_add</mat-icon>
+            Create a new account
+        </a>
+        }
     </mat-menu>
 
 </mat-toolbar>

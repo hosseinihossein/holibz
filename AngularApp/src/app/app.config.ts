@@ -8,7 +8,7 @@ import { AppErrorHandler } from './app-error-handler';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
+    //provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(
@@ -17,7 +17,7 @@ export const appConfig: ApplicationConfig = {
       withXsrfConfiguration({
         cookieName: "XSRF-TOKEN",
         headerName: "X-CSRF-TOKEN"
-      })
+      }),
     ),
     {provide: ErrorHandler, useClass: AppErrorHandler},
   ]

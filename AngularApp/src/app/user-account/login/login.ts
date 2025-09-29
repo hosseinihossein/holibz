@@ -53,7 +53,8 @@ export class Login implements AfterViewInit {
       let formValue = this.loginForm().value;
       this.authService.login(formValue.user!, formValue.password!).subscribe({
         next: res => {
-          console.log("token: ", res.token);
+          //console.log("token: ", res.token);
+          console.log("login successfully!");
           let returnUrl = this.activatedRoute.snapshot.queryParamMap.get("returnUrl") || "/";
           this.router.navigateByUrl(returnUrl);
         },
@@ -68,6 +69,9 @@ export class Login implements AfterViewInit {
             }
             else if(err.error.Password){
               this.password()?.setErrors({loginError: err.error.Password});
+            }
+            else{
+              this.user()?.setErrors({loginError: err.error});
             }
           }
           else{

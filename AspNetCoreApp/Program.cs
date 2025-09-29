@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using AspNetCoreApp.Models;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using UploadLargeFormFile.Filters;
 
 namespace AspNetCoreApp;
 
@@ -73,6 +75,7 @@ public class Program
 
         //builder.Services.AddScoped<Identity_Process>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
+        builder.Services.AddSingleton<GenerateAntiforgeryTokenCookieAttribute>();
 
         //******************* Authentication *******************
         builder.Services.AddAuthentication(options =>
@@ -201,27 +204,17 @@ public class Program
         app.MapControllers();
         app.MapDefaultControllerRoute();
 
-        app.MapGet("/angular/{app}.js", async context =>
+        app.Map("angularapp/browser/", async (HttpContext context, IAntiforgery antiforgery) =>
         {
-            context.Response.ContentType = "text-avascript";
-            await context.Response.SendFileAsync(
-                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser",
-                $"{context.Request.RouteValues["app"]}.js")
-            );
-        });
+            // Send the request token as a JavaScript-readable cookie
+            var tokens = antiforgery.GetAndStoreTokens(context);
 
-        app.MapGet("/angular/{*file}", async context =>
-        {
-            context.Response.ContentType = "text-avascript";
-            await context.Response.SendFileAsync(
-                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser",
-                $"{context.Request.RouteValues["app"]}.js")
-            );
-        });
+            context.Response.Cookies.Append(
+                "XSRF-TOKEN",
+                tokens.RequestToken!,
+                new CookieOptions() { HttpOnly = false, Secure = true });
 
-        app.MapGet("/angular", async context =>
-        {
-            context.Response.ContentType = "text-html";
+            context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync(
                 Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser", "index.html")
             );

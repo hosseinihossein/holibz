@@ -21,16 +21,17 @@ public class IdentityController : ControllerBase
         this.userManager = userManager;
     }
 
-    [HttpGet("csrft")]
+    /*[HttpGet("csrft")]
     public IActionResult GetAntiForgeryToken(IAntiforgery antiforgery)
     {
         // Generate and return the anti-forgery token
         var tokens = antiforgery.GetAndStoreTokens(HttpContext);
         return Ok(new { csrft = tokens.RequestToken });
-    }
+    }*/
 
     [HttpPost("login")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel,
     [FromServices] IConfiguration configuration)
     {
@@ -82,6 +83,7 @@ public class IdentityController : ControllerBase
 
     /*[HttpPost("signup")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
     [FromServices] IEmailSender emailSender)
     {

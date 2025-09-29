@@ -75,7 +75,7 @@ public class Program
 
         //builder.Services.AddScoped<Identity_Process>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
-        builder.Services.AddSingleton<GenerateAntiforgeryTokenCookieAttribute>();
+
 
         //******************* Authentication *******************
         builder.Services.AddAuthentication(options =>
@@ -206,13 +206,16 @@ public class Program
 
         app.Map("angularapp/browser/", async (HttpContext context, IAntiforgery antiforgery) =>
         {
-            // Send the request token as a JavaScript-readable cookie
-            var tokens = antiforgery.GetAndStoreTokens(context);
+            if (!await antiforgery.IsRequestValidAsync(context))
+            {
+                // Send a new request token as a JavaScript-readable cookie
+                var tokens = antiforgery.GetAndStoreTokens(context);
 
-            context.Response.Cookies.Append(
-                "XSRF-TOKEN",
-                tokens.RequestToken!,
-                new CookieOptions() { HttpOnly = false, Secure = true });
+                context.Response.Cookies.Append(
+                    "XSRF-TOKEN",
+                    tokens.RequestToken!,
+                    new CookieOptions() { HttpOnly = false, Secure = true });
+            }
 
             context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync(

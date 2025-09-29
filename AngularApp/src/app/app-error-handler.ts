@@ -1,10 +1,10 @@
 import { HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
 import { ErrorHandler, inject, Injectable } from "@angular/core";
-import { AuthService } from "./services/auth-service";
+import { IdentityService } from "./services/identity-service";
 
 @Injectable()
 export class AppErrorHandler implements ErrorHandler{
-    authService = inject(AuthService);
+    identityService = inject(IdentityService);
 
     handleError(error: any): void {
         const err = error.rejection || error;
@@ -17,7 +17,7 @@ export class AppErrorHandler implements ErrorHandler{
                     break;
                 case HttpStatusCode.Unauthorized:
                     errTypeMessage = "Unauthorized";
-                    this.authService.logout();
+                    this.identityService.logout();
                     break;
                 case HttpStatusCode.Forbidden:
                     errTypeMessage = "Access Denied";

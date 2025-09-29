@@ -22,6 +22,11 @@
             username must be less than 60 characters long!
         </mat-error>
         }
+        @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("signupError")){
+        <mat-error>
+            signup error: {{username()?.getError("signupError")}}
+        </mat-error>
+        }
         @if(username()?.invalid && username()?.dirty &&
         username()?.hasError("usernameTaken")){
         <mat-error>
@@ -42,10 +47,9 @@
             email must be less than 60 characters long!
         </mat-error>
         }
-        @if(email()?.invalid && (email()?.dirty || email()?.touched) &&
-        email()?.hasError("emailTaken")){
+        @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("signupError")){
         <mat-error>
-            another account has already been created by this email!
+            signup error: {{email()?.getError("signupError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -65,6 +69,11 @@
         @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("maxlength")){
         <mat-error>
             password must be less than 60 characters long!
+        </mat-error>
+        }
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("signupError")){
+        <mat-error>
+            signup error: {{password()?.getError("signupError")}}
         </mat-error>
         }
     </mat-form-field>

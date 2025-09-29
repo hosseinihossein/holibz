@@ -5,7 +5,7 @@ import { map, tap } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class IdentityService {
   private token_StorageKey = "jwt_token";
   private tokenExpiration_StorageKey = "token_expire";
   private httpClient = inject(HttpClient);

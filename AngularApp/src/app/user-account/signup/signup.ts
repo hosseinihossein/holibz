@@ -7,7 +7,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatTooltip } from '@angular/material/tooltip';
 import { validateUsername } from '../../validators/username-validator';
-import { AuthService } from '../../services/auth-service';
+import { IdentityService } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
 
@@ -45,7 +45,7 @@ export class Signup implements AfterViewInit {
   password = computed(()=>this.signupForm().get("password"));
 
   //usernameValid = signal(false);
-  authService = inject(AuthService);
+  identityService = inject(IdentityService);
 
   formFields = viewChildren(MatFormField);
   
@@ -69,7 +69,7 @@ export class Signup implements AfterViewInit {
   signup(){
     if(this.signupForm().valid){
       let formValue = this.signupForm().value;
-      this.authService.signup(formValue.username!, formValue.email!, formValue.password!).subscribe({
+      this.identityService.signup(formValue.username!, formValue.email!, formValue.password!).subscribe({
         next: res => {
           console.log("user account created successfully!");
           //display a message that the user needs to validate their email
@@ -77,13 +77,16 @@ export class Signup implements AfterViewInit {
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             if(err.error.Email){
-              this.email()?.setErrors({loginError: err.error.Email});
+              this.email()?.setErrors({signupError: err.error.Email});
             }
             else if(err.error.Username){
-              this.username()?.setErrors({loginError: err.error.Username});
+              this.username()?.setErrors({signupError: err.error.Username});
             }
             else if(err.error.Password){
-              this.password()?.setErrors({loginError: err.error.Password});
+              this.password()?.setErrors({signupError: err.error.Password});
+            }
+            else{
+              this.username()?.setErrors({signupError: err.error});
             }
           }
           else{

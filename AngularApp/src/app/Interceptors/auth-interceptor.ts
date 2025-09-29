@@ -1,13 +1,13 @@
 import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { catchError, Observable } from "rxjs";
-import { AuthService } from "../services/auth-service";
+import { IdentityService } from "../services/identity-service";
 
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
-    const authService = inject(AuthService);
+    const identityService = inject(IdentityService);
 
-    if(authService.isAuthenticated()){
-        let token = authService.getToken();
+    if(identityService.isAuthenticated()){
+        let token = identityService.getToken();
         let cloned = req.clone({setHeaders: {Authorization: "Bearer " + token}});
         return next(cloned);
     }

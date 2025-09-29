@@ -5,7 +5,7 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from "@angular/material/input";
-import { AuthService } from '../../services/auth-service';
+import { IdentityService } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,7 +27,7 @@ export class Login implements AfterViewInit {
   user = computed(()=>this.loginForm().get("user"));
   password = computed(()=>this.loginForm().get("password"));
 
-  authService = inject(AuthService);
+  identityService = inject(IdentityService);
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
   
@@ -51,7 +51,7 @@ export class Login implements AfterViewInit {
   login(){
     if(this.loginForm().valid){
       let formValue = this.loginForm().value;
-      this.authService.login(formValue.user!, formValue.password!).subscribe({
+      this.identityService.login(formValue.user!, formValue.password!).subscribe({
         next: res => {
           //console.log("token: ", res.token);
           console.log("login successfully!");

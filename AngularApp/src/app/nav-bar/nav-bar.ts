@@ -10,7 +10,7 @@ import { DropdownButton } from '../dropdown-button/dropdown-button';
 import { WindowService } from '../services/window-service';
 import { SingletonModes } from '../services/singleton-modes';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../services/auth-service';
+import { IdentityService } from '../services/identity-service';
 
 @Component({
   selector: 'app-nav-bar',
@@ -23,7 +23,7 @@ export class NavBar {
   windowService = inject(WindowService);
   document = inject(DOCUMENT);
   singletonModes = inject(SingletonModes);
-  authService = inject(AuthService);
+  identityService = inject(IdentityService);
   
   displayShadow = signal(false);
 

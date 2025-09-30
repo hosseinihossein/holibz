@@ -1,2 +1,3 @@
-- create a new angular component for displaying results (displaying signup results and ...)
+- test errors for create a new account
+- create a new angular dialog for displaying results (displaying signup results and ...)
 - 

@@ -27,6 +27,8 @@ export class Login implements AfterViewInit {
   user = computed(()=>this.loginForm().get("user"));
   password = computed(()=>this.loginForm().get("password"));
 
+  errorResponse = signal<object | null>(null);
+
   identityService = inject(IdentityService);
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
@@ -71,7 +73,8 @@ export class Login implements AfterViewInit {
               this.password()?.setErrors({loginError: err.error.Password});
             }
             else{
-              this.user()?.setErrors({loginError: err.error});
+              //this.user()?.setErrors({loginError: err.error});
+              this.errorResponse.set(err.error);
             }
           }
           else{

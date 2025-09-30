@@ -63,16 +63,16 @@
     </mat-menu>
 
     <mat-menu #account class="navbar-matMenu">
-        @if(authService.isAuthenticated()){
+        @if(identityService.isAuthenticated()){
         <a mat-menu-item>
             <mat-icon>space_dashboard</mat-icon>
             Dashboard
         </a>
-        <a mat-menu-item>
+        <a mat-menu-item [routerLink]="['profile']">
             <mat-icon>article_person</mat-icon>
             Profile
         </a>
-        <a mat-menu-item (click)="authService.logout()">
+        <a mat-menu-item (click)="identityService.logout()">
             <mat-icon>logout</mat-icon>
             Logout
         </a>

@@ -44,6 +44,8 @@ export class Signup implements AfterViewInit {
   email = computed(()=>this.signupForm().get("email"));
   password = computed(()=>this.signupForm().get("password"));
 
+  errorResponse = signal<object | null>(null);
+
   //usernameValid = signal(false);
   identityService = inject(IdentityService);
 
@@ -85,9 +87,13 @@ export class Signup implements AfterViewInit {
             else if(err.error.Password){
               this.password()?.setErrors({signupError: err.error.Password});
             }
+            else if(err.error.Signup){
+              this.username()?.setErrors({signupError: err.error.Signup});
+            }
             else{
               this.username()?.setErrors({signupError: err.error});
             }
+            this.errorResponse.set(err.error);
           }
           else{
             throwError(()=>err);

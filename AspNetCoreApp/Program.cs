@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using AspNetCoreApp.Models;
@@ -50,7 +51,7 @@ public class Program
 
             options.Tokens.EmailConfirmationTokenProvider = "customTokenProvider";
             options.Tokens.ChangeEmailTokenProvider = "customTokenProvider";
-            //options.Tokens.PasswordResetTokenProvider = "customTokenProvider";
+            options.Tokens.PasswordResetTokenProvider = "customTokenProvider";
             //options.Tokens.AuthenticatorTokenProvider = "customTokenProvider";
             //options.Tokens.ChangePhoneNumberTokenProvider = "customTokenProvider";
 
@@ -206,7 +207,8 @@ public class Program
 
         app.Map("angularapp/browser/", async (HttpContext context, IAntiforgery antiforgery) =>
         {
-            if (!await antiforgery.IsRequestValidAsync(context))
+            if (!context.Request.Headers.ContainsKey("X-CSRF-TOKEN") ||
+            !await antiforgery.IsRequestValidAsync(context))
             {
                 // Send a new request token as a JavaScript-readable cookie
                 var tokens = antiforgery.GetAndStoreTokens(context);
@@ -223,6 +225,24 @@ public class Program
             );
         });
 
+        /*app.Map("/email/", async (HttpContext context, IEmailSender emailSender) =>
+        {
+            await emailSender.SendEmailAsync("hossein", "hosseinhosseini1370@gmail.com", "test",
+            "<h1>the link of a site</h1><a href='https://www.p30download.ir'>p30download</a>");
+
+            //context.Response.ContentType = "text/plain";
+            await context.Response.WriteAsync("email sent");
+        });*/
+
+        app.Map("/user/", async (HttpContext context) =>
+        {
+            if (context.User.Identity?.IsAuthenticated ?? false)
+            {
+                await context.Response.WriteAsync("username: " + context.User.Identity.Name);
+            }
+            await context.Response.WriteAsync("Not Authenticated");
+        });
+
         app.Map("/", () => "Hello World");
 
 
@@ -233,8 +253,7 @@ public class Program
         Console.WriteLine("** All DB Migration Completed! **");
 
 
-        //************************** Seed DataBases ***************************
-        IWebHostEnvironment env = app.Services.GetRequiredService<IWebHostEnvironment>();
+        //************************** Seed DataBases **************************
 
         //***** Seed "admin" Identity *****
         UserManager<Identity_UserDbModel> userManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();

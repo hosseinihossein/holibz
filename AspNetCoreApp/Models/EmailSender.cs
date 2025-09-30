@@ -17,7 +17,7 @@ namespace AspNetCoreApp.Models
         {
             string senderEmail = "ahsgfdajhsgt@gmail.com";
             string senderGmailPassword = "wnmwahawpaexytmh";
-            string senderName = "Admin";
+            string senderName = "no-reply";
 
             MimeMessage email = new MimeMessage();
             email.From.Add(new MailboxAddress(senderName, senderEmail));
@@ -25,12 +25,12 @@ namespace AspNetCoreApp.Models
             email.Subject = subject;
             email.Body = new TextPart(MimeKit.Text.TextFormat.Html)
             {
-                Text = message
+                Text = message,
             };
 
             using (SmtpClient smtp = new SmtpClient())
             {
-                await smtp.ConnectAsync("smtp.gmail.com", 587, false);
+                await smtp.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.Auto);
                 await smtp.AuthenticateAsync(senderEmail, senderGmailPassword);
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);

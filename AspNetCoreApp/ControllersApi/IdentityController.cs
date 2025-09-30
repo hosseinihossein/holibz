@@ -35,60 +35,116 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel,
     [FromServices] IConfiguration configuration)
     {
-        if (User.Identity?.IsAuthenticated ?? false)
+        if (ModelState.IsValid)
         {
-            await signInManager.SignOutAsync();
-        }
-
-        Identity_UserDbModel? user;
-        if (loginModel.UsernameOrEmail.Contains('@'))
-        {
-            user = await userManager.FindByEmailAsync(loginModel.UsernameOrEmail);
-        }
-        else
-        {
-            user = await userManager.FindByNameAsync(loginModel.UsernameOrEmail);
-        }
-
-        if (user is not null)
-        {
-            if (!user.ActivityAllowed)
+            if (User.Identity?.IsAuthenticated ?? false)
             {
-                ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
+                await signInManager.SignOutAsync();
+            }
+
+            Identity_UserDbModel? user;
+            if (loginModel.UsernameOrEmail.Contains('@'))
+            {
+                user = await userManager.FindByEmailAsync(loginModel.UsernameOrEmail);
             }
             else
             {
-                Microsoft.AspNetCore.Identity.SignInResult result =
-                await signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
+                user = await userManager.FindByNameAsync(loginModel.UsernameOrEmail);
+            }
 
-                if (result.Succeeded)
+            if (user is not null)
+            {
+                if (!user.ActivityAllowed)
                 {
-                    string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
-                    var jwtSettings = configuration.GetSection("JwtSettings");
-                    return Ok(new { token, expiresInHours = jwtSettings["DurationInHours"] ?? "10" });
+                    ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
                 }
                 else
                 {
-                    ModelState.AddModelError("Password", "Invalid Credentials");
+                    Microsoft.AspNetCore.Identity.SignInResult result =
+                    await signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
+
+                    if (result.Succeeded)
+                    {
+                        string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
+                        var jwtSettings = configuration.GetSection("JwtSettings");
+                        return Ok(new { token, expiresInHours = jwtSettings["DurationInHours"] ?? "10" });
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Password", "Wrong Password");
+                    }
                 }
+            }
+            else
+            {
+                ModelState.AddModelError("Username", "Invalid Username or Email");
             }
         }
         else
         {
-            ModelState.AddModelError("Username", "Invalid Username or Email");
+            ModelState.AddModelError("Username", "Invalid Credentials");
         }
 
         return BadRequest(ModelState);
     }
 
-    /*[HttpPost("signup")]
+    [HttpPost("signup")]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
     [FromServices] IEmailSender emailSender)
     {
+        if (ModelState.IsValid)
+        {
+            /*var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = signupModel.CfTurnstileResponse };
+            string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+            var client = new HttpClient();
+            var response = await client.PostAsJsonAsync(url, formData);
+            string responseContentString = await response.Content.ReadAsStringAsync();
+            dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
+            if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
+            {
+                ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
+                return View(nameof(Signup));
+            }*/
 
-    }*/
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                await signInManager.SignOutAsync();
+            }
+
+            Identity_UserDbModel user = new Identity_UserDbModel()
+            {
+                UserName = signupModel.Username,
+                Email = signupModel.Email,
+                EmailConfirmed = false,
+                UserGuid = Guid.NewGuid().ToString().Replace("-", ""),
+                PasswordLiteral = signupModel.Password
+            };
+            IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
+            if (result.Succeeded)
+            {
+                //***** Create Email DB *****
+                string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                //***** Sending Email *****
+                string emailMessage = $"<h4>Hi dear {signupModel.Username}</h4>" +
+                "<p>Please click " +
+                $"<a href='https://localhost:5443/api/Identity/ConfirmEmail?token={token}'>here</a>" +
+                "to confirm your email validation.</p>";
+                /*await*/
+                _ = emailSender.SendEmailAsync(signupModel.Username, signupModel.Email,
+                "Email Validation", emailMessage);
+
+                return Ok(new { success = true });
+            }
+            foreach (IdentityError error in result.Errors)
+            {
+                ModelState.AddModelError("Signup", error.Description);
+            }
+        }
+        return BadRequest(ModelState);
+    }
 
     [HttpGet("CheckUsername")]
     public async Task<IActionResult> UsernameExist([FromQuery][StringLength(60)] string username)
@@ -103,4 +159,10 @@ public class IdentityController : ControllerBase
         bool userExist = await userManager.Users.AnyAsync(u => u.UserName == username);
         return Ok(new { isTaken = userExist });
     }
+
+    /*[HttpGet("profile")]
+    public IActionResult Profile()
+    {
+        
+    }*/
 }

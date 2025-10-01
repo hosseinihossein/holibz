@@ -130,8 +130,10 @@ public class IdentityController : ControllerBase
                 //***** Sending Email *****
                 string emailMessage = $"<h4>Hi dear {signupModel.Username}</h4>" +
                 "<p>Please click " +
-                $"<a href='https://localhost:5443/api/Identity/ConfirmEmail?token={token}'>here</a>" +
+                $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
+                "target='_blank'>here</a>" +
                 "to confirm your email validation.</p>";
+
                 /*await*/
                 _ = emailSender.SendEmailAsync(signupModel.Username, signupModel.Email,
                 "Email Validation", emailMessage);

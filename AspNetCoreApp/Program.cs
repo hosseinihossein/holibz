@@ -205,19 +205,15 @@ public class Program
         app.MapControllers();
         app.MapDefaultControllerRoute();
 
-        app.Map("angularapp/browser/", async (HttpContext context, IAntiforgery antiforgery) =>
+        app.Map("/angular/{*catchAll}", async (HttpContext context, IAntiforgery antiforgery) =>
         {
-            if (!context.Request.Headers.ContainsKey("X-CSRF-TOKEN") ||
-            !await antiforgery.IsRequestValidAsync(context))
-            {
-                // Send a new request token as a JavaScript-readable cookie
-                var tokens = antiforgery.GetAndStoreTokens(context);
+            // Send a new request token as a JavaScript-readable cookie
+            var tokens = antiforgery.GetAndStoreTokens(context);
 
-                context.Response.Cookies.Append(
-                    "XSRF-TOKEN",
-                    tokens.RequestToken!,
-                    new CookieOptions() { HttpOnly = false, Secure = true });
-            }
+            context.Response.Cookies.Append(
+                "XSRF-TOKEN",
+                tokens.RequestToken!,
+                new CookieOptions() { HttpOnly = false, Secure = true });
 
             context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync(

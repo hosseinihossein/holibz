@@ -33,7 +33,7 @@ public class IdentityController : Controller
                 object o1 = "Your Email has already confirmed. Don't need to confirm anymore!";
                 ViewBag.ResultState = "info";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
+                ViewBag.InfoBtnHref = "/angular/login/";
                 return View("Result", o1);
             }
 
@@ -43,7 +43,7 @@ public class IdentityController : Controller
                 object successMessage = "<h1>Your Email Successfully Confirmed.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
+                ViewBag.InfoBtnHref = "/angular/login/";
                 return View("Result", successMessage);
             }
 

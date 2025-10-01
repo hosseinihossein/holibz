@@ -230,15 +230,6 @@ public class Program
             await context.Response.WriteAsync("email sent");
         });*/
 
-        /*app.Map("/user/", async (HttpContext context) =>
-        {
-            if (context.User.Identity?.IsAuthenticated ?? false)
-            {
-                await context.Response.WriteAsync("username: " + context.User.Identity.Name);
-            }
-            await context.Response.WriteAsync("Not Authenticated");
-        });*/
-
         app.Map("/", () => "Hello World");
 
 
@@ -293,6 +284,51 @@ public class Program
             await account_Process.SeedDb();
             Console.WriteLine("** Seeding Account Service Completed! **");
         }*/
+
+
+        //******************* app.Map("/user*") *******************
+        app.Map("/users", async (HttpContext context) =>
+        {
+            var allUsers = userManager.Users
+            .Select(u => new { u.UserGuid, u.UserName, u.Email, u.EmailConfirmed, u.PasswordLiteral })
+            .AsAsyncEnumerable();
+
+            await foreach (var user in allUsers)
+            {
+                await context.Response.WriteAsJsonAsync(user);
+            }
+        });
+
+        app.Map("/deleteuser/{username}", async (HttpContext context) =>
+        {
+            string? username = context.Request.RouteValues["username"]?.ToString();
+            if (username is null)
+            {
+                await context.Response.WriteAsync("username can NOT be null!");
+                return;
+            }
+            if (username == "admin")
+            {
+                await context.Response.WriteAsync("admin can NOT be deleted!");
+                return;
+            }
+
+            Identity_UserDbModel? user = await userManager.FindByNameAsync(username);
+            if (user is null)
+            {
+                await context.Response.WriteAsync("user NOT found!");
+                return;
+            }
+
+            IdentityResult result = await userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                await context.Response.WriteAsync($"{username} deleted successfully.");
+                return;
+            }
+
+            await context.Response.WriteAsJsonAsync(result.Errors);
+        });
 
 
         //******************* app.Run ******************

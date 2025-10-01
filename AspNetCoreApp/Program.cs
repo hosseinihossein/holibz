@@ -227,21 +227,21 @@ public class Program
 
         /*app.Map("/email/", async (HttpContext context, IEmailSender emailSender) =>
         {
-            await emailSender.SendEmailAsync("hossein", "hosseinhosseini1370@gmail.com", "test",
-            "<h1>the link of a site</h1><a href='https://www.p30download.ir'>p30download</a>");
+            await emailSender.SendEmailAsync("hossein", "@gmail.com", "test",
+            "<h1>the link of a site</h1><a href='https://www.'>p30download</a>");
 
             //context.Response.ContentType = "text/plain";
             await context.Response.WriteAsync("email sent");
         });*/
 
-        app.Map("/user/", async (HttpContext context) =>
+        /*app.Map("/user/", async (HttpContext context) =>
         {
             if (context.User.Identity?.IsAuthenticated ?? false)
             {
                 await context.Response.WriteAsync("username: " + context.User.Identity.Name);
             }
             await context.Response.WriteAsync("Not Authenticated");
-        });
+        });*/
 
         app.Map("/", () => "Hello World");
 

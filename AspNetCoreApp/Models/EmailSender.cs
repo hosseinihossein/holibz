@@ -13,10 +13,17 @@ namespace AspNetCoreApp.Models
 
     public class EmailSender : IEmailSender
     {
-        public async Task SendEmailAsync(string receiverUserName, string receiverEmail, string subject, string message)
+        private readonly IConfiguration configuration;
+        public EmailSender(IConfiguration conf)
         {
-            string senderEmail = "ahsgfdajhsgt@gmail.com";
-            string senderGmailPassword = "wnmwahawpaexytmh";
+            configuration = conf;
+        }
+
+        public async Task SendEmailAsync(string receiverUserName, string receiverEmail,
+        string subject, string message)
+        {
+            string senderEmail = configuration["EmailSender:Address"]!;
+            string senderGmailPassword = configuration["EmailSender:Password"]!;
             string senderName = "no-reply";
 
             MimeMessage email = new MimeMessage();

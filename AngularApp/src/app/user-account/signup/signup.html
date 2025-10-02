@@ -6,10 +6,16 @@
             <mat-icon>{{usernameValid() ? "check" : "search_check_2"}}</mat-icon>
         </button-->
         @if(username()?.invalid && username()?.dirty && username()?.hasError("usernameTaken")){
-        <mat-icon matSuffix>unpublished</mat-icon>
+        <mat-icon matSuffix [color]="'warn'">unpublished</mat-icon>
+        }
+        @else if (username()?.invalid && username()?.dirty &&
+        !username()?.hasError("required") &&
+        !username()?.hasError("maxlength") &&
+        !username()?.hasError("minlength")) {
+        <mat-spinner matSuffix [diameter]="18"></mat-spinner>
         }
         @else if (!username()?.invalid && username()?.dirty) {
-        <mat-icon matSuffix>check_circle</mat-icon>
+        <mat-icon matSuffix [color]="'accent'">check_circle</mat-icon>
         }
 
         @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("required")){
@@ -22,9 +28,14 @@
             username must be less than 60 characters long!
         </mat-error>
         }
+        @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("minlength")){
+        <mat-error>
+            username must be more than 8 characters long!
+        </mat-error>
+        }
         @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("signupError")){
         <mat-error>
-            signup error: {{username()?.getError("signupError")}}
+            {{username()?.getError("signupError")}}
         </mat-error>
         }
         @if(username()?.invalid && username()?.dirty &&
@@ -42,14 +53,24 @@
             email is required!
         </mat-error>
         }
+        @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("email")){
+        <mat-error>
+            email format is Not correct!
+        </mat-error>
+        }
         @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("maxlength")){
         <mat-error>
             email must be less than 60 characters long!
         </mat-error>
         }
+        @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("minlength")){
+        <mat-error>
+            email must be more than 8 characters long!
+        </mat-error>
+        }
         @if(email()?.invalid && (email()?.dirty || email()?.touched) && email()?.hasError("signupError")){
         <mat-error>
-            signup error: {{email()?.getError("signupError")}}
+            {{email()?.getError("signupError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -71,12 +92,23 @@
             password must be less than 60 characters long!
         </mat-error>
         }
+        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("minlength")){
+        <mat-error>
+            password must be more than 8 characters long!
+        </mat-error>
+        }
         @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("signupError")){
         <mat-error>
-            signup error: {{password()?.getError("signupError")}}
+            {{password()?.getError("signupError")}}
         </mat-error>
         }
     </mat-form-field>
+
+    @if(signupForm().invalid && signupForm().hasError("signupError")){
+    <mat-error>
+        {{signupForm().getError("signupError")}}
+    </mat-error>
+    }
 
     <div class="clearfix">
         <button matButton="filled" type="submit" id="signup-btn" [disabled]="!signupForm().valid">Signup</button>

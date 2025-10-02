@@ -67,7 +67,7 @@ body.dark-mode{
 app-nav-bar {
   @include mat.toolbar-overrides((
     standard-height:56px,
-    ));
+  ));
 }
 
 .navbar-matMenu{
@@ -76,7 +76,7 @@ app-nav-bar {
     item-focus-state-layer-color: var(--mat-sys-surface-container-low),
     container-color: var(--mat-sys-primary-container),
     divider-color: var(--mat-sys-on-primary-container),
-    ));
+  ));
 }
 
 :root{

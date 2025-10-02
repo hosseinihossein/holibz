@@ -66,11 +66,11 @@ export class Login implements AfterViewInit {
             if(err.error.Inactive){
               this.user()?.setErrors({loginError: err.error.Inactive});
             }
-            else if(err.error.Username){
-              this.user()?.setErrors({loginError: err.error.Username});
+            else if(err.error.Username || err.error.errors?.Username){
+              this.user()?.setErrors({loginError: err.error.Username || err.error.errors?.Username});
             }
-            else if(err.error.Password){
-              this.password()?.setErrors({loginError: err.error.Password});
+            else if(err.error.Password || err.error.errors?.Password){
+              this.password()?.setErrors({loginError: err.error.Password || err.error.errors?.Password});
             }
             else{
               //this.user()?.setErrors({loginError: err.error});

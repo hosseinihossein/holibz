@@ -289,14 +289,15 @@ public class Program
         //******************* app.Map("/user*") *******************
         app.Map("/users", async (HttpContext context) =>
         {
-            var allUsers = userManager.Users
+            var allUsers = await userManager.Users
             .Select(u => new { u.UserGuid, u.UserName, u.Email, u.EmailConfirmed, u.PasswordLiteral })
-            .AsAsyncEnumerable();
+            //.AsAsyncEnumerable();
+            .ToArrayAsync();
 
-            await foreach (var user in allUsers)
+            await context.Response.WriteAsJsonAsync(allUsers);
+            /*foreach (var user in allUsers)
             {
-                await context.Response.WriteAsJsonAsync(user);
-            }
+            }*/
         });
 
         app.Map("/deleteuser/{username}", async (HttpContext context) =>

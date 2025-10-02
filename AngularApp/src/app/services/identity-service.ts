@@ -11,7 +11,7 @@ export class IdentityService {
   private httpClient = inject(HttpClient);
 
   signup(username: string, email:string, password: string){
-    return this.httpClient.post(
+    return this.httpClient.post<{success:boolean}>(
       "/api/Identity/signup", 
       {username, email, password}
     );

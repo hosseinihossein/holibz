@@ -43,10 +43,10 @@ public class Identity_LoginModel
 {
     public string? ReturnUrl { get; set; } = string.Empty;
 
-    //[StringLength(50, MinimumLength = 8)]
+    [StringLength(60)]
     public string UsernameOrEmail { get; set; } = string.Empty;
 
-    //[StringLength(50, MinimumLength = 8)]
+    [StringLength(60)]
     public string Password { get; set; } = string.Empty;
 
     //public bool IsPersistent { get; set; } = false;
@@ -64,8 +64,8 @@ public class Identity_SignupModel
     [StringLength(60, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
-    [Compare(nameof(Password))]
-    public string RepeatPassword { get; set; } = string.Empty;
+    //[Compare(nameof(Password))]
+    //public string RepeatPassword { get; set; } = string.Empty;
 }
 
 /*********************************** IdentityDb ************************************/

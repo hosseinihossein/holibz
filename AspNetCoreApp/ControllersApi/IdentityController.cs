@@ -58,6 +58,10 @@ public class IdentityController : ControllerBase
                 {
                     ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
                 }
+                else if (!user.EmailConfirmed)
+                {
+                    ModelState.AddModelError("Username", "Email Not confirmed! Please click the validation link in your email first.");
+                }
                 else
                 {
                     Microsoft.AspNetCore.Identity.SignInResult result =
@@ -71,7 +75,7 @@ public class IdentityController : ControllerBase
                     }
                     else
                     {
-                        ModelState.AddModelError("Password", "Wrong Password");
+                        ModelState.AddModelError("Password", "Invalid Credentials");
                     }
                 }
             }
@@ -79,10 +83,6 @@ public class IdentityController : ControllerBase
             {
                 ModelState.AddModelError("Username", "Invalid Username or Email");
             }
-        }
-        else
-        {
-            ModelState.AddModelError("Username", "Invalid Credentials");
         }
 
         return BadRequest(ModelState);
@@ -132,7 +132,7 @@ public class IdentityController : ControllerBase
                 "<p>Please click " +
                 $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
                 "target='_blank'>here</a>" +
-                "to confirm your email validation.</p>";
+                " to confirm your email validation.</p>";
 
                 /*await*/
                 _ = emailSender.SendEmailAsync(signupModel.Username, signupModel.Email,

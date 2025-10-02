@@ -14,7 +14,7 @@
         }
         @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("loginError")){
         <mat-error>
-            login error: {{user()?.getError("loginError")}}
+            {{user()?.getError("loginError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -38,7 +38,7 @@
         }
         @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("loginError")){
         <mat-error>
-            login error: {{password()?.getError("loginError")}}
+            {{password()?.getError("loginError")}}
         </mat-error>
         }
     </mat-form-field>

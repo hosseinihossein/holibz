@@ -125,7 +125,7 @@ public class IdentityController : ControllerBase
             if (result.Succeeded)
             {
                 /*await*/
-                _ = SendEmailValidationLink(user, emailSender);
+                //_ = SendEmailValidationLink(user, emailSender);// commented out for development 
 
                 return Ok(new { success = true });
             }

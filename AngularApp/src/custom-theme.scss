@@ -97,3 +97,16 @@ app-nav-bar {
     header-collapsed-state-height: fit-content,
   ));
 }
+
+/*.success-ResultStatus {
+  @include mat.dialog-overrides((
+    container-color: var(--mat-sys-primary-container),
+    subhead-color: var(--mat-sys-on-primary-container),
+  ));
+}
+.danger-ResultStatus {
+  @include mat.dialog-overrides((
+    container-color: var(--mat-sys-error-container),
+    subhead-color: var(--mat-sys-on-error-container),
+  ));
+}*/

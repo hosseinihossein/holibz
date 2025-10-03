@@ -11,6 +11,8 @@ import { IdentityService } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
+import { Result } from '../../dialogs/result/result';
 
 @Component({
   selector: 'app-signup',
@@ -48,6 +50,7 @@ export class Signup implements AfterViewInit {
 
   //usernameValid = signal(false);
   identityService = inject(IdentityService);
+  readonly dialog = inject(MatDialog);
   
   formFields = viewChildren(MatFormField);
   
@@ -74,8 +77,21 @@ export class Signup implements AfterViewInit {
       this.identityService.signup(formValue.username!, formValue.email!, formValue.password!).subscribe({
         next: res => {
           if(res.success){
+            //display a message to users that they need to validate their email
+            this.dialog.open(Result,{
+              //panelClass: "success-ResultStatus", 
+              data:{
+                status: "success",
+                title: "New User Account",
+                description: ["Your account created successfully.",
+                  `An email with a validation link has just sent to your registered email address '${this.email()?.value}'.`,
+                  "You need to click the validation link to confirm your email before you can login.",
+                  "Your email validation link expires in 10 hours."],
+                link: {name: "Login", address: "/login"}
+              }
+            });
+
             console.log("user account created successfully!");
-            //display a message that the user needs to validate their email
           }
         },
         error: err => {

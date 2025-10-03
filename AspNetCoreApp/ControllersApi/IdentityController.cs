@@ -124,19 +124,8 @@ public class IdentityController : ControllerBase
             IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
             if (result.Succeeded)
             {
-                //***** Create Email DB *****
-                string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-
-                //***** Sending Email *****
-                string emailMessage = $"<h4>Hi dear {signupModel.Username}</h4>" +
-                "<p>Please click " +
-                $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
-                "target='_blank'>here</a>" +
-                " to confirm your email validation.</p>";
-
                 /*await*/
-                _ = emailSender.SendEmailAsync(signupModel.Username, signupModel.Email,
-                "Email Validation", emailMessage);
+                _ = SendEmailValidationLink(user, emailSender);
 
                 return Ok(new { success = true });
             }
@@ -160,6 +149,42 @@ public class IdentityController : ControllerBase
 
         bool userExist = await userManager.Users.AnyAsync(u => u.UserName == username);
         return Ok(new { isTaken = userExist });
+    }
+
+    [HttpPost("ResendEmailValidation")]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(5 * 1024)]// 5 KB
+    public async Task<IActionResult> ResendEmailValidation([FromBody][StringLength(60)][EmailAddress] string email,
+    [FromServices] IEmailSender emailSender)
+    {
+        if(ModelState.IsValid)
+        {
+            Identity_UserDbModel? user = await userManager.FindByEmailAsync(email);
+            if(user is not null)
+            {
+                await SendEmailValidationLink(user, emailSender)
+
+                return Ok(new { success = true });
+            }
+            ModelState.AddModelError("Email", "user Not found!");
+        }
+        return BadRequest(ModelState);
+    }
+
+    private async Task SendEmailValidationLink(Identity_UserDbModel user, IEmailSender emailSender)
+    {
+        //***** Generate Email Validation Token *****
+        string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+        //***** Sending Email *****
+        string emailMessage = $"<h4>Hi dear {user.Username}</h4>" +
+        "<p>Please click " +
+        $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
+        "target='_blank'>here</a>" +
+        " to confirm your email validation.</p>";
+
+        await emailSender.SendEmailAsync(user.Username, user.Email,
+        "Email Validation", emailMessage);
     }
 
     /*[HttpGet("profile")]

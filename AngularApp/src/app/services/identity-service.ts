@@ -57,4 +57,11 @@ export class IdentityService {
     return localStorage.getItem(this.token_StorageKey);
   }
 
+  resendEmailValidation(email: string){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Identity/ResendEmailValidation", 
+      {email}
+    );
+  }
+
 }

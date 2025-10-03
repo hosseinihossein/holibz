@@ -40,6 +40,7 @@ export class ResendEmailValidation {
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             this.response.set({success: false, error: err.error.Email || err.error.errors?.Email});
+            console.error(err);
           }
           else{
             throwError(()=>err);

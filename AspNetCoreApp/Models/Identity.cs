@@ -52,6 +52,14 @@ public class Identity_LoginModel
     //public bool IsPersistent { get; set; } = false;
 }
 
+public class Identity_ResendEmailValidationModel
+{
+
+    [StringLength(60)]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+}
+
 public class Identity_SignupModel
 {
     [StringLength(60, MinimumLength = 8)]

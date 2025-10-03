@@ -59,8 +59,7 @@ export class IdentityService {
 
   resendEmailValidation(email: string){
     return this.httpClient.post<{success:boolean}>(
-      "/api/Identity/ResendEmailValidation", 
-      {email}
+      "/api/Identity/ResendEmailValidation", {email}
     );
   }
 

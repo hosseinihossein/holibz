@@ -6,7 +6,7 @@
             <mat-icon>{{usernameValid() ? "check" : "search_check_2"}}</mat-icon>
         </button-->
         @if(username()?.invalid && username()?.dirty && username()?.hasError("usernameTaken")){
-        <mat-icon matSuffix [color]="'warn'">unpublished</mat-icon>
+        <mat-icon matSuffix class="warningIcon">unpublished</mat-icon>
         }
         @else if (username()?.invalid && username()?.dirty &&
         !username()?.hasError("required") &&
@@ -15,7 +15,7 @@
         <mat-spinner matSuffix [diameter]="18"></mat-spinner>
         }
         @else if (!username()?.invalid && username()?.dirty) {
-        <mat-icon matSuffix [color]="'accent'">check_circle</mat-icon>
+        <mat-icon matSuffix class="successIcon">check_circle</mat-icon>
         }
 
         @if(username()?.invalid && (username()?.dirty || username()?.touched) && username()?.hasError("required")){

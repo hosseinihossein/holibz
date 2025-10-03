@@ -28,3 +28,10 @@ mat-form-field{
 mat-error::before{
     content: "*";
 }
+
+.warningIcon{
+    color: var(--mat-sys-on-error-container);
+}
+.successIcon{
+    color: var(--mat-sys-on-primary-container);
+}

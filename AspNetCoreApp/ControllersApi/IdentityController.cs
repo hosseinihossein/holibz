@@ -154,12 +154,12 @@ public class IdentityController : ControllerBase
     [HttpPost("ResendEmailValidation")]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(5 * 1024)]// 5 KB
-    public async Task<IActionResult> ResendEmailValidation([FromBody][StringLength(60)][EmailAddress] string email,
+    public async Task<IActionResult> ResendEmailValidation([FromBody] Identity_ResendEmailValidationModel emailModel,
     [FromServices] IEmailSender emailSender)
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel? user = await userManager.FindByEmailAsync(email);
+            Identity_UserDbModel? user = await userManager.FindByEmailAsync(emailModel.Email);
             if (user is not null)
             {
                 await SendEmailValidationLink(user, emailSender);

@@ -20,7 +20,8 @@ mat-form-field{
     margin: auto;
 }
 
-#signup-btn{
+#signup-btn,
+#resend-btn{
     float: right;
     font-size: 12px;
 }

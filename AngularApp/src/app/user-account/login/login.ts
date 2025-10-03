@@ -9,6 +9,8 @@ import { IdentityService } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { ResendEmailValidation } from '../../dialogs/resend-email-validation/resend-email-validation';
 
 @Component({
   selector: 'app-login',
@@ -32,6 +34,7 @@ export class Login implements AfterViewInit {
   identityService = inject(IdentityService);
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
+  readonly dialog = inject(MatDialog);
   
   formFields = viewChildren(MatFormField);
   
@@ -66,11 +69,14 @@ export class Login implements AfterViewInit {
             if(err.error.Inactive){
               this.user()?.setErrors({loginError: err.error.Inactive});
             }
-            else if(err.error.Username || err.error.errors?.Username){
+            else if(err.error.Username || err.error.errors?.UsernameOrEmail){
               this.user()?.setErrors({loginError: err.error.Username || err.error.errors?.Username});
             }
             else if(err.error.Password || err.error.errors?.Password){
               this.password()?.setErrors({loginError: err.error.Password || err.error.errors?.Password});
+            }
+            else if(err.error.EmailValidation){
+              this.loginForm().setErrors({emailValidationError: err.error.EmailValidation});
             }
             else{
               //this.user()?.setErrors({loginError: err.error});
@@ -83,6 +89,10 @@ export class Login implements AfterViewInit {
         },
       });
     }
+  }
+
+  resendEmailValidation(){
+    this.dialog.open(ResendEmailValidation);
   }
 
 }

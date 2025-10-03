@@ -43,6 +43,10 @@
         }
     </mat-form-field>
 
+    @if(loginForm().invalid && loginForm().hasError("emailValidationError")){
+    <mat-error>{{loginForm().getError("emailValidationError")}}</mat-error>
+    }
+
     <div class="clearfix">
         <button matButton="filled" type="submit" id="login-btn" [disabled]="!loginForm().valid">Login</button>
     </div>
@@ -50,6 +54,13 @@
     <div class="clearfix">
         <a matButton id="signup-btn">Create a new account</a>
     </div>
+
+    @if(loginForm().invalid && loginForm().hasError("emailValidationError")){
+    <div class="clearfix">
+        <a matButton id="resend-btn" (click)="resendEmailValidation();">Resend a new email validation link</a>
+    </div>
+    }
+
 </form>
 <div>{{loginForm().value| json}}</div>
 <div>error response: {{errorResponse() | json}}</div>

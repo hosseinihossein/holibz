@@ -60,7 +60,7 @@ public class IdentityController : ControllerBase
                 }
                 else if (!user.EmailConfirmed)
                 {
-                    ModelState.AddModelError("Username", "Email Not confirmed! Please click the validation link in your email first.");
+                    ModelState.AddModelError("EmailValidation", "Email Not confirmed! Please click the validation link in your email first.");
                 }
                 else
                 {
@@ -157,12 +157,12 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> ResendEmailValidation([FromBody][StringLength(60)][EmailAddress] string email,
     [FromServices] IEmailSender emailSender)
     {
-        if(ModelState.IsValid)
+        if (ModelState.IsValid)
         {
             Identity_UserDbModel? user = await userManager.FindByEmailAsync(email);
-            if(user is not null)
+            if (user is not null)
             {
-                await SendEmailValidationLink(user, emailSender)
+                await SendEmailValidationLink(user, emailSender);
 
                 return Ok(new { success = true });
             }
@@ -177,13 +177,13 @@ public class IdentityController : ControllerBase
         string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
         //***** Sending Email *****
-        string emailMessage = $"<h4>Hi dear {user.Username}</h4>" +
+        string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
         "<p>Please click " +
         $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
         "target='_blank'>here</a>" +
         " to confirm your email validation.</p>";
 
-        await emailSender.SendEmailAsync(user.Username, user.Email,
+        await emailSender.SendEmailAsync(user.UserName!, user.Email!,
         "Email Validation", emailMessage);
     }
 

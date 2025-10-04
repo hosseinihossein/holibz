@@ -7,6 +7,8 @@ import { WindowService } from './window-service';
 export class SingletonModes {
   windowService = inject(WindowService);
 
+  readonly turnstileSiteKey = "0x4AAAAAAAkeZ2wTzJxqgC_K";
+
   editMode = signal(false);
   darkMode = signal(false);
 

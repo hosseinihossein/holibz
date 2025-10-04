@@ -43,6 +43,11 @@
         }
     </mat-form-field>
 
+    <ngx-turnstile (errored)="onTurnstileError($event)" (resolved)="onTurnstileChange($event)"
+        [siteKey]="singletonModes.turnstileSiteKey" formControlName="CfTurnstileResponse" retry="auto"
+        [theme]="singletonModes.darkMode() ? 'dark' : 'light'" appearance="always">
+    </ngx-turnstile>
+
     @if(loginForm().invalid && loginForm().hasError("emailValidationError")){
     <mat-error>{{loginForm().getError("emailValidationError")}}</mat-error>
     }

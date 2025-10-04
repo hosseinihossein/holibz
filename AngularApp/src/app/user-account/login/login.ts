@@ -11,11 +11,13 @@ import { throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ResendEmailValidation } from '../../dialogs/resend-email-validation/resend-email-validation';
+import { NgxTurnstileFormsModule, NgxTurnstileModule } from 'ngx-turnstile';
+import { SingletonModes } from '../../services/singleton-modes';
 
 @Component({
   selector: 'app-login',
   imports: [MatFormField,MatInput,MatLabel,MatError,MatIcon,MatButton,MatIconButton,MatSuffix,
-    ReactiveFormsModule,JsonPipe
+    ReactiveFormsModule,JsonPipe,NgxTurnstileModule,NgxTurnstileFormsModule
   ],
   templateUrl: './login.html',
   styleUrl: './login.css'
@@ -24,7 +26,8 @@ export class Login implements AfterViewInit {
   hide = signal(true);
   loginForm = signal(new FormGroup({
     user: new FormControl("",[Validators.required, Validators.maxLength(60)]),
-    password: new FormControl("",[Validators.required, Validators.maxLength(60)])
+    password: new FormControl("",[Validators.required, Validators.maxLength(60)]),
+    CfTurnstileResponse: new FormControl("", [Validators.required])
   }));
   user = computed(()=>this.loginForm().get("user"));
   password = computed(()=>this.loginForm().get("password"));
@@ -35,6 +38,7 @@ export class Login implements AfterViewInit {
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
   readonly dialog = inject(MatDialog);
+  readonly singletonModes = inject(SingletonModes);
   
   formFields = viewChildren(MatFormField);
   
@@ -93,6 +97,14 @@ export class Login implements AfterViewInit {
 
   resendEmailValidation(){
     this.dialog.open(ResendEmailValidation);
+  }
+
+  onTurnstileChange(responseToken:string | null){
+    console.log("turnstile response: "+responseToken);
+  }
+
+  onTurnstileError(errorCode:string | null){
+    console.log("turnstile error code: "+errorCode);
   }
 
 }

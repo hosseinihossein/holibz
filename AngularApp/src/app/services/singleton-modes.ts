@@ -9,9 +9,11 @@ export class SingletonModes {
     let theme = localStorage.getItem("theme");
     if(theme && theme == "dark"){
       this.darkMode.set(true);
+      this.windowService.nativeWindow.document.body.classList.add('dark-mode');
     }
     else{
       this.darkMode.set(false);
+      this.windowService.nativeWindow.document.body.classList.remove('dark-mode');
     }
   }
 

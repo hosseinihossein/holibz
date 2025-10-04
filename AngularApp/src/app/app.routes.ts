@@ -6,8 +6,8 @@ import { inject } from '@angular/core';
 
 export const routes: Routes = [
     {path: "", component: Home},
-    {path: "angular/:path", redirectTo: (activatedRoute)=> activatedRoute.params["path"]},
-    {path: "angular", redirectTo: ""},
+    //{path: "angular/:path", redirectTo: (activatedRoute)=> activatedRoute.params["path"]},
+    //{path: "angular", redirectTo: ""},
     ...userAccountRoutes,
     ...libraryRoutes,
 ];

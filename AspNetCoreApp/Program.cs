@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using UploadLargeFormFile.Filters;
@@ -205,8 +206,54 @@ public class Program
         app.MapControllers();
         app.MapDefaultControllerRoute();
 
-        app.Map("/angular/{*catchAll}", async (HttpContext context, IAntiforgery antiforgery) =>
+        /*app.Map("/angular/{*catchAll}", async (HttpContext context, IAntiforgery antiforgery) =>
         {
+            // Send a new request token as a JavaScript-readable cookie
+            var tokens = antiforgery.GetAndStoreTokens(context);
+
+            context.Response.Cookies.Append(
+                "XSRF-TOKEN",
+                tokens.RequestToken!,
+                new CookieOptions() { HttpOnly = false, Secure = true });
+
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync(
+                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser", "index.html")
+            );
+        });*/
+
+        app.Map("/angularapp/browser/{*catchAll}", async (HttpContext context, IAntiforgery antiforgery) =>
+        {
+            string? catchAll = context.Request.RouteValues["catchAll"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(catchAll))
+            {
+                string staticFilePath =
+                Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser", catchAll);
+                if (File.Exists(staticFilePath))
+                {
+                    //Console.WriteLine("\n\n***** Request.ContentType: " + context.Request.ContentType);
+
+                    var provider = new FileExtensionContentTypeProvider();
+                    if (provider.TryGetContentType(staticFilePath, out string? contentType))
+                    {
+                        //Console.WriteLine("\n\n***** contentType: " + contentType);
+
+                        context.Response.ContentType = contentType;
+                        await context.Response.SendFileAsync(staticFilePath);
+                        return;
+                    }
+                    else
+                    {
+                        //Console.WriteLine($"\n\n***** couldn't get content type for {catchAll}");
+
+                        context.Response.ContentType = "application/octet-stream";
+                        await context.Response.SendFileAsync(staticFilePath);
+                        return;
+                    }
+                }
+            }
+
+
             // Send a new request token as a JavaScript-readable cookie
             var tokens = antiforgery.GetAndStoreTokens(context);
 

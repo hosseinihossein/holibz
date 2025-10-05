@@ -50,6 +50,9 @@
     <input hidden formControlName="CfTurnstileResponse" />
     <div id="widget-container"></div>
 
+    @if(loginForm().invalid && loginForm().hasError("loginError")){
+    <mat-error>{{loginForm().getError("loginError")}}</mat-error>
+    }
     @if(loginForm().invalid && loginForm().hasError("emailValidationError")){
     <mat-error>{{loginForm().getError("emailValidationError")}}</mat-error>
     }

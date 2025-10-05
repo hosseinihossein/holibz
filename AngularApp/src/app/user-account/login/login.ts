@@ -28,7 +28,7 @@ export class Login implements AfterViewInit {
   loginForm = signal(new FormGroup({
     UsernameOrEmail: new FormControl("",{nonNullable: true, validators: [Validators.required, Validators.maxLength(60)]}),
     Password: new FormControl("",{nonNullable: true, validators: [Validators.required, Validators.maxLength(60)]}),
-    CfTurnstileResponse: new FormControl("",{nonNullable: true})
+    CfTurnstileResponse: new FormControl("",{nonNullable: true, validators: [Validators.required]})
   }));
   usernameOrEmail = computed(()=>this.loginForm().controls["UsernameOrEmail"]);
   password = computed(()=>this.loginForm().controls["Password"]);
@@ -52,9 +52,22 @@ export class Login implements AfterViewInit {
     turnstile.render("#widget-container", {
       sitekey: this.singletonModes.turnstileSiteKey,
       theme: this.singletonModes.darkMode() ? "dark" : "light",
+      "response-field": false,
       callback: (token:string) => {
         this.cfTurnstile()?.setValue(token);
         console.log("Challenge completed:", token);
+      },
+      'error-callback': (errorCode: string) => {
+        this.loginForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
+        console.error("error-callback: " + errorCode);
+      },
+      'expired-callback': () => {
+        this.loginForm().setErrors({turnstileError: "Turnstile expired!"});
+        console.error("expired-callback");
+      },
+      'timeout-callback': () => {
+        this.loginForm().setErrors({turnstileError: "Turnstile timeouted!"});
+        console.error("timeout-callback");
       },
     });
   }
@@ -97,9 +110,9 @@ export class Login implements AfterViewInit {
               this.loginForm().setErrors({turnstileError: err.error.TurnstileError});
             }
             else{
-              //this.user()?.setErrors({loginError: err.error});
-              this.errorResponse.set(err.error);
+              this.loginForm().setErrors({loginError: err.error});
             }
+            this.errorResponse.set(err.error);
           }
           else{
             throwError(()=>err);

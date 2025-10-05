@@ -44,10 +44,12 @@ export class Signup implements AfterViewInit {
       validators:[Validators.required, Validators.minLength(8), Validators.maxLength(60)],
       updateOn: "change"
     }),
+    CfTurnstileResponse: new FormControl("",{nonNullable: true, validators: [Validators.required]})
   }));
-  username = computed(()=>this.signupForm().get("username"));
-  email = computed(()=>this.signupForm().get("email"));
-  password = computed(()=>this.signupForm().get("password"));
+  username = computed(()=>this.signupForm().controls["username"]);
+  email = computed(()=>this.signupForm().controls["email"]);
+  password = computed(()=>this.signupForm().controls["password"]);
+  cfTurnstile = computed(()=>this.signupForm().controls["CfTurnstileResponse"]);
 
   errorResponse = signal<object | null>(null);
 
@@ -65,8 +67,22 @@ export class Signup implements AfterViewInit {
     turnstile.render("#widget-container", {
       sitekey: this.singletonModes.turnstileSiteKey,
       theme: this.singletonModes.darkMode() ? "dark" : "light",
-      callback: function (token:string) {
+      "response-field": false,
+      callback: (token:string) => {
+        this.cfTurnstile()?.setValue(token);
         console.log("Challenge completed:", token);
+      },
+      'error-callback': (errorCode: string) => {
+        this.signupForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
+        console.error("error-callback: " + errorCode);
+      },
+      'expired-callback': () => {
+        this.signupForm().setErrors({turnstileError: "Turnstile expired!"});
+        console.error("expired-callback");
+      },
+      'timeout-callback': () => {
+        this.signupForm().setErrors({turnstileError: "Turnstile timeouted!"});
+        console.error("timeout-callback");
       },
     });
   }
@@ -118,6 +134,9 @@ export class Signup implements AfterViewInit {
             }
             else if(err.error?.Signup){
               this.signupForm().setErrors({signupError: err.error?.Signup});
+            }
+            else if(err.error?.TurnstileError){
+              this.signupForm().setErrors({turnstileErrorError: err.error?.TurnstileError});
             }
             else{
               this.signupForm().setErrors({signupError: err.error});

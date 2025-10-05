@@ -13,6 +13,9 @@ import { throwError } from 'rxjs';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { Result } from '../../dialogs/result/result';
+import { SingletonModes } from '../../services/singleton-modes';
+
+declare const turnstile : any;
 
 @Component({
   selector: 'app-signup',
@@ -48,9 +51,9 @@ export class Signup implements AfterViewInit {
 
   errorResponse = signal<object | null>(null);
 
-  //usernameValid = signal(false);
   identityService = inject(IdentityService);
   readonly dialog = inject(MatDialog);
+  readonly singletonModes = inject(SingletonModes);
   
   formFields = viewChildren(MatFormField);
   
@@ -58,6 +61,14 @@ export class Signup implements AfterViewInit {
     for(let formField of this.formFields()){
       formField.subscriptSizing = "dynamic";
     }
+
+    turnstile.render("#widget-container", {
+      sitekey: this.singletonModes.turnstileSiteKey,
+      theme: this.singletonModes.darkMode() ? "dark" : "light",
+      callback: function (token:string) {
+        console.log("Challenge completed:", token);
+      },
+    });
   }
 
   changeVisibility(){

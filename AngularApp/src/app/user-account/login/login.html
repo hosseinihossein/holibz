@@ -1,55 +1,60 @@
 <form [formGroup]="loginForm()" (ngSubmit)="login()">
     <mat-form-field>
         <mat-label>Username or Email</mat-label>
-        <input matInput type="text" required placeholder="Enter your username or email" formControlName="user" />
-        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("required")){
+        <input matInput type="text" required placeholder="Enter your username or email"
+            formControlName="UsernameOrEmail" />
+        @if(usernameOrEmail().invalid && (usernameOrEmail().dirty || usernameOrEmail().touched) &&
+        usernameOrEmail().hasError("required")){
         <mat-error>
             username or email is required!
         </mat-error>
         }
-        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("maxlength")){
+        @if(usernameOrEmail().invalid && (usernameOrEmail().dirty || usernameOrEmail().touched) &&
+        usernameOrEmail().hasError("maxlength")){
         <mat-error>
             username or email must be less than 60 characters long!
         </mat-error>
         }
-        @if(user()?.invalid && (user()?.dirty || user()?.touched) && user()?.hasError("loginError")){
+        @if(usernameOrEmail().invalid && (usernameOrEmail().dirty || usernameOrEmail().touched) &&
+        usernameOrEmail().hasError("loginError")){
         <mat-error>
-            {{user()?.getError("loginError")}}
+            {{usernameOrEmail().getError("loginError")}}
         </mat-error>
         }
     </mat-form-field>
     <mat-form-field>
         <mat-label>Password</mat-label>
         <input matInput required [type]="hide() ? 'password' : 'text'" placeholder="Enter your password"
-            formControlName="password" />
+            formControlName="Password" />
         <button type="button" matIconButton matSuffix (click)="changeVisibility()" [attr.aria-label]="'Hide password'"
             [attr.aria-pressed]="hide()">
             <mat-icon>{{hide() ? 'visibility' : 'visibility_off'}}</mat-icon>
         </button>
-        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("required")){
+        @if(password().invalid && (password().dirty || password().touched) && password().hasError("required")){
         <mat-error>
             password is required!
         </mat-error>
         }
-        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("maxlength")){
+        @if(password().invalid && (password().dirty || password().touched) && password().hasError("maxlength")){
         <mat-error>
             password must be less than 60 characters long!
         </mat-error>
         }
-        @if(password()?.invalid && (password()?.dirty || password()?.touched) && password()?.hasError("loginError")){
+        @if(password().invalid && (password().dirty || password().touched) && password().hasError("loginError")){
         <mat-error>
-            {{password()?.getError("loginError")}}
+            {{password().getError("loginError")}}
         </mat-error>
         }
     </mat-form-field>
 
-    <ngx-turnstile (errored)="onTurnstileError($event)" (resolved)="onTurnstileChange($event)"
-        [siteKey]="singletonModes.turnstileSiteKey" formControlName="CfTurnstileResponse" retry="auto"
-        [theme]="singletonModes.darkMode() ? 'dark' : 'light'" appearance="always">
-    </ngx-turnstile>
+    <input hidden formControlName="CfTurnstileResponse" />
+    <div id="widget-container"></div>
 
     @if(loginForm().invalid && loginForm().hasError("emailValidationError")){
     <mat-error>{{loginForm().getError("emailValidationError")}}</mat-error>
+    }
+    @if(loginForm().invalid && loginForm().hasError("turnstileError")){
+    <mat-error>{{loginForm().getError("turnstileError")}}</mat-error>
     }
 
     <div class="clearfix">

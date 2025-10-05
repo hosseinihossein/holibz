@@ -11,13 +11,14 @@ import { throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ResendEmailValidation } from '../../dialogs/resend-email-validation/resend-email-validation';
-import { NgxTurnstileFormsModule, NgxTurnstileModule } from 'ngx-turnstile';
 import { SingletonModes } from '../../services/singleton-modes';
+
+declare const turnstile:any;
 
 @Component({
   selector: 'app-login',
   imports: [MatFormField,MatInput,MatLabel,MatError,MatIcon,MatButton,MatIconButton,MatSuffix,
-    ReactiveFormsModule,JsonPipe,NgxTurnstileModule,NgxTurnstileFormsModule
+    ReactiveFormsModule,JsonPipe
   ],
   templateUrl: './login.html',
   styleUrl: './login.css'
@@ -25,12 +26,13 @@ import { SingletonModes } from '../../services/singleton-modes';
 export class Login implements AfterViewInit {
   hide = signal(true);
   loginForm = signal(new FormGroup({
-    user: new FormControl("",[Validators.required, Validators.maxLength(60)]),
-    password: new FormControl("",[Validators.required, Validators.maxLength(60)]),
-    CfTurnstileResponse: new FormControl("", [Validators.required])
+    UsernameOrEmail: new FormControl("",{nonNullable: true, validators: [Validators.required, Validators.maxLength(60)]}),
+    Password: new FormControl("",{nonNullable: true, validators: [Validators.required, Validators.maxLength(60)]}),
+    CfTurnstileResponse: new FormControl("",{nonNullable: true})
   }));
-  user = computed(()=>this.loginForm().get("user"));
-  password = computed(()=>this.loginForm().get("password"));
+  usernameOrEmail = computed(()=>this.loginForm().controls["UsernameOrEmail"]);
+  password = computed(()=>this.loginForm().controls["Password"]);
+  cfTurnstile = computed(()=>this.loginForm().controls["CfTurnstileResponse"]);
 
   errorResponse = signal<object | null>(null);
 
@@ -46,6 +48,15 @@ export class Login implements AfterViewInit {
     for(let formField of this.formFields()){
       formField.subscriptSizing = "dynamic";
     }
+
+    turnstile.render("#widget-container", {
+      sitekey: this.singletonModes.turnstileSiteKey,
+      theme: this.singletonModes.darkMode() ? "dark" : "light",
+      callback: (token:string) => {
+        this.cfTurnstile()?.setValue(token);
+        console.log("Challenge completed:", token);
+      },
+    });
   }
 
   changeVisibility(){
@@ -60,7 +71,7 @@ export class Login implements AfterViewInit {
   login(){
     if(this.loginForm().valid){
       let formValue = this.loginForm().value;
-      this.identityService.login(formValue.user!, formValue.password!).subscribe({
+      this.identityService.login(formValue).subscribe({
         next: res => {
           //console.log("token: ", res.token);
           console.log("login successfully!");
@@ -71,16 +82,19 @@ export class Login implements AfterViewInit {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             //console.error("BadRequest err: "+err.error);
             if(err.error.Inactive){
-              this.user()?.setErrors({loginError: err.error.Inactive});
+              this.usernameOrEmail()?.setErrors({loginError: err.error.Inactive});
             }
             else if(err.error.Username || err.error.errors?.UsernameOrEmail){
-              this.user()?.setErrors({loginError: err.error.Username || err.error.errors?.Username});
+              this.usernameOrEmail()?.setErrors({loginError: err.error.Username || err.error.errors?.Username});
             }
             else if(err.error.Password || err.error.errors?.Password){
               this.password()?.setErrors({loginError: err.error.Password || err.error.errors?.Password});
             }
             else if(err.error.EmailValidation){
               this.loginForm().setErrors({emailValidationError: err.error.EmailValidation});
+            }
+            else if(err.error.TurnstileError){
+              this.loginForm().setErrors({turnstileError: err.error.TurnstileError});
             }
             else{
               //this.user()?.setErrors({loginError: err.error});
@@ -99,12 +113,12 @@ export class Login implements AfterViewInit {
     this.dialog.open(ResendEmailValidation);
   }
 
-  onTurnstileChange(responseToken:string | null){
+  /*onTurnstileChange(responseToken:string | null){
     console.log("turnstile response: "+responseToken);
   }
 
   onTurnstileError(errorCode:string | null){
     console.log("turnstile error code: "+errorCode);
-  }
+  }*/
 
 }

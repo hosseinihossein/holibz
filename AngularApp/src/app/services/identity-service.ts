@@ -17,10 +17,10 @@ export class IdentityService {
     );
   }
 
-  login(usernameOrEmail: string, password: string){
+  login(formValue:Partial<{user: string; password: string; CfTurnstileResponse: string;}>/*usernameOrEmail: string, password: string*/){
     return this.httpClient.post<{token:string, expiresInHours:string}>(
       "/api/Identity/login", 
-      {usernameOrEmail, password}
+      formValue
     ).pipe(
       tap({
         next: res => {

@@ -104,6 +104,8 @@
         }
     </mat-form-field>
 
+    <div id="widget-container"></div>
+
     @if(signupForm().invalid && signupForm().hasError("signupError")){
     <mat-error>
         {{signupForm().getError("signupError")}}

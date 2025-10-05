@@ -66,6 +66,7 @@ public class Program
             options.ValidationInterval = TimeSpan.Zero;
         });
 
+        //******************* Controllers *******************
         builder.Services.AddControllersWithViews(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
@@ -75,9 +76,14 @@ public class Program
             options.Filters.Add(new RequireHttpsAttribute());
         });
 
-        //builder.Services.AddScoped<Identity_Process>();
-        builder.Services.AddTransient<IEmailSender, EmailSender>();
+        //******************* IHttpClientFactory *******************
+        builder.Services.AddHttpClient();
 
+        //******************* TurnstileService *******************
+        builder.Services.AddTransient<TurnstileService>();
+
+        //******************* EmailSender *******************
+        builder.Services.AddTransient<IEmailSender, EmailSender>();
 
         //******************* Authentication *******************
         builder.Services.AddAuthentication(options =>

@@ -10,14 +10,14 @@ export class IdentityService {
   private tokenExpiration_StorageKey = "token_expire";
   private httpClient = inject(HttpClient);
 
-  signup(username: string, email:string, password: string){
+  signup(formValue:Partial<{username: string; email: string; password: string; CfTurnstileResponse: string;}>){
     return this.httpClient.post<{success:boolean}>(
       "/api/Identity/signup", 
-      {username, email, password}
+      formValue
     );
   }
 
-  login(formValue:Partial<{user: string; password: string; CfTurnstileResponse: string;}>/*usernameOrEmail: string, password: string*/){
+  login(formValue:Partial<{UsernameOrEmail: string; password: string; CfTurnstileResponse: string;}>){
     return this.httpClient.post<{token:string, expiresInHours:string}>(
       "/api/Identity/login", 
       formValue

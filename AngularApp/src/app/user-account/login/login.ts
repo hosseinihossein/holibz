@@ -53,6 +53,9 @@ export class Login implements AfterViewInit {
       sitekey: this.singletonModes.turnstileSiteKey,
       theme: this.singletonModes.darkMode() ? "dark" : "light",
       "response-field": false,
+      action: "login",
+      "refresh-expired": "manual",
+      "refresh-timeout": "manual",
       callback: (token:string) => {
         this.cfTurnstile()?.setValue(token);
         console.log("Challenge completed:", token);
@@ -106,8 +109,8 @@ export class Login implements AfterViewInit {
             else if(err.error.EmailValidation){
               this.loginForm().setErrors({emailValidationError: err.error.EmailValidation});
             }
-            else if(err.error.TurnstileError){
-              this.loginForm().setErrors({turnstileError: err.error.TurnstileError});
+            else if(err.error.TurnstileError || err.error.errors?.CfTurnstileResponse){
+              this.loginForm().setErrors({turnstileError: err.error.TurnstileError || err.error.errors?.CfTurnstileResponse});
             }
             else{
               this.loginForm().setErrors({loginError: err.error});

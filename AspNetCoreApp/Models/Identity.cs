@@ -49,7 +49,8 @@ public class Identity_LoginModel
     [StringLength(60)]
     public string Password { get; set; } = string.Empty;
 
-    //public bool IsPersistent { get; set; } = false;
+    [StringLength(2048)]
+    public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_ResendEmailValidationModel
@@ -58,6 +59,9 @@ public class Identity_ResendEmailValidationModel
     [StringLength(60)]
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
+
+    [StringLength(2048)]
+    public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_SignupModel
@@ -72,8 +76,8 @@ public class Identity_SignupModel
     [StringLength(60, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
-    //[Compare(nameof(Password))]
-    //public string RepeatPassword { get; set; } = string.Empty;
+    [StringLength(2048)]
+    public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 /*********************************** IdentityDb ************************************/

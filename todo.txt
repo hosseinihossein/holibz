@@ -1,2 +1,2 @@
-- create a new angular dialog for displaying results (displaying signup results and ...)
+- add progress spinner after submitting a form
 - 

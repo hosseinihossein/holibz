@@ -33,55 +33,70 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel,
-    [FromServices] IConfiguration configuration)
+    [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
         {
-            if (User.Identity?.IsAuthenticated ?? false)
-            {
-                await signInManager.SignOutAsync();
-            }
+            /*var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
+                HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                HttpContext.Connection.RemoteIpAddress?.ToString();
+            */
+            TurnstileResponse? turnstileResponse =
+            await turnstileService.ValidateTokenAsync(loginModel.CfTurnstileResponse/*, remoteip*/);
 
-            Identity_UserDbModel? user;
-            if (loginModel.UsernameOrEmail.Contains('@'))
+            if (turnstileResponse is null || turnstileResponse.Success is false)
             {
-                user = await userManager.FindByEmailAsync(loginModel.UsernameOrEmail);
+                ModelState.AddModelError("TurnstileError",
+                turnstileResponse is null ? "response null!" : string.Join(", ", turnstileResponse.ErrorCodes));
             }
             else
             {
-                user = await userManager.FindByNameAsync(loginModel.UsernameOrEmail);
-            }
-
-            if (user is not null)
-            {
-                if (!user.ActivityAllowed)
+                if (User.Identity?.IsAuthenticated ?? false)
                 {
-                    ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
+                    await signInManager.SignOutAsync();
                 }
-                else if (!user.EmailConfirmed)
+
+                Identity_UserDbModel? user;
+                if (loginModel.UsernameOrEmail.Contains('@'))
                 {
-                    ModelState.AddModelError("EmailValidation", "Email Not confirmed! Please click the validation link in your email first.");
+                    user = await userManager.FindByEmailAsync(loginModel.UsernameOrEmail);
                 }
                 else
                 {
-                    Microsoft.AspNetCore.Identity.SignInResult result =
-                    await signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
+                    user = await userManager.FindByNameAsync(loginModel.UsernameOrEmail);
+                }
 
-                    if (result.Succeeded)
+                if (user is not null)
+                {
+                    if (!user.ActivityAllowed)
                     {
-                        string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
-                        var jwtSettings = configuration.GetSection("JwtSettings");
-                        return Ok(new { token, expiresInHours = jwtSettings["DurationInHours"] ?? "10" });
+                        ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
+                    }
+                    else if (!user.EmailConfirmed)
+                    {
+                        ModelState.AddModelError("EmailValidation", "Email Not confirmed! Please click the validation link in your email first.");
                     }
                     else
                     {
-                        ModelState.AddModelError("Password", "Invalid Credentials");
+                        Microsoft.AspNetCore.Identity.SignInResult result =
+                        await signInManager.CheckPasswordSignInAsync(user, loginModel.Password, true);
+
+                        if (result.Succeeded)
+                        {
+                            string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
+                            var jwtSettings = configuration.GetSection("JwtSettings");
+                            return Ok(new { token, expiresInHours = jwtSettings["DurationInHours"] ?? "10" });
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("Password", "Invalid Credentials");
+                        }
                     }
                 }
-            }
-            else
-            {
-                ModelState.AddModelError("Username", "Invalid Username or Email");
+                else
+                {
+                    ModelState.AddModelError("Username", "Invalid Username or Email");
+                }
             }
         }
 

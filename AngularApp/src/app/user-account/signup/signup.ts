@@ -68,6 +68,9 @@ export class Signup implements AfterViewInit {
       sitekey: this.singletonModes.turnstileSiteKey,
       theme: this.singletonModes.darkMode() ? "dark" : "light",
       "response-field": false,
+      action: "signup",
+      "refresh-expired": "manual",
+      "refresh-timeout": "manual",
       callback: (token:string) => {
         this.cfTurnstile()?.setValue(token);
         console.log("Challenge completed:", token);
@@ -101,7 +104,7 @@ export class Signup implements AfterViewInit {
   signup(){
     if(this.signupForm().valid){
       let formValue = this.signupForm().value;
-      this.identityService.signup(formValue.username!, formValue.email!, formValue.password!).subscribe({
+      this.identityService.signup(formValue).subscribe({
         next: res => {
           if(res.success){
             //display a message to users that they need to validate their email
@@ -135,8 +138,8 @@ export class Signup implements AfterViewInit {
             else if(err.error?.Signup){
               this.signupForm().setErrors({signupError: err.error?.Signup});
             }
-            else if(err.error?.TurnstileError){
-              this.signupForm().setErrors({turnstileErrorError: err.error?.TurnstileError});
+            else if(err.error?.TurnstileError || err.error.errors?.CfTurnstileResponse){
+              this.signupForm().setErrors({turnstileError: err.error?.TurnstileError || err.error.errors?.CfTurnstileResponse});
             }
             else{
               this.signupForm().setErrors({signupError: err.error});

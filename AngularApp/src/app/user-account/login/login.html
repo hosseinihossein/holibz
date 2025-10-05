@@ -57,7 +57,7 @@
     <mat-error>{{loginForm().getError("emailValidationError")}}</mat-error>
     }
     @if(loginForm().invalid && loginForm().hasError("turnstileError")){
-    <mat-error>{{loginForm().getError("turnstileError")}}</mat-error>
+    <mat-error>Turnstile Error: {{loginForm().getError("turnstileError")}}</mat-error>
     }
 
     <div class="clearfix">

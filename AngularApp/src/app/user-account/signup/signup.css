@@ -35,3 +35,7 @@ mat-error::before{
 .successIcon{
     color: var(--mat-sys-on-primary-container);
 }
+
+#widget-container{
+    margin: auto;
+}

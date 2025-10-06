@@ -12,13 +12,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ResendEmailValidation } from '../../dialogs/resend-email-validation/resend-email-validation';
 import { SingletonModes } from '../../services/singleton-modes';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 declare const turnstile:any;
 
 @Component({
   selector: 'app-login',
   imports: [MatFormField,MatInput,MatLabel,MatError,MatIcon,MatButton,MatIconButton,MatSuffix,
-    ReactiveFormsModule,JsonPipe
+    ReactiveFormsModule,JsonPipe,MatProgressSpinnerModule
   ],
   templateUrl: './login.html',
   styleUrl: './login.css'
@@ -35,6 +36,8 @@ export class Login implements AfterViewInit {
   cfTurnstile = computed(()=>this.loginForm().controls["CfTurnstileResponse"]);
 
   errorResponse = signal<object | null>(null);
+  displaySubmitSpinner = signal(false);
+  widgetId = signal("");
 
   identityService = inject(IdentityService);
   router = inject(Router);
@@ -49,30 +52,32 @@ export class Login implements AfterViewInit {
       formField.subscriptSizing = "dynamic";
     }
 
-    turnstile.render("#widget-container", {
-      sitekey: this.singletonModes.turnstileSiteKey,
-      theme: this.singletonModes.darkMode() ? "dark" : "light",
-      "response-field": false,
-      action: "login",
-      "refresh-expired": "manual",
-      "refresh-timeout": "manual",
-      callback: (token:string) => {
-        this.cfTurnstile()?.setValue(token);
-        console.log("Challenge completed:", token);
-      },
-      'error-callback': (errorCode: string) => {
-        this.loginForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
-        console.error("error-callback: " + errorCode);
-      },
-      'expired-callback': () => {
-        this.loginForm().setErrors({turnstileError: "Turnstile expired!"});
-        console.error("expired-callback");
-      },
-      'timeout-callback': () => {
-        this.loginForm().setErrors({turnstileError: "Turnstile timeouted!"});
-        console.error("timeout-callback");
-      },
-    });
+    this.widgetId.set(
+      turnstile.render("#widget-container", {
+        sitekey: this.singletonModes.turnstileSiteKey,
+        theme: this.singletonModes.darkMode() ? "dark" : "light",
+        "response-field": false,
+        action: "login",
+        "refresh-expired": "manual",
+        "refresh-timeout": "manual",
+        callback: (token:string) => {
+          this.cfTurnstile()?.setValue(token);
+          //console.log("Challenge completed:", token);
+        },
+        'error-callback': (errorCode: string) => {
+          this.loginForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
+          console.error("error-callback: " + errorCode);
+        },
+        'expired-callback': () => {
+          this.loginForm().setErrors({turnstileError: "Turnstile expired!"});
+          console.error("expired-callback");
+        },
+        'timeout-callback': () => {
+          this.loginForm().setErrors({turnstileError: "Turnstile timeouted!"});
+          console.error("timeout-callback");
+        },
+      })
+    );
   }
 
   changeVisibility(){
@@ -86,6 +91,7 @@ export class Login implements AfterViewInit {
 
   login(){
     if(this.loginForm().valid){
+      this.displaySubmitSpinner.set(true);
       let formValue = this.loginForm().value;
       this.identityService.login(formValue).subscribe({
         next: res => {
@@ -120,6 +126,8 @@ export class Login implements AfterViewInit {
           else{
             throwError(()=>err);
           }
+          this.displaySubmitSpinner.set(false);
+          turnstile.reset(this.widgetId());
         },
       });
     }

@@ -125,6 +125,13 @@
     <div class="clearfix">
         <a matButton id="login-btn">Already have an account</a>
     </div>
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+
 </form>
 <div>{{signupForm().value| json}}</div>
 <div>error response: {{errorResponse() | json}}</div>

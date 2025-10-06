@@ -52,6 +52,8 @@ export class Signup implements AfterViewInit {
   cfTurnstile = computed(()=>this.signupForm().controls["CfTurnstileResponse"]);
 
   errorResponse = signal<object | null>(null);
+  displaySubmitSpinner = signal(false);
+  widgetId = signal("");
 
   identityService = inject(IdentityService);
   readonly dialog = inject(MatDialog);
@@ -64,30 +66,32 @@ export class Signup implements AfterViewInit {
       formField.subscriptSizing = "dynamic";
     }
 
-    turnstile.render("#widget-container", {
-      sitekey: this.singletonModes.turnstileSiteKey,
-      theme: this.singletonModes.darkMode() ? "dark" : "light",
-      "response-field": false,
-      action: "signup",
-      "refresh-expired": "manual",
-      "refresh-timeout": "manual",
-      callback: (token:string) => {
-        this.cfTurnstile()?.setValue(token);
-        console.log("Challenge completed:", token);
-      },
-      'error-callback': (errorCode: string) => {
-        this.signupForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
-        console.error("error-callback: " + errorCode);
-      },
-      'expired-callback': () => {
-        this.signupForm().setErrors({turnstileError: "Turnstile expired!"});
-        console.error("expired-callback");
-      },
-      'timeout-callback': () => {
-        this.signupForm().setErrors({turnstileError: "Turnstile timeouted!"});
-        console.error("timeout-callback");
-      },
-    });
+    this.widgetId.set(
+      turnstile.render("#widget-container", {
+        sitekey: this.singletonModes.turnstileSiteKey,
+        theme: this.singletonModes.darkMode() ? "dark" : "light",
+        "response-field": false,
+        action: "signup",
+        "refresh-expired": "manual",
+        "refresh-timeout": "manual",
+        callback: (token:string) => {
+          this.cfTurnstile()?.setValue(token);
+          //console.log("Challenge completed:", token);
+        },
+        'error-callback': (errorCode: string) => {
+          this.signupForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
+          console.error("error-callback: " + errorCode);
+        },
+        'expired-callback': () => {
+          this.signupForm().setErrors({turnstileError: "Turnstile expired!"});
+          console.error("expired-callback");
+        },
+        'timeout-callback': () => {
+          this.signupForm().setErrors({turnstileError: "Turnstile timeouted!"});
+          console.error("timeout-callback");
+        },
+      })
+    );
   }
 
   changeVisibility(){
@@ -103,10 +107,12 @@ export class Signup implements AfterViewInit {
 
   signup(){
     if(this.signupForm().valid){
+      this.displaySubmitSpinner.set(true);
       let formValue = this.signupForm().value;
       this.identityService.signup(formValue).subscribe({
         next: res => {
           if(res.success){
+            this.displaySubmitSpinner.set(false);
             //display a message to users that they need to validate their email
             this.dialog.open(Result,{
               //panelClass: "success-ResultStatus", 
@@ -149,6 +155,8 @@ export class Signup implements AfterViewInit {
           else{
             throwError(()=>err);
           }
+          this.displaySubmitSpinner.set(false);
+          turnstile.reset(this.widgetId());
         },
       });
     }

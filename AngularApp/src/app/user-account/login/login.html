@@ -74,6 +74,12 @@
     </div>
     }
 
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+
 </form>
 <div>{{loginForm().value| json}}</div>
 <div>error response: {{errorResponse() | json}}</div>

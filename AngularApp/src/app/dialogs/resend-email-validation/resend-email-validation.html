@@ -24,18 +24,22 @@
         </mat-error>
         }
     </mat-form-field>
-    @if(response()){
-    @if(response()?.success){
+
+    <input hidden [formControl]="cfTurnstile()" />
+    <div id="widget-container"></div>
+
+    @if(response() && response()?.success){
     <h4 style="color:var(--mat-sys-on-primary-container);">A Validation Link Sent to '{{email().value}}'</h4>
     }
-    @else {
+    @else if(response()) {
     <mat-error>{{response()?.error}}</mat-error>
     }
-    }
+
     <mat-dialog-actions>
         @if(response() == null || !response()?.success){
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" (click)="resendEmailValidation()" [disabled]="email().invalid">Resend</button>
+        <button matButton="filled" (click)="resendEmailValidation()"
+            [disabled]="email().invalid || cfTurnstile().invalid">Resend</button>
         }
         @else {
         <button matButton mat-dialog-close>Ok</button>

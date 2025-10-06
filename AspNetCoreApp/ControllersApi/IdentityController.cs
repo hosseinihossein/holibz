@@ -37,12 +37,12 @@ public class IdentityController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            /*var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
+            var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
                 HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
                 HttpContext.Connection.RemoteIpAddress?.ToString();
-            */
+
             TurnstileResponse? turnstileResponse =
-            await turnstileService.ValidateTokenAsync(loginModel.CfTurnstileResponse/*, remoteip*/);
+            await turnstileService.ValidateTokenAsync(loginModel.CfTurnstileResponse, remoteip);
 
             if (turnstileResponse is null || turnstileResponse.Success is false)
             {
@@ -107,46 +107,48 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
-    [FromServices] IEmailSender emailSender)
+    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
         {
-            /*var formData = new { secret = "0x4AAAAAAAkeZ_VQzHOlwqGq3-wl_DJ_HEw", response = signupModel.CfTurnstileResponse };
-            string url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-            var client = new HttpClient();
-            var response = await client.PostAsJsonAsync(url, formData);
-            string responseContentString = await response.Content.ReadAsStringAsync();
-            dynamic? responseContent = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(responseContentString);
-            if (!response.IsSuccessStatusCode || (responseContent?.success ?? false) == false)
-            {
-                ModelState.AddModelError("Turnstile", "Cloudn't pass the CAPTCHA!");
-                return View(nameof(Signup));
-            }*/
+            var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
+                HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            if (User.Identity?.IsAuthenticated ?? false)
+            TurnstileResponse? turnstileResponse =
+            await turnstileService.ValidateTokenAsync(signupModel.CfTurnstileResponse, remoteip);
+
+            if (turnstileResponse is null || turnstileResponse.Success is false)
             {
-                await signInManager.SignOutAsync();
+                ModelState.AddModelError("TurnstileError",
+                turnstileResponse is null ? "response null!" : string.Join(", ", turnstileResponse.ErrorCodes));
             }
+            else
+            {
+                if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    await signInManager.SignOutAsync();
+                }
 
-            Identity_UserDbModel user = new Identity_UserDbModel()
-            {
-                UserName = signupModel.Username,
-                Email = signupModel.Email,
-                EmailConfirmed = false,
-                UserGuid = Guid.NewGuid().ToString().Replace("-", ""),
-                PasswordLiteral = signupModel.Password
-            };
-            IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
-            if (result.Succeeded)
-            {
-                /*await*/
-                //_ = SendEmailValidationLink(user, emailSender);// commented out for development 
+                Identity_UserDbModel user = new Identity_UserDbModel()
+                {
+                    UserName = signupModel.Username,
+                    Email = signupModel.Email,
+                    EmailConfirmed = false,
+                    UserGuid = Guid.NewGuid().ToString().Replace("-", ""),
+                    PasswordLiteral = signupModel.Password
+                };
+                IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
+                if (result.Succeeded)
+                {
+                    _ = SendEmailValidationLink(user, emailSender);// commented out for development 
 
-                return Ok(new { success = true });
-            }
-            foreach (IdentityError error in result.Errors)
-            {
-                ModelState.AddModelError("Signup", error.Description);
+                    return Ok(new { success = true });
+                }
+                foreach (IdentityError error in result.Errors)
+                {
+                    ModelState.AddModelError("Signup", error.Description);
+                }
             }
         }
         return BadRequest(ModelState);
@@ -170,18 +172,33 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> ResendEmailValidation([FromBody] Identity_ResendEmailValidationModel emailModel,
-    [FromServices] IEmailSender emailSender)
+    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel? user = await userManager.FindByEmailAsync(emailModel.Email);
-            if (user is not null)
-            {
-                await SendEmailValidationLink(user, emailSender);
+            var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
+                HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                HttpContext.Connection.RemoteIpAddress?.ToString();
 
-                return Ok(new { success = true });
+            TurnstileResponse? turnstileResponse =
+            await turnstileService.ValidateTokenAsync(emailModel.CfTurnstileResponse, remoteip);
+
+            if (turnstileResponse is null || turnstileResponse.Success is false)
+            {
+                ModelState.AddModelError("TurnstileError",
+                turnstileResponse is null ? "response null!" : string.Join(", ", turnstileResponse.ErrorCodes));
             }
-            ModelState.AddModelError("Email", "user Not found!");
+            else
+            {
+                Identity_UserDbModel? user = await userManager.FindByEmailAsync(emailModel.Email);
+                if (user is not null)
+                {
+                    await SendEmailValidationLink(user, emailSender);
+
+                    return Ok(new { success = true });
+                }
+                ModelState.AddModelError("Email", "user Not found!");
+            }
         }
         return BadRequest(ModelState);
     }

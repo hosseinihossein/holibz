@@ -55,13 +55,16 @@ export class Login implements AfterViewInit {
     this.widgetId.set(
       turnstile.render("#widget-container", {
         sitekey: this.singletonModes.turnstileSiteKey,
+        size: "flexible",
         theme: this.singletonModes.darkMode() ? "dark" : "light",
         "response-field": false,
         action: "login",
         "refresh-expired": "manual",
         "refresh-timeout": "manual",
         callback: (token:string) => {
+          const errors = this.loginForm().errors;
           this.cfTurnstile()?.setValue(token);
+          this.loginForm().setErrors(errors);
           //console.log("Challenge completed:", token);
         },
         'error-callback': (errorCode: string) => {

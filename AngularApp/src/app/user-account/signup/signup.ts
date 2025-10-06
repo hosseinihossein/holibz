@@ -69,14 +69,16 @@ export class Signup implements AfterViewInit {
     this.widgetId.set(
       turnstile.render("#widget-container", {
         sitekey: this.singletonModes.turnstileSiteKey,
+        size: "flexible",
         theme: this.singletonModes.darkMode() ? "dark" : "light",
         "response-field": false,
         action: "signup",
         "refresh-expired": "manual",
         "refresh-timeout": "manual",
         callback: (token:string) => {
+          const errors = this.signupForm().errors;
           this.cfTurnstile()?.setValue(token);
-          //console.log("Challenge completed:", token);
+          this.signupForm().setErrors(errors);
         },
         'error-callback': (errorCode: string) => {
           this.signupForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});

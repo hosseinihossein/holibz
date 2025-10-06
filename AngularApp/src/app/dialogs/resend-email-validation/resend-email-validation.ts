@@ -8,13 +8,14 @@ import { FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { SingletonModes } from '../../services/singleton-modes';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 declare const turnstile:any;
 
 @Component({
   selector: 'app-resend-email-validation',
   imports: [MatDialogContent, MatDialogActions, MatFormField, MatInput, MatLabel,
-    MatButton, MatDialogClose, ReactiveFormsModule, MatError],
+    MatButton, MatDialogClose, ReactiveFormsModule, MatError, MatProgressSpinnerModule],
   templateUrl: './resend-email-validation.html',
   styleUrl: './resend-email-validation.css'
 })
@@ -39,8 +40,9 @@ export class ResendEmailValidation implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.widgetId.set(
-      turnstile.render("#widget-container", {
+      turnstile.render("#resendEmail-widget-container", {
         sitekey: this.singletonModes.turnstileSiteKey,
+        size: "flexible",
         theme: this.singletonModes.darkMode() ? "dark" : "light",
         "response-field": false,
         action: "resend-email-validation",
@@ -48,7 +50,6 @@ export class ResendEmailValidation implements AfterViewInit {
         "refresh-timeout": "manual",
         callback: (token:string) => {
           this.cfTurnstile()?.setValue(token);
-          //console.log("Challenge completed:", token);
         },
         'error-callback': (errorCode: string) => {
           this.response.set({success: false, error: "Turnstile error! error code: " + errorCode});
@@ -69,7 +70,7 @@ export class ResendEmailValidation implements AfterViewInit {
   resendEmailValidation(){
     if(this.email().valid && this.cfTurnstile().valid){
       this.displaySubmitSpinner.set(true);
-      this.identityService.resendEmailValidation(this.email().value).subscribe({
+      this.identityService.resendEmailValidation(this.email().value, this.cfTurnstile().value).subscribe({
         next: res => {
           this.displaySubmitSpinner.set(false);
           if(res.success){
@@ -83,7 +84,7 @@ export class ResendEmailValidation implements AfterViewInit {
               this.response.set({success: false, error: "email error: " + (err.error.Email || err.error.errors?.Email)});
             }
             else if(err.error.TurnstileError || err.error.errors?.CfTurnstileResponse){
-              this.response.set({success: false, error: "email error: " + (err.error.TurnstileError || err.error.errors?.CfTurnstileResponse)});
+              this.response.set({success: false, error: "turnstile error: " + (err.error.TurnstileError || err.error.errors?.CfTurnstileResponse)});
             }
             console.error(err);
           }
@@ -91,6 +92,7 @@ export class ResendEmailValidation implements AfterViewInit {
             throwError(()=>err);
           }
           this.displaySubmitSpinner.set(false);
+          turnstile.reset(this.widgetId());
         }
       });
     }

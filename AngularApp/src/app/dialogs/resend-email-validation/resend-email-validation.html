@@ -26,7 +26,7 @@
     </mat-form-field>
 
     <input hidden [formControl]="cfTurnstile()" />
-    <div id="widget-container"></div>
+    <div id="resendEmail-widget-container"></div>
 
     @if(response() && response()?.success){
     <h4 style="color:var(--mat-sys-on-primary-container);">A Validation Link Sent to '{{email().value}}'</h4>
@@ -45,4 +45,11 @@
         <button matButton mat-dialog-close>Ok</button>
         }
     </mat-dialog-actions>
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+
 </mat-dialog-content>

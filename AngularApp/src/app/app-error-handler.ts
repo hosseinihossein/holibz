@@ -1,10 +1,12 @@
 import { HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
 import { ErrorHandler, inject, Injectable } from "@angular/core";
 import { IdentityService } from "./services/identity-service";
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Injectable()
 export class AppErrorHandler implements ErrorHandler{
     identityService = inject(IdentityService);
+    private snackBar = inject(MatSnackBar);
 
     handleError(error: any): void {
         const err = error.rejection || error;
@@ -30,6 +32,7 @@ export class AppErrorHandler implements ErrorHandler{
             errTypeMessage = "Application Error";
         }
 
+        this.snackBar.open(errTypeMessage, "Ok"/*, { duration: 5000 }*/);
         console.error(errTypeMessage, err);
     }
     

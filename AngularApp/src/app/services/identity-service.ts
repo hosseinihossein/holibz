@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { map, tap } from 'rxjs';
 
 @Injectable({
@@ -28,6 +28,7 @@ export class IdentityService {
           let expireDate = new Date(Date.now());
           expireDate.setHours(expireDate.getHours() + Number(res.expiresInHours));
           localStorage.setItem(this.tokenExpiration_StorageKey, expireDate.toString());
+          this.isAuthenticated.set(true);
         },
       }),
     );
@@ -36,10 +37,13 @@ export class IdentityService {
   logout(){
     localStorage.removeItem(this.token_StorageKey);
     localStorage.removeItem(this.tokenExpiration_StorageKey);
+    this.isAuthenticated.set(false);
     console.log("user logout!");
   }
 
-  isAuthenticated():boolean{
+  isAuthenticated = signal(this.hasRecord());
+
+  private hasRecord():boolean{
     if(localStorage.getItem(this.token_StorageKey) && 
       localStorage.getItem(this.tokenExpiration_StorageKey)){
       let expireDate = Date.parse(localStorage.getItem(this.tokenExpiration_StorageKey)!);
@@ -61,6 +65,10 @@ export class IdentityService {
     return this.httpClient.post<{success:boolean}>(
       "/api/Identity/ResendEmailValidation", {email, CfTurnstileResponse}
     );
+  }
+
+  getUserImg(){
+    return this.httpClient.get<{hasImg:boolean; address:string;}>("api/Identity/UserImage");
   }
 
 }

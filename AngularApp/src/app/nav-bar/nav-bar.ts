@@ -11,11 +11,12 @@ import { WindowService } from '../services/window-service';
 import { SingletonModes } from '../services/singleton-modes';
 import { RouterLink } from '@angular/router';
 import { IdentityService } from '../services/identity-service';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-nav-bar',
   imports: [MatIcon, MatToolbar, MatButton, MatIconButton, MatActionList, MatMenu, MatMenuTrigger, MatMenuItem,
-    DropdownButton, AccountDropdown, MatTooltip, RouterLink],
+    DropdownButton, AccountDropdown, MatTooltip, RouterLink,NgOptimizedImage],
   templateUrl: './nav-bar.html',
   styleUrl: './nav-bar.css'
 })

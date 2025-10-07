@@ -1,14 +1,34 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
+import { IdentityService } from '../services/identity-service';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-account-dropdown',
-  imports: [MatIconButton, MatMenuTrigger],
+  imports: [MatIconButton, MatMenuTrigger, MatIcon, NgOptimizedImage],
   templateUrl: './account-dropdown.html',
   styleUrl: './account-dropdown.css'
 })
 export class AccountDropdown {
   menu = input.required<MatMenu>();
-  imgSrc = input("defaultProfile.jpg");
+  identityService = inject(IdentityService);
+  imgSrc = signal("");
+  //displayImage = computed(()=> this.identityService.isAuthenticated() && this.imgSrc() ? true : false);
+  readonly imgBtn = "padding: 0px; width: 50px; height: 50px; transform: translateY(3px);"
+
+  constructor(){
+    effect(() => {
+      if(this.identityService.isAuthenticated()){
+        this.identityService.getUserImg().subscribe({
+          next: res => {
+            if(res.hasImg){
+              this.imgSrc.set(res.address);
+            }
+          }
+        });
+      }
+    });
+  }
 }

@@ -5,6 +5,7 @@ form{
     width: fit-content;
     margin: auto;
     box-shadow: 0 5px 5px var(--mat-sys-outline-variant);
+    overflow: hidden;
 }
 
 mat-form-field{

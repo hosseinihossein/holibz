@@ -3,6 +3,8 @@ mat-form-field{
 }
 mat-dialog-content{
     width: 400px;
+    position: relative;
+    overflow: hidden;
 }
 
 #resendEmail-widget-container{

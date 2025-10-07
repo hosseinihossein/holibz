@@ -6,6 +6,7 @@ form{
     margin: auto;
     box-shadow: 0 5px 5px var(--mat-sys-outline-variant);
     position: relative;
+    overflow: hidden;
 }
 
 mat-form-field{

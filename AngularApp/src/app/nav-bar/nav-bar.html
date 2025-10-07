@@ -1,7 +1,7 @@
 <mat-toolbar [class.shadow]="displayShadow()">
     <a matIconButton routerLink="" style="overflow: hidden;width: 50px;height: 50px;padding: 0;margin: 0;">
-        <img [src]="singletonModes.darkMode() ? 'HLlogo-DarkMode.png' : 'HLlogo-LightMode.png'" alt="HLlogo"
-            style="width:50px;height:50px;margin: 0;padding: 0;">
+        <img [ngSrc]="singletonModes.darkMode() ? 'HLlogo-DarkMode.png' : 'HLlogo-LightMode.png'" alt="HLlogo"
+            width="50" height="50" style="width:50px;height:50px;margin: 0;padding: 0;">
     </a>
 
     <mat-action-list id="mainMenu">

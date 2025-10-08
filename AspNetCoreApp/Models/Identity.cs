@@ -8,6 +8,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -17,10 +18,7 @@ namespace AspNetCoreApp.Models;
 public class Identity_UserDbModel : IdentityUser<int>
 {
     public string UserGuid { get; set; } = string.Empty;
-    public string PasswordLiteral { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? EmailValidationCode { get; set; }
-    public DateTime? EmailValidationDate { get; set; }//rename to evcDate
     public bool DisplayEmailPublicly { get; set; } = false;
     public bool ActivityAllowed { get; set; } = true;
     public byte _version { get; set; } = 0;
@@ -80,41 +78,13 @@ public class Identity_SignupModel
     public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
+
 /*********************************** IdentityDb ************************************/
 public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
 {
     public Identity_DbContext(DbContextOptions<Identity_DbContext> options) : base(options) { }
 }
 
-/******************************** EmailTokenProvider *******************************/
-/*public class Identity_EmailTokenProvider : AuthenticatorTokenProvider<Identity_UserDbModel>
-{
-    public override Task<bool> CanGenerateTwoFactorTokenAsync(UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
-    {
-        return base.CanGenerateTwoFactorTokenAsync(userManager, user);
-    }
-    public override async Task<string> GenerateAsync(string purpose, UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
-    {
-        string code = new Random().Next(10_000, 99_999).ToString();
-        user.EmailValidationCode = code;
-        user.EmailValidationDate = DateTime.Now;
-        IdentityResult result = await userManager.UpdateAsync(user);
-        string token = result.Succeeded ? code : string.Empty;
-        return token;
-    }
-    public override async Task<bool> ValidateAsync(string purpose, string token, UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
-    {
-        bool isValid = false;
-        if (token == user.EmailValidationCode)
-        {
-            isValid = true;
-            user.EmailValidationCode = null;
-            user.EmailValidationDate = null;
-            await userManager.UpdateAsync(user);
-        }
-        return isValid;
-    }
-}*/
 
 /******************************** Custom Token Provider *******************************/
 public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbModel>
@@ -211,3 +181,105 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 
 
 }
+
+
+/******************************** Custom Token Provider *******************************/
+public class Identity_Process
+{
+    readonly DirectoryInfo UserSeedDirectoryInfo;
+    //readonly IWebHostEnvironment env;
+    readonly UserManager<Identity_UserDbModel> userManager;
+    public Identity_Process(IWebHostEnvironment _env, UserManager<Identity_UserDbModel> _userManager)
+    {
+        userManager = _userManager;
+        UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UserSeedData"));
+    }
+
+    public async Task UpdateUserSeed(Identity_UserDbModel user)
+    {
+        Identity_UserSeedModel userSeedModel = new()
+        {
+            UserName = user.UserName!,
+            Email = user.Email!,
+            EmailConfirmed = user.EmailConfirmed,
+            UserGuid = user.UserGuid,
+            PasswordHash = user.PasswordHash!,
+            Description = user.Description,
+            DisplayEmailPublicly = user.DisplayEmailPublicly,
+            ActivityAllowed = user.ActivityAllowed,
+            Roles = [.. await userManager.GetRolesAsync(user)],
+        };
+
+        string json = JsonSerializer.Serialize(userSeedModel);
+        string userSeedPath = Path.Combine(UserSeedDirectoryInfo.FullName, user.UserGuid);
+
+        await File.WriteAllTextAsync(userSeedPath, json);
+    }
+
+    public void DeleteUserSeed(Identity_UserDbModel user)
+    {
+        string userSeedPath = Path.Combine(UserSeedDirectoryInfo.FullName, user.UserGuid);
+        File.Delete(userSeedPath);
+    }
+
+    public async Task SeedUsersToDb()
+    {
+        foreach (var fileInfo in UserSeedDirectoryInfo.EnumerateFiles())
+        {
+            var myUser = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == fileInfo.Name);
+            if (myUser != null) continue;
+
+            string json = await File.ReadAllTextAsync(fileInfo.FullName);
+            Identity_UserSeedModel? userSeedModel;
+            try
+            {
+                userSeedModel = JsonSerializer.Deserialize<Identity_UserSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                continue;
+            }
+            if (userSeedModel is not null)
+            {
+                myUser = new Identity_UserDbModel()
+                {
+                    UserName = userSeedModel.UserName,
+                    Email = userSeedModel.Email,
+                    EmailConfirmed = userSeedModel.EmailConfirmed,
+                    UserGuid = userSeedModel.UserGuid,
+                    PasswordHash = userSeedModel.PasswordHash,
+                    Description = userSeedModel.Description,
+                    DisplayEmailPublicly = userSeedModel.DisplayEmailPublicly,
+                    ActivityAllowed = userSeedModel.ActivityAllowed,
+                };
+                IdentityResult result = await userManager.CreateAsync(myUser);
+                if (!result.Succeeded)
+                {
+                    //log
+                    continue;
+                }
+
+                foreach (string roleName in userSeedModel.Roles)
+                {
+                    await userManager.AddToRoleAsync(myUser, roleName);
+                }
+            }
+        }
+    }
+}
+public class Identity_UserSeedModel
+{
+    public string UserName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public bool EmailConfirmed { get; set; }
+    public string UserGuid { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool DisplayEmailPublicly { get; set; } = false;
+    public bool ActivityAllowed { get; set; } = true;
+    public string[] Roles { get; set; } = [];
+}
+
+
+

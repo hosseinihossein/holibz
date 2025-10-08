@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using System.Text;
 using AspNetCoreApp.Models;
@@ -7,11 +6,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using UploadLargeFormFile.Filters;
 
 namespace AspNetCoreApp;
 
@@ -21,8 +18,11 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        //******************* SQL Server DataBase Services *******************
-        //***** Identity *****
+
+
+
+
+        //******************* Identity *******************
         builder.Services.AddDbContext<Identity_DbContext>(opts =>
         {
             opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:IdentityConnection"],
@@ -59,31 +59,6 @@ public class Program
         })
         .AddTokenProvider<CustomTokenProvider>("customTokenProvider")
         .AddEntityFrameworkStores<Identity_DbContext>();
-
-        //******************* SecurityStampValidatorOptions *******************
-        builder.Services.Configure<SecurityStampValidatorOptions>(options =>
-        {
-            options.ValidationInterval = TimeSpan.Zero;
-        });
-
-        //******************* Controllers *******************
-        builder.Services.AddControllersWithViews(options =>
-        {
-            options.Filters.Add(new RequireHttpsAttribute());
-        });
-        builder.Services.AddControllers(options =>
-        {
-            options.Filters.Add(new RequireHttpsAttribute());
-        });
-
-        //******************* IHttpClientFactory *******************
-        builder.Services.AddHttpClient();
-
-        //******************* TurnstileService *******************
-        builder.Services.AddTransient<TurnstileService>();
-
-        //******************* EmailSender *******************
-        builder.Services.AddTransient<IEmailSender, EmailSender>();
 
         //******************* Authentication *******************
         builder.Services.AddAuthentication(options =>
@@ -187,26 +162,111 @@ public class Program
             };
         });
 
-        //********** anti forgery **********
+        //******************* SecurityStampValidatorOptions *******************
+        builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.Zero;
+        });
+
+        //******************* Controllers *******************
+        builder.Services.AddControllersWithViews(options =>
+        {
+            options.Filters.Add(new RequireHttpsAttribute());
+        });
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add(new RequireHttpsAttribute());
+        });
+
+        //******************* IHttpClientFactory *******************
+        builder.Services.AddHttpClient();
+
+        //******************* AntiForgery *******************
         builder.Services.AddAntiforgery(options =>
         {
             options.HeaderName = "X-CSRF-TOKEN";
         });
 
-        //********************** app **********************
+
+
+
+
+        //**************************** Custom Services **************************
+        builder.Services.AddScoped<TurnstileService>();
+        builder.Services.AddScoped<Identity_Process>();
+        builder.Services.AddSingleton<IEmailSender, EmailSender>();
+        builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
+
+
+
+
+
+        //******************* app *******************
         var app = builder.Build();
 
         //**************************** app.Use ************************
-        /*app.UseSpaStaticFiles();
-        app.UseSpa(spaConfig =>
-        {
-            spaConfig.Options.SourcePath = Path.Combine(app.Environment.WebRootPath, "AngularApp");
-        });*/
-
         app.UseStaticFiles(new StaticFileOptions { ServeUnknownFileTypes = true });
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+
+
+
+
+        /********************** Migrate Pending DataBases **********************/
+        Identity_DbContext identityDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_DbContext>();
+        identityDb.Database.Migrate();
+
+        Console.WriteLine("** All DB Migration Completed! **");
+
+        //************************** Seed DataBases **************************
+        //***** "admin" Identity *****
+        UserManager<Identity_UserDbModel> userManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();
+        RoleManager<Identity_RoleDbModel> roleManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<RoleManager<Identity_RoleDbModel>>();
+        Identity_UserDbModel? admin = await userManager.FindByNameAsync("admin");
+        if (admin == null)
+        {
+            string adminPassword = builder.Configuration["Identity:AdminPassword"]!;
+            admin = new Identity_UserDbModel
+            {
+                UserName = "admin",
+                UserGuid = "admin",
+                Email = "admin@yourdomain.com",
+                EmailConfirmed = true,
+                Description = "This identity belongs to the admin of the website."
+            };
+            IdentityResult result = await userManager.CreateAsync(admin, adminPassword);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine(error.Description);
+                }
+                return;
+            }
+        }
+
+        //***** Seed Roles *****
+        if (await roleManager.FindByNameAsync("Identity_Admins") == null)
+        {
+            await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
+            await userManager.AddToRoleAsync(admin, "Identity_Admins");
+        }
+
+        //***** Seed Users *****
+        if (app.Configuration["Seed:Identity"] == "true")
+        {
+            Console.WriteLine("** Seeding Identity Service Started... **");
+            Identity_Process account_Process = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_Process>();
+            await account_Process.SeedUsersToDb();
+            Console.WriteLine("** Seeding Identity Service Completed! **");
+        }
+
+
+
+
 
         //**************************** app.Map ************************
         app.MapControllers();
@@ -283,76 +343,16 @@ public class Program
             await context.Response.WriteAsync("email sent");
         });*/
 
-        app.Map("/", () => "Hello World");
-
-
-        /********************** migrate pending databases **********************/
-        Identity_DbContext identityDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_DbContext>();
-        identityDb.Database.Migrate();
-
-        Console.WriteLine("** All DB Migration Completed! **");
-
-
-        //************************** Seed DataBases **************************
-
-        //***** Seed "admin" Identity *****
-        UserManager<Identity_UserDbModel> userManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();
-        RoleManager<Identity_RoleDbModel> roleManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<RoleManager<Identity_RoleDbModel>>();
-        Identity_UserDbModel? admin = await userManager.FindByNameAsync("admin");
-        if (admin == null)
-        {
-            admin = new Identity_UserDbModel
-            {
-                UserName = "admin",
-                UserGuid = "admin",
-                Email = "admin@yourdomain.com",
-                EmailConfirmed = true,
-                PasswordLiteral = builder.Configuration["Identity:AdminPassword"]!,
-                Description = "This identity belongs to the admin of the website."
-            };
-            IdentityResult result = await userManager.CreateAsync(admin, admin.PasswordLiteral);
-
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                {
-                    Console.WriteLine(error.Description);
-                }
-                return;
-            }
-        }
-
-        //***** Seed Roles *****
-        if (await roleManager.FindByNameAsync("Identity_Admins") == null)
-        {
-            await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
-            await userManager.AddToRoleAsync(admin, "Identity_Admins");
-        }
-
-        //***** seed IdentityDb *****
-        /*if (app.Configuration["Seed:Account"] == "true")
-        {
-            Console.WriteLine("** Seeding Account Service **");
-            Identity_Process account_Process = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_Process>();
-            await account_Process.SeedDb();
-            Console.WriteLine("** Seeding Account Service Completed! **");
-        }*/
-
-
-        //******************* app.Map("/user*") *******************
+        //********* app.Map("/user*") *********
         app.Map("/users", async (HttpContext context) =>
         {
             var allUsers = await userManager.Users
-            .Select(u => new { u.UserGuid, u.UserName, u.Email, u.EmailConfirmed, u.PasswordLiteral })
+            .Select(u => new { u.UserName, u.Email, u.EmailConfirmed, u.UserGuid })
             //.AsAsyncEnumerable();
             .ToArrayAsync();
 
             await context.Response.WriteAsJsonAsync(allUsers);
-            /*foreach (var user in allUsers)
-            {
-            }*/
         });
-
         app.Map("/deleteuser/{username}", async (HttpContext context) =>
         {
             string? username = context.Request.RouteValues["username"]?.ToString();
@@ -383,6 +383,11 @@ public class Program
 
             await context.Response.WriteAsJsonAsync(result.Errors);
         });
+
+        app.Map("/", () => "Hello World");
+
+
+
 
 
         //******************* app.Run ******************

@@ -7,6 +7,7 @@ import { map, tap } from 'rxjs';
 })
 export class IdentityService {
   private token_StorageKey = "jwt_token";
+  private myGuid_StorageKey = "my_guid";
   private tokenExpiration_StorageKey = "token_expire";
   private httpClient = inject(HttpClient);
 
@@ -18,16 +19,20 @@ export class IdentityService {
   }
 
   login(formValue:Partial<{UsernameOrEmail: string; password: string; CfTurnstileResponse: string;}>){
-    return this.httpClient.post<{token:string, expiresInHours:string}>(
+    return this.httpClient.post<{token:string, expiresInHours:string, userGuid: string}>(
       "/api/Identity/login", 
       formValue
     ).pipe(
       tap({
         next: res => {
           localStorage.setItem(this.token_StorageKey, res.token);
+
+          localStorage.setItem(this.myGuid_StorageKey, res.userGuid);
+
           let expireDate = new Date(Date.now());
           expireDate.setHours(expireDate.getHours() + Number(res.expiresInHours));
           localStorage.setItem(this.tokenExpiration_StorageKey, expireDate.toString());
+
           this.isAuthenticated.set(true);
         },
       }),
@@ -36,6 +41,7 @@ export class IdentityService {
 
   logout(){
     localStorage.removeItem(this.token_StorageKey);
+    localStorage.removeItem(this.myGuid_StorageKey);
     localStorage.removeItem(this.tokenExpiration_StorageKey);
     this.isAuthenticated.set(false);
     console.log("user logout!");
@@ -61,14 +67,22 @@ export class IdentityService {
     return localStorage.getItem(this.token_StorageKey);
   }
 
+  getMyGuid(){
+    return localStorage.getItem(this.myGuid_StorageKey);
+  }
+
   resendEmailValidation(email: string, CfTurnstileResponse: string){
     return this.httpClient.post<{success:boolean}>(
       "/api/Identity/ResendEmailValidation", {email, CfTurnstileResponse}
     );
   }
 
-  getUserImg(){
-    return this.httpClient.get<{hasImg:boolean; address:string;}>("api/Identity/UserImage");
+  getUserImgAddress(userGuid:string | null = null){
+    if(!userGuid){
+      userGuid = this.getMyGuid();
+    }
+    return this.httpClient.get<{address:string;}>(
+      `api/Identity/UserImageAddress?userGuid=${userGuid}`);
   }
 
 }

@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreApp.ControllersApi;
@@ -135,8 +137,7 @@ public class IdentityController : ControllerBase
                     UserName = signupModel.Username,
                     Email = signupModel.Email,
                     EmailConfirmed = false,
-                    UserGuid = Guid.NewGuid().ToString().Replace("-", ""),
-                    PasswordLiteral = signupModel.Password
+                    UserGuid = Guid.NewGuid().ToString().Replace("-", "")
                 };
                 IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
                 if (result.Succeeded)
@@ -219,9 +220,49 @@ public class IdentityController : ControllerBase
         "Email Validation", emailMessage);
     }
 
-    /*[HttpGet("profile")]
-    public IActionResult Profile()
+    [HttpGet("UserImageAddress")]
+    public async Task<IActionResult> GetUserImageAddress([FromServices] IWebHostEnvironment env,
+        [FromQuery][StringLength(32)] string userGuid)
     {
-        
-    }*/
+        Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+        if (user is null)
+        {
+            return NotFound("User Not Found!");
+        }
+
+        string userImagePath =
+        Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImages", user.UserGuid);
+        if (System.IO.File.Exists(userImagePath))
+        {
+            return Ok(new
+            {
+                address = $"api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}"
+            });
+        }
+
+        return NotFound("User Image Not Found!");
+    }
+
+    [HttpGet("UserImage")]
+    public async Task<IActionResult> GetUserImage([FromServices] IWebHostEnvironment env,
+        [FromServices] FileExtensionContentTypeProvider contentTypeProvider,
+        [FromQuery][StringLength(32)] string userGuid)
+    {
+        Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+        if (user is null)
+        {
+            return NotFound("User Not Found!");
+        }
+
+        string userImagePath =
+        Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImages", user.UserGuid);
+        if (System.IO.File.Exists(userImagePath))
+        {
+            return PhysicalFile(userImagePath, "Image/*");
+        }
+
+        return NotFound("User Image Not Found!");
+    }
+
+
 }

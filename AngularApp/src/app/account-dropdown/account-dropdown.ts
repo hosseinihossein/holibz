@@ -15,15 +15,14 @@ export class AccountDropdown {
   menu = input.required<MatMenu>();
   identityService = inject(IdentityService);
   imgSrc = signal("");
-  //displayImage = computed(()=> this.identityService.isAuthenticated() && this.imgSrc() ? true : false);
   readonly imgBtn = "padding: 0px; width: 50px; height: 50px; transform: translateY(3px);"
 
   constructor(){
     effect(() => {
       if(this.identityService.isAuthenticated()){
-        this.identityService.getUserImg().subscribe({
+        this.identityService.getUserImgAddress().subscribe({
           next: res => {
-            if(res.hasImg){
+            if(res.address){
               this.imgSrc.set(res.address);
             }
           }

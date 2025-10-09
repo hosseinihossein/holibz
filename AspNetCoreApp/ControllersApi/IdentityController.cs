@@ -441,7 +441,7 @@ public class IdentityController : ControllerBase
         //***** Sending Email *****
         string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
         "<p>Please click " +
-        $"<a href='https://localhost:5443/Identity/ResetPassword?token={token}&email={user.Email}' " +
+        $"<a href='https://localhost:5443/Identity/ResetPassword?token={token}&userGuid={user.UserGuid}' " +
         "target='_blank'>'Here'</a>" +
         " to proceed password reset.</p>";
 

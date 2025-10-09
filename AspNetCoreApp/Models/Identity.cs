@@ -93,8 +93,10 @@ public class Identity_ChangePasswordFormModel
 
 public class Identity_ResetPasswordFormModel
 {
-    [StringLength(60, MinimumLength = 8)]
-    public string CurrentPassword { get; set; } = string.Empty;
+    [StringLength(32)]
+    public string UserGuid { get; set; } = string.Empty;
+
+    public string Token { get; set; } = string.Empty;
 
     [StringLength(60, MinimumLength = 8)]
     public string NewPassword { get; set; } = string.Empty;

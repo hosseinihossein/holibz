@@ -100,11 +100,12 @@ public class IdentityController : Controller
     }
 
     public async Task<IActionResult> ResetPassword([FromQuery] string token,
-    [FromQuery][StringLength(60)] string email)
+    [FromQuery][StringLength(32)] string userGuid)
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel? user = await userManager.FindByEmailAsync(email);
+            Identity_UserDbModel? user =
+            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
             if (user is null)
             {
                 object userNotFoundMessage = "<h1>User Not found!!</h1>";
@@ -112,18 +113,44 @@ public class IdentityController : Controller
                 return View("Result", userNotFoundMessage);
             }
 
-            bool tokenIsValid =
-            await userManager.VerifyUserTokenAsync(user, "customTokenProvider", "ResetPassword", token);
-            if (tokenIsValid)
+            Identity_ResetPasswordFormModel formModel = new()
             {
-                return View();
+                UserGuid = user.UserGuid,
+                Token = token,
+            };
+            return View(formModel);
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            Identity_UserDbModel? user =
+            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == formModel.UserGuid);
+            if (user is null)
+            {
+                object userNotFoundMessage = "<h1>User Not found!!</h1>";
+                ViewBag.ResultState = "danger";
+                return View("Result", userNotFoundMessage);
             }
 
-            object incorrectVal = "<h1>Your email validation link Is Incorrect or Expired!</h1>";
-            ViewBag.ResultState = "danger";
-            //ViewBag.InfoBtnName = "Resend";
-            //ViewBag.InfoBtnHref = $"/Identity/ResendEmailValidation?newEmail={newEmail}";
-            return View("Result", incorrectVal);
+            var result =
+            await userManager.ResetPasswordAsync(user, formModel.Token, formModel.NewPassword);
+            if (result.Succeeded)
+            {
+                object successMessage = "<h1>Your new password successfully set.</h1>";
+                ViewBag.ResultState = "success";
+                ViewBag.InfoBtnName = "Login";
+                ViewBag.InfoBtnHref = "/angular/login/";
+                return View("Result", successMessage);
+            }
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("SubmitResetPassword", error.Description);
+            }
         }
         return BadRequest(ModelState);
     }

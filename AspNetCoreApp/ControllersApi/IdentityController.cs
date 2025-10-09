@@ -31,7 +31,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel,
+    public async Task<IActionResult> Login([FromBody] Identity_LoginFormModel loginModel,
     [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
@@ -103,7 +103,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("signup")]
-    public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
+    public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupFormModel signupModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
@@ -254,9 +254,15 @@ public class IdentityController : ControllerBase
             else
             {
                 Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-                await SendNewEmailValidationLink(user, formModel.Email, emailSender);
-
-                return Ok(new { success = true });
+                if (user.Email == formModel.Email)
+                {
+                    ModelState.AddModelError("Email", "The current and new email addresses are the same!");
+                }
+                else
+                {
+                    await SendNewEmailValidationLink(user, formModel.Email, emailSender);
+                    return Ok(new { success = true });
+                }
             }
         }
         return BadRequest(ModelState);
@@ -270,7 +276,7 @@ public class IdentityController : ControllerBase
         //***** Sending Email *****
         string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
         "<p>Please click " +
-        $"<a href='https://localhost:5443/Identity/ConfirmNewEmail?token={token}&email={newEmail}' " +
+        $"<a href='https://localhost:5443/Identity/ConfirmNewEmail?userGuid={user.UserGuid}&token={token}&newEmail={newEmail}' " +
         "target='_blank'>'Here'</a>" +
         " to confirm your new email validation.</p>";
 
@@ -374,7 +380,7 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordForm formModel,
+    public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordFormModel formModel,
     [FromServices] Identity_Process identityProcess)
     {
         if (ModelState.IsValid)

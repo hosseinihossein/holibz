@@ -37,7 +37,7 @@ public class Identity_RoleDbModel : IdentityRole<int>
     public string Description { get; set; } = string.Empty;
 }
 
-public class Identity_LoginModel
+public class Identity_LoginFormModel
 {
     public string? ReturnUrl { get; set; } = string.Empty;
 
@@ -62,7 +62,7 @@ public class Identity_EmailValidationFormModel
     public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
-public class Identity_SignupModel
+public class Identity_SignupFormModel
 {
     [StringLength(60, MinimumLength = 8)]
     public string Username { get; set; } = string.Empty;
@@ -78,7 +78,20 @@ public class Identity_SignupModel
     public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
-public class Identity_ChangePasswordForm
+public class Identity_ChangePasswordFormModel
+{
+    [StringLength(60, MinimumLength = 8)]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    [StringLength(60, MinimumLength = 8)]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [StringLength(60, MinimumLength = 8)]
+    [Compare(nameof(NewPassword))]
+    public string RepeatNewPassword { get; set; } = string.Empty;
+}
+
+public class Identity_ResetPasswordFormModel
 {
     [StringLength(60, MinimumLength = 8)]
     public string CurrentPassword { get; set; } = string.Empty;

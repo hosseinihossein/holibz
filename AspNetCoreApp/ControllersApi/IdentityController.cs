@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Threading.Tasks;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
@@ -15,25 +18,19 @@ public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
+    readonly DirectoryInfo userImageDirectoryInfo;
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager, UserManager<Identity_UserDbModel> userManager,
     IWebHostEnvironment env)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
+
+        userImageDirectoryInfo =
+        Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImage"));
     }
 
-    /*[HttpGet("csrft")]
-    public IActionResult GetAntiForgeryToken(IAntiforgery antiforgery)
-    {
-        // Generate and return the anti-forgery token
-        var tokens = antiforgery.GetAndStoreTokens(HttpContext);
-        return Ok(new { csrft = tokens.RequestToken });
-    }*/
-
     [HttpPost("login")]
-    [ValidateAntiForgeryToken]
-    [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> Login([FromBody] Identity_LoginModel loginModel,
     [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
@@ -106,8 +103,6 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("signup")]
-    [ValidateAntiForgeryToken]
-    [RequestSizeLimit(5 * 1024)]// 5 KB
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupModel signupModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
@@ -170,9 +165,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("ResendEmailValidation")]
-    [ValidateAntiForgeryToken]
-    [RequestSizeLimit(5 * 1024)]// 5 KB
-    public async Task<IActionResult> ResendEmailValidation([FromBody] Identity_ResendEmailValidationModel emailModel,
+    public async Task<IActionResult> ResendEmailValidation([FromBody] Identity_EmailValidationFormModel emailModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
@@ -203,7 +196,6 @@ public class IdentityController : ControllerBase
         }
         return BadRequest(ModelState);
     }
-
     private async Task SendEmailValidationLink(Identity_UserDbModel user, IEmailSender emailSender)
     {
         //***** Generate Email Validation Token *****
@@ -213,16 +205,82 @@ public class IdentityController : ControllerBase
         string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
         "<p>Please click " +
         $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
-        "target='_blank'>here</a>" +
+        "target='_blank'>'Here'</a>" +
         " to confirm your email validation.</p>";
 
         await emailSender.SendEmailAsync(user.UserName!, user.Email!,
         "Email Validation", emailMessage);
     }
 
-    [HttpGet("UserImageAddress")]
-    public async Task<IActionResult> GetUserImageAddress([FromServices] IWebHostEnvironment env,
-        [FromQuery][StringLength(32)] string userGuid)
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> SubmitUsername([FromBody][StringLength(60)] string username,
+    [FromServices] Identity_Process identityProcess)
+    {
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        var result = await userManager.SetUserNameAsync(user, username);
+        if (result.Succeeded)
+        {
+            // user seed
+            await identityProcess.UpdateUserSeed(user);
+            return Ok(new { success = true });
+        }
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("", error.Description);
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> ChangeEmail([FromBody] Identity_EmailValidationFormModel formModel,
+    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
+    {
+        if (ModelState.IsValid)
+        {
+            var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
+                HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            TurnstileResponse? turnstileResponse =
+            await turnstileService.ValidateTokenAsync(formModel.CfTurnstileResponse, remoteip);
+
+            if (turnstileResponse is null || turnstileResponse.Success is false)
+            {
+                ModelState.AddModelError("TurnstileError",
+                turnstileResponse is null ? "response null!" : string.Join(", ", turnstileResponse.ErrorCodes));
+            }
+            else
+            {
+                Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+                await SendNewEmailValidationLink(user, formModel.Email, emailSender);
+
+                return Ok(new { success = true });
+            }
+        }
+        return BadRequest(ModelState);
+    }
+    private async Task SendNewEmailValidationLink(Identity_UserDbModel user, string newEmail,
+    IEmailSender emailSender)
+    {
+        //***** Generate Email Validation Token *****
+        string token = await userManager.GenerateChangeEmailTokenAsync(user, newEmail);
+
+        //***** Sending Email *****
+        string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
+        "<p>Please click " +
+        $"<a href='https://localhost:5443/Identity/ConfirmNewEmail?token={token}&email={newEmail}' " +
+        "target='_blank'>'Here'</a>" +
+        " to confirm your new email validation.</p>";
+
+        await emailSender.SendEmailAsync(user.UserName!, newEmail!,
+        "New Email Validation", emailMessage);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> UserImageAddress([FromServices] IWebHostEnvironment env,
+    [FromQuery][StringLength(32)] string userGuid)
     {
         Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
         if (user is null)
@@ -231,7 +289,7 @@ public class IdentityController : ControllerBase
         }
 
         string userImagePath =
-        Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImages", user.UserGuid);
+        Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
             return Ok(new
@@ -243,10 +301,9 @@ public class IdentityController : ControllerBase
         return NotFound("User Image Not Found!");
     }
 
-    [HttpGet("UserImage")]
-    public async Task<IActionResult> GetUserImage([FromServices] IWebHostEnvironment env,
-        [FromServices] FileExtensionContentTypeProvider contentTypeProvider,
-        [FromQuery][StringLength(32)] string userGuid)
+    [HttpGet]
+    public async Task<IActionResult> UserImage([FromServices] IWebHostEnvironment env,
+    [FromQuery][StringLength(32)] string userGuid)
     {
         Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
         if (user is null)
@@ -255,7 +312,7 @@ public class IdentityController : ControllerBase
         }
 
         string userImagePath =
-        Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImages", user.UserGuid);
+        Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
             return PhysicalFile(userImagePath, "Image/*");
@@ -263,6 +320,131 @@ public class IdentityController : ControllerBase
 
         return NotFound("User Image Not Found!");
     }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(128 * 1024)]//128 KB
+    public async Task<IActionResult> SubmitUserImage([FromServices] IWebHostEnvironment env,
+    IFormFile? userImageFile = null)
+    {
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        string userImagePath = Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
+        if (userImageFile is null)
+        {
+            if (System.IO.File.Exists(userImagePath))
+            {
+                System.IO.File.Delete(userImagePath);
+                user.Version++;
+                await userManager.UpdateAsync(user);
+            }
+        }
+        else
+        {
+            using (FileStream fs = System.IO.File.Create(userImagePath))
+            {
+                await userImageFile.CopyToAsync(fs);
+            }
+            user.Version++;
+            await userManager.UpdateAsync(user);
+        }
+
+        return Ok(new { success = true });
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> SubmitDescription([FromBody][StringLength(500)] string description,
+    [FromServices] Identity_Process identityProcess)
+    {
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        user.Description = description;
+        var result = await userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            // user seed
+            await identityProcess.UpdateUserSeed(user);
+            return Ok(new { success = true });
+        }
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("", error.Description);
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordForm formModel,
+    [FromServices] Identity_Process identityProcess)
+    {
+        if (ModelState.IsValid)
+        {
+            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+
+            var result = await userManager.ChangePasswordAsync(user, formModel.CurrentPassword, formModel.NewPassword);
+            if (result.Succeeded)
+            {
+                await identityProcess.UpdateUserSeed(user);
+                return Ok(new { success = true });
+            }
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ForgetPassword([FromBody] Identity_EmailValidationFormModel formModel,
+    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
+    {
+        if (ModelState.IsValid)
+        {
+            var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
+                HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            TurnstileResponse? turnstileResponse =
+            await turnstileService.ValidateTokenAsync(formModel.CfTurnstileResponse, remoteip);
+
+            if (turnstileResponse is null || turnstileResponse.Success is false)
+            {
+                ModelState.AddModelError("TurnstileError",
+                turnstileResponse is null ? "response null!" : string.Join(", ", turnstileResponse.ErrorCodes));
+            }
+            else
+            {
+                Identity_UserDbModel? user = await userManager.FindByEmailAsync(formModel.Email);
+                if (user is not null)
+                {
+                    await SendResetPasswordLink(user, emailSender);
+
+                    return Ok(new { success = true });
+                }
+                ModelState.AddModelError("Email", "user Not found!");
+            }
+        }
+        return BadRequest(ModelState);
+    }
+    private async Task SendResetPasswordLink(Identity_UserDbModel user, IEmailSender emailSender)
+    {
+        //***** Generate Email Validation Token *****
+        string token = await userManager.GeneratePasswordResetTokenAsync(user);
+
+        //***** Sending Email *****
+        string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
+        "<p>Please click " +
+        $"<a href='https://localhost:5443/Identity/ResetPassword?token={token}&email={user.Email}' " +
+        "target='_blank'>'Here'</a>" +
+        " to proceed password reset.</p>";
+
+        await emailSender.SendEmailAsync(user.UserName!, user.Email!,
+        "Reset Password", emailMessage);
+    }
+
+
+
 
 
 }

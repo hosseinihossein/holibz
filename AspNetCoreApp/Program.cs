@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using AspNetCoreApp.Models;
@@ -17,6 +18,21 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+
+
+
+
+        //******************* Kestrel *******************
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.Listen(IPAddress.Loopback, 5443, listenOptions =>
+            {
+                listenOptions.UseHttps(/*"certFileName.pfx"*/);//user default certs
+            });
+
+            options.Limits.MaxRequestBodySize = 5 * 1024;// 5 KB
+        });
 
 
 
@@ -172,10 +188,12 @@ public class Program
         builder.Services.AddControllersWithViews(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
+            options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
         });
         builder.Services.AddControllers(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
+            options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
         });
 
         //******************* IHttpClientFactory *******************

@@ -51,7 +51,7 @@ public class Identity_LoginModel
     public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
-public class Identity_ResendEmailValidationModel
+public class Identity_EmailValidationFormModel
 {
 
     [StringLength(60)]
@@ -78,6 +78,21 @@ public class Identity_SignupModel
     public string CfTurnstileResponse { get; set; } = string.Empty;
 }
 
+public class Identity_ChangePasswordForm
+{
+    [StringLength(60, MinimumLength = 8)]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    [StringLength(60, MinimumLength = 8)]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [StringLength(60, MinimumLength = 8)]
+    [Compare(nameof(NewPassword))]
+    public string RepeatNewPassword { get; set; } = string.Empty;
+}
+
+
+
 
 /*********************************** IdentityDb ************************************/
 public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
@@ -100,7 +115,8 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
         _configuration = configuration;
     }
 
-    public override async Task<string> GenerateAsync(string purpose, UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
+    public override async Task<string> GenerateAsync(string purpose,
+    UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
 
@@ -122,7 +138,8 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public override async Task<bool> ValidateAsync(string purpose, string token, UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
+    public override async Task<bool> ValidateAsync(string purpose, string token,
+    UserManager<Identity_UserDbModel> userManager, Identity_UserDbModel user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
 

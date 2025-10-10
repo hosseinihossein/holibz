@@ -10,9 +10,9 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { ResendEmailValidation } from '../../dialogs/resend-email-validation/resend-email-validation';
 import { SingletonModes } from '../../services/singleton-modes';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-email';
 
 declare const turnstile:any;
 
@@ -136,15 +136,12 @@ export class Login implements AfterViewInit {
   }
 
   resendEmailValidation(){
-    this.dialog.open(ResendEmailValidation);
+    this.dialog.open(SendLinkToEmail, {data:{purpose:"resendEmailValidation"}});
+  }
+  forgetPassword(){
+    this.dialog.open(SendLinkToEmail, {data:{purpose:"forgetPassword"}});
   }
 
-  /*onTurnstileChange(responseToken:string | null){
-    console.log("turnstile response: "+responseToken);
-  }
-
-  onTurnstileError(errorCode:string | null){
-    console.log("turnstile error code: "+errorCode);
-  }*/
+  
 
 }

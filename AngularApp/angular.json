@@ -38,6 +38,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "baseHref": "/angularapp/browser/",
             "outputPath": "../AspNetCoreApp/wwwroot/AngularApp",
             "browser": "src/main.ts",
             "polyfills": [

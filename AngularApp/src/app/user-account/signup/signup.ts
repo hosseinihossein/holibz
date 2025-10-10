@@ -14,13 +14,14 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { Result } from '../../dialogs/result/result';
 import { SingletonModes } from '../../services/singleton-modes';
+import { RouterLink } from '@angular/router';
 
 declare const turnstile : any;
 
 @Component({
   selector: 'app-signup',
   imports: [MatFormField, MatInput, MatButton, MatIconButton, MatSuffix, MatLabel, MatError, MatIcon,
-    ReactiveFormsModule, JsonPipe, MatProgressSpinner],
+    ReactiveFormsModule, JsonPipe, MatProgressSpinner, RouterLink],
   templateUrl: './signup.html',
   styleUrl: './signup.css'
 })

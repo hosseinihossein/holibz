@@ -1,5 +1,5 @@
 <mat-toolbar [class.shadow]="displayShadow()">
-    <a matIconButton routerLink="" style="overflow: hidden;width: 50px;height: 50px;padding: 0;margin: 0;">
+    <a matIconButton [routerLink]="['/']" style="overflow: hidden;width: 50px;height: 50px;padding: 0;margin: 0;">
         <img [ngSrc]="singletonModes.darkMode() ? 'HLlogo-DarkMode.png' : 'HLlogo-LightMode.png'" alt="HLlogo"
             width="50" height="50" style="width:50px;height:50px;margin: 0;padding: 0;">
     </a>
@@ -68,7 +68,7 @@
             <mat-icon>space_dashboard</mat-icon>
             Dashboard
         </a>
-        <a mat-menu-item [routerLink]="['profile']">
+        <a mat-menu-item [routerLink]="['/profile']">
             <mat-icon>article_person</mat-icon>
             Profile
         </a>
@@ -78,11 +78,11 @@
         </a>
         }
         @else{
-        <a mat-menu-item [routerLink]="['login']">
+        <a mat-menu-item [routerLink]="['/login']">
             <mat-icon>login</mat-icon>
             Login
         </a>
-        <a mat-menu-item [routerLink]="['signup']">
+        <a mat-menu-item [routerLink]="['/signup']">
             <mat-icon>person_add</mat-icon>
             Create a new account
         </a>

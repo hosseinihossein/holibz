@@ -39,6 +39,20 @@ export class SendLinkToEmail implements AfterViewInit {
   displaySubmitSpinner = signal(false);
   widgetId = signal("");
 
+  dialogTitle = signal("Send Link to Email");
+
+  constructor(){
+    if(this.data.purpose === "resendEmailValidation"){
+      this.dialogTitle.set("Resending Email Validation Link");
+    }
+    else if(this.data.purpose === "forgetPassword"){
+      this.dialogTitle.set("Sending Email to Proceed Reseting Password");
+    }
+    else if(this.data.purpose === "cahngeEmail"){
+      this.dialogTitle.set("Sending Email Validation Link to New Email");
+    }
+  }
+
   ngAfterViewInit(): void {
     this.widgetId.set(
       turnstile.render("#resendEmail-widget-container", {

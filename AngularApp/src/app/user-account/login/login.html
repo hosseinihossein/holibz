@@ -65,8 +65,8 @@
     </div>
     <div style="text-align: center;font-size: 12px;margin: 16px 0;">or</div>
     <div class="clearfix">
-        <a matButton id="forgetPassword-btn">Forget password</a>
-        <a matButton id="signup-btn" [routerLink]="['signup']">Create a new account</a>
+        <button matButton id="forgetPassword-btn" (click)="forgetPassword()">Forget password</button>
+        <a matButton id="signup-btn" [routerLink]="['/signup']">Create a new account</a>
     </div>
 
     @if(loginForm().invalid && loginForm().hasError("emailValidationError")){

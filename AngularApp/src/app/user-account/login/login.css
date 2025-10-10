@@ -27,6 +27,10 @@ mat-form-field{
     float: right;
     font-size: 12px;
 }
+#forgetPassword-btn{
+    float: left;
+    font-size: 12px;
+}
 
 mat-error::before{
     content: "*";

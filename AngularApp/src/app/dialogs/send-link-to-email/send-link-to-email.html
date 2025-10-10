@@ -1,0 +1,55 @@
+<mat-dialog-content>
+    <h3>Resending Email Validation Link</h3>
+    <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput [value]="" [formControl]="email()">
+        @if(email().invalid && (email().dirty || email().touched) && email().hasError("required")){
+        <mat-error>
+            email is required!
+        </mat-error>
+        }
+        @if(email().invalid && (email().dirty || email().touched) && email().hasError("email")){
+        <mat-error>
+            email format is Not correct!
+        </mat-error>
+        }
+        @if(email().invalid && (email().dirty || email().touched) && email().hasError("maxlength")){
+        <mat-error>
+            email must be less than 60 characters long!
+        </mat-error>
+        }
+        @if(email().invalid && (email().dirty || email().touched) && email().hasError("minlength")){
+        <mat-error>
+            email must be more than 8 characters long!
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <input hidden [formControl]="cfTurnstile()" />
+    <div id="resendEmail-widget-container"></div>
+
+    @if(response() && response()?.success){
+    <h4 style="color:var(--mat-sys-on-primary-container);">A Validation Link Sent to '{{email().value}}'</h4>
+    }
+    @else if(response()) {
+    <mat-error>{{response()?.error}}</mat-error>
+    }
+
+    <mat-dialog-actions>
+        @if(response() == null || !response()?.success){
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" (click)="requestSendingLinkToEmail()"
+            [disabled]="email().invalid || cfTurnstile().invalid">Send</button>
+        }
+        @else {
+        <button matButton="outlined" mat-dialog-close>Ok</button>
+        }
+    </mat-dialog-actions>
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+
+</mat-dialog-content>

@@ -76,6 +76,16 @@ export class IdentityService {
       "/api/Identity/ResendEmailValidation", {email, CfTurnstileResponse}
     );
   }
+  cahngeEmail(email: string, CfTurnstileResponse: string){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Identity/ChangeEmail", {email, CfTurnstileResponse}
+    );
+  }
+  forgetPassword(email: string, CfTurnstileResponse: string){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Identity/ForgetPassword", {email, CfTurnstileResponse}
+    );
+  }
 
   getUserImgAddress(userGuid:string | null = null){
     if(!userGuid){

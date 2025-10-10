@@ -8,7 +8,7 @@ import { MatInput } from "@angular/material/input";
 import { IdentityService } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { throwError } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ResendEmailValidation } from '../../dialogs/resend-email-validation/resend-email-validation';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -18,9 +18,8 @@ declare const turnstile:any;
 
 @Component({
   selector: 'app-login',
-  imports: [MatFormField,MatInput,MatLabel,MatError,MatIcon,MatButton,MatIconButton,MatSuffix,
-    ReactiveFormsModule,JsonPipe,MatProgressSpinnerModule
-  ],
+  imports: [MatFormField, MatInput, MatLabel, MatError, MatIcon, MatButton, MatIconButton, MatSuffix,
+    ReactiveFormsModule, JsonPipe, MatProgressSpinnerModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })

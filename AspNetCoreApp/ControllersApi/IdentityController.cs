@@ -104,7 +104,8 @@ public class IdentityController : ControllerBase
 
     [HttpPost("signup")]
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupFormModel signupModel,
-    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
+    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService,
+    [FromServices] Identity_Process identityProcess)
     {
         if (ModelState.IsValid)
         {
@@ -137,6 +138,8 @@ public class IdentityController : ControllerBase
                 IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
                 if (result.Succeeded)
                 {
+                    await identityProcess.UpdateUserSeed(user);
+
                     _ = SendEmailValidationLink(user, emailSender);// commented out for development 
 
                     return Ok(new { success = true });

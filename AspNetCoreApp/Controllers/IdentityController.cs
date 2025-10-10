@@ -17,7 +17,7 @@ public class IdentityController : Controller
     }
 
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token,
-    [FromQuery][StringLength(60)] string email)
+    [FromQuery][StringLength(60)] string email, [FromServices] Identity_Process identityProcess)
     {
         if (ModelState.IsValid)
         {
@@ -41,6 +41,8 @@ public class IdentityController : Controller
             IdentityResult result = await userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
+                await identityProcess.UpdateUserSeed(user);
+
                 object successMessage = "<h1>Your Email Successfully Confirmed.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
@@ -58,7 +60,8 @@ public class IdentityController : Controller
     }
 
     public async Task<IActionResult> ConfirmNewEmail([FromQuery][StringLength(32)] string userGuid,
-    [FromQuery] string token, [FromQuery][StringLength(60)] string newEmail)
+    [FromQuery] string token, [FromQuery][StringLength(60)] string newEmail,
+    [FromServices] Identity_Process identityProcess)
     {
         if (ModelState.IsValid)
         {
@@ -83,6 +86,8 @@ public class IdentityController : Controller
             IdentityResult result = await userManager.ChangeEmailAsync(user, newEmail, token);
             if (result.Succeeded)
             {
+                await identityProcess.UpdateUserSeed(user);
+
                 object successMessage = "<h1>Your Email Successfully Changed.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
@@ -124,7 +129,8 @@ public class IdentityController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel)
+    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel,
+    [FromServices] Identity_Process identityProcess)
     {
         if (ModelState.IsValid)
         {
@@ -141,6 +147,8 @@ public class IdentityController : Controller
             await userManager.ResetPasswordAsync(user, formModel.Token, formModel.NewPassword);
             if (result.Succeeded)
             {
+                await identityProcess.UpdateUserSeed(user);
+
                 object successMessage = "<h1>Your new password successfully set.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";

@@ -44,13 +44,8 @@ namespace AspNetCore.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     UserGuid = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    PasswordLiteral = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    EmailValidationCode = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    EmailValidationDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DisplayEmailPublicly = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     ActivityAllowed = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     _version = table.Column<byte>(type: "tinyint unsigned", nullable: false),

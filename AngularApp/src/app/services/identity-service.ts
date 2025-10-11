@@ -51,8 +51,8 @@ export class IdentityService {
   }
   
   isAuthenticated = signal(this.hasRecord());
-  userModel = signal<UserModel | null>(this.getUserModel());
-  token = signal<string | null>(this.getToken());
+  userModel = signal<UserModel | null>(this.getUserModelFromLocalStorage());
+  token = signal<string | null>(this.getTokenFromLocalStorage());
   
   private hasRecord():boolean{
     if(localStorage.getItem(this.token_StorageKey) && 
@@ -69,13 +69,13 @@ export class IdentityService {
     return false;
   }
   
-  private getToken(): string | null{
+  private getTokenFromLocalStorage(): string | null{
     if(this.isAuthenticated()){
       return localStorage.getItem(this.token_StorageKey);
     }
     return null;
   }
-  private getUserModel(): UserModel | null{
+  private getUserModelFromLocalStorage(): UserModel | null{
     if(this.isAuthenticated()){
       return JSON.parse(localStorage.getItem(this.user_StorageKey)!);
     }
@@ -98,7 +98,7 @@ export class IdentityService {
     );
   }
 
-  getUserImageAddress(userGuid:string){
+  /*getUserImageAddress(userGuid:string){
     return this.httpClient.get<string>(`/api/Identity/GetUserImageAddress?userGuid=${userGuid}`);
   }
   getUserName(userGuid:string){
@@ -109,17 +109,22 @@ export class IdentityService {
   }
   getUserEmail(userGuid:string){
     return this.httpClient.get<string>(`/api/Identity/GetUserEmail?userGuid=${userGuid}`);
+  }*/
+  getUserModel(userGuid:string){
+    return this.httpClient.get<UserModel>(`/api/Identity/GetUserModel?userGuid=${userGuid}`);
   }
 
   submitUserImage(){}
 
   updateUserModel(){
-    this.httpClient.get<UserModel>("/api/Identity/GetUserModel").subscribe({
-      next: res=>{
-        this.userModel.set(res);
-        localStorage.setItem(this.user_StorageKey, JSON.stringify(this.userModel()));
-      }
-    })
+    if(this.isAuthenticated()){
+      this.getUserModel(this.userModel()!.guid!).subscribe({
+        next: res=>{
+          this.userModel.set(res);
+          localStorage.setItem(this.user_StorageKey, JSON.stringify(this.userModel()));
+        }
+      });
+    }
   }
 
 }

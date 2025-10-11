@@ -87,7 +87,7 @@ export class SendLinkToEmail implements AfterViewInit {
       this.displaySubmitSpinner.set(true);
 
       const callBacks = {
-        next: (res:{success:boolean;}) => {
+        next: (res:{success:boolean}) => {
           this.displaySubmitSpinner.set(false);
           if(res.success){
             this.response.set({success: true, error: ""});
@@ -102,7 +102,9 @@ export class SendLinkToEmail implements AfterViewInit {
             else if(err.error.TurnstileError || err.error.errors?.CfTurnstileResponse){
               this.response.set({success: false, error: "turnstile error: " + (err.error.TurnstileError || err.error.errors?.CfTurnstileResponse)});
             }
-            console.error(err);
+            console.error("err: "+err);
+            console.error("err.error: "+err.error);
+            console.error("err.error.errors: "+err.error.errors);
           }
           else{
             throwError(()=>err);

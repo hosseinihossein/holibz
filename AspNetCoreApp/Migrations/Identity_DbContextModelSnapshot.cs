@@ -86,12 +86,6 @@ namespace AspNetCore.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("EmailValidationCode")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("EmailValidationDate")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -107,10 +101,6 @@ namespace AspNetCore.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PasswordLiteral")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("PhoneNumber")

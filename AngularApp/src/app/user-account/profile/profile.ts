@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
@@ -8,8 +8,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { EditImage } from '../../dialogs/edit-image/edit-image';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
-import { IdentityService } from '../../services/identity-service';
+import { IdentityService, UserModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -25,26 +26,24 @@ export class Profile {
   dialog = inject(MatDialog);
   identityService = inject(IdentityService);
 
-  userImgSrc = computed(()=>
-    this.userGuid() ? 
-    this.identityService.getUserImageAddress(this.userGuid()!) :
-    this.identityService.userModel()?.imageAddress
-  );
-  username = computed(()=>
-    this.userGuid() ? 
-    this.identityService.getUserName(this.userGuid()!) :
-    this.identityService.userModel()?.username
-  );
-  email = computed(()=>
-    this.userGuid() ?
-    this.identityService.getUserEmail(this.userGuid()!) : 
-    this.identityService.userModel()?.email
-  );
-  description = computed(()=>
-    this.userGuid() ? 
-    this.identityService.getUserImageAddress(this.userGuid()!) :
-    this.identityService.userModel()?.description
-  );
+  userModel = signal<UserModel|null>(null);
+  userImgSrc = computed(()=>this.userModel()?.imageAddress);
+  username = computed(()=>this.userModel()?.username);
+  email = computed(()=>this.userModel()?.email);
+  description = computed(()=>this.userModel()?.description);
+
+  constructor(){
+    effect(()=>{
+      if(this.userGuid()){
+        this.identityService.getUserModel(this.userGuid()!).subscribe({
+          next: res=>this.userModel.set(res),
+        });
+      }
+      else{
+        this.userModel.set(this.identityService.userModel());
+      }
+    });
+  }
 
   openEditImageDialog(){
     const dialogRef = this.dialog.open(EditImage,

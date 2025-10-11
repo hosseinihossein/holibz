@@ -13,12 +13,16 @@ using Microsoft.EntityFrameworkCore;
 namespace AspNetCoreApp.ControllersApi;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/[controller]/[action]")]
 public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
     readonly DirectoryInfo userImageDirectoryInfo;
+
+
+
+
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager,
     UserManager<Identity_UserDbModel> userManager, IWebHostEnvironment env)
@@ -30,7 +34,11 @@ public class IdentityController : ControllerBase
         Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImage"));
     }
 
-    [HttpPost("login")]
+
+
+
+
+    [HttpPost]
     public async Task<IActionResult> Login([FromBody] Identity_LoginFormModel loginModel,
     [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
@@ -115,19 +123,32 @@ public class IdentityController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> GetUserModel()
+    public async Task<IActionResult> GetUserModel([FromQuery][StringLength(32)] string userGuid)
     {
-        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-        return Ok(new
+        if (ModelState.IsValid)
         {
-            guid = user.UserGuid,
-            username = user.UserName,
-            description = user.Description,
-            imageAddress = GetUserImageAddress(user.UserGuid),
-            email = user.Email,
-        });
+            Identity_UserDbModel? user =
+            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+            if (user is null)
+            {
+                ModelState.AddModelError("user", "the specified user Not found!");
+                return BadRequest(ModelState);
+            }
+            return Ok(new
+            {
+                guid = user.UserGuid,
+                username = user.UserName,
+                description = user.Description,
+                imageAddress = GetUserImageAddress(user.UserGuid),
+                email = user.Email,
+            });
+        }
+        return BadRequest(ModelState);
     }
+
+
+
+
 
     [HttpPost("signup")]
     public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupFormModel signupModel,
@@ -194,7 +215,12 @@ public class IdentityController : ControllerBase
         return Ok(new { isTaken = userExist });
     }
 
-    [HttpPost("ResendEmailValidation")]
+
+
+
+
+
+    [HttpPost]
     public async Task<IActionResult> ResendEmailValidation([FromBody] Identity_EmailValidationFormModel emailModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
@@ -242,6 +268,10 @@ public class IdentityController : ControllerBase
         "Email Validation", emailMessage);
     }
 
+
+
+
+
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> SubmitUsername([FromBody][StringLength(60)] string username,
@@ -261,6 +291,10 @@ public class IdentityController : ControllerBase
         }
         return BadRequest(ModelState);
     }
+
+
+
+
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -297,6 +331,7 @@ public class IdentityController : ControllerBase
         }
         return BadRequest(ModelState);
     }
+
     private async Task SendNewEmailValidationLink(Identity_UserDbModel user, string newEmail,
     IEmailSender emailSender)
     {
@@ -313,6 +348,10 @@ public class IdentityController : ControllerBase
         await emailSender.SendEmailAsync(user.UserName!, newEmail!,
         "New Email Validation", emailMessage);
     }
+
+
+
+
 
     private async Task<string?> GetUserImageAddress(string userGuid)
     {
@@ -380,6 +419,10 @@ public class IdentityController : ControllerBase
         return Ok(new { success = true });
     }
 
+
+
+
+
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> SubmitDescription([FromBody][StringLength(500)] string description,
@@ -400,6 +443,10 @@ public class IdentityController : ControllerBase
         }
         return BadRequest(ModelState);
     }
+
+
+
+
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -471,6 +518,9 @@ public class IdentityController : ControllerBase
         await emailSender.SendEmailAsync(user.UserName!, user.Email!,
         "Reset Password", emailMessage);
     }
+
+
+
 
 
 

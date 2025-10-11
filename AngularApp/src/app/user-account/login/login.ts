@@ -63,7 +63,11 @@ export class Login implements AfterViewInit {
         callback: (token:string) => {
           const errors = this.loginForm().errors;
           this.cfTurnstile()?.setValue(token);
-          this.loginForm().setErrors(errors);
+          for(let error in errors){
+            if(error !== "turnstileError"){
+              this.loginForm().setErrors(errors[error]);
+            }
+          }
           //console.log("Challenge completed:", token);
         },
         'error-callback': (errorCode: string) => {

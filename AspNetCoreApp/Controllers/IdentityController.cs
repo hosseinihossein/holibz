@@ -34,7 +34,7 @@ public class IdentityController : Controller
                 object o1 = "<h1>Your Email has already confirmed. Don't need to confirm anymore!</h1>";
                 ViewBag.ResultState = "info";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angular/login/";
+                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
                 return View("Result", o1);
             }
 
@@ -46,7 +46,7 @@ public class IdentityController : Controller
                 object successMessage = "<h1>Your Email Successfully Confirmed.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angular/login/";
+                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
                 return View("Result", successMessage);
             }
 
@@ -79,7 +79,7 @@ public class IdentityController : Controller
                 object o1 = "<h1>Your Email has already been changed successfully.</h1>";
                 ViewBag.ResultState = "info";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angular/login/";
+                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
                 return View("Result", o1);
             }
 
@@ -91,7 +91,7 @@ public class IdentityController : Controller
                 object successMessage = "<h1>Your Email Successfully Changed.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angular/login/";
+                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
                 return View("Result", successMessage);
             }
 
@@ -152,7 +152,7 @@ public class IdentityController : Controller
                 object successMessage = "<h1>Your new password successfully set.</h1>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
-                ViewBag.InfoBtnHref = "/angular/login/";
+                ViewBag.InfoBtnHref = "/angularapp/browser/login/";
                 return View("Result", successMessage);
             }
             foreach (var error in result.Errors)

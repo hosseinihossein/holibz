@@ -26,6 +26,7 @@
                 }
             </mat-card-title>
 
+            @if(email()){
             <mat-card-subtitle>
                 {{email()}}
                 @if(singletonModes.editMode()){
@@ -35,18 +36,24 @@
                 </button>
                 }
             </mat-card-subtitle>
+            }
         </div>
 
     </mat-card-header>
 
     <mat-card-content>
         <p>
+            @if(description()){
             {{description()}}
             @if(singletonModes.editMode()){
             <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit description"
                 (click)="openEditDescriptionDialog()">
                 <mat-icon>edit</mat-icon>
             </button>
+            }
+            }
+            @else{
+            About me..
             }
         </p>
     </mat-card-content>

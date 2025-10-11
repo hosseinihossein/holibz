@@ -20,8 +20,8 @@ public class IdentityController : ControllerBase
     readonly UserManager<Identity_UserDbModel> userManager;
     readonly DirectoryInfo userImageDirectoryInfo;
 
-    public IdentityController(SignInManager<Identity_UserDbModel> signInManager, UserManager<Identity_UserDbModel> userManager,
-    IWebHostEnvironment env)
+    public IdentityController(SignInManager<Identity_UserDbModel> signInManager,
+    UserManager<Identity_UserDbModel> userManager, IWebHostEnvironment env)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
@@ -84,7 +84,19 @@ public class IdentityController : ControllerBase
                         {
                             string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                             var jwtSettings = configuration.GetSection("JwtSettings");
-                            return Ok(new { token, expiresInHours = jwtSettings["DurationInHours"] ?? "10" });
+                            return Ok(new
+                            {
+                                token,
+                                expiresInHours = jwtSettings["DurationInHours"] ?? "10",
+                                user = new
+                                {
+                                    guid = user.UserGuid,
+                                    username = user.UserName,
+                                    description = user.Description,
+                                    imageAddress = GetUserImageAddress(user.UserGuid),
+                                    email = user.Email,
+                                },
+                            });
                         }
                         else
                         {
@@ -100,6 +112,21 @@ public class IdentityController : ControllerBase
         }
 
         return BadRequest(ModelState);
+    }
+
+    [HttpGet]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetUserModel()
+    {
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        return Ok(new
+        {
+            guid = user.UserGuid,
+            username = user.UserName,
+            description = user.Description,
+            imageAddress = GetUserImageAddress(user.UserGuid),
+            email = user.Email,
+        });
     }
 
     [HttpPost("signup")]
@@ -287,32 +314,26 @@ public class IdentityController : ControllerBase
         "New Email Validation", emailMessage);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> UserImageAddress([FromServices] IWebHostEnvironment env,
-    [FromQuery][StringLength(32)] string userGuid)
+    private async Task<string?> GetUserImageAddress(string userGuid)
     {
         Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
         if (user is null)
         {
-            return NotFound("User Not Found!");
+            return null;
         }
 
         string userImagePath =
         Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
-            return Ok(new
-            {
-                address = $"api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}"
-            });
+            return $"api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}";
         }
 
-        return NotFound("User Image Not Found!");
+        return null;
     }
 
     [HttpGet]
-    public async Task<IActionResult> UserImage([FromServices] IWebHostEnvironment env,
-    [FromQuery][StringLength(32)] string userGuid)
+    public async Task<IActionResult> UserImage([FromQuery][StringLength(32)] string userGuid)
     {
         Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
         if (user is null)
@@ -324,7 +345,7 @@ public class IdentityController : ControllerBase
         Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
-            return PhysicalFile(userImagePath, "Image/*");
+            return PhysicalFile(userImagePath, "application/octet-stream", "userImage", true);
         }
 
         return NotFound("User Image Not Found!");
@@ -333,8 +354,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [RequestSizeLimit(128 * 1024)]//128 KB
-    public async Task<IActionResult> SubmitUserImage([FromServices] IWebHostEnvironment env,
-    IFormFile? userImageFile = null)
+    public async Task<IActionResult> SubmitUserImage(IFormFile? userImageFile = null)
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
         string userImagePath = Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);

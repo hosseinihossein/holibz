@@ -14,20 +14,12 @@ import { NgOptimizedImage } from '@angular/common';
 export class AccountDropdown {
   menu = input.required<MatMenu>();
   identityService = inject(IdentityService);
-  imgSrc = signal("");
+
+  imgSrc = computed(()=>
+    this.identityService.isAuthenticated() ? 
+    this.identityService.userModel()?.imageAddress :
+    null);
+    
   readonly imgBtn = "padding: 0px; width: 50px; height: 50px; transform: translateY(3px);"
 
-  constructor(){
-    effect(() => {
-      if(this.identityService.isAuthenticated()){
-        this.identityService.getUserImgAddress().subscribe({
-          next: res => {
-            if(res.address){
-              this.imgSrc.set(res.address);
-            }
-          }
-        });
-      }
-    });
-  }
 }

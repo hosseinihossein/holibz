@@ -1,7 +1,12 @@
 <mat-card appearance="outlined">
     <mat-card-header>
         <div style="float: left;position: relative;">
-            <img [src]="userImgSrc()" alt="user image" id="user-profile-img">
+            @if(userImgSrc()){
+            <img [ngSrc]="userImgSrc()!" alt="user image" id="user-profile-img">
+            }
+            @else {
+            <mat-icon>account_circle</mat-icon>
+            }
             @if(singletonModes.editMode()){
             <button matIconButton class="edit-btn" style="bottom: -8px;left: -8px;" matTooltip="Edit user image"
                 (click)="openEditImageDialog()">

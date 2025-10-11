@@ -7,7 +7,7 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
     const identityService = inject(IdentityService);
 
     if(identityService.isAuthenticated()){
-        let token = identityService.getToken();
+        let token = identityService.token();
         let cloned = req.clone({setHeaders: {Authorization: "Bearer " + token}});
         return next(cloned);
     }

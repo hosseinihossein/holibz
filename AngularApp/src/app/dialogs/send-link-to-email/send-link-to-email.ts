@@ -48,7 +48,7 @@ export class SendLinkToEmail implements AfterViewInit {
     else if(this.data.purpose === "forgetPassword"){
       this.dialogTitle.set("Sending Email to Proceed Reseting Password");
     }
-    else if(this.data.purpose === "cahngeEmail"){
+    else if(this.data.purpose === "changeEmail"){
       this.dialogTitle.set("Sending Email Validation Link to New Email");
     }
   }

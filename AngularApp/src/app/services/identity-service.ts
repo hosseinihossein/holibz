@@ -102,19 +102,7 @@ export class IdentityService {
     );
   }
 
-  /*getUserImageAddress(userGuid:string){
-    return this.httpClient.get<string>(`/api/Identity/GetUserImageAddress?userGuid=${userGuid}`);
-  }
-  getUserName(userGuid:string){
-    return this.httpClient.get<string>(`/api/Identity/GetUserName?userGuid=${userGuid}`);
-  }
-  getUserDescription(userGuid:string){
-    return this.httpClient.get<string>(`/api/Identity/GetUserDescription?userGuid=${userGuid}`);
-  }
-  getUserEmail(userGuid:string){
-    return this.httpClient.get<string>(`/api/Identity/GetUserEmail?userGuid=${userGuid}`);
-  }*/
-  getUserModel(userGuid:string){
+  requestUserModel(userGuid:string){
     return this.httpClient.get<UserModel>(`/api/Identity/GetUserModel?userGuid=${userGuid}`);
   }
 
@@ -132,11 +120,6 @@ export class IdentityService {
         localStorage.setItem(this.token_StorageKey, res.token);
       },
     }));
-  }
-  submitEmail(email:string){
-    return this.httpClient.post<{success:boolean}>(
-      `/api/Identity/SubmitUsername`, {email}
-    );
   }
   submitDescription(description:string){
     return this.httpClient.post<{success:boolean}>(

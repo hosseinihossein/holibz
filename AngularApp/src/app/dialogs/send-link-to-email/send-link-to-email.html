@@ -1,7 +1,7 @@
 <mat-dialog-content>
     <h3>{{dialogTitle()}}</h3>
     <mat-form-field>
-        <mat-label>Email</mat-label>
+        <mat-label>{{data.purpose === "changeEmail" ? "New Email" : "Email"}}</mat-label>
         <input matInput [value]="" [formControl]="email()">
         @if(email().invalid && (email().dirty || email().touched) && email().hasError("required")){
         <mat-error>

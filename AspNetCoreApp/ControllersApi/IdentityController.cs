@@ -310,7 +310,7 @@ public class IdentityController : ControllerBase
             }
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError("Username", error.Description);
             }
         }
         return BadRequest(ModelState);
@@ -327,6 +327,7 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[ValidateAntiForgeryToken]//there's no need to the antiforgery when turnstile is set
     public async Task<IActionResult> ChangeEmail([FromBody] Identity_EmailValidationFormModel formModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {

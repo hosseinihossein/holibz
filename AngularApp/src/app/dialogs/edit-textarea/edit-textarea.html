@@ -1,11 +1,12 @@
 <mat-dialog-content>
     <mat-form-field>
         <mat-label>{{data.label}}</mat-label>
-        <textarea matInput [value]="data.value" #paragraphInput placeholder="Write your text here.."
+        <textarea matInput [value]="data.value" [formControl]="myText()" placeholder="Write about yourself here.."
             rows="5"></textarea>
     </mat-form-field>
     <mat-dialog-actions>
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="paragraphInput.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="myText().value"
+            [disabled]="data.value === myText().value">Save</button>
     </mat-dialog-actions>
 </mat-dialog-content>

@@ -11,6 +11,8 @@ import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { IdentityService, UserModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
 import { map } from 'rxjs';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-email';
 
 @Component({
   selector: 'app-profile',
@@ -32,10 +34,12 @@ export class Profile {
   email = computed(()=>this.userModel()?.email);
   description = computed(()=>this.userModel()?.description);
 
+  errorResponse = signal("");
+
   constructor(){
     effect(()=>{
       if(this.userGuid()){
-        this.identityService.getUserModel(this.userGuid()!).subscribe({
+        this.identityService.requestUserModel(this.userGuid()!).subscribe({
           next: res=>this.userModel.set(res),
         });
       }
@@ -67,7 +71,7 @@ export class Profile {
     });
     
     const dialogRef = this.dialog.open(EditInput,
-      {data:{label: 'Edit Username', value: this.identityService.userModel()?.username}});
+      {data:{label: 'Username', value: this.identityService.userModel()?.username}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         this.identityService.submitUserName(result).subscribe({
@@ -77,6 +81,19 @@ export class Profile {
               newUserModel.username = result;
               this.identityService.updateUserModel(newUserModel);
             }
+          },
+          error: err => {
+            if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
+              if(err.error.Username || err.error.errors?.Username){
+                this.errorResponse.set("*Error: "+err.error.errors?.Username);
+              }
+              else if(err.error.errors){
+                console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
+              }
+              else{
+                console.error("err.error: "+JSON.stringify(err.error));
+              }
+            }
           }
         });
       }
@@ -84,21 +101,41 @@ export class Profile {
   }
   
   openEditEmailDialog(){
-    const dialogRef = this.dialog.open(EditInput,
-      {data:{label: 'Edit Email', value: this.identityService.userModel()?.email}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        //this.email.set(result);
-      }
-    });
+    this.dialog.open(SendLinkToEmail, {data:{purpose: 'changeEmail'}});
   }
   
   openEditDescriptionDialog(){
+    this.identityService.getCsrf().subscribe({
+      next: () => console.log("Csrf received successfully."),
+      error: () => console.error("Couldn't get Csrf!"),
+    });
+
     const dialogRef = this.dialog.open(EditTextarea,
-      {data:{label: 'Edit User Description', value: this.identityService.userModel()?.description}});
+      {data:{label: 'About Me', value: this.identityService.userModel()?.description}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        //this.description.set(result);
+        this.identityService.submitDescription(result).subscribe({
+          next: res=>{
+            if(res.success){
+              let newUserModel = new UserModel(this.userModel());
+              newUserModel.description = result;
+              this.identityService.updateUserModel(newUserModel);
+            }
+          },
+          error: err => {
+            if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
+              if(err.error.Description || err.error.errors?.Description){
+                this.errorResponse.set("*Error: "+err.error.errors?.Description);
+              }
+              else if(err.error.errors){
+                console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
+              }
+              else{
+                console.error("err.error: "+JSON.stringify(err.error));
+              }
+            }
+          }
+        });
       }
     });
   }

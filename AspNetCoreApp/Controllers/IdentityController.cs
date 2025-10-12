@@ -88,7 +88,7 @@ public class IdentityController : Controller
             {
                 await identityProcess.UpdateUserSeed(user);
 
-                object successMessage = "<h1>Your Email Successfully Changed.</h1>";
+                object successMessage = "<h2>Your Email Successfully Changed. You may need to login again.</h2>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
                 ViewBag.InfoBtnHref = "/angularapp/browser/login/";

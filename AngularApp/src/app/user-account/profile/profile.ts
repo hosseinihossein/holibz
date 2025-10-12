@@ -61,11 +61,22 @@ export class Profile {
   }
 
   openEditUsernameDialog(){
+    this.identityService.getCsrf().subscribe({
+      next: ()=>console.log("Csrf received successfully."),
+    });
     const dialogRef = this.dialog.open(EditInput,
       {data:{label: 'Edit Username', value: this.identityService.userModel()?.username}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        //this.username.set(result);
+        this.identityService.submitUserName(result).subscribe({
+          next: res=>{
+            if(res.success){
+              let newUserModel = new UserModel(this.userModel());
+              newUserModel.username = result;
+              this.identityService.updateUserModel(newUserModel);
+            }
+          }
+        });
       }
     });
   }

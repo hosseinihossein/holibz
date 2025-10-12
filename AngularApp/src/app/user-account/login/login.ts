@@ -102,7 +102,8 @@ export class Login implements AfterViewInit {
       this.identityService.login(formValue).subscribe({
         next: res => {
           //console.log("token: ", res.token);
-          console.log("login successfully!");
+          //console.log("login successfully!");
+          //console.log("userModel: "+ JSON.stringify(res.user));
           let returnUrl = this.activatedRoute.snapshot.queryParamMap.get("returnUrl") || "/";
           this.router.navigateByUrl(returnUrl);
         },

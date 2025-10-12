@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { map, tap } from 'rxjs';
+//import { toSignal } from '@angular/core/rxjs-interop';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +27,7 @@ export class IdentityService {
     ).pipe(
       tap({
         next: res => {
+          this.token.set(res.token);
           localStorage.setItem(this.token_StorageKey, res.token);
 
           let expireDate = new Date(Date.now());
@@ -47,6 +49,8 @@ export class IdentityService {
     localStorage.removeItem(this.user_StorageKey);
     localStorage.removeItem(this.tokenExpiration_StorageKey);
     this.isAuthenticated.set(false);
+    this.userModel.set(null);
+    this.token.set(null);
     console.log("user logout!");
   }
   
@@ -114,26 +118,62 @@ export class IdentityService {
     return this.httpClient.get<UserModel>(`/api/Identity/GetUserModel?userGuid=${userGuid}`);
   }
 
-  submitUserImage(){}
+  getCsrf(){
+    return this.httpClient.get("/api/Identity/GetCsrf");
+  }
 
-  updateUserModel(){
+  submitUserImage(){}
+  submitUserName(username:string){
+    return this.httpClient.post<{success:boolean, token:string}>(
+      `/api/Identity/SubmitUsername`, {Username:username}
+    ).pipe(tap({
+      next: res => {
+        this.token.set(res.token);
+        localStorage.setItem(this.token_StorageKey, res.token);
+      },
+    }));
+  }
+  submitEmail(email:string){
+    return this.httpClient.post<{success:boolean}>(
+      `/api/Identity/SubmitUsername`, {email}
+    );
+  }
+  submitDescription(description:string){
+    return this.httpClient.post<{success:boolean}>(
+      `/api/Identity/SubmitUsername`, {description}
+    );
+  }
+
+  updateUserModel(newUserModel:UserModel){
     if(this.isAuthenticated()){
-      this.getUserModel(this.userModel()!.guid!).subscribe({
-        next: res=>{
-          this.userModel.set(res);
-          localStorage.setItem(this.user_StorageKey, JSON.stringify(this.userModel()));
-        }
-      });
+      this.userModel.set(newUserModel);
+      localStorage.setItem(this.user_StorageKey, JSON.stringify(newUserModel));
     }
   }
 
+
 }
 
-export interface UserModel
+/*export interface UserModel2
 {
   guid: string;
   username: string;
   description: string;
   imageAddress: string;
   email: string;
+}*/
+export class UserModel
+{
+  constructor(userModel:UserModel|null = null){
+    this.guid = userModel?.guid ?? "";
+    this.username = userModel?.username ?? "";
+    this.description = userModel?.description ?? "";
+    this.imageAddress = userModel?.imageAddress ?? "";
+    this.email = userModel?.email ?? "";
+  }
+  guid: string = "";
+  username: string = "";
+  description: string = "";
+  imageAddress: string = "";
+  email: string = "";
 }

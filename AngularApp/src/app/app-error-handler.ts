@@ -24,6 +24,9 @@ export class AppErrorHandler implements ErrorHandler{
                 case HttpStatusCode.Forbidden:
                     errTypeMessage = "Access Denied";
                     break;
+                case HttpStatusCode.BadRequest:
+                    errTypeMessage = "Bad Request";
+                    break;
                 default:
                     errTypeMessage = "Unknown Error";
             }

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using UploadLargeFormFile.Filters;
 
 namespace AspNetCoreApp.ControllersApi;
 
@@ -38,10 +39,27 @@ public class IdentityController : ControllerBase
 
 
 
+    [HttpGet]
+    [GenerateAntiforgeryTokenCookie]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public IActionResult GetCsrf()
+    {
+        return Ok();
+    }
+
+
+
+
+
     [HttpPost]
     public async Task<IActionResult> Login([FromBody] Identity_LoginFormModel loginModel,
-    [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
+    [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService,
+    IAntiforgery antiforgery)
     {
+        foreach (var header in Request.Headers)
+        {
+            Console.WriteLine($"\n***** {header.Key} = {header.Value}");
+        }
         if (ModelState.IsValid)
         {
             var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
@@ -92,6 +110,15 @@ public class IdentityController : ControllerBase
                         {
                             string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                             var jwtSettings = configuration.GetSection("JwtSettings");
+
+                            // Send a new request token as a JavaScript-readable cookie
+                            /*var tokens = antiforgery.GetAndStoreTokens(HttpContext);
+
+                            HttpContext.Response.Cookies.Append(
+                                "XSRF-TOKEN",
+                                tokens.RequestToken!,
+                                new CookieOptions() { HttpOnly = false, Secure = true });*/
+
                             return Ok(new
                             {
                                 token,
@@ -101,7 +128,7 @@ public class IdentityController : ControllerBase
                                     guid = user.UserGuid,
                                     username = user.UserName,
                                     description = user.Description,
-                                    imageAddress = GetUserImageAddress(user.UserGuid),
+                                    imageAddress = await GetUserImageAddress(user.UserGuid),
                                     email = user.Email,
                                 },
                             });
@@ -139,7 +166,7 @@ public class IdentityController : ControllerBase
                 guid = user.UserGuid,
                 username = user.UserName,
                 description = user.Description,
-                imageAddress = GetUserImageAddress(user.UserGuid),
+                imageAddress = await GetUserImageAddress(user.UserGuid),
                 email = user.Email,
             });
         }
@@ -219,7 +246,6 @@ public class IdentityController : ControllerBase
 
 
 
-
     [HttpPost]
     public async Task<IActionResult> ResendEmailValidation([FromBody] Identity_EmailValidationFormModel emailModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
@@ -274,22 +300,73 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> SubmitUsername([FromBody][StringLength(60)] string username,
-    [FromServices] Identity_Process identityProcess)
+    //[ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitUsername(
+        [FromBody] UsernameModel model,
+        //[FromQuery] string username,
+        [FromServices] Identity_Process identityProcess,
+        [FromServices] IAntiforgery antiForgery)
     {
-        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-        var result = await userManager.SetUserNameAsync(user, username);
-        if (result.Succeeded)
+        if (!await antiForgery.IsRequestValidAsync(HttpContext))
         {
-            // user seed
-            await identityProcess.UpdateUserSeed(user);
-            return Ok(new { success = true });
+            ModelState.AddModelError("antiforgerytoken", "anti forgery token is incorrect!");
+            return BadRequest(ModelState);
         }
-        foreach (var error in result.Errors)
+        if (ModelState.IsValid)
         {
-            ModelState.AddModelError("", error.Description);
+            //Console.WriteLine("\n***** ModelState is valid");
+            foreach (var header in Request.Headers)
+            {
+                Console.WriteLine($"\n***** {header.Key} = {header.Value}");
+            }
+            /*foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"\n***** claim = {claim}");
+            }*/
+            /*if (User.Identity is not null)
+            {
+                if (User.Identity.IsAuthenticated)
+                {
+                    Console.WriteLine("\n***** User IsAuthenticated");
+                }
+                if (User.Identity.Name is not null)
+                {
+                    Console.WriteLine($"\n***** User.Identity.Name = {User.Identity.Name}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\n***** User.Identity is null");
+                ModelState.AddModelError("Identity", "User.Identity is null");
+                return BadRequest(ModelState);
+            }*/
+            if (User.Identity?.Name is null)
+            {
+                Console.WriteLine("\n***** User.Identity.Name is null");
+                ModelState.AddModelError("Identity", "User.Identity.Name is null");
+                return BadRequest(ModelState);
+            }
+
+            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+            var result = await userManager.SetUserNameAsync(user, model.Username);
+            if (result.Succeeded)
+            {
+                string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
+                // user seed
+                await identityProcess.UpdateUserSeed(user);
+                return Ok(new { success = true, token });
+            }
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
         }
         return BadRequest(ModelState);
+    }
+    public class UsernameModel
+    {
+        [StringLength(60, MinimumLength = 8)]
+        public string Username { get; set; } = string.Empty;
     }
 
 

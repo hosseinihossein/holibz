@@ -18,7 +18,8 @@ export class AccountDropdown {
   imgSrc = computed(()=>
     this.identityService.isAuthenticated() ? 
     this.identityService.userModel()?.imageAddress :
-    null);
+    null
+  );
     
   readonly imgBtn = "padding: 0px; width: 50px; height: 50px; transform: translateY(3px);"
 

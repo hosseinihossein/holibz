@@ -1,2 +1,3 @@
 - upload userImage
+- add an action to the api/identity for getting anftiforgery token after login
 - 

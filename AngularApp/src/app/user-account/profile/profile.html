@@ -5,7 +5,7 @@
             <img [ngSrc]="userImgSrc()!" alt="user image" id="user-profile-img">
             }
             @else {
-            <mat-icon>account_circle</mat-icon>
+            <mat-icon style="font-size: 100px;width: 100px;height: 100px;">account_circle</mat-icon>
             }
             @if(singletonModes.editMode()){
             <button matIconButton class="edit-btn" style="bottom: -8px;left: -8px;" matTooltip="Edit user image"
@@ -45,15 +45,15 @@
         <p>
             @if(description()){
             {{description()}}
+            }
+            @else{
+            About me..
+            }
             @if(singletonModes.editMode()){
             <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit description"
                 (click)="openEditDescriptionDialog()">
                 <mat-icon>edit</mat-icon>
             </button>
-            }
-            }
-            @else{
-            About me..
             }
         </p>
     </mat-card-content>

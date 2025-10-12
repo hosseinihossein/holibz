@@ -1,10 +1,13 @@
 <mat-dialog-content>
     <mat-form-field>
         <mat-label>{{data.label}}</mat-label>
-        <input matInput [value]="data.value" #myInput>
+        <input matInput [value]="data.value" [formControl]="username()">
     </mat-form-field>
     <mat-dialog-actions>
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="myInput.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="username().value"
+            [disabled]="username().value === data.value || username().invalid">
+            Save
+        </button>
     </mat-dialog-actions>
 </mat-dialog-content>

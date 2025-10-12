@@ -53,8 +53,7 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> Login([FromBody] Identity_LoginFormModel loginModel,
-    [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService,
-    IAntiforgery antiforgery)
+    [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
         foreach (var header in Request.Headers)
         {
@@ -110,14 +109,6 @@ public class IdentityController : ControllerBase
                         {
                             string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                             var jwtSettings = configuration.GetSection("JwtSettings");
-
-                            // Send a new request token as a JavaScript-readable cookie
-                            /*var tokens = antiforgery.GetAndStoreTokens(HttpContext);
-
-                            HttpContext.Response.Cookies.Append(
-                                "XSRF-TOKEN",
-                                tokens.RequestToken!,
-                                new CookieOptions() { HttpOnly = false, Secure = true });*/
 
                             return Ok(new
                             {
@@ -300,53 +291,14 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    //[ValidateAntiForgeryToken]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitUsername(
+        //[FromBody] string username,//BadRequest status 400, username is required, The JSON value could not be converted to System.String. it didn't work even by newtonsoft json.
         [FromBody] UsernameModel model,
-        //[FromQuery] string username,
-        [FromServices] Identity_Process identityProcess,
-        [FromServices] IAntiforgery antiForgery)
+        [FromServices] Identity_Process identityProcess)
     {
-        if (!await antiForgery.IsRequestValidAsync(HttpContext))
-        {
-            ModelState.AddModelError("antiforgerytoken", "anti forgery token is incorrect!");
-            return BadRequest(ModelState);
-        }
         if (ModelState.IsValid)
         {
-            //Console.WriteLine("\n***** ModelState is valid");
-            foreach (var header in Request.Headers)
-            {
-                Console.WriteLine($"\n***** {header.Key} = {header.Value}");
-            }
-            /*foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"\n***** claim = {claim}");
-            }*/
-            /*if (User.Identity is not null)
-            {
-                if (User.Identity.IsAuthenticated)
-                {
-                    Console.WriteLine("\n***** User IsAuthenticated");
-                }
-                if (User.Identity.Name is not null)
-                {
-                    Console.WriteLine($"\n***** User.Identity.Name = {User.Identity.Name}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("\n***** User.Identity is null");
-                ModelState.AddModelError("Identity", "User.Identity is null");
-                return BadRequest(ModelState);
-            }*/
-            if (User.Identity?.Name is null)
-            {
-                Console.WriteLine("\n***** User.Identity.Name is null");
-                ModelState.AddModelError("Identity", "User.Identity.Name is null");
-                return BadRequest(ModelState);
-            }
-
             Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
             var result = await userManager.SetUserNameAsync(user, model.Username);
             if (result.Succeeded)

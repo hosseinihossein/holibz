@@ -147,8 +147,6 @@ public class Program
             {
                 OnTokenValidated = async context =>
                 {
-                    //Console.WriteLine("\n***** in OnTokenValidated()");
-
                     var userManager = context.HttpContext.RequestServices
                         .GetRequiredService<UserManager<Identity_UserDbModel>>();
                     var signinManager = context.HttpContext.RequestServices
@@ -157,20 +155,16 @@ public class Program
                     string? userGuid = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (userGuid is null)
                     {
-                        //Console.WriteLine("\n***** couldn't find user id in the token!");
                         context.Fail("couldn't find user id in the token!");
                         return;
                     }
-                    //Console.WriteLine($"\n***** userGuid = {userGuid}");
 
                     string? securityStamp = context.Principal?.FindFirst("AspNet.Identity.SecurityStamp")?.Value;
                     if (securityStamp is null)
                     {
-                        //Console.WriteLine("\n***** couldn't find security stamp in the token!");
                         context.Fail("couldn't find security stamp in the token!");
                         return;
                     }
-                    //Console.WriteLine($"\n***** securityStamp = {securityStamp}");
 
                     Identity_UserDbModel? user =
                         await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
@@ -181,15 +175,7 @@ public class Program
                         return;
                     }
 
-                    //Console.WriteLine("\n***** before createing principal");
-
-                    //var principal = await signinManager.CreateUserPrincipalAsync(user);
-
-                    //Console.WriteLine($"\n***** principal.Identity?.IsAuthenticated = {principal.Identity?.IsAuthenticated}");
-                    //Console.WriteLine($"\n***** principal.Identity?.Name = {principal.Identity?.Name}");
-
                     context.Principal = await signinManager.CreateUserPrincipalAsync(user);
-                    //context.HttpContext.User = principal;
                 },
 
             };
@@ -205,12 +191,10 @@ public class Program
         builder.Services.AddControllersWithViews(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
-            //options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
         });
         builder.Services.AddControllers(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
-            //options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
         });
 
         //******************* IHttpClientFactory *******************
@@ -220,7 +204,7 @@ public class Program
         builder.Services.AddAntiforgery(options =>
         {
             options.HeaderName = "X-CSRF-TOKEN";
-            //options.Cookie.Name = "XSRF-TOKEN";
+            //options.Cookie.Name = "XSRF-TOKEN";//swap error
         });
 
 
@@ -324,7 +308,7 @@ public class Program
             );
         });*/
 
-        app.Map("/angularapp/browser/{*catchAll}", async (HttpContext context, IAntiforgery antiforgery) =>
+        app.Map("/angularapp/browser/{*catchAll}", async (HttpContext context/*, IAntiforgery antiforgery*/) =>
         {
             string? catchAll = context.Request.RouteValues["catchAll"]?.ToString();
             if (!string.IsNullOrWhiteSpace(catchAll))
@@ -333,21 +317,15 @@ public class Program
                 Path.Combine(app.Environment.WebRootPath, "AngularApp", "browser", catchAll);
                 if (File.Exists(staticFilePath))
                 {
-                    //Console.WriteLine("\n\n***** Request.ContentType: " + context.Request.ContentType);
-
                     var provider = new FileExtensionContentTypeProvider();
                     if (provider.TryGetContentType(staticFilePath, out string? contentType))
                     {
-                        //Console.WriteLine("\n\n***** contentType: " + contentType);
-
                         context.Response.ContentType = contentType;
                         await context.Response.SendFileAsync(staticFilePath);
                         return;
                     }
                     else
                     {
-                        //Console.WriteLine($"\n\n***** couldn't get content type for {catchAll}");
-
                         context.Response.ContentType = "application/octet-stream";
                         await context.Response.SendFileAsync(staticFilePath);
                         return;

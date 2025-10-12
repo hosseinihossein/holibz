@@ -62,8 +62,10 @@ export class Profile {
 
   openEditUsernameDialog(){
     this.identityService.getCsrf().subscribe({
-      next: ()=>console.log("Csrf received successfully."),
+      next: () => console.log("Csrf received successfully."),
+      error: () => console.error("Couldn't get Csrf!"),
     });
+    
     const dialogRef = this.dialog.open(EditInput,
       {data:{label: 'Edit Username', value: this.identityService.userModel()?.username}});
     dialogRef.afterClosed().subscribe(result=>{

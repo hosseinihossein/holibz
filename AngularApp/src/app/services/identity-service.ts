@@ -125,7 +125,7 @@ export class IdentityService {
   submitUserImage(){}
   submitUserName(username:string){
     return this.httpClient.post<{success:boolean, token:string}>(
-      `/api/Identity/SubmitUsername`, {Username:username}
+      `/api/Identity/SubmitUsername`, {username}
     ).pipe(tap({
       next: res => {
         this.token.set(res.token);

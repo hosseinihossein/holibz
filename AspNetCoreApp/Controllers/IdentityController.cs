@@ -24,14 +24,14 @@ public class IdentityController : Controller
             Identity_UserDbModel? user = await userManager.FindByEmailAsync(email);
             if (user is null)
             {
-                object userNotFoundMessage = "<h1>User Not found!!</h1>";
+                object userNotFoundMessage = "<h2>User Not found!!</h2>";
                 ViewBag.ResultState = "danger";
                 return View("Result", userNotFoundMessage);
             }
 
             if (user.EmailConfirmed)
             {
-                object o1 = "<h1>Your Email has already confirmed. Don't need to confirm anymore!</h1>";
+                object o1 = "<h2>Your Email has already confirmed. Don't need to confirm anymore!</h2>";
                 ViewBag.ResultState = "info";
                 ViewBag.InfoBtnName = "Login";
                 ViewBag.InfoBtnHref = "/angularapp/browser/login/";
@@ -43,14 +43,14 @@ public class IdentityController : Controller
             {
                 await identityProcess.UpdateUserSeed(user);
 
-                object successMessage = "<h1>Your Email Successfully Confirmed.</h1>";
+                object successMessage = "<h2>Your Email Successfully Confirmed.</h2>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
                 ViewBag.InfoBtnHref = "/angularapp/browser/login/";
                 return View("Result", successMessage);
             }
 
-            object incorrectVal = "<h1>Your email validation link Is Incorrect or Expired!</h1>";
+            object incorrectVal = "<h2>Your email validation link Is Incorrect or Expired!</h2>";
             ViewBag.ResultState = "danger";
             //ViewBag.InfoBtnName = "Resend";
             //ViewBag.InfoBtnHref = $"/Identity/ResendEmailValidation?email={email}";
@@ -69,14 +69,14 @@ public class IdentityController : Controller
             await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
             if (user is null)
             {
-                object userNotFoundMessage = "<h1>User Not found!!</h1>";
+                object userNotFoundMessage = "<h2>User Not found!!</h2>";
                 ViewBag.ResultState = "danger";
                 return View("Result", userNotFoundMessage);
             }
 
             if (user.Email == newEmail)
             {
-                object o1 = "<h1>Your Email has already been changed successfully.</h1>";
+                object o1 = "<h2>Your Email has already been changed successfully.</h2>";
                 ViewBag.ResultState = "info";
                 ViewBag.InfoBtnName = "Login";
                 ViewBag.InfoBtnHref = "/angularapp/browser/login/";
@@ -95,7 +95,7 @@ public class IdentityController : Controller
                 return View("Result", successMessage);
             }
 
-            object incorrectVal = "<h1>Your email validation link Is Incorrect or Expired!</h1>";
+            object incorrectVal = "<h2>Your email validation link Is Incorrect or Expired!</h2>";
             ViewBag.ResultState = "danger";
             //ViewBag.InfoBtnName = "Resend";
             //ViewBag.InfoBtnHref = $"/Identity/ResendEmailValidation?newEmail={newEmail}";
@@ -113,7 +113,7 @@ public class IdentityController : Controller
             await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
             if (user is null)
             {
-                object userNotFoundMessage = "<h1>User Not found!!</h1>";
+                object userNotFoundMessage = "<h2>User Not found!!</h2>";
                 ViewBag.ResultState = "danger";
                 return View("Result", userNotFoundMessage);
             }
@@ -138,7 +138,7 @@ public class IdentityController : Controller
             await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == formModel.UserGuid);
             if (user is null)
             {
-                object userNotFoundMessage = "<h1>User Not found!!</h1>";
+                object userNotFoundMessage = "<h2>User Not found!!</h2>";
                 ViewBag.ResultState = "danger";
                 return View("Result", userNotFoundMessage);
             }
@@ -149,7 +149,7 @@ public class IdentityController : Controller
             {
                 await identityProcess.UpdateUserSeed(user);
 
-                object successMessage = "<h1>Your new password successfully set.</h1>";
+                object successMessage = "<h2>Your new password successfully set.</h2>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";
                 ViewBag.InfoBtnHref = "/angularapp/browser/login/";

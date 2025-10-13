@@ -132,6 +132,11 @@ export class IdentityService {
       `/api/Identity/SubmitDescription`, {description}
     );
   }
+  submitDisplayEmailPublicly(displayPublicly:boolean){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Identity/SubmitDisplayEmailPublicly", {displayPublicly}
+    );
+  }
 
   updateUserModel(newUserModel:UserModel){
     if(this.isAuthenticated()){
@@ -151,18 +156,21 @@ export class IdentityService {
   imageAddress: string;
   email: string;
 }*/
+
 export class UserModel
 {
-  constructor(userModel:UserModel|null = null){
+  constructor(userModel:Partial<UserModel>|null = null){
     this.guid = userModel?.guid ?? "";
     this.username = userModel?.username ?? "";
     this.description = userModel?.description ?? "";
     this.imageAddress = userModel?.imageAddress ?? "";
     this.email = userModel?.email ?? "";
+    this.displayEmailPublicly = userModel?.displayEmailPublicly ?? false;
   }
   guid: string = "";
   username: string = "";
   description: string = "";
   imageAddress: string = "";
   email: string = "";
+  displayEmailPublicly: boolean = false;
 }

@@ -121,6 +121,7 @@ public class IdentityController : ControllerBase
                                     description = user.Description,
                                     imageAddress = await GetUserImageAddress(user.UserGuid),
                                     email = user.Email,
+                                    displayEmailPublicly = user.DisplayEmailPublicly,
                                 },
                             });
                         }
@@ -563,7 +564,31 @@ public class IdentityController : ControllerBase
 
 
 
-
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitDisplayEmailPublicly([FromBody] DisplayEmailPubliclyModel model,
+    [FromServices] Identity_Process identityProcess)
+    {
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        user.DisplayEmailPublicly = model.DisplayEmailPublicly;
+        var result = await userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            // user seed
+            await identityProcess.UpdateUserSeed(user);
+            return Ok(new { success = true });
+        }
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("", error.Description);
+        }
+        return BadRequest(ModelState);
+    }
+    public class DisplayEmailPubliclyModel
+    {
+        public bool DisplayEmailPublicly { get; set; }
+    }
 
 
 }

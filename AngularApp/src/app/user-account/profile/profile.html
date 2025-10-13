@@ -35,6 +35,22 @@
                     <mat-icon>edit</mat-icon>
                 </button>
                 }
+                @if(!userGuid() && displayEmailPublicly()){
+                <mat-checkbox [checked]="true" disabled style="margin-left: 48px;">
+                    Displaying email publicly!
+                </mat-checkbox>
+                }
+                @else if(!userGuid() && !displayEmailPublicly()){
+                <mat-checkbox [checked]="false" disabled style="margin-left: 48px;">
+                    NOT displaying email publicly!
+                </mat-checkbox>
+                }
+                @if(!userGuid() && singletonModes.editMode()){
+                <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Change"
+                    (click)="editDisplayEmailPublicly();">
+                    <mat-icon>change_circle</mat-icon>
+                </button>
+                }
             </mat-card-subtitle>
             }
         </div>
@@ -58,6 +74,7 @@
         </p>
     </mat-card-content>
 
+    @if(!userGuid()){
     <mat-card-actions align="end">
         @if(errorResponse()){
         <span style="color:var(--mat-sys-on-error-container);font-size: 12px;">
@@ -69,4 +86,5 @@
             <mat-icon>{{singletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
         </button>
     </mat-card-actions>
+    }
 </mat-card>

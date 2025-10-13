@@ -122,8 +122,8 @@ export class SendLinkToEmail implements AfterViewInit {
         this.identityService.forgetPassword(
           this.email().value, this.cfTurnstile().value).subscribe(callBacks);
       }
-      else if(this.data.purpose === "cahngeEmail"){
-        this.identityService.cahngeEmail(
+      else if(this.data.purpose === "changeEmail"){
+        this.identityService.changeEmail(
           this.email().value, this.cfTurnstile().value).subscribe(callBacks);
       }
     }

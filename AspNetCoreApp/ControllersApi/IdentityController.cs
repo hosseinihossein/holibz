@@ -365,8 +365,11 @@ public class IdentityController : ControllerBase
     private async Task SendNewEmailValidationLink(Identity_UserDbModel user, string newEmail,
     IEmailSender emailSender)
     {
+        Console.WriteLine($"\n***** in SendNewEmailValidationLink");
         //***** Generate Email Validation Token *****
         string token = await userManager.GenerateChangeEmailTokenAsync(user, newEmail);
+
+        Console.WriteLine($"\n***** token generated");
 
         //***** Sending Email *****
         string emailMessage = $"<h4>Hi dear {user.UserName}</h4>" +
@@ -377,6 +380,8 @@ public class IdentityController : ControllerBase
 
         await emailSender.SendEmailAsync(user.UserName!, newEmail!,
         "New Email Validation", emailMessage);
+
+        Console.WriteLine($"\n***** email sent");
     }
 
 
@@ -455,11 +460,12 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> SubmitDescription([FromBody][StringLength(500)] string description,
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitDescription([FromBody] DescriptionModel model,
     [FromServices] Identity_Process identityProcess)
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-        user.Description = description;
+        user.Description = model.Description;
         var result = await userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
@@ -473,7 +479,11 @@ public class IdentityController : ControllerBase
         }
         return BadRequest(ModelState);
     }
-
+    public class DescriptionModel
+    {
+        [StringLength(500)]
+        public string? Description { get; set; } = string.Empty;
+    }
 
 
 

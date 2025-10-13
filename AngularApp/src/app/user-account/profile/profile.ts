@@ -10,7 +10,7 @@ import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { IdentityService, UserModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
-import { map } from 'rxjs';
+import { map, throwError } from 'rxjs';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-email';
 
@@ -67,7 +67,11 @@ export class Profile {
   openEditUsernameDialog(){
     this.identityService.getCsrf().subscribe({
       next: () => console.log("Csrf received successfully."),
-      error: () => console.error("Couldn't get Csrf!"),
+      error: err => {
+        console.error("Couldn't get Csrf!");
+        //throwError(()=>err);//doesn't pass error to the app-error-handler
+        throw(err);
+      },
     });
     
     const dialogRef = this.dialog.open(EditInput,
@@ -89,9 +93,11 @@ export class Profile {
               }
               else if(err.error.errors){
                 console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
+                throw(err);
               }
               else{
                 console.error("err.error: "+JSON.stringify(err.error));
+                throw(err);
               }
             }
           }
@@ -107,7 +113,10 @@ export class Profile {
   openEditDescriptionDialog(){
     this.identityService.getCsrf().subscribe({
       next: () => console.log("Csrf received successfully."),
-      error: () => console.error("Couldn't get Csrf!"),
+      error: err => {
+        console.error("Couldn't get Csrf!");
+        throw(err);
+      },
     });
 
     const dialogRef = this.dialog.open(EditTextarea,
@@ -129,9 +138,11 @@ export class Profile {
               }
               else if(err.error.errors){
                 console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
+                throw(err);
               }
               else{
                 console.error("err.error: "+JSON.stringify(err.error));
+                throw(err);
               }
             }
           }

@@ -3,7 +3,9 @@ import { ErrorHandler, inject, Injectable } from "@angular/core";
 import { IdentityService } from "./services/identity-service";
 import { MatSnackBar } from "@angular/material/snack-bar";
 
-@Injectable()
+@Injectable({
+    providedIn: "root",
+})
 export class AppErrorHandler implements ErrorHandler{
     identityService = inject(IdentityService);
     private snackBar = inject(MatSnackBar);

@@ -13,6 +13,16 @@ export class IdentityService {
   private tokenExpiration_StorageKey = "token_expire";
   private httpClient = inject(HttpClient);
 
+  isAuthenticated = signal(false);
+  userModel = signal<UserModel | null>(null);
+  token = signal<string | null>(null);
+
+  constructor(){
+    this.isAuthenticated.set(this.hasRecord());
+    this.userModel.set(this.getUserModelFromLocalStorage());
+    this.token.set(this.getTokenFromLocalStorage());
+  }
+
   signup(formValue:Partial<{username: string; email: string; password: string; CfTurnstileResponse: string;}>){
     return this.httpClient.post<{success:boolean}>(
       "/api/Identity/signup", 
@@ -54,10 +64,6 @@ export class IdentityService {
     console.log("user logout!");
   }
   
-  isAuthenticated = signal(this.hasRecord());
-  userModel = signal<UserModel | null>(this.getUserModelFromLocalStorage());
-  token = signal<string | null>(this.getTokenFromLocalStorage());
-  
   private hasRecord():boolean{
     if(localStorage.getItem(this.token_StorageKey) && 
     localStorage.getItem(this.tokenExpiration_StorageKey) &&
@@ -91,7 +97,7 @@ export class IdentityService {
       "/api/Identity/ResendEmailValidation", {email, CfTurnstileResponse}
     );
   }
-  cahngeEmail(email: string, CfTurnstileResponse: string){
+  changeEmail(email: string, CfTurnstileResponse: string){
     return this.httpClient.post<{success:boolean}>(
       "/api/Identity/ChangeEmail", {email, CfTurnstileResponse}
     );
@@ -123,7 +129,7 @@ export class IdentityService {
   }
   submitDescription(description:string){
     return this.httpClient.post<{success:boolean}>(
-      `/api/Identity/SubmitUsername`, {description}
+      `/api/Identity/SubmitDescription`, {description}
     );
   }
 

@@ -1,3 +1,3 @@
 - upload userImage
-- match the ChangeEmail and the edit description actions with their clients and test
+- test changeEmail and login state before validating your new email
 - 

@@ -489,8 +489,10 @@ public class IdentityController : ControllerBase
 
 
 
+
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordFormModel formModel,
     [FromServices] Identity_Process identityProcess)
     {
@@ -501,12 +503,14 @@ public class IdentityController : ControllerBase
             var result = await userManager.ChangePasswordAsync(user, formModel.CurrentPassword, formModel.NewPassword);
             if (result.Succeeded)
             {
+                string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
+                //user seed
                 await identityProcess.UpdateUserSeed(user);
-                return Ok(new { success = true });
+                return Ok(new { success = true, token });
             }
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError("ChangePassword", error.Description);
             }
         }
         return BadRequest(ModelState);

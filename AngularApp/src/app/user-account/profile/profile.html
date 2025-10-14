@@ -76,15 +76,19 @@
 
     @if(!userGuid()){
     <mat-card-actions align="end">
-        @if(errorResponse()){
-        <span style="color:var(--mat-sys-on-error-container);font-size: 12px;">
-            {{errorResponse()}}
-        </span>
-        }
+        <button matFab extended (click)="openChangePasswordDialog()">
+            <mat-icon>key</mat-icon>
+            Change Password
+        </button>
         <button matButton="elevated" class="noPaddingBtn" (click)="singletonModes.toggleEditMode()"
             [matTooltip]="singletonModes.editMode() ? 'Exit from edit mode' : 'Enter edit mode'">
             <mat-icon>{{singletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
         </button>
     </mat-card-actions>
+    }
+    @if(errorResponse()){
+    <p style="color:var(--mat-sys-on-error-container);font-size: 12px;">
+        * {{errorResponse()}}
+    </p>
     }
 </mat-card>

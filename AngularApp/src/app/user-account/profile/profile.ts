@@ -1,5 +1,5 @@
 import { Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -14,12 +14,14 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-email';
 import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
+import { ChangePassword } from '../../dialogs/change-password/change-password';
+import { Result, ResultDialogInputData } from '../../dialogs/result/result';
 
 @Component({
   selector: 'app-profile',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent,
-    MatCardActions, MatIcon, MatButton, MatIconButton, MatTooltip, NgOptimizedImage,
-    MatCheckboxModule],
+    MatCardActions, MatIcon, MatTooltip, NgOptimizedImage,
+    MatCheckboxModule, MatButtonModule],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })
@@ -80,15 +82,6 @@ export class Profile {
   }
 
   openEditUsernameDialog(){
-    /*this.identityService.getCsrf().subscribe({
-      next: () => console.log("Csrf received successfully."),
-      error: err => {
-        console.error("Couldn't get Csrf!");
-        //throwError(()=>err);//doesn't pass error to the app-error-handler
-        throw(err);
-      },
-    });*/
-    
     const dialogRef = this.dialog.open(EditInput,
       {data:{label: 'Username', value: this.identityService.userModel()?.username}});
     dialogRef.afterClosed().subscribe(result=>{
@@ -104,7 +97,7 @@ export class Profile {
           error: err => {
             if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
               if(err.error.Username || err.error.errors?.Username){
-                this.errorResponse.set("*Error: "+err.error.errors?.Username);
+                this.errorResponse.set("*Error: "+ (err.error.Username || err.error.errors?.Username));
               }
               else if(err.error.errors){
                 console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
@@ -126,14 +119,6 @@ export class Profile {
   }
   
   openEditDescriptionDialog(){
-    /*this.identityService.getCsrf().subscribe({
-      next: () => console.log("Csrf received successfully."),
-      error: err => {
-        console.error("Couldn't get Csrf!");
-        throw(err);
-      },
-    });*/
-
     const dialogRef = this.dialog.open(EditTextarea,
       {data:{label: 'About Me', value: this.identityService.userModel()?.description}});
     dialogRef.afterClosed().subscribe(result=>{
@@ -199,6 +184,10 @@ export class Profile {
         });
       }
     });
+  }
+
+  openChangePasswordDialog(){
+    this.dialog.open(ChangePassword);
   }
 
 }

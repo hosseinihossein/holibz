@@ -13,7 +13,7 @@ import { MatInput } from '@angular/material/input';
   styleUrl: './edit-input.css'
 })
 export class EditInput {
-  readonly dialogRef = inject(MatDialogRef<EditInput>);
+  //readonly dialogRef = inject(MatDialogRef<EditInput>);
   readonly data = inject<{label:string, value:string}>(MAT_DIALOG_DATA);
 
   myInput = signal(new FormControl(this.data.value,{

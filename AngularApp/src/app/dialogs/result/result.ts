@@ -11,13 +11,8 @@ import { Router } from '@angular/router';
   styleUrl: './result.css'
 })
 export class Result {
-  readonly dialogRef = inject(MatDialogRef<Result>);
-  readonly data = inject<{
-    status: string,
-    title:string | null, 
-    description:string[] | null, 
-    link:{name:string, address:string} | null
-  }>(MAT_DIALOG_DATA);
+  //readonly dialogRef = inject(MatDialogRef<Result>);
+  readonly data = inject<Partial<ResultDialogInputData>>(MAT_DIALOG_DATA);
   readonly router = inject(Router);
 
   goToLinkAddress(){
@@ -25,4 +20,10 @@ export class Result {
       this.router.navigate([this.data.link.address]);
     }
   }
+}
+export class ResultDialogInputData {
+  status: "success" | "info" | "warning" = "info";
+  title:string | null = null; 
+  description:string[] | null = null; 
+  link:{name:string, address:string} | null = null;
 }

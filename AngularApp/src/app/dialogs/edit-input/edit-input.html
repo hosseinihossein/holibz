@@ -1,7 +1,7 @@
 <mat-dialog-content>
     <mat-form-field>
         <mat-label>{{data.label}}</mat-label>
-        <input matInput [value]="data.value" [formControl]="myInput()">
+        <input matInput [formControl]="myInput()">
         @if(myInput().invalid && (myInput().dirty || myInput().touched) && myInput().hasError("required")){
         <mat-error>
             {{data.label}} is required!

@@ -145,6 +145,18 @@ export class IdentityService {
     }
   }
 
+  submitChangePassword(
+  changePasswordForm: Partial<{CurrentPassword:string, NewPassword:string, RepeatNewPassword: string}>){
+    return this.httpClient.post<{success:boolean, token:string}>(
+      `/api/Identity/ChangePassword`, changePasswordForm
+    ).pipe(tap({
+      next: res => {
+        this.token.set(res.token);
+        localStorage.setItem(this.token_StorageKey, res.token);
+      },
+    }));
+  }
+
 
 }
 

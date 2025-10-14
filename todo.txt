@@ -1,3 +1,2 @@
 - upload userImage
-- test changeEmail and login state before validating your new email
 - 

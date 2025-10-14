@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, inject, signal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { IdentityService } from '../../services/identity-service';
 import { SingletonModes } from '../../services/singleton-modes';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,6 +9,7 @@ import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatButton } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Result, ResultDialogInputData } from '../result/result';
 
 declare const turnstile:any;
 
@@ -20,8 +21,9 @@ declare const turnstile:any;
   styleUrl: './send-link-to-email.css'
 })
 export class SendLinkToEmail implements AfterViewInit {
-  readonly dialogRef = inject(MatDialogRef<SendLinkToEmail>);
+  readonly sendLinkToEmailDialogRef = inject(MatDialogRef<SendLinkToEmail>);
   readonly data = inject<{purpose:string}>(MAT_DIALOG_DATA);
+  dialog = inject(MatDialog);
   
   identityService = inject(IdentityService);
   readonly singletonModes = inject(SingletonModes);
@@ -35,7 +37,6 @@ export class SendLinkToEmail implements AfterViewInit {
     validators:[Validators.required]
   }));
 
-  response = signal<{success:boolean, error:string} | null>(null);
   displaySubmitSpinner = signal(false);
   widgetId = signal("");
 
@@ -67,15 +68,15 @@ export class SendLinkToEmail implements AfterViewInit {
           this.cfTurnstile()?.setValue(token);
         },
         'error-callback': (errorCode: string) => {
-          this.response.set({success: false, error: "Turnstile error! error code: " + errorCode});
+          this.cfTurnstile().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
           console.error("error-callback: " + errorCode);
         },
         'expired-callback': () => {
-          this.response.set({success: false, error: "Turnstile expired!"});
+          this.cfTurnstile().setErrors({turnstileError: "Turnstile expired!"});
           console.error("expired-callback");
         },
         'timeout-callback': () => {
-          this.response.set({success: false, error: "Turnstile timeouted!"});
+          this.cfTurnstile().setErrors({turnstileError: "Turnstile timeouted!"});
           console.error("timeout-callback");
         },
       })
@@ -88,26 +89,36 @@ export class SendLinkToEmail implements AfterViewInit {
 
       const callBacks = {
         next: (res:{success:boolean}) => {
-          this.displaySubmitSpinner.set(false);
           if(res.success){
-            this.response.set({success: true, error: ""});
-            console.log("email validation link sent successfully!");
+            console.log("Email validation link sent successfully!");
+            const resultInputData = new ResultDialogInputData();
+            resultInputData.status = "success";
+            resultInputData.title = "Success";
+            resultInputData.description = [
+              "A validation link sent to your email successfully.",
+              "Please check your email and click on the validation link to proceed."
+            ];
+            const resultDialogRef = this.dialog.open(Result,{data: resultInputData});
+            resultDialogRef.afterClosed().subscribe(() => {
+              this.displaySubmitSpinner.set(false);
+              this.sendLinkToEmailDialogRef.close();
+            });
           }
         },
         error: (err:any) => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             if(err.error.Email || err.error.errors?.Email){
-              this.response.set({success: false, error: "email error: " + (err.error.Email || err.error.errors?.Email)});
+              this.email().setErrors({submitError: err.error.Email || err.error.errors?.Email});
             }
             else if(err.error.TurnstileError || err.error.errors?.CfTurnstileResponse){
-              this.response.set({success: false, error: "turnstile error: " + (err.error.TurnstileError || err.error.errors?.CfTurnstileResponse)});
+              this.cfTurnstile().setErrors({submitError: err.error.TurnstileError || err.error.errors?.CfTurnstileResponse});
             }
-            console.error("err: "+err);
-            console.error("err.error: "+err.error);
-            console.error("err.error.errors: "+err.error.errors);
+            console.error("err: "+JSON.stringify(err));
+            console.error("err.error: "+JSON.stringify(err.error));
+            console.error("err.error.errors: "+JSON.stringify(err.error.errors));
           }
           else{
-            throwError(()=>err);
+            throw(err);
           }
           this.displaySubmitSpinner.set(false);
           turnstile.reset(this.widgetId());

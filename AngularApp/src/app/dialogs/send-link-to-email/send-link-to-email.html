@@ -23,27 +23,35 @@
             email must be more than 8 characters long!
         </mat-error>
         }
+        @if(email().invalid && (email().dirty || email().touched) && email().hasError("submitError")){
+        <mat-error>
+            {{email().getError("submitError")}}
+        </mat-error>
+        }
     </mat-form-field>
 
-    <input hidden [formControl]="cfTurnstile()" />
+    <input type="hidden" [formControl]="cfTurnstile()" />
     <div id="resendEmail-widget-container"></div>
 
-    @if(response() && response()?.success){
-    <h4 style="color:var(--mat-sys-on-primary-container);">A Validation Link Sent to '{{email().value}}'</h4>
+    @if(cfTurnstile().invalid && (cfTurnstile().dirty || cfTurnstile().touched) &&
+    cfTurnstile().hasError("submitError")){
+    <mat-error>
+        {{cfTurnstile().getError("submitError")}}
+    </mat-error>
     }
-    @else if(response()) {
-    <mat-error>{{response()?.error}}</mat-error>
+    @if(cfTurnstile().invalid && (cfTurnstile().dirty || cfTurnstile().touched) &&
+    cfTurnstile().hasError("turnstileError")){
+    <mat-error>
+        {{cfTurnstile().getError("turnstileError")}}
+    </mat-error>
     }
 
     <mat-dialog-actions>
-        @if(response() == null || !response()?.success){
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" (click)="requestSendingLinkToEmail()"
-            [disabled]="email().invalid || cfTurnstile().invalid">Send</button>
-        }
-        @else {
-        <button matButton="outlined" mat-dialog-close>Ok</button>
-        }
+            [disabled]="email().invalid || cfTurnstile().invalid">
+            Send
+        </button>
     </mat-dialog-actions>
 
     @if(displaySubmitSpinner()){

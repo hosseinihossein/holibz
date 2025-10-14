@@ -72,14 +72,16 @@
             </button>
             }
         </p>
-    </mat-card-content>
-
-    @if(!userGuid()){
-    <mat-card-actions align="end">
+        @if(!userGuid() && singletonModes.editMode()){
         <button matFab extended (click)="openChangePasswordDialog()">
             <mat-icon>key</mat-icon>
             Change Password
         </button>
+        }
+    </mat-card-content>
+
+    @if(!userGuid()){
+    <mat-card-actions align="end">
         <button matButton="elevated" class="noPaddingBtn" (click)="singletonModes.toggleEditMode()"
             [matTooltip]="singletonModes.editMode() ? 'Exit from edit mode' : 'Enter edit mode'">
             <mat-icon>{{singletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>

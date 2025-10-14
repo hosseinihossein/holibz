@@ -5,7 +5,7 @@ import { MatIcon } from '@angular/material/icon';
 import { SingletonModes } from '../../services/singleton-modes';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
-import { EditImage } from '../../dialogs/edit-image/edit-image';
+import { EditUserImage } from '../../dialogs/edit-user-image/edit-user-image';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { IdentityService, UserModel } from '../../services/identity-service';
@@ -67,18 +67,8 @@ export class Profile {
   }
 
   openEditImageDialog(){
-    const dialogRef = this.dialog.open(EditImage,
-      {data:{value: this.identityService.userModel()?.imageAddress}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        if(result === "delete"){
-          //this.userImgSrc.set("");
-        }
-        else{
-          //this.userImgSrc.set(result.file.name);
-        }
-      }
-    });
+    this.dialog.open(EditUserImage,
+    {data:{currentImgSrc: this.identityService.userModel()?.imageAddress}});
   }
 
   openEditUsernameDialog(){

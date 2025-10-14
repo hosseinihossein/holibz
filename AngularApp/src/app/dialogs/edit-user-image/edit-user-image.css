@@ -3,6 +3,8 @@ mat-form-field{
 }
 mat-dialog-content{
     width: 400px;
+    position: relative;
+    overflow: hidden;
 }
 button#selectButton{
     margin: 88px 8px 0px;
@@ -20,4 +22,21 @@ button#selectButton{
 mat-dialog-actions button.warning{
     display: block;
     float: left;
+}
+
+#submit-spinner-layout{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(5px);
+    z-index: 1;
+}
+mat-spinner#submit-spinner{
+    display: block;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
 }

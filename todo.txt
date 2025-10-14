@@ -1,2 +1,4 @@
 - upload userImage
+- delete user account
+- create several versions of image on server
 - 

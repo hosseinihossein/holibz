@@ -116,7 +116,18 @@ export class IdentityService {
     return this.httpClient.get("/api/Identity/GetCsrf");
   }
 
-  submitUserImage(){}
+  submitUserImage(file: File){
+    const formData = new FormData();
+    formData.append('UserImageFile', file);
+    return this.httpClient.post<{success: boolean, userImageAddress: string}>(
+      "/api/Identity/SubmitUserImage", formData
+    );
+  }
+  deleteUserImage(){
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Identity/DeleteUserImage"
+    );
+  }
   submitUserName(username:string){
     return this.httpClient.post<{success:boolean, token:string}>(
       `/api/Identity/SubmitUsername`, {username}
@@ -175,14 +186,14 @@ export class UserModel
     this.guid = userModel?.guid ?? "";
     this.username = userModel?.username ?? "";
     this.description = userModel?.description ?? "";
-    this.imageAddress = userModel?.imageAddress ?? "";
+    this.imageAddress = userModel?.imageAddress ?? null;
     this.email = userModel?.email ?? "";
     this.displayEmailPublicly = userModel?.displayEmailPublicly ?? false;
   }
   guid: string = "";
   username: string = "";
   description: string = "";
-  imageAddress: string = "";
+  imageAddress: string|null = null;
   email: string = "";
   displayEmailPublicly: boolean = false;
 }

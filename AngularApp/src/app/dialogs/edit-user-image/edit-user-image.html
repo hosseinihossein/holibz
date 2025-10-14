@@ -1,0 +1,30 @@
+<mat-dialog-content>
+
+    <div id="img-box" class="clearfix">
+        <img [src]="previewImgSrc()" alt="user profile image" #previewImg
+            [style.display]="previewImgSrc() ? 'block' : 'none'">
+        <button matButton="elevated" id="selectButton" (click)="myFileInput.click()">Select New Image</button>
+        <input type="file" style="display: none;" #myFileInput (change)="onSelectImage($event)">
+    </div>
+
+    @if(errorResponse()){
+    <span style="color: var(--mat-sys-on-error-container);font-size: 12px;">
+        {{errorResponse()?.message}}
+    </span>
+    }
+
+    <mat-dialog-actions align="end" style="float: right;">
+        <button matButton mat-dialog-close>Cancel</button>
+        <button matButton="filled" [disabled]="!selectedFile()" (click)="onSubmit()">Submit</button>
+    </mat-dialog-actions>
+    <mat-dialog-actions align="start">
+        <button matButton="filled" class="warning" (click)="onDelete()">Delete</button>
+    </mat-dialog-actions>
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+
+</mat-dialog-content>

@@ -401,7 +401,7 @@ public class IdentityController : ControllerBase
         Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
-            return $"api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}";
+            return $"/api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}";
         }
 
         return null;
@@ -429,25 +429,53 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [RequestSizeLimit(128 * 1024)]//128 KB
-    public async Task<IActionResult> SubmitUserImage(IFormFile? userImageFile = null)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitUserImage(UserImageFileModel model)
+    {
+        if (ModelState.IsValid)
+        {
+            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+            string userImagePath = Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
+            /*if (model.UserImageFile is null)
+            {
+                if (System.IO.File.Exists(userImagePath))
+                {
+                    System.IO.File.Delete(userImagePath);
+                    user.Version++;
+                    await userManager.UpdateAsync(user);
+                }
+            }
+            else
+            {*/
+            using (FileStream fs = System.IO.File.Create(userImagePath))
+            {
+                await model.UserImageFile.CopyToAsync(fs);
+            }
+            user.Version++;
+            await userManager.UpdateAsync(user);
+            //}
+
+            string userImageAddress = (await GetUserImageAddress(user.UserGuid))!;
+            return Ok(new { success = true, userImageAddress });
+        }
+        return BadRequest(ModelState);
+    }
+    public class UserImageFileModel
+    {
+        public IFormFile UserImageFile { get; set; } = null!;
+    }
+
+    [HttpDelete]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteUserImage()
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
         string userImagePath = Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
-        if (userImageFile is null)
+
+        if (System.IO.File.Exists(userImagePath))
         {
-            if (System.IO.File.Exists(userImagePath))
-            {
-                System.IO.File.Delete(userImagePath);
-                user.Version++;
-                await userManager.UpdateAsync(user);
-            }
-        }
-        else
-        {
-            using (FileStream fs = System.IO.File.Create(userImagePath))
-            {
-                await userImageFile.CopyToAsync(fs);
-            }
+            System.IO.File.Delete(userImagePath);
             user.Version++;
             await userManager.UpdateAsync(user);
         }

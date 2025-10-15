@@ -1,5 +1,5 @@
 mat-sidenav{
-    width: 340px;
+    width: 240px;
     border-right: 1px solid var(--mat-sys-outline-variant);
     border-radius: 0;
     padding-right: 10px;
@@ -11,6 +11,6 @@ mat-sidenav{
     }
 }
 
-mat-sidenav-content{
+/*mat-sidenav-content{
     
-}
+}*/

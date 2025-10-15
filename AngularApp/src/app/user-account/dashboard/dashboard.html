@@ -1,12 +1,16 @@
 <mat-sidenav-container>
 
     <mat-sidenav id="" mode="side" opened position="start" fixedInViewport fixedTopGap="56" fixedBottomGap="16">
-
+        <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;">
+            Sections:
+        </p>
+        <button matButton (click)="activeSection.set('MyLibraries')">My Libraries</button>
     </mat-sidenav>
 
     <mat-sidenav-content>
-        <!--app-libraries-list></app-libraries-list-->
-        <app-profile></app-profile>
+        @if(activeSection() === "MyLibraries"){
+        <app-libraries-list></app-libraries-list>
+        }
     </mat-sidenav-content>
 
 </mat-sidenav-container>

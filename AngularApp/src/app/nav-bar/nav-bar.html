@@ -64,7 +64,7 @@
 
     <mat-menu #account class="navbar-matMenu">
         @if(identityService.isAuthenticated()){
-        <a mat-menu-item>
+        <a mat-menu-item [routerLink]="['/dashboard']">
             <mat-icon>space_dashboard</mat-icon>
             Dashboard
         </a>

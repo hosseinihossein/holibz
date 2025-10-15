@@ -4,7 +4,9 @@
     <mat-sidenav id="startSideNav" mode="side" opened position="start" fixedInViewport fixedTopGap="56"
         fixedBottomGap="16">
         <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;"
-            matTooltip="This document is included in these shelves" matTooltipShowDelay="500">Shelves:</p>
+            matTooltip="This document is included in these shelves" matTooltipShowDelay="500">
+            Shelves:
+        </p>
         <mat-accordion>
             @for(shelf of documentService.shelves(); track shelf.guid){
             <mat-expansion-panel>

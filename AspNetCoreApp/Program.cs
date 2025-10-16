@@ -216,6 +216,7 @@ public class Program
         builder.Services.AddScoped<Identity_Process>();
         builder.Services.AddSingleton<IEmailSender, EmailSender>();
         builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
+        builder.Services.AddSingleton<TagNameBuilder>();
 
 
 

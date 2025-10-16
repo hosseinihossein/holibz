@@ -44,15 +44,15 @@ export class Profile {
   constructor(){
     if(!this.userGuid()){
       this.identityService.getCsrf().subscribe({
-          next: () => {
-            console.log("Csrf received successfully.");
-          },
-          error: err => {
-            console.error("Couldn't get Csrf!");
-            //throwError(()=>err);//doesn't pass error to the app-error-handler
-            throw(err);
-          },
-        });
+        next: () => {
+          console.log("Csrf received successfully.");
+        },
+        error: err => {
+          console.error("Couldn't get Csrf!");
+          //throwError(()=>err);//doesn't pass error to the app-error-handler
+          throw(err);
+        },
+      });
     }
     effect(()=>{
       if(this.userGuid()){

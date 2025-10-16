@@ -1,2 +1,5 @@
-- create several versions of image on server
+- add returnUrl to navbar login link
+- change the name of the Storage/Identity/UserImage directory to Storage/Identity/UserImages
+- new actions for CreateNewLibrary and CreateNewShelf
+- add Default Library and Shelf after validating user email
 - 

@@ -101,7 +101,7 @@ public class Library_DbContext : DbContext
     }
 }
 //********************************************************************************
-public class TagNameBuilder
+public class Library_TagNameBuilder
 {
     public string? Build(string value)
     {
@@ -125,3 +125,16 @@ public class TagNameBuilder
         return null;
     }
 }
+
+//********************************************************************************
+
+public class Library_LibraryCardModel
+{
+    public string Guid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string? Description { get; set; }
+    public string[] ShelvesTitles { get; set; } = [];
+    public bool HasImage { get; set; } = false;
+    public string OwnerUsername { get; set; } = null!;
+}
+

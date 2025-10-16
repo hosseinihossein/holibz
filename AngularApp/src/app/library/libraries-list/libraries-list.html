@@ -1,7 +1,5 @@
 <div class="top-box clearfix">
     <div class="icon-box" matBadge="5" matTooltip="number of libraries">
-        <!--img [src]="singletonModes.darkMode() ? 'HLlogo-DarkMode.png' : 'HLlogo-LightMode.png'" alt="library icon"
-            id="library-icon"-->
         <mat-icon>account_balance</mat-icon>
     </div>
     <div class="icon-box" matBadge="30" matTooltip="number of shelves">
@@ -11,14 +9,6 @@
         <mat-icon>newsstand</mat-icon>
     </div>
 
-    <!--button matButton="elevated">
-        <mat-icon>add_notes</mat-icon>
-        Add a new Document
-    </button>
-    <button matButton="elevated">
-        <mat-icon>shelves</mat-icon>
-        Add a new Shelf
-    </button-->
     <button matButton="elevated">
         <mat-icon>account_balance</mat-icon>
         Add a new Library
@@ -26,10 +16,7 @@
 </div>
 
 <div class="list">
-    <app-library-card></app-library-card>
-    <app-library-card></app-library-card>
-    <app-library-card></app-library-card>
-    <app-library-card></app-library-card>
-    <app-library-card></app-library-card>
-    <app-library-card></app-library-card>
+    @for(libModel of libraryCards(); track libModel.Guid){
+    <app-library-card [model]="libModel"></app-library-card>
+    }
 </div>

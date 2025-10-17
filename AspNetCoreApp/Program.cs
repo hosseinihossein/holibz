@@ -213,10 +213,10 @@ public class Program
 
         //**************************** Custom Services **************************
         builder.Services.AddScoped<TurnstileService>();
-        builder.Services.AddScoped<Identity_Process>();
+        builder.Services.AddScoped<Identity_Process>();//convert it to singleton
         builder.Services.AddSingleton<IEmailSender, EmailSender>();
         builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
-        builder.Services.AddSingleton<Library_TagNameBuilder>();
+        builder.Services.AddSingleton<Library_process>();
 
 
 
@@ -281,7 +281,7 @@ public class Program
         {
             Console.WriteLine("** Seeding Identity Service Started... **");
             Identity_Process account_Process = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_Process>();
-            await account_Process.SeedUsersToDb();
+            await account_Process.SeedUsersToDb(userManager);
             Console.WriteLine("** Seeding Identity Service Completed! **");
         }
 

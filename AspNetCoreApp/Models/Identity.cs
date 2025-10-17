@@ -215,19 +215,18 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 }
 
 
-/******************************** Custom Token Provider *******************************/
+/******************************** Identity Process *******************************/
 public class Identity_Process
 {
     readonly DirectoryInfo UserSeedDirectoryInfo;
     //readonly IWebHostEnvironment env;
-    readonly UserManager<Identity_UserDbModel> userManager;
-    public Identity_Process(IWebHostEnvironment _env, UserManager<Identity_UserDbModel> _userManager)
+    public Identity_Process(IWebHostEnvironment _env)
     {
-        userManager = _userManager;
         UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UserSeedData"));
     }
 
-    public async Task UpdateUserSeed(Identity_UserDbModel user)
+    public async Task UpdateUserSeed(Identity_UserDbModel user,
+    UserManager<Identity_UserDbModel> userManager)
     {
         Identity_UserSeedModel userSeedModel = new()
         {
@@ -254,7 +253,7 @@ public class Identity_Process
         File.Delete(userSeedPath);
     }
 
-    public async Task SeedUsersToDb()
+    public async Task SeedUsersToDb(UserManager<Identity_UserDbModel> userManager)
     {
         foreach (var fileInfo in UserSeedDirectoryInfo.EnumerateFiles())
         {

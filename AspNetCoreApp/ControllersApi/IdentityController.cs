@@ -205,7 +205,7 @@ public class IdentityController : ControllerBase
                 IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
                 if (result.Succeeded)
                 {
-                    await identityProcess.UpdateUserSeed(user);
+                    await identityProcess.UpdateUserSeed(user, userManager);
 
                     _ = SendEmailValidationLink(user, emailSender);// commented out for development 
 
@@ -306,7 +306,7 @@ public class IdentityController : ControllerBase
             {
                 string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                 // user seed
-                await identityProcess.UpdateUserSeed(user);
+                await identityProcess.UpdateUserSeed(user, userManager);
                 return Ok(new { success = true, token });
             }
             foreach (var error in result.Errors)
@@ -499,7 +499,7 @@ public class IdentityController : ControllerBase
         if (result.Succeeded)
         {
             // user seed
-            await identityProcess.UpdateUserSeed(user);
+            await identityProcess.UpdateUserSeed(user, userManager);
             return Ok(new { success = true });
         }
         foreach (var error in result.Errors)
@@ -533,7 +533,7 @@ public class IdentityController : ControllerBase
             {
                 string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                 //user seed
-                await identityProcess.UpdateUserSeed(user);
+                await identityProcess.UpdateUserSeed(user, userManager);
                 return Ok(new { success = true, token });
             }
             foreach (var error in result.Errors)
@@ -608,7 +608,7 @@ public class IdentityController : ControllerBase
         if (result.Succeeded)
         {
             // user seed
-            await identityProcess.UpdateUserSeed(user);
+            await identityProcess.UpdateUserSeed(user, userManager);
             return Ok(new { success = true });
         }
         foreach (var error in result.Errors)

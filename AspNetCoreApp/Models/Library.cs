@@ -1,8 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreApp.Models;
 
+//********************************************************************************
+//************************************ DbModels **********************************
 public class Library_LibraryDbModel
 {
     public int Id { get; set; }
@@ -100,10 +103,12 @@ public class Library_DbContext : DbContext
 
     }
 }
+
 //********************************************************************************
-public class Library_TagNameBuilder
+//*********************************** Processes **********************************
+public class Library_process //singleton service
 {
-    public string? Build(string value)
+    public string? BuildTagName(string value)
     {
         if (!string.IsNullOrWhiteSpace(value))
         {
@@ -124,10 +129,80 @@ public class Library_TagNameBuilder
         }
         return null;
     }
+
+    public async Task<ProcessResult> CreateNewLibrary(Library_DbContext libraryDb, string ownerGuid,
+    Library_NewLibrayFormModel formModel)
+    {
+        if (!await libraryDb.Libraries.AnyAsync(lib =>
+            lib.OwnerGuid == ownerGuid && lib.Title == formModel.Title))
+        {
+            Library_LibraryDbModel libraryDbModel = new()
+            {
+                Title = formModel.Title,
+                OwnerGuid = ownerGuid,
+                Description = formModel.Decription,
+            };
+
+            await libraryDb.Libraries.AddAsync(libraryDbModel);
+            await libraryDb.SaveChangesAsync();
+
+            return new ProcessResult() { Success = true, ResultObject = libraryDbModel };
+        }
+        return new ProcessResult()
+        {
+            ErrorTitle = "Title Conflict",
+            ErrorDescription = $"There's already been a library with title '{formModel.Title}'!"
+        };
+    }
+    public async Task<ProcessResult> CreateNewShelf(Library_DbContext libraryDb, string ownerGuid,
+    Library_NewShelfFormModel formModel)
+    {
+        if (!await libraryDb.Shelves.AnyAsync(shelf =>
+            shelf.OwnerGuid == ownerGuid && shelf.Title == formModel.Title))
+        {
+            Library_LibraryDbModel? libraryContainer =
+            await libraryDb.Libraries.FirstOrDefaultAsync(lib => lib.Guid == formModel.LibraryGuid);
+
+            if (libraryContainer is null)
+            {
+                return new ProcessResult()
+                {
+                    ErrorTitle = "Library",
+                    ErrorDescription = $"There's no library with guid '{formModel.LibraryGuid}'!"
+                };
+            }
+
+            Library_ShelfDbModel shelfDbModel = new()
+            {
+                Title = formModel.Title,
+                OwnerGuid = ownerGuid,
+                Description = formModel.Decription,
+                Library = libraryContainer,
+            };
+
+            await libraryDb.Shelves.AddAsync(shelfDbModel);
+            await libraryDb.SaveChangesAsync();
+
+            return new ProcessResult() { Success = true, ResultObject = shelfDbModel };
+        }
+        return new ProcessResult()
+        {
+            ErrorTitle = "Title Conflict",
+            ErrorDescription = $"There's already been a shelf with title '{formModel.Title}'!"
+        };
+    }
+}
+public class ProcessResult
+{
+    public bool Success { get; set; } = false;
+    public string? ErrorTitle { get; set; } = null;
+    public string? ErrorDescription { get; set; } = null;
+    public object? ResultObject { get; set; } = null;
 }
 
-//********************************************************************************
 
+//********************************************************************************
+//************************************ DataModels ********************************
 public class Library_LibraryCardModel
 {
     public string Guid { get; set; } = null!;
@@ -136,5 +211,24 @@ public class Library_LibraryCardModel
     public string[] ShelvesTitles { get; set; } = [];
     public bool HasImage { get; set; } = false;
     public string OwnerUsername { get; set; } = null!;
+}
+public class Library_NewLibrayFormModel
+{
+    [StringLength(30, MinimumLength = 3)]
+    public string Title { get; set; } = null!;
+
+    [StringLength(200)]
+    public string? Decription { get; set; } = null;
+}
+public class Library_NewShelfFormModel
+{
+    [StringLength(30, MinimumLength = 3)]
+    public string Title { get; set; } = null!;
+
+    [StringLength(200)]
+    public string? Decription { get; set; } = null;
+
+    [StringLength(32)]
+    public string? LibraryGuid { get; set; } = null;
 }
 

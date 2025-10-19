@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations
 {
     [DbContext(typeof(Identity_DbContext))]
-    [Migration("20251011093134_Initial")]
+    [Migration("20251019061826_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -68,9 +68,6 @@ namespace AspNetCore.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
-
-                    b.Property<bool>("ActivityAllowed")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()

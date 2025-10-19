@@ -66,9 +66,6 @@ namespace AspNetCore.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<bool>("ActivityAllowed")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("longtext");

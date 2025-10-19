@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
-import { IdentityService } from '../services/identity-service';
+import { IdentityService } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
 
 @Component({

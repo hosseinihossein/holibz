@@ -3,3 +3,11 @@
 - new actions for CreateNewLibrary and CreateNewShelf
 - add Default Library and Shelf after validating user email
 - 
+- add date to identity user db model, document db model, shelf db model and library db model
+- add properties to identity user db model for allowing action like allowedToLogin and other identity specific activities
+ and also add allowedToCreateNewDocument, AllowedToCreateLibrary and shelf to document db model and ...
+- 
+
+
+
+- break the angular app to several sub apps for each service.

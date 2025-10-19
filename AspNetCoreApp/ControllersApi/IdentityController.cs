@@ -92,11 +92,12 @@ public class IdentityController : ControllerBase
 
                 if (user is not null)
                 {
-                    if (!user.ActivityAllowed)
+                    /*if (!user.AllowToLogin)
                     {
-                        ModelState.AddModelError("Inactive", "Your Account is inactive! Contact to admin.");
+                        ModelState.AddModelError("AllowToLogin", "Your are NOT allowed to login to your account! Contact to admin.");
                     }
-                    else if (!user.EmailConfirmed)
+                    else*/
+                    if (!user.EmailConfirmed)
                     {
                         ModelState.AddModelError("EmailValidation", "Email Not confirmed! Please click the validation link in your email first.");
                     }

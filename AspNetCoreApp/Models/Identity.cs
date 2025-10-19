@@ -20,7 +20,6 @@ public class Identity_UserDbModel : IdentityUser<int>
     public string UserGuid { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool DisplayEmailPublicly { get; set; } = false;
-    public bool ActivityAllowed { get; set; } = true;
     public byte _version { get; set; } = 0;
     [NotMapped]
     public int Version
@@ -28,6 +27,7 @@ public class Identity_UserDbModel : IdentityUser<int>
         get => _version;
         set => _version = value > 255 | value < 0 ? (byte)0 : (byte)value;
     }
+    //public bool AllowToLogin { get; set; } = true; // add to admin db
 }
 
 public class Identity_RoleDbModel : IdentityRole<int>
@@ -237,7 +237,7 @@ public class Identity_Process
             PasswordHash = user.PasswordHash!,
             Description = user.Description,
             DisplayEmailPublicly = user.DisplayEmailPublicly,
-            ActivityAllowed = user.ActivityAllowed,
+            //AllowToLogin = user.AllowToLogin,
             Roles = [.. await userManager.GetRolesAsync(user)],
         };
 
@@ -282,7 +282,7 @@ public class Identity_Process
                     PasswordHash = userSeedModel.PasswordHash,
                     Description = userSeedModel.Description,
                     DisplayEmailPublicly = userSeedModel.DisplayEmailPublicly,
-                    ActivityAllowed = userSeedModel.ActivityAllowed,
+                    //AllowToLogin = userSeedModel.AllowToLogin,
                 };
                 IdentityResult result = await userManager.CreateAsync(myUser);
                 if (!result.Succeeded)
@@ -308,7 +308,7 @@ public class Identity_UserSeedModel
     public string PasswordHash { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool DisplayEmailPublicly { get; set; } = false;
-    public bool ActivityAllowed { get; set; } = true;
+    //public bool AllowToLogin { get; set; } = true;
     public string[] Roles { get; set; } = [];
 }
 

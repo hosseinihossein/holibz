@@ -28,6 +28,7 @@ public class Identity_UserDbModel : IdentityUser<int>
         set => _version = value > 255 | value < 0 ? (byte)0 : (byte)value;
     }
     //public bool AllowToLogin { get; set; } = true; // add to admin db
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public class Identity_RoleDbModel : IdentityRole<int>
@@ -237,7 +238,7 @@ public class Identity_Process
             PasswordHash = user.PasswordHash!,
             Description = user.Description,
             DisplayEmailPublicly = user.DisplayEmailPublicly,
-            //AllowToLogin = user.AllowToLogin,
+            CreatedAt = user.CreatedAt,
             Roles = [.. await userManager.GetRolesAsync(user)],
         };
 
@@ -282,7 +283,7 @@ public class Identity_Process
                     PasswordHash = userSeedModel.PasswordHash,
                     Description = userSeedModel.Description,
                     DisplayEmailPublicly = userSeedModel.DisplayEmailPublicly,
-                    //AllowToLogin = userSeedModel.AllowToLogin,
+                    CreatedAt = userSeedModel.CreatedAt,
                 };
                 IdentityResult result = await userManager.CreateAsync(myUser);
                 if (!result.Succeeded)
@@ -308,7 +309,7 @@ public class Identity_UserSeedModel
     public string PasswordHash { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool DisplayEmailPublicly { get; set; } = false;
-    //public bool AllowToLogin { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
     public string[] Roles { get; set; } = [];
 }
 

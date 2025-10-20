@@ -2,7 +2,7 @@ import { Component, ElementRef, inject, signal, viewChild } from '@angular/core'
 import { MatButton } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { IdentityService, UserModel } from '../../services/identity-service';
+import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 
 @Component({
@@ -61,7 +61,7 @@ export class EditUserImage {
       this.identityService.submitUserImage(this.selectedFile()!).subscribe({
         next: res => {
           if(res.success){
-            let newUserModel = new UserModel(this.identityService.userModel());
+            let newUserModel = new UserProfileModel(this.identityService.userModel());
             newUserModel.imageAddress = res.userImageAddress;
             this.identityService.updateUserModel(newUserModel);
             this.displaySubmitSpinner.set(true);
@@ -95,7 +95,7 @@ export class EditUserImage {
     this.identityService.deleteUserImage().subscribe({
       next: res => {
         if(res.success){
-          let newUserModel = new UserModel(this.identityService.userModel());
+          let newUserModel = new UserProfileModel(this.identityService.userModel());
           newUserModel.imageAddress = null;
           this.identityService.updateUserModel(newUserModel);
           this.displaySubmitSpinner.set(true);

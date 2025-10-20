@@ -14,6 +14,7 @@ public class Library_LibraryDbModel
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
     public List<Library_ShelfDbModel> Shelves { get; set; } = [];
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_ShelfDbModel
 {
@@ -24,6 +25,7 @@ public class Library_ShelfDbModel
     public string? Description { get; set; } = null;
     public Library_LibraryDbModel Library { get; set; } = null!;
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_DocumentDbModel
 {
@@ -37,6 +39,7 @@ public class Library_DocumentDbModel
     public List<Library_ShelfDbModel> Shelves { get; set; } = [];
     public List<Library_ElementDbModel> Elements { get; set; } = [];
     public List<Library_TagDbModel> Tags { get; set; } = [];
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_RelatedVersionsDbModel
 {
@@ -54,6 +57,7 @@ public class Library_ElementDbModel
     public string? Title { get; set; } = null;
     public int Order { get; set; }
     public Library_DocumentDbModel Document { get; set; } = null!;
+    public DateTime LastEditedAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_TagDbModel
 {

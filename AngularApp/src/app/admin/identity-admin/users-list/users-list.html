@@ -1,0 +1,148 @@
+<mat-sidenav-container>
+
+    <mat-sidenav id="" mode="side" opened position="start" fixedInViewport fixedTopGap="56" fixedBottomGap="16">
+        <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;">
+            Filters:
+        </p>
+
+        <mat-form-field>
+            <mat-label>UserName</mat-label>
+            <input matInput [formControl]="usernameFilter()" placeholder="Any">
+        </mat-form-field>
+
+        <!--mat-form-field>
+            <mat-label>Roles</mat-label>
+            <mat-select [formControl]="rolesFilter()" multiple>
+                @for (role of rolesList(); track role) {
+                <mat-option [value]="role">{{role}}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field-->
+
+        <mat-form-field>
+            <mat-label>Email</mat-label>
+            <input matInput [formControl]="emailFilter()" placeholder="Any">
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Since</mat-label>
+            <input matInput [matDatepicker]="picker" [formControl]="createdFromFilter()">
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>To</mat-label>
+            <input matInput [matDatepicker]="picker" [formControl]="createdToFilter()">
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <label>Email validation:</label>
+        <mat-radio-group aria-label="Select an option" [formControl]="emailConfirmedFilter()">
+            <mat-radio-button [value]="true">Confirmed</mat-radio-button>
+            <mat-radio-button [value]="false">Not confirmed</mat-radio-button>
+            <mat-radio-button [value]="null">Any</mat-radio-button>
+        </mat-radio-group>
+
+        <label>Display email publicly:</label>
+        <mat-radio-group aria-label="Select an option" [formControl]="displayEmailPubliclyFilter()">
+            <mat-radio-button [value]="true">Display</mat-radio-button>
+            <mat-radio-button [value]="false">Don't display</mat-radio-button>
+            <mat-radio-button [value]="null">Any</mat-radio-button>
+        </mat-radio-group>
+
+        <button matButton="" #submitFilterBtn>Submit Filter</button>
+
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+        <!--div class="mat-elevation-z8"-->
+        <table mat-table [dataSource]="dataSource()" matSort matSortDisableClear matSortDirection="desc">
+
+            <!-- UserImage Column -->
+            <ng-container matColumnDef="UserImage">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> UserImage </th>
+                <td mat-cell *matCellDef="let userModel">
+                    @if(userModel.ImageAddress){
+                    <img [src]="userModel.ImageAddress" alt="user profile image" class="userProfileImage">
+                    }
+                    @else {
+                    <mat-icon style="font-size: 48px;width: 48px;height: 48px;">account_circle</mat-icon>
+                    }
+                </td>
+            </ng-container>
+
+            <!-- UserName Column -->
+            <ng-container matColumnDef="UserName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> UserName </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.UserName}} </td>
+            </ng-container>
+
+            <!-- UserGuid Column -->
+            <ng-container matColumnDef="UserGuid">
+                <th mat-header-cell *matHeaderCellDef> UserGuid </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.UserGuid}} </td>
+            </ng-container>
+
+            <!-- Email Column -->
+            <ng-container matColumnDef="Email">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Email </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.Email}} </td>
+            </ng-container>
+
+            <!-- EmailConfirmed Column -->
+            <ng-container matColumnDef="EmailConfirmed">
+                <th mat-header-cell *matHeaderCellDef> EmailConfirmed </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.EmailConfirmed}} </td>
+            </ng-container>
+
+            <!-- DisplayEmailPublicly Column -->
+            <ng-container matColumnDef="DisplayEmailPublicly">
+                <th mat-header-cell *matHeaderCellDef> DisplayEmailPublicly </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.DisplayEmailPublicly}} </td>
+            </ng-container>
+
+            <!-- CreatedAt Column -->
+            <ng-container matColumnDef="CreatedAt">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> CreatedAt </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.CreatedAt.toLocaleString()}} </td>
+            </ng-container>
+
+            <!-- Roles Column -->
+            <ng-container matColumnDef="Roles">
+                <th mat-header-cell *matHeaderCellDef> Roles </th>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.Roles.join(", ")}} </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="Actions">
+                <th mat-header-cell *matHeaderCellDef> Actions </th>
+                <td mat-cell *matCellDef="let userModel">
+                    <button matButton="" (click)="deleteUser(userModel.UserGuid)">Delete</button>
+                </td>
+            </ng-container>
+
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+            <tr mat-row *matRowDef="let userModel; columns: displayedColumns();"></tr>
+
+            <!-- Row shown when there is no matching data. -->
+            <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" colspan="4">No data matching the filter!</td>
+            </tr>
+        </table>
+
+        <mat-paginator [length]="resultsLength()" [pageSizeOptions]="[10, 20, 50, 100]"
+            aria-label="Select page of users results"></mat-paginator>
+
+        <!--/div-->
+        @if(displayLoadingSpinner()){
+        <div id="loading-spinner-layout">
+            <mat-spinner id="loading-spinner"></mat-spinner>
+        </div>
+        }
+    </mat-sidenav-content>
+
+</mat-sidenav-container>

@@ -14,7 +14,7 @@ export class IdentityService {
   private httpClient = inject(HttpClient);
 
   isAuthenticated = signal(false);
-  userModel = signal<UserModel | null>(null);
+  userModel = signal<UserProfileModel | null>(null);
   token = signal<string | null>(null);
 
   constructor(){
@@ -31,7 +31,7 @@ export class IdentityService {
   }
 
   login(formValue:Partial<{UsernameOrEmail: string; password: string; CfTurnstileResponse: string;}>){
-    return this.httpClient.post<{token:string, expiresInHours:string, user: UserModel}>(
+    return this.httpClient.post<{token:string, expiresInHours:string, user: UserProfileModel}>(
       "/api/Identity/login", 
       formValue
     ).pipe(
@@ -85,7 +85,7 @@ export class IdentityService {
     }
     return null;
   }
-  private getUserModelFromLocalStorage(): UserModel | null{
+  private getUserModelFromLocalStorage(): UserProfileModel | null{
     if(this.isAuthenticated()){
       return JSON.parse(localStorage.getItem(this.user_StorageKey)!);
     }
@@ -109,7 +109,7 @@ export class IdentityService {
   }
 
   requestUserModel(userGuid:string){
-    return this.httpClient.get<UserModel>(`/api/Identity/GetUserModel?userGuid=${userGuid}`);
+    return this.httpClient.get<UserProfileModel>(`/api/Identity/GetUserModel?userGuid=${userGuid}`);
   }
 
   getCsrf(){
@@ -149,7 +149,7 @@ export class IdentityService {
     );
   }
 
-  updateUserModel(newUserModel:UserModel){
+  updateUserModel(newUserModel:UserProfileModel){
     if(this.isAuthenticated()){
       this.userModel.set(newUserModel);
       localStorage.setItem(this.user_StorageKey, JSON.stringify(newUserModel));
@@ -180,9 +180,9 @@ export class IdentityService {
   email: string;
 }*/
 
-export class UserModel
+export class UserProfileModel
 {
-  constructor(userModel:Partial<UserModel>|null = null){
+  constructor(userModel:Partial<UserProfileModel>|null = null){
     this.guid = userModel?.guid ?? "";
     this.username = userModel?.username ?? "";
     this.description = userModel?.description ?? "";

@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { EditUserImage } from '../../dialogs/edit-user-image/edit-user-image';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
-import { IdentityService, UserModel } from '../../services/identity-service';
+import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-email';
@@ -32,7 +32,7 @@ export class Profile {
   dialog = inject(MatDialog);
   identityService = inject(IdentityService);
 
-  userModel = signal<UserModel|null>(null);
+  userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
   username = computed(()=>this.userModel()?.username);
   description = computed(()=>this.userModel()?.description);
@@ -79,7 +79,7 @@ export class Profile {
         this.identityService.submitUserName(result).subscribe({
           next: res=>{
             if(res.success){
-              let newUserModel = new UserModel(this.userModel());
+              let newUserModel = new UserProfileModel(this.userModel());
               newUserModel.username = result;
               this.identityService.updateUserModel(newUserModel);
             }
@@ -116,7 +116,7 @@ export class Profile {
         this.identityService.submitDescription(result).subscribe({
           next: res=>{
             if(res.success){
-              let newUserModel = new UserModel(this.userModel());
+              let newUserModel = new UserProfileModel(this.userModel());
               newUserModel.description = result;
               this.identityService.updateUserModel(newUserModel);
             }
@@ -151,7 +151,7 @@ export class Profile {
         this.identityService.submitDisplayEmailPublicly(displayPubliclyEditedTo).subscribe({
           next: res=>{
             if(res.success){
-              let newUserModel = new UserModel(this.userModel());
+              let newUserModel = new UserProfileModel(this.userModel());
               newUserModel.displayEmailPublicly = displayPubliclyEditedTo;
               this.identityService.updateUserModel(newUserModel);
             }

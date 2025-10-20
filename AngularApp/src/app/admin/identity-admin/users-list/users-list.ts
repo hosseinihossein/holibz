@@ -17,12 +17,13 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { catchError, fromEvent, merge, of, startWith, Subscription, switchMap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Result } from '../../../dialogs/result/result';
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'app-users-list',
-  imports: [MatTableModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, 
-  MatPaginatorModule, MatProgressSpinner, MatIcon, MatSidenavModule, ReactiveFormsModule, 
-  MatInputModule, MatDatepickerModule, MatRadioModule, MatSelectModule, MatSortModule],
+  imports: [MatTableModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule,
+    MatPaginatorModule, MatProgressSpinner, MatIcon, MatSidenavModule, ReactiveFormsModule,
+    MatInputModule, MatDatepickerModule, MatRadioModule, MatSelectModule, MatSortModule, RouterLink],
   templateUrl: './users-list.html',
   styleUrl: './users-list.css'
 })
@@ -31,7 +32,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
 
   dataSource = signal<UsersListModel[]>([]);
   displayedColumns = signal<string[]>(["UserImage","UserName","UserGuid","Email","EmailConfirmed",
-  "DisplayEmailPublicly","CreatedAt","Roles","Actions"]);
+  "DisplayEmailPublicly","CreatedAt","Actions"]);
   displayLoadingSpinner = signal<boolean>(true);
   resultsLength = signal<number>(0);
 
@@ -44,7 +45,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
   //rolesFilter = signal(new FormControl<string|null>(null,{validators:Validators.maxLength(256)}));
   //hasProfileImageFilter = signal(new FormControl<boolean|null>(null));// because database doesn't have any record for user images
 
-  rolesList = signal<string[]>([]);
+  //rolesList = signal<string[]>([]);
 
   readonly adminService = inject(AdminService);
   readonly dialog = inject(MatDialog);
@@ -54,11 +55,11 @@ export class UsersList implements AfterViewInit, OnDestroy {
   submitFilterButton = viewChild.required<ElementRef<HTMLButtonElement>>("submitFilterBtn");
 
   constructor(){
-    this.adminService.requestRolesList().subscribe({
+    /*this.adminService.requestRolesList().subscribe({
       next: res => {
         this.rolesList.set(res);
       },
-    });
+    });*/
   }
   ngAfterViewInit(): void {
     // If the user changes the sort order, reset back to the first page.
@@ -89,6 +90,12 @@ export class UsersList implements AfterViewInit, OnDestroy {
           /*if(this.rolesFilter().value?.trim()) {
             filterModel.roles = this.rolesFilter().value!.replaceAll(" ","").split(",");
           }*/
+
+          filterModel.page = this.paginator().pageIndex;
+          filterModel.pageSize = this.paginator().pageSize;
+
+          filterModel.sortProperty = this.sort().active;
+          filterModel.sortDirection = this.sort().direction;
 
           return this.adminService.requestUsersListForAdmin(filterModel).pipe(
             catchError(()=> of(null))
@@ -142,10 +149,10 @@ export class UsersListModel {
   ImageAddress:string|null = null;
   UserName:string = "";
   Email:string = "";
-  EmailConfirmed:boolean  = false;
+  EmailConfirmed:boolean = false;
   UserGuid:string = "";
   //Description:string|null = null;
   DisplayEmailPublicly:boolean = false;
   CreatedAt: Date|null = null;
-  Roles:string[] = [];
+  //Roles:string[] = [];
 }

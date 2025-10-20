@@ -30,18 +30,18 @@ export class AdminService {
     }
 
     return this.httpClient.get<UsersListResponseModel>(
-      "/api/Admin/UsersList", {params:httpParams}
+      "/api/Identity/UsersList", {params:httpParams}
     );
   }
 
   requestRolesList(){
-    return this.httpClient.get<string[]>("/api/Admin/RolesList");
+    return this.httpClient.get<string[]>("/api/Identity/RolesList");
   }
 
   requestDeleteUser(userGuid:string){
     let httpParams = new HttpParams().set("userGuid", userGuid);
     return this.httpClient.delete<{success:boolean, username:string}>(
-      "/api/Admin/DeleteUser", {params: httpParams}
+      "/api/Identity/DeleteUser", {params: httpParams}
     );
   }
 
@@ -54,7 +54,10 @@ export class UsersListFilterModel{
   createdTo?:Date;
   emailConfirmed?:boolean;
   displayEmailPublicly?:boolean;
-  //roles?:string[]
+  page?: number;
+  pageSize?: number;
+  sortProperty?: string;
+  sortDirection?: string;
 }
 export class UsersListResponseModel{
   usersList: UsersListModel[] = [];

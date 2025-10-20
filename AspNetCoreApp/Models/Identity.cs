@@ -15,6 +15,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AspNetCoreApp.Models;
 
+//*********************************** IdentityDb ************************************
+public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
+{
+    public Identity_DbContext(DbContextOptions<Identity_DbContext> options) : base(options) { }
+}
+
 public class Identity_UserDbModel : IdentityUser<int>
 {
     public string UserGuid { get; set; } = string.Empty;
@@ -38,6 +44,7 @@ public class Identity_RoleDbModel : IdentityRole<int>
     public string Description { get; set; } = string.Empty;
 }
 
+//*********************************** data models ************************************
 public class Identity_LoginFormModel
 {
     public string? ReturnUrl { get; set; } = string.Empty;
@@ -107,14 +114,46 @@ public class Identity_ResetPasswordFormModel
     public string RepeatNewPassword { get; set; } = string.Empty;
 }
 
-
-
-
-/*********************************** IdentityDb ************************************/
-public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
+public class UsersListFilterModel
 {
-    public Identity_DbContext(DbContextOptions<Identity_DbContext> options) : base(options) { }
+    [StringLength(60)]
+    public string? UserName { get; set; } = null;
+
+    [StringLength(60)]
+    public string? Email { get; set; } = null;
+
+    public bool? EmailConfirmed { get; set; } = null;
+
+    public bool? DisplayEmailPublicly { get; set; } = null;
+
+    [StringLength(60)]
+    public DateTime? CreatedFrom { get; set; } = null;
+
+    [StringLength(60)]
+    public DateTime? CreatedTo { get; set; } = null;
+
+    public int Page { get; set; } = 0;
+
+    public int PageSize { get; set; } = 50;
+
+    [StringLength(48)]
+    public string? SortProperty { get; set; } = null;
+
+    [StringLength(4)]
+    public string? SortDirection { get; set; } = null;
 }
+
+public class UsersListModel
+{
+    public string ImageAddress { get; set; } = null!;
+    public string UserName { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public bool EmailConfirmed { get; set; }
+    public string UserGuid { get; set; } = null!;
+    public bool DisplayEmailPublicly { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
 
 
 /******************************** Custom Token Provider *******************************/

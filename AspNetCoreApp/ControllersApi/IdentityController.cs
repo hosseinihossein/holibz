@@ -624,4 +624,69 @@ public class IdentityController : ControllerBase
     }
 
 
+
+
+
+    //********************************* admin ********************************
+    [HttpGet]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Identity_Admins")]
+    public async Task<IActionResult> UsersList([FromBody] UsersListFilterModel filter)
+    {
+        var allFilteredUsers = await userManager.Users
+        .Where(user =>
+            (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
+            (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+            (filter.CreatedFrom == null || user.CreatedAt >= filter.CreatedFrom) &&
+            (filter.CreatedTo == null || user.CreatedAt <= filter.CreatedTo) &&
+            (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
+            (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
+        )
+        .Select(user => new
+        {
+            user.UserName,
+            user.UserGuid,
+            user.Email,
+            user.EmailConfirmed,
+            user.DisplayEmailPublicly,
+            user.CreatedAt,
+            user.Version,
+        })
+        .ToListAsync();
+
+        List<UsersListModel> allUsersListModels = [];
+        foreach (var userInfo in allFilteredUsers)
+        {
+            UsersListModel usersListModel = new()
+            {
+                UserGuid = userInfo.UserGuid,
+                UserName = userInfo.UserName!,
+                Email = userInfo.Email!,
+                EmailConfirmed = userInfo.EmailConfirmed,
+                DisplayEmailPublicly = userInfo.DisplayEmailPublicly,
+                CreatedAt = userInfo.CreatedAt,
+                ImageAddress = $"/api/Identity/UserImage?userGuid=${userInfo.UserGuid}&v=${userInfo.Version}",
+            };
+            allUsersListModels.Add(usersListModel);
+        }
+
+        UsersListModel[] selectedUsersListModels;
+        //if (filter.SortProperty == "CreatedAt")// default sort for CreatedAt property
+        if (filter.SortDirection == "asc")
+        {
+            selectedUsersListModels = allUsersListModels.OrderBy(user => user.CreatedAt)
+            .Skip(filter.Page * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToArray();
+        }
+        else
+        {
+            selectedUsersListModels = allUsersListModels.OrderBy(user => user.CreatedAt)
+            .Skip(filter.Page * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToArray();
+        }
+
+        return Ok(new { usersList = selectedUsersListModels, totalResultsLength = allFilteredUsers.Count });
+    }
+
 }

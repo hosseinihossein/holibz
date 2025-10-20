@@ -8,6 +8,12 @@
         <mat-form-field>
             <mat-label>UserName</mat-label>
             <input matInput [formControl]="usernameFilter()" placeholder="Any">
+            @if(usernameFilter().invalid && (usernameFilter().dirty || usernameFilter().touched) &&
+            usernameFilter().hasError("maxlength")){
+            <mat-error>
+                username must be less than 60 characters long!
+            </mat-error>
+            }
         </mat-form-field>
 
         <!--mat-form-field>
@@ -22,6 +28,12 @@
         <mat-form-field>
             <mat-label>Email</mat-label>
             <input matInput [formControl]="emailFilter()" placeholder="Any">
+            @if(emailFilter().invalid && (emailFilter().dirty || emailFilter().touched) &&
+            emailFilter().hasError("maxlength")){
+            <mat-error>
+                email must be less than 60 characters long!
+            </mat-error>
+            }
         </mat-form-field>
 
         <mat-form-field>
@@ -30,6 +42,12 @@
             <mat-hint>MM/DD/YYYY</mat-hint>
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
+            @if(createdFromFilter().invalid && (createdFromFilter().dirty || createdFromFilter().touched) &&
+            createdFromFilter().hasError("maxlength")){
+            <mat-error>
+                date must be less than 60 characters long!
+            </mat-error>
+            }
         </mat-form-field>
         <mat-form-field>
             <mat-label>To</mat-label>
@@ -37,6 +55,12 @@
             <mat-hint>MM/DD/YYYY</mat-hint>
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
+            @if(createdToFilter().invalid && (createdToFilter().dirty || createdToFilter().touched) &&
+            createdToFilter().hasError("maxlength")){
+            <mat-error>
+                date must be less than 60 characters long!
+            </mat-error>
+            }
         </mat-form-field>
 
         <label>Email validation:</label>
@@ -63,7 +87,7 @@
 
             <!-- UserImage Column -->
             <ng-container matColumnDef="UserImage">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> UserImage </th>
+                <th mat-header-cell *matHeaderCellDef> UserImage </th>
                 <td mat-cell *matCellDef="let userModel">
                     @if(userModel.ImageAddress){
                     <img [src]="userModel.ImageAddress" alt="user profile image" class="userProfileImage">
@@ -76,7 +100,7 @@
 
             <!-- UserName Column -->
             <ng-container matColumnDef="UserName">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> UserName </th>
+                <th mat-header-cell *matHeaderCellDef> UserName </th>
                 <td mat-cell *matCellDef="let userModel"> {{userModel.UserName}} </td>
             </ng-container>
 
@@ -88,7 +112,7 @@
 
             <!-- Email Column -->
             <ng-container matColumnDef="Email">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Email </th>
+                <th mat-header-cell *matHeaderCellDef> Email </th>
                 <td mat-cell *matCellDef="let userModel"> {{userModel.Email}} </td>
             </ng-container>
 
@@ -111,16 +135,17 @@
             </ng-container>
 
             <!-- Roles Column -->
-            <ng-container matColumnDef="Roles">
+            <!--ng-container matColumnDef="Roles">
                 <th mat-header-cell *matHeaderCellDef> Roles </th>
                 <td mat-cell *matCellDef="let userModel"> {{userModel.Roles.join(", ")}} </td>
-            </ng-container>
+            </ng-container-->
 
             <!-- Actions Column -->
             <ng-container matColumnDef="Actions">
                 <th mat-header-cell *matHeaderCellDef> Actions </th>
                 <td mat-cell *matCellDef="let userModel">
                     <button matButton="" (click)="deleteUser(userModel.UserGuid)">Delete</button>
+                    <a matButton="" [routerLink]="['profile']">Profile</a>
                 </td>
             </ng-container>
 

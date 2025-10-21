@@ -18,12 +18,16 @@ import { catchError, fromEvent, merge, of, startWith, Subscription, switchMap } 
 import { MatDialog } from '@angular/material/dialog';
 import { Result } from '../../../dialogs/result/result';
 import { RouterLink } from "@angular/router";
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-users-list',
+  providers:[provideNativeDateAdapter()],
   imports: [MatTableModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule,
     MatPaginatorModule, MatProgressSpinner, MatIcon, MatSidenavModule, ReactiveFormsModule,
-    MatInputModule, MatDatepickerModule, MatRadioModule, MatSelectModule, MatSortModule, RouterLink],
+    MatInputModule, MatDatepickerModule, MatRadioModule, MatSelectModule, MatSortModule, RouterLink,
+    DatePipe],
   templateUrl: './users-list.html',
   styleUrl: './users-list.css'
 })
@@ -52,7 +56,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
 
   paginator = viewChild.required(MatPaginator);
   sort = viewChild.required(MatSort);
-  submitFilterButton = viewChild.required<ElementRef<HTMLButtonElement>>("submitFilterBtn");
+  submitFilterButton = viewChild.required<MatButton>("submitFilterBtn");
 
   constructor(){
     /*this.adminService.requestRolesList().subscribe({
@@ -70,7 +74,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
     this.subscription().add(
       merge(
         this.sort().sortChange, this.paginator().page, 
-        fromEvent(this.submitFilterButton().nativeElement, "click")
+        fromEvent(this.submitFilterButton()._elementRef.nativeElement, "click")
       ).pipe(
         startWith({}),
         switchMap(() => {
@@ -97,13 +101,14 @@ export class UsersList implements AfterViewInit, OnDestroy {
           filterModel.sortProperty = this.sort().active;
           filterModel.sortDirection = this.sort().direction;
 
-          return this.adminService.requestUsersListForAdmin(filterModel).pipe(
+          return this.adminService.requestUsersListForAdmin(filterModel);/*.pipe(
             catchError(()=> of(null))
-          );
+          );*/
         })
       ).subscribe({
         next: res => {
           this.displayLoadingSpinner.set(false);
+          //console.log(res);
           if(res === null){
             this.dataSource.set([]);
           }
@@ -111,6 +116,11 @@ export class UsersList implements AfterViewInit, OnDestroy {
             this.dataSource.set(res.usersList);
             this.resultsLength.set(res.totalResultsLength);
           }
+        },
+        error: err => {
+          this.displayLoadingSpinner.set(false);
+          this.dataSource.set([]);
+          throw(err);
         },
       })
     );
@@ -138,7 +148,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
             }
           });
           dialogRef.afterClosed().subscribe(result=>{
-            this.submitFilterButton().nativeElement.click();
+            this.submitFilterButton()._elementRef.nativeElement.click();
           });
         }
       },

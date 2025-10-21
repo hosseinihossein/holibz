@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Antiforgery;
@@ -407,6 +408,23 @@ public class IdentityController : ControllerBase
 
         return null;
     }
+    private string? GetUserImageAddressWithVersion(string userGuid, int version)
+    {
+        /*Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+        if (user is null)
+        {
+            return null;
+        }*/
+
+        string userImagePath =
+        Path.Combine(userImageDirectoryInfo.FullName, userGuid);
+        if (System.IO.File.Exists(userImagePath))
+        {
+            return $"/api/Identity/UserImage?userGuid={userGuid}&v={version}";
+        }
+
+        return null;
+    }
 
     [HttpGet]
     public async Task<IActionResult> UserImage([FromQuery][StringLength(32)] string userGuid)
@@ -629,64 +647,149 @@ public class IdentityController : ControllerBase
 
     //********************************* admin ********************************
     [HttpGet]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Identity_Admins")]
-    public async Task<IActionResult> UsersList([FromBody] UsersListFilterModel filter)
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Identity_Admins")]
+    public async Task<IActionResult> UsersList([FromQuery] UsersListFilterModel? filter)
     {
-        var allFilteredUsers = await userManager.Users
-        .Where(user =>
-            (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
-            (filter.Email == null || user.Email!.Contains(filter.Email)) &&
-            (filter.CreatedFrom == null || user.CreatedAt >= filter.CreatedFrom) &&
-            (filter.CreatedTo == null || user.CreatedAt <= filter.CreatedTo) &&
-            (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
-            (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
-        )
-        .Select(user => new
-        {
-            user.UserName,
-            user.UserGuid,
-            user.Email,
-            user.EmailConfirmed,
-            user.DisplayEmailPublicly,
-            user.CreatedAt,
-            user.Version,
-        })
-        .ToListAsync();
+        filter ??= new();
 
-        List<UsersListModel> allUsersListModels = [];
-        foreach (var userInfo in allFilteredUsers)
+        DateTime? createdTo = null;
+        if (filter.CreatedTo is not null)
         {
-            UsersListModel usersListModel = new()
+            try
             {
-                UserGuid = userInfo.UserGuid,
-                UserName = userInfo.UserName!,
-                Email = userInfo.Email!,
-                EmailConfirmed = userInfo.EmailConfirmed,
-                DisplayEmailPublicly = userInfo.DisplayEmailPublicly,
-                CreatedAt = userInfo.CreatedAt,
-                ImageAddress = $"/api/Identity/UserImage?userGuid=${userInfo.UserGuid}&v=${userInfo.Version}",
-            };
-            allUsersListModels.Add(usersListModel);
+                createdTo = JsonSerializer.Deserialize<DateTime>(filter.CreatedTo);
+            }
+            catch
+            {
+                createdTo = null;
+            }
+        }
+        DateTime? createdFrom = null;
+        if (filter.CreatedFrom is not null)
+        {
+            try
+            {
+                createdFrom = JsonSerializer.Deserialize<DateTime>(filter.CreatedFrom);
+            }
+            catch
+            {
+                createdFrom = null;
+            }
         }
 
-        UsersListModel[] selectedUsersListModels;
-        //if (filter.SortProperty == "CreatedAt")// default sort for CreatedAt property
+        //Console.WriteLine($"\n***** filter json: {JsonSerializer.Serialize(filter)}");
+
+        List<UsersListModel> allFilteredUsers = [];
         if (filter.SortDirection == "asc")
         {
-            selectedUsersListModels = allUsersListModels.OrderBy(user => user.CreatedAt)
-            .Skip(filter.Page * filter.PageSize)
-            .Take(filter.PageSize)
-            .ToArray();
+            if (filter.SortProperty == "CreatedAt")
+            {
+                allFilteredUsers = await userManager.Users
+                .Where(user =>
+                    (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
+                    (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                    (createdFrom == null || user.CreatedAt >= createdFrom) &&
+                    (createdTo == null || user.CreatedAt <= createdTo) &&
+                    (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
+                    (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
+                )
+                .OrderBy(user => user.CreatedAt)
+                .Skip(filter.Page!.Value * filter.PageSize!.Value)
+                .Take(filter.PageSize!.Value)
+                .Select(user => new UsersListModel()
+                {
+                    CreatedAt = user.CreatedAt,
+                    UserName = user.UserName!,
+                    UserGuid = user.UserGuid,
+                    Email = user.Email!,
+                    EmailConfirmed = user.EmailConfirmed,
+                    DisplayEmailPublicly = user.DisplayEmailPublicly,
+                    //ImageAddress = await GetUserImageAddress(user.UserGuid),
+                    Version = user.Version,
+                })
+                .ToListAsync();
+            }
+            //return Ok(new { usersList = allFilteredUsers.ToArray(), totalResultsLength = allFilteredUsersLength });
         }
         else
         {
-            selectedUsersListModels = allUsersListModels.OrderBy(user => user.CreatedAt)
-            .Skip(filter.Page * filter.PageSize)
-            .Take(filter.PageSize)
-            .ToArray();
+            if (filter.SortProperty == "CreatedAt")
+            {
+                allFilteredUsers = await userManager.Users
+                .Where(user =>
+                    (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
+                    (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                    (createdFrom == null || user.CreatedAt >= createdFrom) &&
+                    (createdTo == null || user.CreatedAt <= createdTo) &&
+                    (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
+                    (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
+                )
+                .OrderByDescending(user => user.CreatedAt)
+                .Skip(filter.Page!.Value * filter.PageSize!.Value)
+                .Take(filter.PageSize!.Value)
+                .Select(user => new UsersListModel()
+                {
+                    CreatedAt = user.CreatedAt,
+                    UserName = user.UserName!,
+                    UserGuid = user.UserGuid,
+                    Email = user.Email!,
+                    EmailConfirmed = user.EmailConfirmed,
+                    DisplayEmailPublicly = user.DisplayEmailPublicly,
+                    //ImageAddress = $"/api/Identity/UserImage?userGuid=${user.UserGuid}&v=${user.Version}",
+                    Version = user.Version,
+                })
+                .ToListAsync();
+            }
+            else//descending order by CreatedAt as fallback
+            {
+                allFilteredUsers = await userManager.Users
+                .Where(user =>
+                    (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
+                    (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                    (createdFrom == null || user.CreatedAt >= createdFrom) &&
+                    (createdTo == null || user.CreatedAt <= createdTo) &&
+                    (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
+                    (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
+                )
+                .OrderByDescending(user => user.CreatedAt)
+                .Skip(filter.Page!.Value * filter.PageSize!.Value)
+                .Take(filter.PageSize!.Value)
+                .Select(user => new UsersListModel()
+                {
+                    CreatedAt = user.CreatedAt,
+                    UserName = user.UserName!,
+                    UserGuid = user.UserGuid,
+                    Email = user.Email!,
+                    EmailConfirmed = user.EmailConfirmed,
+                    DisplayEmailPublicly = user.DisplayEmailPublicly,
+                    //ImageAddress = $"/api/Identity/UserImage?userGuid=${user.UserGuid}&v=${user.Version}",
+                    Version = user.Version,
+                })
+                .ToListAsync();
+            }
         }
 
-        return Ok(new { usersList = selectedUsersListModels, totalResultsLength = allFilteredUsers.Count });
+        int allFilteredUsersLength = allFilteredUsers.Count;
+        if (allFilteredUsers.Count == filter.PageSize)
+        {
+            allFilteredUsersLength = await userManager.Users
+            .Where(user =>
+                (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
+                (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                (createdFrom == null || user.CreatedAt >= createdFrom) &&
+                (createdTo == null || user.CreatedAt <= createdTo) &&
+                (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
+                (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
+            )
+            .CountAsync();
+        }
+
+        foreach (UsersListModel userListModel in allFilteredUsers)
+        {
+            userListModel.ImageAddress = GetUserImageAddressWithVersion(userListModel.UserGuid, userListModel.Version);
+        }
+
+        return Ok(new { usersList = allFilteredUsers.ToArray(), totalResultsLength = allFilteredUsersLength });
     }
 
 }

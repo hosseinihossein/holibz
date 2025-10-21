@@ -38,10 +38,10 @@
 
         <mat-form-field>
             <mat-label>Since</mat-label>
-            <input matInput [matDatepicker]="picker" [formControl]="createdFromFilter()">
+            <input matInput [matDatepicker]="sincePicker" [formControl]="createdFromFilter()">
             <mat-hint>MM/DD/YYYY</mat-hint>
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
+            <mat-datepicker-toggle matIconSuffix [for]="sincePicker"></mat-datepicker-toggle>
+            <mat-datepicker #sincePicker></mat-datepicker>
             @if(createdFromFilter().invalid && (createdFromFilter().dirty || createdFromFilter().touched) &&
             createdFromFilter().hasError("maxlength")){
             <mat-error>
@@ -51,10 +51,10 @@
         </mat-form-field>
         <mat-form-field>
             <mat-label>To</mat-label>
-            <input matInput [matDatepicker]="picker" [formControl]="createdToFilter()">
+            <input matInput [matDatepicker]="toPicker" [formControl]="createdToFilter()">
             <mat-hint>MM/DD/YYYY</mat-hint>
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
+            <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+            <mat-datepicker #toPicker></mat-datepicker>
             @if(createdToFilter().invalid && (createdToFilter().dirty || createdToFilter().touched) &&
             createdToFilter().hasError("maxlength")){
             <mat-error>
@@ -89,8 +89,8 @@
             <ng-container matColumnDef="UserImage">
                 <th mat-header-cell *matHeaderCellDef> UserImage </th>
                 <td mat-cell *matCellDef="let userModel">
-                    @if(userModel.ImageAddress){
-                    <img [src]="userModel.ImageAddress" alt="user profile image" class="userProfileImage">
+                    @if(userModel.imageAddress){
+                    <img [src]="userModel.imageAddress" alt="user profile image" class="userProfileImage">
                     }
                     @else {
                     <mat-icon style="font-size: 48px;width: 48px;height: 48px;">account_circle</mat-icon>
@@ -101,37 +101,37 @@
             <!-- UserName Column -->
             <ng-container matColumnDef="UserName">
                 <th mat-header-cell *matHeaderCellDef> UserName </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.UserName}} </td>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.userName}} </td>
             </ng-container>
 
             <!-- UserGuid Column -->
             <ng-container matColumnDef="UserGuid">
                 <th mat-header-cell *matHeaderCellDef> UserGuid </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.UserGuid}} </td>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.userGuid}} </td>
             </ng-container>
 
             <!-- Email Column -->
             <ng-container matColumnDef="Email">
                 <th mat-header-cell *matHeaderCellDef> Email </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.Email}} </td>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.email}} </td>
             </ng-container>
 
             <!-- EmailConfirmed Column -->
             <ng-container matColumnDef="EmailConfirmed">
                 <th mat-header-cell *matHeaderCellDef> EmailConfirmed </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.EmailConfirmed}} </td>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.emailConfirmed}} </td>
             </ng-container>
 
             <!-- DisplayEmailPublicly Column -->
             <ng-container matColumnDef="DisplayEmailPublicly">
                 <th mat-header-cell *matHeaderCellDef> DisplayEmailPublicly </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.DisplayEmailPublicly}} </td>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.displayEmailPublicly}} </td>
             </ng-container>
 
             <!-- CreatedAt Column -->
             <ng-container matColumnDef="CreatedAt">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> CreatedAt </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.CreatedAt.toLocaleString()}} </td>
+                <td mat-cell *matCellDef="let userModel"> {{userModel.createdAt | date}} </td>
             </ng-container>
 
             <!-- Roles Column -->
@@ -144,7 +144,7 @@
             <ng-container matColumnDef="Actions">
                 <th mat-header-cell *matHeaderCellDef> Actions </th>
                 <td mat-cell *matCellDef="let userModel">
-                    <button matButton="" (click)="deleteUser(userModel.UserGuid)">Delete</button>
+                    <button matButton="" (click)="deleteUser(userModel.userGuid)">Delete</button>
                     <a matButton="" [routerLink]="['profile']">Profile</a>
                 </td>
             </ng-container>

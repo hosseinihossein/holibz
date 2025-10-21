@@ -48,6 +48,7 @@ namespace AspNetCore.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DisplayEmailPublicly = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     _version = table.Column<byte>(type: "tinyint unsigned", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)

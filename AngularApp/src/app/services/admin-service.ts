@@ -9,25 +9,40 @@ export class AdminService {
   readonly httpClient = inject(HttpClient);
 
   requestUsersListForAdmin(filterModel:UsersListFilterModel){
+    //console.log("filterModel: ",JSON.stringify(filterModel));
     let httpParams = new HttpParams();
     if(filterModel.username){
-      httpParams.set("UserName", filterModel.username);
+      httpParams=httpParams.set("UserName", filterModel.username);
     }
     if(filterModel.email){
-      httpParams.set("Email", filterModel.email);
+      httpParams=httpParams.set("Email", filterModel.email);
     }
-    if(filterModel.emailConfirmed){
-      httpParams.set("EmailConfirmed", filterModel.emailConfirmed);
+    if(filterModel.emailConfirmed || filterModel.emailConfirmed === false){
+      httpParams=httpParams.set("EmailConfirmed", filterModel.emailConfirmed);
     }
-    if(filterModel.displayEmailPublicly){
-      httpParams.set("DisplayEmailPublicly", filterModel.displayEmailPublicly);
+    if(filterModel.displayEmailPublicly || filterModel.displayEmailPublicly === false){
+      httpParams=httpParams.set("DisplayEmailPublicly", filterModel.displayEmailPublicly);
     }
     if(filterModel.createdFrom){
-      httpParams.set("CreatedFrom", JSON.stringify(filterModel.createdFrom));
+      httpParams=httpParams.set("CreatedFrom", JSON.stringify(filterModel.createdFrom));
     }
     if(filterModel.createdTo){
-      httpParams.set("CreatedTo", JSON.stringify(filterModel.createdTo));
+      httpParams=httpParams.set("CreatedTo", JSON.stringify(filterModel.createdTo));
     }
+    if(filterModel.page || filterModel.page === 0){
+      httpParams=httpParams.set("Page", filterModel.page);
+    }
+    if(filterModel.pageSize){
+      httpParams=httpParams.set("PageSize", filterModel.pageSize);
+    }
+    if(filterModel.sortDirection){
+      httpParams=httpParams.set("SortDirection", filterModel.sortDirection);
+    }
+    if(filterModel.sortProperty){
+      httpParams=httpParams.set("SortProperty", filterModel.sortProperty);
+    }
+
+    //console.log("httpParams: ",JSON.stringify(httpParams));
 
     return this.httpClient.get<UsersListResponseModel>(
       "/api/Identity/UsersList", {params:httpParams}

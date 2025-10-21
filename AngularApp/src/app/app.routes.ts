@@ -3,6 +3,7 @@ import { Home } from './home/home';
 import { libraryRoutes } from './library/library.routes';
 import { userAccountRoutes } from './user-account/user-account.routes';
 import { inject } from '@angular/core';
+import { adminRoutes } from './admin/admin.routes';
 
 export const routes: Routes = [
     {path: "", component: Home},
@@ -10,4 +11,5 @@ export const routes: Routes = [
     //{path: "angular", redirectTo: ""},
     ...userAccountRoutes,
     ...libraryRoutes,
+    ...adminRoutes
 ];

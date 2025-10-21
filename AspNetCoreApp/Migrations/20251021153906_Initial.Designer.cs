@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations
 {
     [DbContext(typeof(Identity_DbContext))]
-    [Migration("20251019061826_Initial")]
+    [Migration("20251021153906_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -72,6 +72,9 @@ namespace AspNetCore.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .HasColumnType("longtext");

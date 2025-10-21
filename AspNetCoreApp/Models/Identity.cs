@@ -127,14 +127,14 @@ public class UsersListFilterModel
     public bool? DisplayEmailPublicly { get; set; } = null;
 
     [StringLength(60)]
-    public DateTime? CreatedFrom { get; set; } = null;
+    public string? CreatedFrom { get; set; } = null;
 
     [StringLength(60)]
-    public DateTime? CreatedTo { get; set; } = null;
+    public string? CreatedTo { get; set; } = null;
 
-    public int Page { get; set; } = 0;
+    public int? Page { get; set; } = 0;
 
-    public int PageSize { get; set; } = 50;
+    public int? PageSize { get; set; } = 50;
 
     [StringLength(48)]
     public string? SortProperty { get; set; } = null;
@@ -145,7 +145,8 @@ public class UsersListFilterModel
 
 public class UsersListModel
 {
-    public string ImageAddress { get; set; } = null!;
+    public string? ImageAddress { get; set; } = null;
+    public int Version { get; set; } = 0;
     public string UserName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public bool EmailConfirmed { get; set; }

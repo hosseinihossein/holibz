@@ -183,17 +183,19 @@ export class IdentityService {
 export class UserProfileModel
 {
   constructor(userModel:Partial<UserProfileModel>|null = null){
-    this.guid = userModel?.guid ?? "";
-    this.username = userModel?.username ?? "";
-    this.description = userModel?.description ?? "";
-    this.imageAddress = userModel?.imageAddress ?? null;
-    this.email = userModel?.email ?? "";
-    this.displayEmailPublicly = userModel?.displayEmailPublicly ?? false;
+    this.guid = userModel?.guid;
+    this.username = userModel?.username;
+    this.description = userModel?.description;
+    this.imageAddress = userModel?.imageAddress;
+    this.email = userModel?.email;
+    this.displayEmailPublicly = userModel?.displayEmailPublicly;
+    this.roles = userModel?.roles;
   }
-  guid: string = "";
-  username: string = "";
-  description: string = "";
-  imageAddress: string|null = null;
-  email: string = "";
-  displayEmailPublicly: boolean = false;
+  guid?: string;
+  username?: string;
+  description?: string;
+  imageAddress?: string|null;
+  email?: string;
+  displayEmailPublicly?: boolean;
+  roles?: string[];
 }

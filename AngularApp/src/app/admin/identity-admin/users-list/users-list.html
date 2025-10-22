@@ -172,7 +172,8 @@
                         (click)="deleteUser(userModel.userGuid, userModel.userName)" matTooltip="Delete User">
                         <mat-icon>delete</mat-icon>
                     </button>
-                    <a matMiniFab [routerLink]="['profile']" matTooltip="User Profile" style="margin: 0 4px;">
+                    <a matMiniFab [routerLink]="['/profile', userModel.userGuid]" matTooltip="User Profile"
+                        style="margin: 0 4px;">
                         <mat-icon>id_card</mat-icon>
                     </a>
                 </td>

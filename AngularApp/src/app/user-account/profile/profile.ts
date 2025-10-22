@@ -16,6 +16,7 @@ import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
 import { Result, ResultDialogInputData } from '../../dialogs/result/result';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
@@ -26,11 +27,13 @@ import { Result, ResultDialogInputData } from '../../dialogs/result/result';
   styleUrl: './profile.css'
 })
 export class Profile {
-  userGuid = input<string|null>(null);
+  userGuid = signal<string|null>(null);
+  myProfile = signal(false);
 
   singletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
   identityService = inject(IdentityService);
+  activatedRoute = inject(ActivatedRoute);
 
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
@@ -42,7 +45,16 @@ export class Profile {
   errorResponse = signal("");
 
   constructor(){
-    if(!this.userGuid()){
+    let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
+    if(userGuidRouteParam){
+      this.userGuid.set(userGuidRouteParam);
+    }
+
+    if(!this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid){
+      this.myProfile.set(true);
+    }
+
+    if(this.myProfile()){
       this.identityService.getCsrf().subscribe({
         next: () => {
           console.log("Csrf received successfully.");
@@ -54,8 +66,9 @@ export class Profile {
         },
       });
     }
+    
     effect(()=>{
-      if(this.userGuid()){
+      if(!this.myProfile()){
         this.identityService.requestUserModel(this.userGuid()!).subscribe({
           next: res=>this.userModel.set(res),
         });

@@ -1,6 +1,6 @@
 <button matIconButton [matMenuTriggerFor]="menu()" [style]="imgSrc() ? imgBtn : ''">
     @if(imgSrc()){
-    <img [ngSrc]="imgSrc()!" width="50" height="50" alt="user image">
+    <img [ngSrc]="imgSrc()!" priority width="50" height="50" alt="user image">
     }
     @else if(identityService.isAuthenticated()){
     <mat-icon>account_circle</mat-icon>

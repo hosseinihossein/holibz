@@ -2,13 +2,16 @@ mat-sidenav{
     width: 240px;
     border-right: 1px solid var(--mat-sys-outline-variant);
     border-radius: 0;
-    padding-right: 10px;
-    padding-top: 10px;
+    padding: 8px;
 }
 @media screen and (max-width:700px) {
     mat-sidenav{
         display: none;
     }
+}
+
+div.sidenav-option-container{
+    margin: 8px;
 }
 
 /*mat-sidenav-content{

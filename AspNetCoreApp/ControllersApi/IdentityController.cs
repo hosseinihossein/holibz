@@ -124,6 +124,7 @@ public class IdentityController : ControllerBase
                                     imageAddress = await GetUserImageAddress(user.UserGuid),
                                     email = user.Email,
                                     displayEmailPublicly = user.DisplayEmailPublicly,
+                                    roles = (await userManager.GetRolesAsync(user)).ToArray(),
                                 },
                             });
                         }
@@ -155,14 +156,27 @@ public class IdentityController : ControllerBase
                 ModelState.AddModelError("user", "the specified user Not found!");
                 return BadRequest(ModelState);
             }
-            return Ok(new
+            if (user.DisplayEmailPublicly)
             {
-                guid = user.UserGuid,
-                username = user.UserName,
-                description = user.Description,
-                imageAddress = await GetUserImageAddress(user.UserGuid),
-                email = user.Email,
-            });
+                return Ok(new
+                {
+                    guid = user.UserGuid,
+                    username = user.UserName,
+                    description = user.Description,
+                    imageAddress = await GetUserImageAddress(user.UserGuid),
+                    email = user.Email,
+                });
+            }
+            else
+            {
+                return Ok(new
+                {
+                    guid = user.UserGuid,
+                    username = user.UserName,
+                    description = user.Description,
+                    imageAddress = await GetUserImageAddress(user.UserGuid),
+                });
+            }
         }
         return BadRequest(ModelState);
     }
@@ -647,7 +661,7 @@ public class IdentityController : ControllerBase
 
     //********************************* admin ********************************
     [HttpGet]
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Identity_Admins")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Identity_Admins")]
     public async Task<IActionResult> UsersList([FromQuery] UsersListFilterModel? filter)
     {
         filter ??= new();

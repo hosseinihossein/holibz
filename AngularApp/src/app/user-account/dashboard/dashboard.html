@@ -4,7 +4,20 @@
         <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;">
             Sections:
         </p>
-        <button matButton (click)="activeSection.set('MyLibraries')">My Libraries</button>
+        <div class="sidenav-option-container">
+            <button matFab extended (click)="activeSection.set('MyLibraries')">
+                <mat-icon>account_balance</mat-icon>
+                My Libraries
+            </button>
+        </div>
+        @if(identityService.userModel()?.roles?.includes("Identity_Admins")){
+        <div class="sidenav-option-container">
+            <a matFab extended [routerLink]="['/UsersList']">
+                <mat-icon>patient_list</mat-icon>
+                Users List
+            </a>
+        </div>
+        }
     </mat-sidenav>
 
     <mat-sidenav-content>

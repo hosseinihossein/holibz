@@ -16,7 +16,7 @@ export class LibraryService {
       quryParams = new HttpParams().set("userGuid", userGuid);
     }
     else if(this.identityService.isAuthenticated()){
-      quryParams = new HttpParams().set("userGuid", this.identityService.userModel()!.guid);
+      quryParams = new HttpParams().set("userGuid", this.identityService.userModel()!.guid!);
     }
     else{
       return null;

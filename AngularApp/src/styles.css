@@ -41,6 +41,6 @@ div.mat-expansion-panel-body{
 }
 
 /*************** mat-form-field *******************/
-mat-form-field{
+/*mat-form-field.minHeightEighty{
     min-height: 80px;
-}
+}*/

@@ -98,15 +98,21 @@ app-nav-bar {
   ));
 }
 
-/*.success-ResultStatus {
-  @include mat.dialog-overrides((
-    container-color: var(--mat-sys-primary-container),
-    subhead-color: var(--mat-sys-on-primary-container),
+.small-form-field{
+  @include mat.form-field-overrides((
+    container-height: 36px,
+    filled-with-label-container-padding-top: 8px,
+    filled-with-label-container-padding-bottom: 0,
+    subscript-text-line-height: 14px,
+    subscript-text-size: 12px,
   ));
 }
-.danger-ResultStatus {
-  @include mat.dialog-overrides((
-    container-color: var(--mat-sys-error-container),
-    subhead-color: var(--mat-sys-on-error-container),
+
+.small-radio-button{
+  @include mat.radio-overrides((
+    label-text-size: 12px,
+    state-layer-size: 24px,
+    touch-target-size: 24px,
+    label-text-line-height: 12px,
   ));
-}*/
+}

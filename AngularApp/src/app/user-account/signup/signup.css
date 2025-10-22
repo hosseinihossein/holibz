@@ -12,6 +12,7 @@ mat-form-field{
     display: block;
     width: 300px;
     margin: auto;
+    min-height: 80px;
 }
 
 #signup-btn{

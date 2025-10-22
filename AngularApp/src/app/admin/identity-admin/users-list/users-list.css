@@ -2,7 +2,8 @@ mat-sidenav{
     width: 240px;
     border-right: 1px solid var(--mat-sys-outline-variant);
     border-radius: 0;
-    padding-right: 10px;
+    padding-right: 4px;
+    padding-left: 4px;
     padding-top: 10px;
 }
 @media screen and (max-width:700px) {
@@ -15,8 +16,8 @@ mat-sidenav-content{
 }
 
 img.userProfileImage{
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     overflow: hidden;
     object-fit: contain;
@@ -38,3 +39,55 @@ mat-spinner#loading-spinner{
     top: 50%;
     transform: translateY(-50%);
 }
+
+.small-form-field {
+    height: 56px;
+    min-height: 0;
+    width: 100%;
+}
+.small-form-field mat-label{
+    font-size: 12px;
+}
+.small-form-field input{
+    font-size: 12px;
+}
+::ng-deep .small-form-field .mdc-text-field,
+::ng-deep .small-form-field .mat-mdc-form-field-hint-wrapper{
+    padding: 0 8px;
+}
+
+.small-label{
+    display: block;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+mat-radio-button{
+    font-size: 12px;
+    display: block;
+}
+::ng-deep label.mdc-label{
+    cursor: pointer;
+}
+/*.small-form-field .mat-mdc-form-field-flex{
+    height: 12px;
+}*/
+
+/*.custom-height {
+  height: 12px; 
+}
+
+.custom-height .mat-form-field-wrapper {
+  padding: 0;
+  height: 100%;
+}
+
+.custom-height .mat-form-field-flex {
+  align-items: center;
+  height: 100%;
+}
+
+.custom-height .mat-input-element {
+  height: 100%;
+  padding: 0;
+}*/

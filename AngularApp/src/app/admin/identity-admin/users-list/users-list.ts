@@ -20,6 +20,9 @@ import { Result } from '../../../dialogs/result/result';
 import { RouterLink } from "@angular/router";
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { DatePipe } from '@angular/common';
+import { MatDividerModule } from '@angular/material/divider';
+import { ConfirmDelete } from '../../../dialogs/confirm-delete/confirm-delete';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-users-list',
@@ -27,7 +30,7 @@ import { DatePipe } from '@angular/common';
   imports: [MatTableModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule,
     MatPaginatorModule, MatProgressSpinner, MatIcon, MatSidenavModule, ReactiveFormsModule,
     MatInputModule, MatDatepickerModule, MatRadioModule, MatSelectModule, MatSortModule, RouterLink,
-    DatePipe],
+    DatePipe, MatDividerModule, MatTooltipModule],
   templateUrl: './users-list.html',
   styleUrl: './users-list.css'
 })
@@ -129,29 +132,34 @@ export class UsersList implements AfterViewInit, OnDestroy {
     this.subscription().unsubscribe();
   }
 
-  deleteUser(userGuid:string){
-    this.displayLoadingSpinner.set(true);
+  deleteUser(userGuid:string, userName:string){
+    const deleteDialogRef = this.dialog.open(ConfirmDelete,{data:{type:"User", label:userName}});
+    deleteDialogRef.afterClosed().subscribe(result => {
+      if(result === true){
+        this.displayLoadingSpinner.set(true);
 
-    this.adminService.requestDeleteUser(userGuid).subscribe({
-      next: res => {
-        this.displayLoadingSpinner.set(false);
-        if(res.success){
-          const dialogRef = this.dialog.open(Result,{
-            //panelClass: "success-ResultStatus", 
-            data:{
-              status: "success",
-              title: `Delete User '${res.username}'`,
-              description: [`User identity with username '${res.username}' deleted successfully.`,
-                "All of their data including their libraries and documents are also deleted.",
-                "We also informed them through their email."
-              ],
+        this.adminService.requestDeleteUser(userGuid).subscribe({
+          next: res => {
+            this.displayLoadingSpinner.set(false);
+            if(res.success){
+              const dialogRef = this.dialog.open(Result,{
+                //panelClass: "success-ResultStatus", 
+                data:{
+                  status: "success",
+                  title: `Delete User '${res.username}'`,
+                  description: [`User identity with username '${res.username}' deleted successfully.`,
+                    "All of their data including their libraries and documents are also deleted.",
+                    "We also informed them through their email."
+                  ],
+                }
+              });
+              dialogRef.afterClosed().subscribe(result=>{
+                this.submitFilterButton()._elementRef.nativeElement.click();
+              });
             }
-          });
-          dialogRef.afterClosed().subscribe(result=>{
-            this.submitFilterButton()._elementRef.nativeElement.click();
-          });
-        }
-      },
+          },
+        });
+      }
     });
   }
 }

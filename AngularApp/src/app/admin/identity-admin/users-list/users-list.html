@@ -5,9 +5,9 @@
             Filters:
         </p>
 
-        <mat-form-field>
-            <mat-label>UserName</mat-label>
-            <input matInput [formControl]="usernameFilter()" placeholder="Any">
+        <mat-form-field class="small-form-field">
+            <mat-label style="font-size: 12px;">UserName</mat-label>
+            <input matInput [formControl]="usernameFilter()" placeholder="Any" style="font-size: 12px;">
             @if(usernameFilter().invalid && (usernameFilter().dirty || usernameFilter().touched) &&
             usernameFilter().hasError("maxlength")){
             <mat-error>
@@ -16,16 +16,7 @@
             }
         </mat-form-field>
 
-        <!--mat-form-field>
-            <mat-label>Roles</mat-label>
-            <mat-select [formControl]="rolesFilter()" multiple>
-                @for (role of rolesList(); track role) {
-                <mat-option [value]="role">{{role}}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field-->
-
-        <mat-form-field>
+        <mat-form-field class="small-form-field">
             <mat-label>Email</mat-label>
             <input matInput [formControl]="emailFilter()" placeholder="Any">
             @if(emailFilter().invalid && (emailFilter().dirty || emailFilter().touched) &&
@@ -36,7 +27,10 @@
             }
         </mat-form-field>
 
-        <mat-form-field>
+        <mat-divider></mat-divider>
+
+        <label class="small-label">Created:</label>
+        <mat-form-field class="small-form-field">
             <mat-label>Since</mat-label>
             <input matInput [matDatepicker]="sincePicker" [formControl]="createdFromFilter()">
             <mat-hint>MM/DD/YYYY</mat-hint>
@@ -49,7 +43,7 @@
             </mat-error>
             }
         </mat-form-field>
-        <mat-form-field>
+        <mat-form-field class="small-form-field">
             <mat-label>To</mat-label>
             <input matInput [matDatepicker]="toPicker" [formControl]="createdToFilter()">
             <mat-hint>MM/DD/YYYY</mat-hint>
@@ -63,37 +57,47 @@
             }
         </mat-form-field>
 
-        <label>Email validation:</label>
-        <mat-radio-group aria-label="Select an option" [formControl]="emailConfirmedFilter()">
+        <mat-divider></mat-divider>
+
+        <label class="small-label">Email validation:</label>
+        <mat-radio-group aria-label="Select an option" [formControl]="emailConfirmedFilter()"
+            class="small-radio-button">
             <mat-radio-button [value]="true">Confirmed</mat-radio-button>
             <mat-radio-button [value]="false">Not confirmed</mat-radio-button>
             <mat-radio-button [value]="null">Any</mat-radio-button>
         </mat-radio-group>
 
-        <label>Display email publicly:</label>
-        <mat-radio-group aria-label="Select an option" [formControl]="displayEmailPubliclyFilter()">
+        <mat-divider></mat-divider>
+
+        <label class="small-label">Display email publicly:</label>
+        <mat-radio-group aria-label="Select an option" [formControl]="displayEmailPubliclyFilter()"
+            class="small-radio-button">
             <mat-radio-button [value]="true">Display</mat-radio-button>
             <mat-radio-button [value]="false">Don't display</mat-radio-button>
             <mat-radio-button [value]="null">Any</mat-radio-button>
         </mat-radio-group>
 
-        <button matButton="" #submitFilterBtn>Submit Filter</button>
+        <mat-divider></mat-divider>
+
+        <button matButton="outlined" #submitFilterBtn style="display: block;width: fit-content;margin: 16px auto;">
+            Submit Filter
+        </button>
 
     </mat-sidenav>
 
     <mat-sidenav-content>
-        <!--div class="mat-elevation-z8"-->
+
         <table mat-table [dataSource]="dataSource()" matSort matSortDisableClear matSortDirection="desc">
 
             <!-- UserImage Column -->
             <ng-container matColumnDef="UserImage">
-                <th mat-header-cell *matHeaderCellDef> UserImage </th>
+                <th mat-header-cell *matHeaderCellDef> Image </th>
                 <td mat-cell *matCellDef="let userModel">
                     @if(userModel.imageAddress){
                     <img [src]="userModel.imageAddress" alt="user profile image" class="userProfileImage">
                     }
                     @else {
-                    <mat-icon style="font-size: 48px;width: 48px;height: 48px;">account_circle</mat-icon>
+                    <mat-icon style="font-size: 56px;width: 56px;height: 56px;">account_circle</mat-icon>
                     }
                 </td>
             </ng-container>
@@ -106,7 +110,7 @@
 
             <!-- UserGuid Column -->
             <ng-container matColumnDef="UserGuid">
-                <th mat-header-cell *matHeaderCellDef> UserGuid </th>
+                <th mat-header-cell *matHeaderCellDef> Guid </th>
                 <td mat-cell *matCellDef="let userModel"> {{userModel.userGuid}} </td>
             </ng-container>
 
@@ -119,13 +123,23 @@
             <!-- EmailConfirmed Column -->
             <ng-container matColumnDef="EmailConfirmed">
                 <th mat-header-cell *matHeaderCellDef> EmailConfirmed </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.emailConfirmed}} </td>
+                <td mat-cell *matCellDef="let userModel">
+                    <mat-icon
+                        [style]="userModel.emailConfirmed ? 'color:var(--mat-sys-on-primary-container);' : 'color: var(--mat-sys-on-error-container);'">
+                        {{userModel.emailConfirmed ? "check" : "close"}}
+                    </mat-icon>
+                </td>
             </ng-container>
 
             <!-- DisplayEmailPublicly Column -->
             <ng-container matColumnDef="DisplayEmailPublicly">
-                <th mat-header-cell *matHeaderCellDef> DisplayEmailPublicly </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.displayEmailPublicly}} </td>
+                <th mat-header-cell *matHeaderCellDef> PublicEmail </th>
+                <td mat-cell *matCellDef="let userModel">
+                    <mat-icon
+                        [style]="userModel.displayEmailPublicly ? 'color:var(--mat-sys-on-primary-container);' : 'color: var(--mat-sys-on-error-container);'">
+                        {{userModel.displayEmailPublicly ? "check" : "close"}}
+                    </mat-icon>
+                </td>
             </ng-container>
 
             <!-- CreatedAt Column -->
@@ -134,18 +148,17 @@
                 <td mat-cell *matCellDef="let userModel"> {{userModel.createdAt | date}} </td>
             </ng-container>
 
-            <!-- Roles Column -->
-            <!--ng-container matColumnDef="Roles">
-                <th mat-header-cell *matHeaderCellDef> Roles </th>
-                <td mat-cell *matCellDef="let userModel"> {{userModel.Roles.join(", ")}} </td>
-            </ng-container-->
-
             <!-- Actions Column -->
             <ng-container matColumnDef="Actions">
                 <th mat-header-cell *matHeaderCellDef> Actions </th>
-                <td mat-cell *matCellDef="let userModel">
-                    <button matButton="" (click)="deleteUser(userModel.userGuid)">Delete</button>
-                    <a matButton="" [routerLink]="['profile']">Profile</a>
+                <td mat-cell *matCellDef="let userModel" style="text-wrap: nowrap;">
+                    <button matMiniFab style="color:var(--mat-sys-on-error-container);margin: 0 4px;"
+                        (click)="deleteUser(userModel.userGuid, userModel.userName)" matTooltip="Delete User">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                    <a matMiniFab [routerLink]="['profile']" matTooltip="User Profile" style="margin: 0 4px;">
+                        <mat-icon>id_card</mat-icon>
+                    </a>
                 </td>
             </ng-container>
 
@@ -161,6 +174,8 @@
 
         <mat-paginator [length]="resultsLength()" [pageSizeOptions]="[10, 20, 50, 100]"
             aria-label="Select page of users results"></mat-paginator>
+
+
 
         <!--/div-->
         @if(displayLoadingSpinner()){

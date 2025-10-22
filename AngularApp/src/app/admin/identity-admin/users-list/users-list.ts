@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { MatButton, MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -130,6 +130,10 @@ export class UsersList implements AfterViewInit, OnDestroy {
   }
   ngOnDestroy(): void {
     this.subscription().unsubscribe();
+  }
+
+  changeColumns(e:MatButtonToggleChange){
+    this.displayedColumns.set(e.value);
   }
 
   deleteUser(userGuid:string, userName:string){

@@ -1,10 +1,12 @@
 <mat-sidenav-container>
 
     <mat-sidenav id="" mode="side" opened position="start" fixedInViewport fixedTopGap="56" fixedBottomGap="16">
-        <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;">
+        <!--p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;">
             Filters:
-        </p>
+        </p-->
+        <!--mat-divider></mat-divider-->
 
+        <label class="small-label">Filters:</label>
         <mat-form-field class="small-form-field">
             <mat-label style="font-size: 12px;">UserName</mat-label>
             <input matInput [formControl]="usernameFilter()" placeholder="Any" style="font-size: 12px;">
@@ -62,9 +64,9 @@
         <label class="small-label">Email validation:</label>
         <mat-radio-group aria-label="Select an option" [formControl]="emailConfirmedFilter()"
             class="small-radio-button">
+            <mat-radio-button [value]="null">Any</mat-radio-button>
             <mat-radio-button [value]="true">Confirmed</mat-radio-button>
             <mat-radio-button [value]="false">Not confirmed</mat-radio-button>
-            <mat-radio-button [value]="null">Any</mat-radio-button>
         </mat-radio-group>
 
         <mat-divider></mat-divider>
@@ -72,9 +74,9 @@
         <label class="small-label">Display email publicly:</label>
         <mat-radio-group aria-label="Select an option" [formControl]="displayEmailPubliclyFilter()"
             class="small-radio-button">
+            <mat-radio-button [value]="null">Any</mat-radio-button>
             <mat-radio-button [value]="true">Display</mat-radio-button>
             <mat-radio-button [value]="false">Don't display</mat-radio-button>
-            <mat-radio-button [value]="null">Any</mat-radio-button>
         </mat-radio-group>
 
         <mat-divider></mat-divider>
@@ -86,6 +88,20 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
+        <!--span>Display Columns:</span-->
+        <mat-button-toggle-group multiple [value]="displayedColumns()" (change)="changeColumns($event)"
+            style="width: fit-content;margin: 8px auto;display: flex;">
+            <mat-button-toggle value="UserImage">Image</mat-button-toggle>
+            <mat-button-toggle value="UserName">UserName</mat-button-toggle>
+            <mat-button-toggle value="UserGuid">Guid</mat-button-toggle>
+            <mat-button-toggle value="Email">Email</mat-button-toggle>
+            <mat-button-toggle value="EmailConfirmed">Email Confirmed</mat-button-toggle>
+            <mat-button-toggle value="DisplayEmailPublicly">Public Email</mat-button-toggle>
+            <mat-button-toggle value="CreatedAt">Created At</mat-button-toggle>
+            <mat-button-toggle value="Actions">Actions</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <mat-divider></mat-divider>
 
         <table mat-table [dataSource]="dataSource()" matSort matSortDisableClear matSortDirection="desc">
 
@@ -122,7 +138,7 @@
 
             <!-- EmailConfirmed Column -->
             <ng-container matColumnDef="EmailConfirmed">
-                <th mat-header-cell *matHeaderCellDef> EmailConfirmed </th>
+                <th mat-header-cell *matHeaderCellDef> Email Confirmed </th>
                 <td mat-cell *matCellDef="let userModel">
                     <mat-icon
                         [style]="userModel.emailConfirmed ? 'color:var(--mat-sys-on-primary-container);' : 'color: var(--mat-sys-on-error-container);'">
@@ -133,7 +149,7 @@
 
             <!-- DisplayEmailPublicly Column -->
             <ng-container matColumnDef="DisplayEmailPublicly">
-                <th mat-header-cell *matHeaderCellDef> PublicEmail </th>
+                <th mat-header-cell *matHeaderCellDef> Public Email </th>
                 <td mat-cell *matCellDef="let userModel">
                     <mat-icon
                         [style]="userModel.displayEmailPublicly ? 'color:var(--mat-sys-on-primary-container);' : 'color: var(--mat-sys-on-error-container);'">
@@ -144,7 +160,7 @@
 
             <!-- CreatedAt Column -->
             <ng-container matColumnDef="CreatedAt">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> CreatedAt </th>
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Created At </th>
                 <td mat-cell *matCellDef="let userModel"> {{userModel.createdAt | date}} </td>
             </ng-container>
 

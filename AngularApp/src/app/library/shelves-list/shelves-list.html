@@ -7,9 +7,9 @@
     <mat-sidenav-content>
         <ng-content />
         <mat-accordion multi>
-            <app-shelf-card></app-shelf-card>
-            <app-shelf-card></app-shelf-card>
-            <app-shelf-card></app-shelf-card>
+            @for(shelfModel of shelfModels(); track shelfModel.guid){
+            <app-shelf-card [shelfModel]="shelfModel"></app-shelf-card>
+            }
         </mat-accordion>
     </mat-sidenav-content>
 

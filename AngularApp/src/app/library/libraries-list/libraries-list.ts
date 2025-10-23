@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { LibraryCard, LibraryCardModel } from "../library-card/library-card";
+import { LibraryCard, LibraryModel } from "../library-card/library-card";
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatBadge } from '@angular/material/badge';
@@ -19,15 +19,14 @@ import { JsonPipe, NgOptimizedImage } from '@angular/common';
 export class LibrariesList {
   userGuid = signal<string|null>(null);
 
-  singletonModes = inject(SingletonModes);
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
   router = inject(Router);
   identityService = inject(IdentityService);
 
-  libraryCards = signal<LibraryCardModel[]>([]);
-  totalNumberOfShelves = signal(0);
+  libraryModels = signal<LibraryModel[]>([]);
   totalNumberOfUserDocuments = signal(0);
+  totalNumberOfUserShelves = signal(0);
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
   isMyLibraries = signal(false);
@@ -62,15 +61,22 @@ export class LibrariesList {
     }
     
     effect(()=>{
-      this.libraryService.requestLibraries(this.userGuid())?.subscribe({
+      this.libraryService.requestLibraryList(this.userGuid())?.subscribe({
         next: res => {
           if(res){
-            this.libraryCards.set(res);
-            this.totalNumberOfShelves.set(this.libraryCards().flatMap(l=>l.shelvesTitles).length);
-            //console.log(JSON.stringify(this.libraryCards()));
+            this.libraryModels.set(res);
+            this.totalNumberOfUserShelves.set(this.libraryModels().flatMap(lib=>lib.shelvesTitles).length);
           }
         },
       });
+
+      /*this.libraryService.requestTotalNumberOfShelves(this.userGuid())?.subscribe({
+        next: res => {
+          if(res){
+            this.totalNumberOfUserShelves.set(res.totalNumberOfUserShelves);
+          }
+        },
+      });*/
 
       this.libraryService.requestTotalNumberOfDocuments(this.userGuid())?.subscribe({
         next: res => {

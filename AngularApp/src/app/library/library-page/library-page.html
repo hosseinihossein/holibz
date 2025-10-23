@@ -1,15 +1,19 @@
 <app-shelves-list>
     <mat-card appearance="raised">
         <mat-card-header>
-            <img src="HLlogo-LightMode.png" alt="library logo" matCardAvatar>
-            <mat-card-title>Html Css JavaScript</mat-card-title>
-            <mat-card-subtitle>Created by username</mat-card-subtitle>
+            @if(libraryModel()?.hasImage){
+            <img [ngSrc]="`/api/Library/LogoImage?guid=${libraryModel()!.guid}`" alt="library logo" matCardAvatar>
+            }
+            @else {
+            <mat-icon matCardAvatar style="font-size: 36px;text-align: center;/*width: 40px;height: 40px;*/">
+                account_balance
+            </mat-icon>
+            }
+            <mat-card-title>{{libraryModel()?.title}}</mat-card-title>
+            <mat-card-subtitle>{{libraryModel()?.ownerUsername}}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-            <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste laudantium quibusdam aspernatur labore,
-                consectetur quidem eveniet quod et quae, veniam optio cupiditate harum necessitatibus asperiores?
-            </p>
+            <p>{{libraryModel()?.description}}</p>
         </mat-card-content>
     </mat-card>
 </app-shelves-list>

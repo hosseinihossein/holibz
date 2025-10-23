@@ -14,8 +14,9 @@
     </mat-card-header>
 
     <mat-card-content>
-        @if(imgSrc()){
-        <img mat-card-image id="main-img" [src]="imgSrc()" alt="Photo of a computer">
+        @if(hasImg()){
+        <img mat-card-image id="main-img" [ngSrc]="`/api/Library/DocumentImage?docGuid=${docGuid()}`" fill
+            alt="document image">
         }
         <p>{{description()}}</p>
         <ul style="margin: 0px;">

@@ -1,5 +1,4 @@
 - new actions for CreateNewLibrary and CreateNewShelf
-- add new user and test the creation of the default library and CreateNewShelf
 - 
 
 

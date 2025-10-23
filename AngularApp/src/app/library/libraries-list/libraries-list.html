@@ -7,10 +7,10 @@
         <mat-icon>account_circle</mat-icon>
         }
     </div>
-    <div class="icon-box" [matBadge]="libraryCards().length" matTooltip="number of libraries">
+    <div class="icon-box" [matBadge]="libraryModels().length" matTooltip="number of libraries">
         <mat-icon>account_balance</mat-icon>
     </div>
-    <div class="icon-box" [matBadge]="totalNumberOfShelves()" matTooltip="number of shelves">
+    <div class="icon-box" [matBadge]="totalNumberOfUserShelves()" matTooltip="number of shelves">
         <mat-icon>shelves</mat-icon>
     </div>
     <div class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="number of documents">
@@ -26,7 +26,7 @@
 </div>
 
 <div class="list">
-    @for(libModel of libraryCards(); track libModel.guid){
-    <app-library-card [libraryCardModel]="libModel" [title]="libModel.title!"></app-library-card>
+    @for(libModel of libraryModels(); track libModel.guid){
+    <app-library-card [libraryModel]="libModel"></app-library-card>
     }
 </div>

@@ -57,7 +57,7 @@ public class Library_ElementDbModel
     public string? Title { get; set; } = null;
     public int Order { get; set; }
     public Library_DocumentDbModel Document { get; set; } = null!;
-    public DateTime LastEditedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_TagDbModel
 {
@@ -65,6 +65,7 @@ public class Library_TagDbModel
     public string Name { get; set; } = null!;
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
 }
+
 public class Library_DbContext : DbContext
 {
     public Library_DbContext(DbContextOptions<Library_DbContext> options) : base(options) { }

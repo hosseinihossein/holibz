@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { NgOptimizedImage } from "@angular/common";
@@ -11,14 +11,14 @@ import { NgOptimizedImage } from "@angular/common";
   styleUrl: './library-card.css'
 })
 export class LibraryCard {
-  model = input<LibraryCardModel>();
+  libraryCardModel = input.required<LibraryCardModel>();
 }
 
 export class LibraryCardModel {
-  Guid: string = "";
-  Title: string = "";
-  Description: string|null = null; 
-  ShelvesTitles: string[] = [];
-  HasImage:boolean = false;
-  OwnerUsername: string = "";
+  guid?: string;
+  title?: string;
+  description?: string; 
+  shelvesTitles?: string[];
+  hasImage?:boolean;
+  ownerUsername?: string;
 }

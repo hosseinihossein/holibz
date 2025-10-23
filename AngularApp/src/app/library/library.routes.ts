@@ -7,6 +7,7 @@ import { ShelfPage } from "./shelf-page/shelf-page";
 import { ShelvesList } from "./shelves-list/shelves-list";
 
 export const libraryRoutes : Routes = [
+    {path: "libraries/:userGuid", component: LibrariesList},
     {path: "libraries", component: LibrariesList},
     {path: "library", component: LibraryPage},
     {path: "shelves", component: ShelvesList},

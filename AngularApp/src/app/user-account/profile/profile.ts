@@ -28,7 +28,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class Profile {
   userGuid = signal<string|null>(null);
-  myProfile = signal(false);
+  isMyProfile = signal(false);
 
   singletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
@@ -51,10 +51,10 @@ export class Profile {
     }
 
     if(!this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid){
-      this.myProfile.set(true);
+      this.isMyProfile.set(true);
     }
 
-    if(this.myProfile()){
+    if(this.isMyProfile()){
       this.identityService.getCsrf().subscribe({
         next: () => {
           console.log("Csrf received successfully.");
@@ -68,7 +68,7 @@ export class Profile {
     }
     
     effect(()=>{
-      if(!this.myProfile()){
+      if(!this.isMyProfile()){
         this.identityService.requestUserModel(this.userGuid()!).subscribe({
           next: res=>this.userModel.set(res),
         });

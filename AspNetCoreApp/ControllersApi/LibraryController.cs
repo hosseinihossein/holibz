@@ -30,17 +30,19 @@ public class LibraryController : ControllerBase
 
 
     [HttpGet]
-    public async Task<IActionResult> List(string userGuid)
+    public async Task<IActionResult> List([FromQuery] string userGuid)
     {
         Identity_UserDbModel? owner =
         await userManager.Users.FirstOrDefaultAsync(user => user.UserGuid == userGuid);
         if (owner is null)
         {
-            ModelState.AddModelError("userGuid", "Couldn't find Owner!");
+            ModelState.AddModelError("userGuid", "Couldn't find the owner!");
             return BadRequest(ModelState);
         }
 
-        var librariesInfo = await libraryDb.Libraries.Include(lib => lib.Shelves).Where(lib => lib.OwnerGuid == userGuid)
+        var librariesInfo = await libraryDb.Libraries
+        .Include(lib => lib.Shelves)
+        .Where(lib => lib.OwnerGuid == userGuid)
         .Select(lib => new
         {
             lib.Guid,
@@ -77,7 +79,23 @@ public class LibraryController : ControllerBase
 
 
 
-    //[HttpPost]
+    [HttpGet]
+    public async Task<IActionResult> TotalNumberOfDocuments([FromQuery] string userGuid)
+    {
+        Identity_UserDbModel? owner =
+        await userManager.Users.FirstOrDefaultAsync(user => user.UserGuid == userGuid);
+        if (owner is null)
+        {
+            ModelState.AddModelError("userGuid", "Couldn't find the owner!");
+            return BadRequest(ModelState);
+        }
+
+        int totalNumberOfUserDocuments = await libraryDb.Documents
+        .Where(doc => doc.OwnerGuid == owner.UserGuid)
+        .CountAsync();
+
+        return Ok(new { totalNumberOfUserDocuments });
+    }
 
 
 

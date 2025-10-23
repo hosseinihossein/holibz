@@ -1,8 +1,8 @@
-- add returnUrl to navbar login link
-- change the name of the Storage/Identity/UserImage directory to Storage/Identity/UserImages
 - new actions for CreateNewLibrary and CreateNewShelf
-- admin controller
+- add new user and test the creation of the default library and CreateNewShelf
+- 
 
 
 
+- do changedetection onpush and some other performance updates like ssr
 - break the angular app to several sub apps for each service.

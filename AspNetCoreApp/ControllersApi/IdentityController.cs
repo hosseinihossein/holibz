@@ -20,7 +20,7 @@ public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
-    readonly DirectoryInfo userImageDirectoryInfo;
+    readonly DirectoryInfo usersImagesDirectoryInfo;
 
 
 
@@ -32,8 +32,8 @@ public class IdentityController : ControllerBase
         this.signInManager = signInManager;
         this.userManager = userManager;
 
-        userImageDirectoryInfo =
-        Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UserImage"));
+        usersImagesDirectoryInfo =
+        Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UsersImages"));
     }
 
 
@@ -56,10 +56,10 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> Login([FromBody] Identity_LoginFormModel loginModel,
     [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
-        foreach (var header in Request.Headers)
+        /*foreach (var header in Request.Headers)
         {
             Console.WriteLine($"\n***** {header.Key} = {header.Value}");
-        }
+        }*/
         if (ModelState.IsValid)
         {
             var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
@@ -185,8 +185,8 @@ public class IdentityController : ControllerBase
 
 
 
-    [HttpPost("signup")]
-    public async Task<IActionResult> CreateNewAccount([FromBody] Identity_SignupFormModel signupModel,
+    [HttpPost]
+    public async Task<IActionResult> Signup([FromBody] Identity_SignupFormModel signupModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService,
     [FromServices] Identity_Process identityProcess)
     {
@@ -236,8 +236,8 @@ public class IdentityController : ControllerBase
         return BadRequest(ModelState);
     }
 
-    [HttpGet("CheckUsername")]
-    public async Task<IActionResult> UsernameExist([FromQuery][StringLength(60)] string username)
+    [HttpGet]
+    public async Task<IActionResult> CheckUsername([FromQuery][StringLength(60)] string username)
     {
         /*Identity_UserDbModel? user = await userManager.FindByNameAsync(username);
         if (user is null)
@@ -414,7 +414,7 @@ public class IdentityController : ControllerBase
         }
 
         string userImagePath =
-        Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
+        Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
             return $"/api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}";
@@ -431,7 +431,7 @@ public class IdentityController : ControllerBase
         }*/
 
         string userImagePath =
-        Path.Combine(userImageDirectoryInfo.FullName, userGuid);
+        Path.Combine(usersImagesDirectoryInfo.FullName, userGuid);
         if (System.IO.File.Exists(userImagePath))
         {
             return $"/api/Identity/UserImage?userGuid={userGuid}&v={version}";
@@ -450,7 +450,7 @@ public class IdentityController : ControllerBase
         }
 
         string userImagePath =
-        Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
+        Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
         if (System.IO.File.Exists(userImagePath))
         {
             return PhysicalFile(userImagePath, "application/octet-stream", "userImage", true);
@@ -468,7 +468,7 @@ public class IdentityController : ControllerBase
         if (ModelState.IsValid)
         {
             Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-            string userImagePath = Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
+            string userImagePath = Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
             /*if (model.UserImageFile is null)
             {
                 if (System.IO.File.Exists(userImagePath))
@@ -504,7 +504,7 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> DeleteUserImage()
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-        string userImagePath = Path.Combine(userImageDirectoryInfo.FullName, user.UserGuid);
+        string userImagePath = Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
 
         if (System.IO.File.Exists(userImagePath))
         {
@@ -805,5 +805,10 @@ public class IdentityController : ControllerBase
 
         return Ok(new { usersList = allFilteredUsers.ToArray(), totalResultsLength = allFilteredUsersLength });
     }
+
+
+
+
+
 
 }

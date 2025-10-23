@@ -26,6 +26,9 @@ mat-card-content{
     flex: 1 1 auto;
     overflow: auto;
 }
+mat-card-content li{
+    font-size: 12px;
+}
 
 img{
     object-fit: contain;

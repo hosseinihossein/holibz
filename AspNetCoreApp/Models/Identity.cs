@@ -263,7 +263,7 @@ public class Identity_Process
     //readonly IWebHostEnvironment env;
     public Identity_Process(IWebHostEnvironment _env)
     {
-        UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UserSeedData"));
+        UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UsersSeedData"));
     }
 
     public async Task UpdateUserSeed(Identity_UserDbModel user,

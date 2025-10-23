@@ -35,17 +35,17 @@
                     <mat-icon>edit</mat-icon>
                 </button>
                 }
-                @if(myProfile() && displayEmailPublicly()){
+                @if(isMyProfile() && displayEmailPublicly()){
                 <mat-checkbox [checked]="true" disabled style="margin-left: 48px;">
                     Displaying email publicly!
                 </mat-checkbox>
                 }
-                @else if(myProfile() && !displayEmailPublicly()){
+                @else if(isMyProfile() && !displayEmailPublicly()){
                 <mat-checkbox [checked]="false" disabled style="margin-left: 48px;">
                     NOT displaying email publicly!
                 </mat-checkbox>
                 }
-                @if(myProfile() && singletonModes.editMode()){
+                @if(isMyProfile() && singletonModes.editMode()){
                 <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Change"
                     (click)="editDisplayEmailPublicly();">
                     <mat-icon>change_circle</mat-icon>
@@ -79,7 +79,7 @@
         }
     </mat-card-content>
 
-    @if(myProfile() && singletonModes.editMode()){
+    @if(isMyProfile() && singletonModes.editMode()){
     <mat-card-actions align="start">
         <button matFab extended (click)="openChangePasswordDialog()">
             <mat-icon>key</mat-icon>
@@ -87,7 +87,7 @@
         </button>
     </mat-card-actions>
     }
-    @if(myProfile()){
+    @if(isMyProfile()){
     <mat-card-actions align="end">
         <button matButton="elevated" class="noPaddingBtn" (click)="singletonModes.toggleEditMode()"
             [matTooltip]="singletonModes.editMode() ? 'Exit from edit mode' : 'Enter edit mode'">

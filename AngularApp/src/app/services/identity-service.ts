@@ -25,7 +25,7 @@ export class IdentityService {
 
   signup(formValue:Partial<{username: string; email: string; password: string; CfTurnstileResponse: string;}>){
     return this.httpClient.post<{success:boolean}>(
-      "/api/Identity/signup", 
+      "/api/Identity/Signup", 
       formValue
     );
   }

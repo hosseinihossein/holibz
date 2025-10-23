@@ -38,12 +38,25 @@ public class Program
 
 
 
-        //******************* Identity *******************
+        //******************* Identity_DbContext *******************
         builder.Services.AddDbContext<Identity_DbContext>(opts =>
         {
             opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:IdentityConnection"],
             new MySqlServerVersion(new Version(8, 0, 42)));
         });
+
+        //******************* Library_DbContext *******************
+        builder.Services.AddDbContext<Library_DbContext>(opts =>
+        {
+            opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:LibraryConnection"],
+            new MySqlServerVersion(new Version(8, 0, 42)));
+        });
+
+
+
+
+
+        //******************* Identity *******************
         builder.Services.AddIdentity<Identity_UserDbModel, Identity_RoleDbModel>(options =>
         {
             options.User.RequireUniqueEmail = true;

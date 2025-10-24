@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { IdentityService } from './identity-service';
 import { LibraryModel } from '../library/library-card/library-card';
 import { ShelfModel } from '../library/shelf-card/shelf-card';
+import { DocumentCardModel } from '../library/document-card/document-card';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +27,6 @@ export class LibraryService {
     }
     return this.httpClient.get<LibraryModel[]>("/api/Library/List", { params: quryParams});
   }
-
   requestShelfList(userGuid: string|null = null){
     let quryParams:HttpParams;
     if(userGuid){
@@ -76,6 +76,12 @@ export class LibraryService {
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.get<LibraryModel>(
       "/api/Library/LibraryModel", {params: httpParams}
+    );
+  }
+  requestDocumentModel(docGuid: string){
+    let httpParams = new HttpParams().set("docGuid", docGuid);
+    return this.httpClient.get<DocumentCardModel>(
+      "/api/Library/DocumentModel", {params: httpParams}
     );
   }
 

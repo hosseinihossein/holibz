@@ -85,7 +85,7 @@ public class LibraryController : ControllerBase
     {
         var libraryInfo = await libraryDb.Libraries
         .Include(lib => lib.Shelves)
-        .Where(lib => lib.Guid == libraryGuid)
+        //.Where(lib => lib.Guid == libraryGuid)
         .Select(lib => new
         {
             lib.Guid,
@@ -95,7 +95,7 @@ public class LibraryController : ControllerBase
             lib.OwnerGuid,
             lib.CreatedAt,
         })
-        .FirstOrDefaultAsync();
+        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
 
         if (libraryInfo is null)
         {

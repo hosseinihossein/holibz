@@ -1,4 +1,5 @@
 - new actions for CreateNewLibrary and CreateNewShelf
+- pass document guid to each document card so that they can request their data from server individually
 - 
 
 

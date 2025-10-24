@@ -6,42 +6,42 @@
     </button>
     }
     <mat-card-header style="padding: 4px;">
-        <a href="" mat-card-avatar>
-            <img id="avatar-img" [src]="avatarSrc()" alt="default profile image">
+        <a [routerLink]="['/profile', userGuid()]" mat-card-avatar>
+            @if(userAvatarSrc()){
+            <img [ngSrc]="userAvatarSrc()!" priority width="50" height="50" alt="user image" id="avatar-img">
+            }
+            @else {
+            <mat-icon style="font-size: 50px;width: 50px;height: 50px;">account_circle</mat-icon>
+            }
         </a>
-        <mat-card-title>{{title()}}</mat-card-title>
-        <mat-card-subtitle>by <a href="">{{ownerUsername()}}</a></mat-card-subtitle>
+        <mat-card-title>{{documentCardModel()?.title}}</mat-card-title>
+        <mat-card-subtitle>
+            by
+            <a [routerLink]="['/profile', userGuid()]">
+                {{userModel()?.username}}
+            </a>
+        </mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-        @if(hasImg()){
+        @if(documentCardModel()?.hasImage){
         <img mat-card-image id="main-img" [ngSrc]="`/api/Library/DocumentImage?docGuid=${docGuid()}`" fill
             alt="document image">
         }
-        <p>{{description()}}</p>
+        <p>{{documentCardModel()?.description}}</p>
         <ul style="margin: 0px;">
             <h4 style="margin-bottom: 0;">Contents:</h4>
+            @for(header of documentCardModel()?.headers; track header){
             <li>
-                <h3>header one</h3>
+                <h3>{{header}}</h3>
             </li>
-            <li>
-                <h3>header two header two header two header two</h3>
-            </li>
-            <!--li>
-                <h3>header three</h3>
-            </li>
-            <li>
-                <h3>header four</h3>
-            </li>
-            <li>
-                <h3>header five</h3>
-            </li-->
+            }
         </ul>
     </mat-card-content>
 
     <!--span style="flex: 1 1 auto;"></span-->
 
     <mat-card-actions align="end">
-        <button matButton>Open</button>
+        <a matButton [routerLink]="['/document', docGuid()]">Open</a>
     </mat-card-actions>
 </mat-card>

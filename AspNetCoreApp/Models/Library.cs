@@ -228,13 +228,20 @@ public class Library_ShelfModel
     //public Library_DocumentMiniModel[] DocumentsBriefs { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }
-/*public class Library_DocumentMiniModel
+public class Library_DocumentModel
 {
-    public string Title { get; set; } = null!;
-    public string Decsription { get; set; } = null!;
     public string Guid { get; set; } = null!;
-    public bool HasImg { get; set; }
-}*/
+    public string OwnerGuid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public string Version { get; set; } = null!;
+    public object[] RelatedVersionsBriefs { get; set; } = [];
+    public object[] ShelvesBriefs { get; set; } = [];
+    public object[] ElementsBriefs { get; set; } = [];
+    public string[] Tags { get; set; } = [];
+    public DateTime CreatedAt { get; set; }
+    public bool HasImage { get; set; }
+}
 public class Library_NewLibrayFormModel
 {
     [StringLength(30, MinimumLength = 3)]

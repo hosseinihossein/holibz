@@ -14,5 +14,5 @@ export const libraryRoutes : Routes = [
     {path: "shelves/:userGuid", component: ShelvesList},
     {path: "shelf", component: ShelfPage},
     {path: "documents", component: DocumentsList},
-    {path: "document", component: DocumentPage}
+    {path: "document/:docGuid", component: DocumentPage},
 ];

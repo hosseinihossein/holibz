@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, signal } from '@angular/core';
 import { MatAccordion, MatExpansionPanel, MatExpansionPanelActionRow, MatExpansionPanelDescription, MatExpansionPanelHeader, MatExpansionPanelTitle } from "@angular/material/expansion";
 import { MatTooltip } from '@angular/material/tooltip';
 import { DocumentCard } from "../document-card/document-card";
@@ -31,12 +31,14 @@ export class ShelfCard implements OnInit {
   constructor(){}
 
   ngOnInit(): void {
-    this.identityService.requestUserModel(this.shelfModel().ownerGuid!).subscribe({
-      next: res => {
-        if(res){
-          this.userModel.set(res);
-        }
-      },
+    effect(()=>{
+      this.identityService.requestUserModel(this.shelfModel().ownerGuid!).subscribe({
+        next: res => {
+          if(res){
+            this.userModel.set(res);
+          }
+        },
+      });
     });
   }
 
@@ -52,6 +54,6 @@ export class ShelfModel{
   title?:string;
   description?:string;
   libraryTitle?:string;
-  //documentsBriefs?:{title:string, guid:string, description:string, hasImg:boolean}[];
+  documentsGuids?:string[];
   createdAt?:Date;
 }

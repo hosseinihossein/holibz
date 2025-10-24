@@ -1,7 +1,7 @@
 <mat-expansion-panel hideToggle expanded>
     <mat-expansion-panel-header>
         <mat-panel-title>
-            <mat-icon [matBadge]="shelfModel().documentsBriefs?.length" matBadgePosition="above">shelves</mat-icon>
+            <mat-icon [matBadge]="shelfModel().documentsGuids?.length" matBadgePosition="above">shelves</mat-icon>
             &nbsp;
             &nbsp;
             {{shelfModel().title}}
@@ -21,10 +21,8 @@
     </mat-expansion-panel-header>
 
     <div class="listOfDocs">
-        @for (brief of shelfModel().documentsBriefs; track brief.guid) {
-        <app-document-card [title]="brief.title" [docGuid]="brief.guid" [mini]="true" [hasImg]="brief.hasImg"
-            [description]="brief.description" [ownerUsername]="userModel()?.username ?? ''">
-        </app-document-card>
+        @for (guid of shelfModel().documentsGuids; track guid) {
+        <app-document-card [docGuid]="guid" [userGuid]="userModel()?.guid!" [mini]="true"></app-document-card>
         }
     </div>
 

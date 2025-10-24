@@ -1,4 +1,4 @@
-<app-shelves-list>
+<app-shelves-list [libraryGuid]="libraryModel()?.guid!">
     <mat-card appearance="raised">
         <mat-card-header>
             @if(libraryModel()?.hasImage){

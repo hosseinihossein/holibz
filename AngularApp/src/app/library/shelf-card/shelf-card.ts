@@ -44,7 +44,7 @@ export class ShelfCard implements OnInit {
 
   openShelf(){
     this.libraryService.currentShelfModel.set(this.shelfModel());
-    this.router.navigate(["/Shelf"]);
+    this.router.navigate(["/shelf"]);
   }
 }
 

@@ -89,6 +89,7 @@ export class LibrariesList {
       this.identityService.requestUserModel(this.userGuid()!).subscribe({
         next: res => {
           this.userModel.set(res);
+          this.libraryService.currentOwnerUserModel.set(res);
         },
       });
     });

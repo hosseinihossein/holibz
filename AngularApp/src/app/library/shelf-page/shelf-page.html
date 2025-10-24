@@ -9,7 +9,7 @@
                 <mat-icon id="shelf-logo">shelves</mat-icon>
             </div>
             <mat-card-title>
-                {{shelfTitle()}}
+                {{shelfModel()?.title}}
                 @if(signletonModes.editMode()){
                 <button matIconButton class="noPaddingBtn" matTooltip="Edit title" (click)="openEditTitleDialog()">
                     <mat-icon>edit</mat-icon>
@@ -17,12 +17,12 @@
                 }
             </mat-card-title>
             <mat-card-subtitle>
-                Created by username
+                Created by {{userModel()?.username}}
             </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
             <p>
-                {{shelfDescription()}}
+                {{shelfModel()?.description}}
                 @if(signletonModes.editMode()){
                 <button matIconButton class="noPaddingBtn" matTooltip="Edit description"
                     (click)="openEditDescriptionDialog()">

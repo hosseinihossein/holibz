@@ -47,7 +47,7 @@ export class DocumentCard implements OnInit {
     });
 
     effect(() => {
-      this.libraryService.requestDocumentModel(this.docGuid()).subscribe({
+      this.libraryService.requestDocumentCardModel(this.docGuid()).subscribe({
         next: res => {
           if(res){
             this.documentCardModel.set(res);

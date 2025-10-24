@@ -216,6 +216,7 @@ public class Library_LibraryModel
     public string[] ShelvesTitles { get; set; } = [];
     public bool HasImage { get; set; } = false;
     public string OwnerUsername { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
 }
 public class Library_ShelfModel
@@ -225,21 +226,15 @@ public class Library_ShelfModel
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
     public string LibraryTitle { get; set; } = null!;
-    //public Library_DocumentMiniModel[] DocumentsBriefs { get; set; } = [];
+    public string[] DocumentsGuids { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }
-public class Library_DocumentModel
+public class Library_DocumentCardModel
 {
     public string Guid { get; set; } = null!;
-    public string OwnerGuid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!;
-    public string Version { get; set; } = null!;
-    public object[] RelatedVersionsBriefs { get; set; } = [];
-    public object[] ShelvesBriefs { get; set; } = [];
-    public object[] ElementsBriefs { get; set; } = [];
-    public string[] Tags { get; set; } = [];
-    public DateTime CreatedAt { get; set; }
+    public string[] Headers { get; set; } = [];
     public bool HasImage { get; set; }
 }
 public class Library_NewLibrayFormModel

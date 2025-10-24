@@ -15,7 +15,6 @@ import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-e
 import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
-import { Result, ResultDialogInputData } from '../../dialogs/result/result';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -28,7 +27,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class Profile {
   userGuid = signal<string|null>(null);
-  isMyProfile = signal(false);
+  isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid);
 
   singletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
@@ -50,22 +49,24 @@ export class Profile {
       this.userGuid.set(userGuidRouteParam);
     }
 
-    if(!this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid){
+    /*if(!this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid){
       this.isMyProfile.set(true);
-    }
+    }*/
 
-    if(this.isMyProfile()){
-      this.identityService.getCsrf().subscribe({
-        next: () => {
-          console.log("Csrf received successfully.");
-        },
-        error: err => {
-          console.error("Couldn't get Csrf!");
-          //throwError(()=>err);//doesn't pass error to the app-error-handler
-          throw(err);
-        },
-      });
-    }
+    effect(() => {
+      if(this.isMyProfile()){
+        this.identityService.getCsrf().subscribe({
+          next: () => {
+            console.log("Csrf received successfully.");
+          },
+          error: err => {
+            console.error("Couldn't get Csrf!");
+            //throwError(()=>err);//doesn't pass error to the app-error-handler
+            throw(err);
+          },
+        });
+      }
+    });
     
     effect(()=>{
       if(!this.isMyProfile()){

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DocumentsList } from "../documents-list/documents-list";
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
@@ -9,6 +9,10 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
+import { ActivatedRoute } from '@angular/router';
+import { LibraryService } from '../../services/library-service';
+import { ShelfModel } from '../shelf-card/shelf-card';
+import { IdentityService, UserProfileModel } from '../../services/identity-service';
 
 @Component({
   selector: 'app-shelf-page',
@@ -18,27 +22,76 @@ import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
   styleUrl: './shelf-page.css'
 })
 export class ShelfPage {
-  shelfTitle = signal("shelf title");
-  shelfDescription = signal(`Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste laudantium quibusdam aspernatur labore,
-    consectetur quidem eveniet quod et quae, veniam optio cupiditate harum necessitatibus asperiores?`);
+  shelfGuid = signal<string|null>(null);
 
   signletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
+  activatedRoute = inject(ActivatedRoute);
+  librarySerice = inject(LibraryService);
+  identityService = inject(IdentityService);
+  shelfModel = signal<ShelfModel|null>(null);
+  isMyShelf = computed(() => this.identityService.isAuthenticated() && 
+  this.shelfModel()?.ownerGuid === this.identityService.userModel()?.guid);
+  userModel = signal<UserProfileModel|null>(null);
+
+  constructor(){
+    let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
+    if(libraryGuidRouteParam){
+      this.shelfGuid.set(libraryGuidRouteParam);
+    }
+    if(!this.shelfGuid()){
+      if(this.librarySerice.currentLibraryModel()){
+        this.shelfModel.set(this.librarySerice.currentLibraryModel());
+        this.librarySerice.currentLibraryModel.set(null);
+
+        this.userModel.set(this.librarySerice.currentOwnerUserModel());
+        this.librarySerice.currentOwnerUserModel.set(null);
+      }
+    }
+    else{
+      effect(() => {
+        if(this.shelfGuid()){
+          this.librarySerice.requestShelfModel(this.shelfGuid()!).subscribe({
+            next: res => {
+              if(res){
+                this.shelfModel.set(res);
+                if(res.guid){
+                  this.shelfGuid.set(res.guid);//not necessary
+                }
+              }
+            },
+          });
+        }
+      });
+    }
+
+    effect(() => {
+      if(this.shelfModel()){
+        this.identityService.requestUserModel(this.shelfModel()?.ownerGuid!).subscribe({
+          next: res => {
+            if(res){
+              this.userModel.set(res);
+            }
+          },
+        });
+      }
+    });
+  }
 
   openEditTitleDialog(){
-    const dialogRef = this.dialog.open(EditInput,{data:{label: 'Edit Shelf Title', value: this.shelfTitle()}});
+    const dialogRef = this.dialog.open(EditInput,{data:{label: 'Edit Shelf Title', value: this.shelfModel()?.title}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        this.shelfTitle.set(result);
+        //this.shelfTitle.set(result);
       }
     });
   }
   
   openEditDescriptionDialog(){
-    const dialogRef = this.dialog.open(EditTextarea,{data:{label: 'Edit Shelf Description', value: this.shelfDescription()}});
+    const dialogRef = this.dialog.open(EditTextarea,{data:{label: 'Edit Shelf Description', value: this.shelfModel()?.description}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        this.shelfDescription.set(result);
+        //this.shelfDescription.set(result);
       }
     });
   }

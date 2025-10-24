@@ -23,7 +23,7 @@ export class LibraryCard {
 
   openLibrary(){
     this.libraryService.currentLibraryModel.set(this.libraryModel());
-    this.router.navigate(["/Library"]);
+    this.router.navigate(["/library"]);
   }
 }
 
@@ -34,5 +34,6 @@ export class LibraryModel {
   shelvesTitles?: string[];
   hasImage?:boolean;
   ownerUsername?: string;
+  ownerGuid?: string;
   createdAt?:Date;
 }

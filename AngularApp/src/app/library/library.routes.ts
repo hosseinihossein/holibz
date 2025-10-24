@@ -9,10 +9,11 @@ import { ShelvesList } from "./shelves-list/shelves-list";
 export const libraryRoutes : Routes = [
     {path: "libraries/:userGuid", component: LibrariesList},
     {path: "libraries", component: LibrariesList},//uses identityService.userModel to get the current user data
-    {path: "library/:guid", component: LibraryPage},
-    {path: "library", component: LibraryPage},//uses libararyService.currentLibraryModel to get the data from selected libraryCard
-    {path: "shelves/:userGuid", component: ShelvesList},
-    {path: "shelf", component: ShelfPage},
-    {path: "documents", component: DocumentsList},
+    {path: "library/:libraryGuid", component: LibraryPage},
+    {path: "library", component: LibraryPage},//uses libararyService.currentLibraryModel to get the data for the selected libraryCard
+    //{path: "shelves/:libraryGuid", component: ShelvesList},// equal to library page
+    {path: "shelf/:shelfGuid", component: ShelfPage},
+    {path: "shelf", component: ShelfPage},//use libraryService.currentShelfModel to get data for the selected shelfCard
+    //{path: "documents", component: DocumentsList},// equal to shelf page
     {path: "document/:docGuid", component: DocumentPage},
 ];

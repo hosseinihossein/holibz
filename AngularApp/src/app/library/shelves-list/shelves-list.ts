@@ -53,7 +53,7 @@ export class ShelvesList {
       }
     });
 
-    effect(() => {
+    /*effect(() => {
       if(this.isMyShelfList()){
         this.identityService.getCsrf().subscribe({
           next: () => {
@@ -65,6 +65,6 @@ export class ShelvesList {
           },
         });
       }
-    });
+    });*/
   }
 }

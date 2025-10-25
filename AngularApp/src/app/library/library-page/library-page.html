@@ -5,12 +5,11 @@
             <img [ngSrc]="`/api/Library/LogoImage?guid=${libraryModel()!.guid}`" alt="library logo" matCardAvatar>
             }
             @else {
-            <mat-icon matCardAvatar style="font-size: 36px;text-align: center;/*width: 40px;height: 40px;*/">
-                account_balance
-            </mat-icon>
+            <mat-icon matCardAvatar
+                style="font-size: 36px;text-align: center;/*width: 40px;height: 40px;*/">account_balance</mat-icon>
             }
             <mat-card-title>{{libraryModel()?.title}}</mat-card-title>
-            <mat-card-subtitle>{{libraryModel()?.ownerUsername}}</mat-card-subtitle>
+            <mat-card-subtitle>{{userModel()?.username}}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
             <p>{{libraryModel()?.description}}</p>

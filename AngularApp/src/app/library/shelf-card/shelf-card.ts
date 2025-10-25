@@ -31,14 +31,12 @@ export class ShelfCard implements OnInit {
   constructor(){}
 
   ngOnInit(): void {
-    effect(()=>{
-      this.identityService.requestUserModel(this.shelfModel().ownerGuid!).subscribe({
-        next: res => {
-          if(res){
-            this.userModel.set(res);
-          }
-        },
-      });
+    this.identityService.requestUserModel(this.shelfModel().ownerGuid!).subscribe({
+      next: res => {
+        if(res){
+          this.userModel.set(res);
+        }
+      },
     });
   }
 

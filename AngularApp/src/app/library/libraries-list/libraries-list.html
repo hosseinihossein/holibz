@@ -1,5 +1,6 @@
 <div class="top-box clearfix">
-    <div class="icon-box" [matBadge]="userModel()?.username" matBadgePosition="below" matTooltip="number of libraries">
+    <!-- [matBadge]="userModel()?.username" matBadgePosition="below" -->
+    <div class="icon-box" [matTooltip]="userModel()?.username">
         @if(userImgSrc()){
         <img [ngSrc]="userImgSrc()!" priority width="56" height="56" alt="user image" id="user-profile-img">
         }

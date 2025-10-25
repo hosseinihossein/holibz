@@ -166,6 +166,12 @@ public class LibraryController : ControllerBase
         return Ok(shelfCardModels);
     }
 
+    /*[HttpGet]
+    public async Task<IActionResult> ShelfModel([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        
+    }*/
+
     [HttpGet]
     public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
     {

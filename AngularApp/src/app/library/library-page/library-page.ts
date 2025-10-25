@@ -6,11 +6,12 @@ import { LibraryService } from '../../services/library-service';
 import { LibraryCardModel } from '../library-card/library-card';
 import { NgOptimizedImage } from '@angular/common';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-library-page',
   imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar, 
-    MatCardSubtitle, NgOptimizedImage],
+    MatCardSubtitle, NgOptimizedImage, MatIcon],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })

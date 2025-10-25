@@ -49,7 +49,7 @@ export class DocumentsList {
       }
     });
 
-    effect(() => {
+    /*effect(() => {
       if(this.isMyDocumentList()){
         this.identityService.getCsrf().subscribe({
           next: () => {
@@ -61,6 +61,6 @@ export class DocumentsList {
           },
         });
       }
-    });
+    });*/
   }
 }

@@ -29,7 +29,8 @@ export class LibrariesList {
   totalNumberOfUserShelves = signal(0);
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
-  isMyLibraries = signal(false);
+  isMyLibraries = computed(()=>this.identityService.isAuthenticated() && 
+  this.userModel()?.guid === this.identityService.userModel()?.guid);
 
   constructor(){
     let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
@@ -40,14 +41,13 @@ export class LibrariesList {
     if(!this.userGuid()){
       if(this.identityService.isAuthenticated()){
         this.userGuid.set(this.identityService.userModel()?.guid!);
-        this.isMyLibraries.set(true);
       }
       else{
         this.router.navigateByUrl("/login");
       }
     }
 
-    if(this.isMyLibraries()){
+    /*if(this.isMyLibraries()){
       this.identityService.getCsrf().subscribe({
         next: () => {
           console.log("Csrf received successfully.");
@@ -58,7 +58,7 @@ export class LibrariesList {
           throw(err);
         },
       });
-    }
+    }*/
     
     effect(()=>{
       this.libraryService.requestLibraryList(this.userGuid())?.subscribe({

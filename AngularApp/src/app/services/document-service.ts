@@ -1,7 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { SectionModel } from '../models/section-model';
 import { DocumentInfo } from '../models/document-info';
-import { ShelfModel } from '../models/shelf-model';
+//import { ShelfModel } from '../models/shelf-model';
 
 @Injectable({
   providedIn: 'root'
@@ -114,7 +114,7 @@ export class DocumentService {
     this.documentInfo.update(info=>({...info,tags:tags}));
   }
 
-  shelves= signal<ShelfModel[]>([
+  shelves= signal<any[]>([
     {guid : "shelf001", title:"shelf one", description:"this is shelf one", documentsGuids:["doc0","doc1doc1doc1doc1doc1doc1doc1doc1doc1", "doc2","doc3"]},
     {guid : "shelf002", title:"shelf two shelf two", description:"this is shelf two", documentsGuids:["doc4", "doc5","doc6"]},
     {guid : "shelf003", title:"shelf three", description:"this is shelf three", documentsGuids:["doc7", "doc8","doc9"]},

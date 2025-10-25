@@ -1,11 +1,13 @@
 <app-documents-list [shelfGuid]="shelfModel()?.guid!">
     <mat-card appearance="raised">
         <mat-card-header>
+            @if(isMyShelf()){
             <button matButton="elevated" class="noPaddingBtn" id="edit-mode-btn"
-                (click)="signletonModes.toggleEditMode()">
+                (click)="signletonModes.toggleEditMode()" matTooltip="Edit">
                 <mat-icon>{{signletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
             </button>
-            <div matCardAvatar matBadge="25" matBadgePosition="above">
+            }
+            <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
                 <mat-icon id="shelf-logo">shelves</mat-icon>
             </div>
             <mat-card-title>

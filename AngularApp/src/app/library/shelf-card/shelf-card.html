@@ -1,7 +1,10 @@
 <mat-expansion-panel hideToggle expanded>
     <mat-expansion-panel-header>
         <mat-panel-title>
-            <mat-icon [matBadge]="shelfModel().totalNumberOfShelfDocuments" matBadgePosition="above">shelves</mat-icon>
+            <mat-icon [matBadge]="shelfModel().totalNumberOfShelfDocuments" matBadgePosition="above"
+                aria-hidden="false">
+                shelves
+            </mat-icon>
             &nbsp;
             &nbsp;
             {{shelfModel().title}}

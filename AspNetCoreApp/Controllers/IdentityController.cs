@@ -118,7 +118,7 @@ public class IdentityController : Controller
         // creating Default library
         Library_NewLibrayFormModel libraryFormModel = new()
         {
-            Title = "Default",
+            Title = "Default Library",
             Decription = "Containing all shelves that doesn't belong to anyother libraries."
         };
         var createDefaultLibraryResult = await libraryProcess.CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
@@ -144,7 +144,7 @@ public class IdentityController : Controller
             // creating Default shelf in Default library
             Library_NewShelfFormModel shelfFormModel = new()
             {
-                Title = "Default",
+                Title = "Default Shelf",
                 Decription = "Containing all documents that doesn't belong to anyother shelves.",
                 LibraryGuid = defaultLibrary.Guid,
             };

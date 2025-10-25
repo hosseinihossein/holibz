@@ -42,8 +42,8 @@ export class ShelfPage {
       this.shelfGuid.set(libraryGuidRouteParam);
     }
     if(!this.shelfGuid()){
-      if(this.librarySerice.currentLibraryModel()){
-        this.shelfModel.set(this.librarySerice.currentLibraryModel());
+      if(this.librarySerice.currentShelfModel()){
+        this.shelfModel.set(this.librarySerice.currentShelfModel());
         //this.librarySerice.currentLibraryModel.set(null);
 
         this.userModel.set(this.librarySerice.currentOwnerUserModel());

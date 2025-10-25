@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, OnInit, signal } from '@angular/core';
 import { MatAccordion, MatExpansionPanel, MatExpansionPanelActionRow, MatExpansionPanelDescription, MatExpansionPanelHeader, MatExpansionPanelTitle } from "@angular/material/expansion";
 import { MatTooltip } from '@angular/material/tooltip';
-import { DocumentCard } from "../document-card/document-card";
+import { DocumentCard, DocumentCardModel } from "../document-card/document-card";
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatBadge } from '@angular/material/badge';
@@ -19,7 +19,7 @@ import { NgOptimizedImage } from '@angular/common';
   styleUrl: './shelf-card.css'
 })
 export class ShelfCard implements OnInit {
-  shelfModel = input.required<ShelfModel>();
+  shelfModel = input.required<ShelfCardModel>();
 
   router = inject(Router);
   libraryService = inject(LibraryService);
@@ -48,12 +48,13 @@ export class ShelfCard implements OnInit {
   }
 }
 
-export class ShelfModel{
+export class ShelfCardModel{
   guid?:string;
   ownerGuid?:string;
   title?:string;
   description?:string;
   libraryTitle?:string;
-  documentsGuids?:string[];
+  documentCardModels?:DocumentCardModel[];
+  totalNumberOfShelfDocuments?:number;
   createdAt?:Date;
 }

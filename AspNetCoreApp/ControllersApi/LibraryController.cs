@@ -37,14 +37,6 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List([FromQuery][StringLength(32)] string userGuid)
     {
-        Identity_UserDbModel? owner =
-        await userManager.Users.FirstOrDefaultAsync(user => user.UserGuid == userGuid);
-        if (owner is null)
-        {
-            ModelState.AddModelError("userGuid", "Couldn't find the owner!");
-            return BadRequest(ModelState);
-        }
-
         var librariesInfo = await libraryDb.Libraries
         .Include(lib => lib.Shelves)
         .Where(lib => lib.OwnerGuid == userGuid)
@@ -55,23 +47,24 @@ public class LibraryController : ControllerBase
             lib.Description,
             ShelvesTitles = lib.Shelves.Select(shelf => shelf.Title),
             lib.CreatedAt,
+            lib.OwnerGuid,
         })
         .ToListAsync();
 
-        List<Library_LibraryModel> cardModelList = [];
+        List<Library_LibraryCardModel> cardModelList = [];
         foreach (var libraryInfo in librariesInfo)
         {
             string libraryImagePath =
             Path.Combine(Storage_Library.FullName, "Images", libraryInfo.Guid);
 
-            Library_LibraryModel libCard = new()
+            Library_LibraryCardModel libCard = new()
             {
                 Guid = libraryInfo.Guid,
                 Title = libraryInfo.Title,
                 Description = libraryInfo.Description,
                 ShelvesTitles = libraryInfo.ShelvesTitles.ToArray(),
-                OwnerUsername = owner.UserName!,
-                OwnerGuid = owner.UserGuid,
+                //OwnerUsername = owner.UserName!,
+                OwnerGuid = libraryInfo.OwnerGuid,
                 HasImage = System.IO.File.Exists(libraryImagePath),
                 CreatedAt = libraryInfo.CreatedAt,
             };
@@ -104,24 +97,24 @@ public class LibraryController : ControllerBase
             return NotFound();
         }
 
-        Identity_UserDbModel? owner =
+        /*Identity_UserDbModel? owner =
         await userManager.Users.FirstOrDefaultAsync(user => user.UserGuid == libraryInfo.OwnerGuid);
         if (owner is null)
         {
             ModelState.AddModelError("userGuid", "Couldn't find the owner!");
             return BadRequest(ModelState);
-        }
+        }*/
 
         string libraryImagePath =
             Path.Combine(Storage_Library.FullName, "Images", libraryInfo.Guid);
 
-        Library_LibraryModel libModel = new()
+        Library_LibraryCardModel libModel = new()
         {
             Guid = libraryInfo.Guid,
             Title = libraryInfo.Title,
             Description = libraryInfo.Description,
             ShelvesTitles = libraryInfo.ShelvesTitles.ToArray(),
-            OwnerUsername = owner.UserName!,
+            //OwnerUsername = owner.UserName!,
             OwnerGuid = libraryInfo.OwnerGuid,
             HasImage = System.IO.File.Exists(libraryImagePath),
             CreatedAt = libraryInfo.CreatedAt,
@@ -133,22 +126,26 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid)
     {
-        var shelvesInfo = await libraryDb.Shelves
+        var shelfCardModels = await libraryDb.Shelves
         .Include(shelf => shelf.Library)
         .Include(shelf => shelf.Documents)
+        .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Library.Guid == libraryGuid)
-        .Select(shelf => new Library_ShelfModel()
+        .Select(shelf => new Library_ShelfCardModel()
         {
-            /*shelf.CreatedAt,
-            shelf.Description,
-            shelf.Guid,
-            LibraryTitle = shelf.Library.Title,
-            shelf.Title,
-            shelf.OwnerGuid,
-            DocumentsGuids = shelf.Documents.Select(doc => doc.Guid),*/
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
-            DocumentsGuids = shelf.Documents.Select(doc => doc.Guid).ToArray(),
+            DocumentCardModels = shelf.Documents
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Take(10)
+            .Select(doc => new Library_DocumentCardModel()
+            {
+                Description = doc.Description,
+                Guid = doc.Guid,
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+                OwnerGuid = doc.OwnerGuid,
+                Title = doc.Title,
+            }).ToArray(),
             Guid = shelf.Guid,
             LibraryTitle = shelf.Library.Title,
             Title = shelf.Title,
@@ -157,30 +154,45 @@ public class LibraryController : ControllerBase
         .AsSplitQuery()
         .ToArrayAsync();
 
-        /*List<Library_ShelfModel> shelfModels = [];
-        foreach (var shelfInfo in shelvesInfo)
+        foreach (var shelfCardModel in shelfCardModels)
         {
-            Library_ShelfModel shelfModel = new()
+            foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
             {
-                CreatedAt = shelfInfo.CreatedAt,
-                Description = shelfInfo.Description,
-                DocumentsGuids = shelfInfo.DocumentsGuids.ToArray(),
-                Guid = shelfInfo.Guid,
-                LibraryTitle = shelfInfo.LibraryTitle,
-                Title = shelfInfo.Title,
-                OwnerGuid = shelfInfo.OwnerGuid,
-            };
-            shelfModels.Add(shelfModel);
+                documentCardModel.HasImage =
+                System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+            }
         }
-        return Ok(shelfModels);*/
-        return Ok(shelvesInfo);
+
+        return Ok(shelfCardModels);
     }
 
-    /*[HttpGet]
-    public async Task<IActionResult> DocumentList([FromQuery][StringLength(32)] string shelfGuid)
+    [HttpGet]
+    public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
     {
+        Library_DocumentCardModel[] documentCardModels = await libraryDb.Shelves
+        .Include(shelf => shelf.Documents)
+        .ThenInclude(doc => doc.Elements)
+        .Where(shelf => shelf.Guid == shelfGuid)
+        .SelectMany(shelf => shelf.Documents)
+        .Select(doc => new Library_DocumentCardModel()
+        {
+            Description = doc.Description,
+            Guid = doc.Guid,
+            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+            OwnerGuid = doc.OwnerGuid,
+            Title = doc.Title,
+        })
+        //.AsSplitQuery()//we dont need assplitquery because include and theninclide are not in the same level
+        .ToArrayAsync();
 
-    }*/
+        foreach (var documentCardModel in documentCardModels)
+        {
+            documentCardModel.HasImage =
+            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+        }
+
+        return Ok(documentCardModels);
+    }
 
     [HttpGet]
     public async Task<IActionResult> DocumentCardModel([FromQuery][StringLength(32)] string documentGuid)
@@ -193,6 +205,7 @@ public class LibraryController : ControllerBase
             Guid = doc.Guid,
             Description = doc.Description,
             Title = doc.Title,
+            OwnerGuid = doc.OwnerGuid,
             Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
         })
         .FirstOrDefaultAsync();

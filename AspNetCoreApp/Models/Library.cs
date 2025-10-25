@@ -208,26 +208,27 @@ public class ProcessResult
 
 //********************************************************************************
 //************************************ DataModels ********************************
-public class Library_LibraryModel
+public class Library_LibraryCardModel
 {
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string[] ShelvesTitles { get; set; } = [];
     public bool HasImage { get; set; } = false;
-    public string OwnerUsername { get; set; } = null!;
+    //public string OwnerUsername { get; set; } = null!;
     public string OwnerGuid { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
 }
-public class Library_ShelfModel
+public class Library_ShelfCardModel
 {
     public string Guid { get; set; } = null!;
     public string OwnerGuid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
     public string LibraryTitle { get; set; } = null!;
-    public string[] DocumentsGuids { get; set; } = [];
+    public Library_DocumentCardModel[] DocumentCardModels { get; set; } = [];
     public DateTime CreatedAt { get; set; }
+    public int TotalNumberOfShelfDocuments { get; set; }
 }
 public class Library_DocumentCardModel
 {
@@ -236,6 +237,7 @@ public class Library_DocumentCardModel
     public string Description { get; set; } = null!;
     public string[] Headers { get; set; } = [];
     public bool HasImage { get; set; }
+    public string OwnerGuid { get; set; } = null!;
 }
 public class Library_NewLibrayFormModel
 {

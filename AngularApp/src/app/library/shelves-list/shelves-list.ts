@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatSidenav, MatSidenavContainer, MatSidenavContent } from '@angular/material/sidenav';
-import { ShelfCard, ShelfModel } from "../shelf-card/shelf-card";
+import { ShelfCard, ShelfCardModel } from "../shelf-card/shelf-card";
 import { MatAccordion } from '@angular/material/expansion';
 import { LibraryService } from '../../services/library-service';
 import { ActivatedRoute } from '@angular/router';
@@ -14,36 +14,38 @@ import { IdentityService, UserProfileModel } from '../../services/identity-servi
 })
 export class ShelvesList {
   libraryGuid = input.required<string>();
-  userGuid = signal<string|null>(null);
 
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
   identityService = inject(IdentityService);
 
-  shelfModels = signal<ShelfModel[]>([]);
-  totalNumberOfUserDocuments = signal(0);
+  shelfModels = signal<ShelfCardModel[]>([]);
+  //totalNumberOfUserDocuments = signal(0);
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
-  isMyShelfList = computed(() => this.identityService.isAuthenticated() && this.identityService.userModel()?.guid === this.userGuid());//signal(false);
+  isMyShelfList = computed(() => this.identityService.isAuthenticated() && 
+  this.identityService.userModel()?.guid === this.userModel()?.guid);//signal(false);
 
   constructor(){
+    this.userModel.set(this.libraryService.currentOwnerUserModel());
+
     effect(() => {
       this.libraryService.requestShelfList(this.libraryGuid())?.subscribe({
         next: res => {
           if(res){
             this.shelfModels.set(res);
-            this.totalNumberOfUserDocuments.set(res.flatMap(shelf=>shelf.documentsGuids).length);
-            if(res[0].ownerGuid){
+            //this.totalNumberOfUserDocuments.set(res.flatMap(shelf=>shelf.documentsGuids).length);
+            /*if(res[0].ownerGuid){
               this.userGuid.set(res[0].ownerGuid);
-            }
+            }*/
           }
         },
       });
     });
     
     effect(() => {
-      if(this.userGuid()){
-        this.identityService.requestUserModel(this.userGuid()!).subscribe({
+      if(!this.userModel() && this.shelfModels() && this.shelfModels().length > 0){
+        this.identityService.requestUserModel(this.shelfModels()[0].ownerGuid!).subscribe({
           next: res => {
             this.userModel.set(res);
           },

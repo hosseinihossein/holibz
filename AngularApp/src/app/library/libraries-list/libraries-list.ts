@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { LibraryCard, LibraryModel } from "../library-card/library-card";
+import { LibraryCard, LibraryCardModel } from "../library-card/library-card";
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatBadge } from '@angular/material/badge';
@@ -24,7 +24,7 @@ export class LibrariesList {
   router = inject(Router);
   identityService = inject(IdentityService);
 
-  libraryModels = signal<LibraryModel[]>([]);
+  libraryModels = signal<LibraryCardModel[]>([]);
   totalNumberOfUserDocuments = signal(0);
   totalNumberOfUserShelves = signal(0);
   userModel = signal<UserProfileModel|null>(null);

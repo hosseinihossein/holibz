@@ -4,6 +4,7 @@ import { MatIcon } from '@angular/material/icon';
 import { NgOptimizedImage } from "@angular/common";
 import { Router } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
+import { UserProfileModel } from '../../services/identity-service';
 
 @Component({
   selector: 'app-library-card',
@@ -16,10 +17,16 @@ import { LibraryService } from '../../services/library-service';
   }
 })
 export class LibraryCard {
-  libraryModel = input.required<LibraryModel>();
+  libraryModel = input.required<LibraryCardModel>();
 
   router = inject(Router);
   libraryService = inject(LibraryService);
+
+  userModel = signal<UserProfileModel|null>(null);
+
+  constructor(){
+    this.userModel.set(this.libraryService.currentOwnerUserModel());
+  }
 
   openLibrary(){
     this.libraryService.currentLibraryModel.set(this.libraryModel());
@@ -27,13 +34,13 @@ export class LibraryCard {
   }
 }
 
-export class LibraryModel {
+export class LibraryCardModel {
   guid?: string;
   title?: string;
   description?: string; 
   shelvesTitles?: string[];
   hasImage?:boolean;
-  ownerUsername?: string;
+  //ownerUsername?: string;
   ownerGuid?: string;
   createdAt?:Date;
 }

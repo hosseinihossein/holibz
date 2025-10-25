@@ -11,7 +11,7 @@ import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { ActivatedRoute } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
-import { ShelfModel } from '../shelf-card/shelf-card';
+import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 
 @Component({
@@ -29,10 +29,12 @@ export class ShelfPage {
   activatedRoute = inject(ActivatedRoute);
   librarySerice = inject(LibraryService);
   identityService = inject(IdentityService);
-  shelfModel = signal<ShelfModel|null>(null);
+  
+  shelfModel = signal<ShelfCardModel|null>(null);
+
+  userModel = signal<UserProfileModel|null>(null);
   isMyShelf = computed(() => this.identityService.isAuthenticated() && 
   this.shelfModel()?.ownerGuid === this.identityService.userModel()?.guid);
-  userModel = signal<UserProfileModel|null>(null);
 
   constructor(){
     let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
@@ -42,10 +44,10 @@ export class ShelfPage {
     if(!this.shelfGuid()){
       if(this.librarySerice.currentLibraryModel()){
         this.shelfModel.set(this.librarySerice.currentLibraryModel());
-        this.librarySerice.currentLibraryModel.set(null);
+        //this.librarySerice.currentLibraryModel.set(null);
 
         this.userModel.set(this.librarySerice.currentOwnerUserModel());
-        this.librarySerice.currentOwnerUserModel.set(null);
+        //this.librarySerice.currentOwnerUserModel.set(null);
       }
     }
     else{
@@ -66,7 +68,7 @@ export class ShelfPage {
     }
 
     effect(() => {
-      if(this.shelfModel()){
+      if(!this.userModel() && this.shelfModel()){
         this.identityService.requestUserModel(this.shelfModel()?.ownerGuid!).subscribe({
           next: res => {
             if(res){

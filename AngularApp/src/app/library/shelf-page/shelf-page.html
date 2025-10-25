@@ -1,4 +1,4 @@
-<app-documents-list>
+<app-documents-list [shelfGuid]="shelfModel()?.guid!">
     <mat-card appearance="raised">
         <mat-card-header>
             <button matButton="elevated" class="noPaddingBtn" id="edit-mode-btn"

@@ -16,27 +16,31 @@ import { Router, RouterLink } from '@angular/router';
   templateUrl: './document-card.html',
   styleUrl: './document-card.css'
 })
-export class DocumentCard implements OnInit {
-  docGuid = input.required<string>();
-  userGuid = input.required<string>();
+export class DocumentCard /*implements OnInit*/ {
+  documentCardModel = input.required<DocumentCardModel>();
+  //docGuid = input.required<string>();
+  //userGuid = input.required<string>();
   mini = input(false);
   alone = input(false);
 
   singletonModes = inject(SingletonModes);
   identityService = inject(IdentityService);
   libraryService = inject(LibraryService);
-  router = inject(Router);
+  //router = inject(Router);
 
   documentCard = viewChild(MatCard,{read:ElementRef});
   
   appearance = signal<"outlined"|"raised"|"filled">("outlined");
   userModel = signal<UserProfileModel|null>(null);
   userAvatarSrc = computed(()=>this.userModel()?.imageAddress);
-  documentCardModel = signal<DocumentCardModel|null>(null);
+  //documentCardModel = signal<DocumentCardModel|null>(null);
 
-  constructor(){}
-  ngOnInit(): void {
-    effect(() => {
+  constructor(){
+    this.userModel.set(this.libraryService.currentOwnerUserModel());
+  }
+  //ngOnInit(): void {
+    /*effect(() => {
+      if()
       this.identityService.requestUserModel(this.userGuid()).subscribe({
         next: res => {
           if(res){
@@ -44,9 +48,9 @@ export class DocumentCard implements OnInit {
           }
         },
       });
-    });
+    });*/
 
-    effect(() => {
+    /*effect(() => {
       this.libraryService.requestDocumentCardModel(this.docGuid()).subscribe({
         next: res => {
           if(res){
@@ -54,8 +58,8 @@ export class DocumentCard implements OnInit {
           }
         },
       });
-    });
-  }
+    });*/
+  //}
 
   raiseCard(){
     this.appearance.set("raised");
@@ -73,4 +77,5 @@ export class DocumentCardModel{
   description?:string;
   headers?:string[];
   hasImage?:boolean;
+  ownerGuid?:string;
 }

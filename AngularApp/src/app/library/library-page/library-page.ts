@@ -3,7 +3,7 @@ import { ShelvesList } from "../shelves-list/shelves-list";
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { ActivatedRoute } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
-import { LibraryModel } from '../library-card/library-card';
+import { LibraryCardModel } from '../library-card/library-card';
 import { NgOptimizedImage } from '@angular/common';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 
@@ -20,7 +20,7 @@ export class LibraryPage {
   activatedRoute = inject(ActivatedRoute);
   librarySerice = inject(LibraryService);
   identityService = inject(IdentityService);
-  libraryModel = signal<LibraryModel|null>(null);
+  libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
   this.libraryModel()?.ownerGuid === this.identityService.userModel()?.guid);
   userModel = signal<UserProfileModel|null>(null);
@@ -33,10 +33,10 @@ export class LibraryPage {
     if(!this.libraryGuid()){
       if(this.librarySerice.currentLibraryModel()){
         this.libraryModel.set(this.librarySerice.currentLibraryModel());
-        this.librarySerice.currentLibraryModel.set(null);
+        //this.librarySerice.currentLibraryModel.set(null);
 
         this.userModel.set(this.librarySerice.currentOwnerUserModel());
-        this.librarySerice.currentOwnerUserModel.set(null);
+        //this.librarySerice.currentOwnerUserModel.set(null);
       }
     }
     else{
@@ -57,7 +57,7 @@ export class LibraryPage {
     }
 
     effect(() => {
-      if(this.libraryModel()){
+      if(!this.userModel() && this.libraryModel()){
         this.identityService.requestUserModel(this.libraryModel()?.ownerGuid!).subscribe({
           next: res => {
             if(res){
@@ -66,6 +66,6 @@ export class LibraryPage {
           },
         });
       }
-    })
+    });
   }
 }

@@ -4,6 +4,7 @@ import { IdentityService, UserProfileModel } from './identity-service';
 import { LibraryCardModel } from '../library/library-card/library-card';
 import { ShelfCardModel } from '../library/shelf-card/shelf-card';
 import { DocumentCardModel } from '../library/document-card/document-card';
+import { DocumentPageModel } from '../library/document-page/document-page';
 
 @Injectable({
   providedIn: 'root'
@@ -86,8 +87,12 @@ export class LibraryService {
       "/api/Library/DocumentCardModel", {params: httpParams}
     );
   }
-
-
+  requestDocumentPageModel(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid", documentGuid);
+    return this.httpClient.get<DocumentPageModel>(
+      "/api/Library/DocumentPageModel", {params:httpParams}
+    );
+  }
 
 }
 

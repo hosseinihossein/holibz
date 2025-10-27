@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { DocumentElement } from "../document-element/document-element";
+import { DocumentElement, DocumentElementModel } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 
 @Component({
@@ -9,5 +9,5 @@ import { SectionModel } from '../../../../models/section-model';
   styleUrl: './h1-element.css'
 })
 export class H1Element {
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
 }

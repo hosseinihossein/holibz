@@ -239,6 +239,49 @@ public class Library_DocumentCardModel
     public bool HasImage { get; set; }
     public string OwnerGuid { get; set; } = null!;
 }
+public class Library_DocumentPageModel
+{
+    public string Guid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public bool HasImage { get; set; }
+    public string Description { get; set; } = null!;
+    public string Version { get; set; } = null!;
+    public Library_VersionBrief? RelatedVersions { get; set; }
+    public Library_ShelfBrief[] Shelves { get; set; } = [];
+    public Library_DocumentElementModel[] Elements { get; set; } = [];
+    public string[] Tags { get; set; } = [];
+    public DateTime CreatedAt { get; set; }
+}
+public class Library_DocumentElementModel
+{
+    public string Guid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
+    public string Type { get; set; } = null!;
+    public string Value { get; set; } = null!;
+    public string? Title { get; set; }
+    public int Order { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+public class Library_ShelfBrief
+{
+    public string Guid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string? Description { get; set; }
+    public Library_DocumentBrief[] Documents { get; set; } = [];
+}
+public class Library_DocumentBrief
+{
+    public string Guid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string? Description { get; set; }
+}
+public class Library_VersionBrief
+{
+    public string DocumentGuid { get; set; } = null!;
+    public string VersionName { get; set; } = null!;
+}
+
 public class Library_NewLibrayFormModel
 {
     [StringLength(30, MinimumLength = 3)]

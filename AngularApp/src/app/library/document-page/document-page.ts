@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, ElementRef, inject, input, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -14,16 +14,18 @@ import { DocumentService } from '../../services/document-service';
 import { DocumentElement, DocumentElementModel } from './document-elements/document-element/document-element';
 import { MatChip, MatChipSet } from "@angular/material/chips";
 import { EditTags } from '../../dialogs/edit-tags/edit-tags';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
-import { IdentityService } from '../../services/identity-service';
+import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { DocumentCardModel } from '../document-card/document-card';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
-    MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip],
+    MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip, RouterLink,
+  NgOptimizedImage],
   templateUrl: './document-page.html',
   styleUrl: './document-page.css'
 })
@@ -33,6 +35,10 @@ export class DocumentPage implements AfterViewInit {
   //containerShelves = signal<ShelfCardModel[]|null>(null);
   //documentElements = signal<DocumentElementModel[]|null>(null);
   documentPageModel = signal<DocumentPageModel|null>(null);
+
+  //ownerGuid = signal<string|null>(null);
+  ownerModel = signal<UserProfileModel|null>(null);
+  ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
 
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
@@ -44,14 +50,39 @@ export class DocumentPage implements AfterViewInit {
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
 
-  //sortedSectoins = computed(()=>this.documentService.allSectionModels().sort((a,b)=>{if(a.order > b.order)return 1;else return -1;}))
+  sortedElements = computed(()=>this.documentPageModel()?.elements.sort((a,b)=>{if(a.order > b.order)return 1;else return -1;}));
   
   constructor(){
     console.log("app-document constructor!");
+    
     let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
     if(documentGuidRouteParam){
       this.documentGuid.set(documentGuidRouteParam);
     }
+
+    effect(() => {
+      if(this.documentGuid()){
+        this.libraryService.requestDocumentPageModel(this.documentGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.documentPageModel.set(res);
+            }
+          },
+        });
+      }
+    });
+
+    effect(() => {
+      if(this.documentPageModel()){
+        this.identityService.requestUserModel(this.documentPageModel()!.ownerGuid).subscribe({
+          next: res => {
+            if(res){
+              this.ownerModel.set(res);
+            }
+          },
+        });
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -97,15 +128,16 @@ export class DocumentPage implements AfterViewInit {
 
 }
 
-class DocumentPageModel {
+export class DocumentPageModel {
   guid:string = null!;
   ownerGuid:string = null!;
   title:string = null!;
   hasImage:boolean = false;
   description:string = null!;
   version:string = null!;
-  relatedVersions?:{version:string, documentGuid:string}[]
-  shelves:ShelfCardModel[] = [];
+  relatedVersions?:{versionName:string, documentGuid:string}[]
+  shelves:{guid:string, title:string, description?:string, 
+    documents:{guid:string, title:string, description?:string}[]}[] = [];
   elements:DocumentElementModel[] = [];
   tags:string[] = [];
   createdAt:Date = null!;

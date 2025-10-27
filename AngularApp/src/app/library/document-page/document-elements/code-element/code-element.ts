@@ -4,6 +4,7 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { SectionModel } from '../../../../models/section-model';
+import { DocumentElementModel } from '../document-element/document-element';
 
 @Component({
   selector: 'app-code-element',
@@ -13,7 +14,7 @@ import { SectionModel } from '../../../../models/section-model';
 })
 export class CodeElement {
   clipboard = inject(Clipboard);
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
   
   copyCode(event:Event){
     if(event.currentTarget instanceof HTMLButtonElement){

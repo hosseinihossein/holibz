@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { MatFabButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { DocumentElement } from "../document-element/document-element";
+import { DocumentElement, DocumentElementModel } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 import { DocumentService } from '../../../../services/document-service';
 
@@ -12,5 +12,5 @@ import { DocumentService } from '../../../../services/document-service';
   styleUrl: './file-element.css'
 })
 export class FileElement {
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
 }

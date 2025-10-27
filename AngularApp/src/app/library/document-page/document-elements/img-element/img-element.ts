@@ -1,7 +1,7 @@
 import { Component, inject, input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { LargeImg } from '../../../../dialogs/large-img/large-img';
-import { SectionModel } from '../../../../models/section-model';
+import { DocumentElementModel } from '../document-element/document-element';
 
 @Component({
   selector: 'app-img-element',
@@ -10,11 +10,11 @@ import { SectionModel } from '../../../../models/section-model';
   styleUrl: './img-element.css'
 })
 export class ImgElement {
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
 
   readonly dialog = inject(MatDialog);
 
   openLargeImage(){
-    this.dialog.open(LargeImg, {data:{imgSrc:this.sectionModel().value, imgTitle: this.sectionModel().title}});
+    this.dialog.open(LargeImg, {data:{imgSrc:this.elementModel().value, imgTitle: this.elementModel().title}});
   }
 }

@@ -1,28 +1,28 @@
 <div class="mainDiv" [class.editMode]="singletonModes.editMode()">
     @if(singletonModes.editMode()){
-    <app-edit-box [sectionModel]="sectionModel()"></app-edit-box>
+    <app-edit-box [elementModel]="elementModel()"></app-edit-box>
     }
-    @switch (sectionModel().type) {
+    @switch (elementModel().type) {
     @case("h1"){
-    <app-h1-element [sectionModel]="sectionModel()"></app-h1-element>
+    <app-h1-element [elementModel]="elementModel()"></app-h1-element>
     }
     @case("h2"){
-    <app-h2-element [sectionModel]="sectionModel()"></app-h2-element>
+    <app-h2-element [elementModel]="elementModel()"></app-h2-element>
     }
     @case("p"){
-    <app-p-element [sectionModel]="sectionModel()"></app-p-element>
+    <app-p-element [elementModel]="elementModel()"></app-p-element>
     }
     @case("img"){
-    <app-img-element [sectionModel]="sectionModel()"></app-img-element>
+    <app-img-element [elementModel]="elementModel()"></app-img-element>
     }
     @case("code"){
-    <app-code-element [sectionModel]="sectionModel()"></app-code-element>
+    <app-code-element [elementModel]="elementModel()"></app-code-element>
     }
     @case("file"){
-    <app-file-element [sectionModel]="sectionModel()"></app-file-element>
+    <app-file-element [elementModel]="elementModel()"></app-file-element>
     }
     @case("link"){
-    <app-link-element [sectionModel]="sectionModel()"></app-link-element>
+    <app-link-element [elementModel]="elementModel()"></app-link-element>
     }
     }
 </div>

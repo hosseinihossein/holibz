@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { SectionModel } from '../../../../models/section-model';
+import { DocumentElementModel } from '../document-element/document-element';
 
 @Component({
   selector: 'app-link-element',
@@ -10,5 +11,5 @@ import { SectionModel } from '../../../../models/section-model';
   styleUrl: './link-element.css'
 })
 export class LinkElement {
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
 }

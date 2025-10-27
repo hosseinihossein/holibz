@@ -10,6 +10,7 @@ import { EditCode } from '../../../../dialogs/edit-code/edit-code';
 import { EditLink } from '../../../../dialogs/edit-link/edit-link';
 import { EditFile } from '../../../../dialogs/edit-file/edit-file';
 import { EditImageTitle } from '../../../../dialogs/edit-image-title/edit-image-title';
+import { DocumentElementModel } from '../document-element/document-element';
 
 @Component({
   selector: 'app-edit-box',
@@ -18,13 +19,13 @@ import { EditImageTitle } from '../../../../dialogs/edit-image-title/edit-image-
   styleUrl: './edit-box.css'
 })
 export class EditBox {
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
 
   documentService = inject(DocumentService);
   dialog = inject(MatDialog);
 
   openDialog(){
-    switch(this.sectionModel().type){
+    switch(this.elementModel().type){
       case "h1":
         this.openEditHeaderDialog();
         break;
@@ -53,15 +54,15 @@ export class EditBox {
   }
 
   private openEditHeaderDialog(){
-    const dialogRef = this.dialog.open(EditHeader,{data:{value:this.sectionModel().value}});
+    const dialogRef = this.dialog.open(EditHeader,{data:{value:this.elementModel().value}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "delete"){
-          this.documentService.deleteSection(this.sectionModel().guid);
+          this.documentService.deleteSection(this.elementModel().guid);
         }
         else{
           let sectionInfo = {
-            guid:this.sectionModel().guid, 
+            guid:this.elementModel().guid, 
             value: result,
           };
           this.documentService.mockEditSection(sectionInfo);
@@ -71,15 +72,15 @@ export class EditBox {
     });
   }
   private openEditParagraphDialog(){
-    const dialogRef = this.dialog.open(EditParagraph,{data:{value:this.sectionModel().value}});
+    const dialogRef = this.dialog.open(EditParagraph,{data:{value:this.elementModel().value}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "delete"){
-          this.documentService.deleteSection(this.sectionModel().guid);
+          this.documentService.deleteSection(this.elementModel().guid);
         }
         else{
           let sectionInfo = {
-            guid:this.sectionModel().guid, 
+            guid:this.elementModel().guid, 
             value: result,
           };
           this.documentService.mockEditSection(sectionInfo);
@@ -89,15 +90,15 @@ export class EditBox {
     });
   }
   private openEditCodeDialog(){
-    const dialogRef = this.dialog.open(EditCode,{data:{value:this.sectionModel().value}});
+    const dialogRef = this.dialog.open(EditCode,{data:{value:this.elementModel().value}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "delete"){
-          this.documentService.deleteSection(this.sectionModel().guid);
+          this.documentService.deleteSection(this.elementModel().guid);
         }
         else{
           let sectionInfo = {
-            guid:this.sectionModel().guid, 
+            guid:this.elementModel().guid, 
             value: result,
           };
           this.documentService.mockEditSection(sectionInfo);
@@ -107,15 +108,15 @@ export class EditBox {
     });
   }
   private openEditFileDialog(){
-    const dialogRef = this.dialog.open(EditFile,{data:{value:this.sectionModel().value, title:this.sectionModel().title }});
+    const dialogRef = this.dialog.open(EditFile,{data:{value:this.elementModel().value, title:this.elementModel().title }});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "delete"){
-          this.documentService.deleteSection(this.sectionModel().guid);
+          this.documentService.deleteSection(this.elementModel().guid);
         }
         else{
           let sectionInfo = {
-            guid:this.sectionModel().guid, 
+            guid:this.elementModel().guid, 
             file: result.file, 
             title: result.title, 
           };
@@ -125,15 +126,15 @@ export class EditBox {
     });
   }
   private openEditImageDialog(){
-    const dialogRef = this.dialog.open(EditImageTitle,{data:{value:this.sectionModel().value,title:this.sectionModel().title??''}});
+    const dialogRef = this.dialog.open(EditImageTitle,{data:{value:this.elementModel().value,title:this.elementModel().title??''}});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "delete"){
-          this.documentService.deleteSection(this.sectionModel().guid);
+          this.documentService.deleteSection(this.elementModel().guid);
         }
         else{
           let sectionInfo = {
-            guid:this.sectionModel().guid, 
+            guid:this.elementModel().guid, 
             file: result.file, 
             title: result.title, 
           };
@@ -143,15 +144,15 @@ export class EditBox {
     });
   }
   private openEditLinkDialog(){
-    const dialogRef = this.dialog.open(EditLink,{data:{value:this.sectionModel().value, title:this.sectionModel().title }});
+    const dialogRef = this.dialog.open(EditLink,{data:{value:this.elementModel().value, title:this.elementModel().title }});
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "delete"){
-          this.documentService.deleteSection(this.sectionModel().guid);
+          this.documentService.deleteSection(this.elementModel().guid);
         }
         else{
           let sectionInfo = {
-            guid:this.sectionModel().guid, 
+            guid:this.elementModel().guid, 
             value: result.value, 
             title: result.title, 
           };

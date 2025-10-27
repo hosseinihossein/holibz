@@ -8,15 +8,18 @@
             Shelves:
         </p>
         <mat-accordion>
-            @for(shelf of documentService.shelves(); track shelf.guid){
+            @for(shelf of documentPageModel()?.shelves; track shelf.guid){
             <mat-expansion-panel>
                 <mat-expansion-panel-header>
                     <mat-panel-title [matTooltip]="shelf.description">
                         {{shelf.title}}
                     </mat-panel-title>
                 </mat-expansion-panel-header>
-                @for(doc of shelf.documentsGuids; track doc){
-                <a matButton class="siblingDocs" matTooltip="document description" matTooltipShowDelay="500">{{doc}}</a>
+                @for(doc of shelf.documents; track doc){
+                <a matButton [routerLink]="['document',doc.guid]" class="siblingDocs" [matTooltip]="doc.description"
+                    matTooltipShowDelay="500">
+                    {{doc.title}}
+                </a>
                 }
             </mat-expansion-panel>
             }
@@ -26,10 +29,10 @@
     <!--------------------- content overview -------------------->
     <mat-sidenav id="endSideNav" mode="side" opened position="end" fixedInViewport fixedTopGap="80" fixedBottomGap="16">
         <p style="font-weight: 500;color: var(--mat-sys-on-surface);margin: 3px;">Contents:</p>
-        @for(section of documentService.allSectionModels(); track section.guid){
-        @if(section.type === "h1" || section.type === "h2"){
-        <a href="./#{{section.guid}}" id="overview-header{{section.guid}}"
-            [style.paddingLeft.px]="section.type === 'h2' ? 12 : 4">{{section.value}}</a>
+        @for(element of documentPageModel()?.elements; track element.guid){
+        @if(element.type === "h1" || element.type === "h2"){
+        <a href="./#{{element.guid}}" id="overview-header{{element.guid}}"
+            [style.paddingLeft.px]="element.type === 'h2' ? 12 : 4">{{element.value}}</a>
         }
         }
     </mat-sidenav>
@@ -39,12 +42,17 @@
         <!--------------------- top action box -------------------->
         <div class="actionDiv clearfix">
             <a matButton="elevated" href="" id="userProfile" class="noPaddingBtn" matTooltip="Owner">
-                <img src="defaultProfile.jpg" alt="">
+                @if(ownerImgSrc()){
+                <img [ngSrc]="ownerImgSrc()!" priority width="40" height="40" alt="user image">
+                }
+                @else {
+                <mat-icon style="font-size: 40px;width: 40px;height: 40px;">account_circle</mat-icon>
+                }
                 <span id="username">hossein</span>
             </a>
             <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version of the document">
                 <mat-icon>arrow_drop_down</mat-icon>
-                {{documentService.documentInfo().version}}
+                {{documentPageModel()?.version}}
             </button>
             @if(singletonModes.editMode()){
             <button matButton="elevated" [matMenuTriggerFor]="sectionMenu"
@@ -77,8 +85,8 @@
                 <mat-icon>difference</mat-icon> New
             </button>
             }
-            @for(version of documentService.getDocumentVersions(documentGuid()); track version){
-            <button mat-menu-item>{{version}}</button>
+            @for(relatedVersion of documentPageModel()?.relatedVersions; track relatedVersion){
+            <a mat-menu-item [routerLink]="['document', relatedVersion.documentGuid]">{{relatedVersion.versionName}}</a>
             }
         </mat-menu>
         <mat-menu #sectionMenu>
@@ -128,7 +136,7 @@
                 }
             </h3>
             <mat-chip-set>
-                @for(tag of documentService.documentInfo().tags; track tag){
+                @for(tag of documentPageModel()?.tags; track tag){
                 <mat-chip>{{tag}}</mat-chip>
                 }
             </mat-chip-set>
@@ -136,8 +144,8 @@
         <!-------------------------------------------------->
 
         <!--------------------- sections -------------------->
-        @for(section of sortedSectoins(); track section.guid){
-        <app-document-element [sectionModel]="section"></app-document-element>
+        @for(element of sortedElements(); track element.guid){
+        <app-document-element [elementModel]="element"></app-document-element>
         }
 
     </mat-sidenav-content>

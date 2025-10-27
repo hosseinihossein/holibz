@@ -18,18 +18,19 @@ import { LinkElement } from '../link-element/link-element';
 })
 export class DocumentElement implements AfterViewInit {
   singletonModes = inject(SingletonModes);
-  sectionModel = input.required<SectionModel>();
+  elementModel = input.required<DocumentElementModel>();
 
   constructor(){
     console.log("app-section constructor!");
   }
   ngAfterViewInit(): void {
-    console.log("app-section after view inir!");
+    console.log("app-section after view init!");
   }
 }
 
 export class DocumentElementModel {
   guid:string = null!;
+  ownerGuid:string = null!;
   type: "h1"|"h2"|"p"|"img"|"code"|"file"|"link" = null!;
   value:string = null!;
   order:number = null!;

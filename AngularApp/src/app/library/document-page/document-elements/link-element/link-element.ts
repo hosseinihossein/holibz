@@ -4,11 +4,11 @@ import { MatIcon } from '@angular/material/icon';
 import { SectionModel } from '../../../../models/section-model';
 
 @Component({
-  selector: 'app-link-section',
+  selector: 'app-link-element',
   imports: [MatIcon, MatButton],
-  templateUrl: './link-section.html',
-  styleUrl: './link-section.css'
+  templateUrl: './link-element.html',
+  styleUrl: './link-element.css'
 })
-export class LinkSection {
+export class LinkElement {
   sectionModel = input.required<SectionModel>();
 }

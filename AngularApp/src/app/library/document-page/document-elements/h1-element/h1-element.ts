@@ -1,13 +1,13 @@
 import { Component, input } from '@angular/core';
-import { Section } from "../section/section";
+import { DocumentElement } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 
 @Component({
-  selector: 'app-h2-section',
+  selector: 'app-h1-element',
   imports: [],
-  templateUrl: './h2-section.html',
-  styleUrl: './h2-section.css'
+  templateUrl: './h1-element.html',
+  styleUrl: './h1-element.css'
 })
-export class H2Section {
+export class H1Element {
   sectionModel = input.required<SectionModel>();
 }

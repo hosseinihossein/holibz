@@ -4,12 +4,12 @@ import { LargeImg } from '../../../../dialogs/large-img/large-img';
 import { SectionModel } from '../../../../models/section-model';
 
 @Component({
-  selector: 'app-img-section',
+  selector: 'app-img-element',
   imports: [],
-  templateUrl: './img-section.html',
-  styleUrl: './img-section.css'
+  templateUrl: './img-element.html',
+  styleUrl: './img-element.css'
 })
-export class ImgSection {
+export class ImgElement {
   sectionModel = input.required<SectionModel>();
 
   readonly dialog = inject(MatDialog);

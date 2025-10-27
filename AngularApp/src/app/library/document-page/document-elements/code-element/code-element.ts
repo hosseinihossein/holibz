@@ -6,12 +6,12 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { SectionModel } from '../../../../models/section-model';
 
 @Component({
-  selector: 'app-code-section',
+  selector: 'app-code-element',
   imports: [MatIcon, MatIconButton, MatTooltip],
-  templateUrl: './code-section.html',
-  styleUrl: './code-section.css'
+  templateUrl: './code-element.html',
+  styleUrl: './code-element.css'
 })
-export class CodeSection {
+export class CodeElement {
   clipboard = inject(Clipboard);
   sectionModel = input.required<SectionModel>();
   

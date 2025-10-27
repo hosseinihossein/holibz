@@ -43,7 +43,7 @@ public class Library_DocumentDbModel
 }
 public class Library_RelatedVersionsDbModel
 {
-    public int ID { get; set; }
+    public int Id { get; set; }
     public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
 }

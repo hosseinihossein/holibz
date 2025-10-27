@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, ElementRef, inject, input } from '@angular/core';
+import { AfterViewInit, Component, computed, ElementRef, inject, input, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -11,35 +11,51 @@ import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { SingletonModes } from '../../services/singleton-modes';
 import { DocumentService } from '../../services/document-service';
-import { Section } from './sections/section/section';
+import { DocumentElement, DocumentElementModel } from './document-elements/document-element/document-element';
 import { MatChip, MatChipSet } from "@angular/material/chips";
 import { EditTags } from '../../dialogs/edit-tags/edit-tags';
+import { ActivatedRoute } from '@angular/router';
+import { LibraryService } from '../../services/library-service';
+import { IdentityService } from '../../services/identity-service';
+import { DocumentCardModel } from '../document-card/document-card';
+import { ShelfCardModel } from '../shelf-card/shelf-card';
 
 @Component({
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
-    MatMenu, MatMenuItem, MatMenuTrigger, Section, MatChipSet, MatChip],
+    MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip],
   templateUrl: './document-page.html',
   styleUrl: './document-page.css'
 })
 export class DocumentPage implements AfterViewInit {
-  documentGuid = input.required<string>();
+  //documentGuid = input.required<string>();
+  documentGuid = signal<string|null>(null);
+  //containerShelves = signal<ShelfCardModel[]|null>(null);
+  //documentElements = signal<DocumentElementModel[]|null>(null);
+  documentPageModel = signal<DocumentPageModel|null>(null);
 
-  clipboard = inject(Clipboard);
+  //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
   singletonModes = inject(SingletonModes);
   elementRef = inject(ElementRef);
-  documentService = inject(DocumentService);
+  //documentService = inject(DocumentService);
+  activatedRoute = inject(ActivatedRoute);
+  libraryService = inject(LibraryService);
+  identityService = inject(IdentityService);
 
-  sortedSectoins = computed(()=>this.documentService.allSectionModels().sort((a,b)=>{if(a.order > b.order)return 1;else return -1;}))
+  //sortedSectoins = computed(()=>this.documentService.allSectionModels().sort((a,b)=>{if(a.order > b.order)return 1;else return -1;}))
   
   constructor(){
     console.log("app-document constructor!");
+    let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
+    if(documentGuidRouteParam){
+      this.documentGuid.set(documentGuidRouteParam);
+    }
   }
 
   ngAfterViewInit(): void {
-    console.log("app-document after view inir!");
+    console.log("app-document after view init!");
     //a better prefered approach renderer2
     const viewPortObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -70,13 +86,27 @@ export class DocumentPage implements AfterViewInit {
     const dialogRef = this.dialog.open(EditTags);
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        this.documentService.updateDocumentTags(result);
+        //this.documentService.updateDocumentTags(result);
       }
     });
   }
 
   addNewSection(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
-    this.documentService.mockAddSection(type);
+    //this.documentService.mockAddSection(type);
   }
 
 }
+
+class DocumentPageModel {
+  guid:string = null!;
+  ownerGuid:string = null!;
+  title:string = null!;
+  hasImage:boolean = false;
+  description:string = null!;
+  version:string = null!;
+  relatedVersions?:{version:string, documentGuid:string}[]
+  shelves:ShelfCardModel[] = [];
+  elements:DocumentElementModel[] = [];
+  tags:string[] = [];
+  createdAt:Date = null!;
+} 

@@ -1,13 +1,13 @@
 import { Component, input } from '@angular/core';
-import { Section } from "../section/section";
+import { DocumentElement } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 
 @Component({
-  selector: 'app-p-section',
+  selector: 'app-p-element',
   imports: [],
-  templateUrl: './p-section.html',
-  styleUrl: './p-section.css'
+  templateUrl: './p-element.html',
+  styleUrl: './p-element.css'
 })
-export class PSection {
+export class PElement {
   sectionModel = input.required<SectionModel>();
 }

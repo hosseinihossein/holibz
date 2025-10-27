@@ -1,16 +1,16 @@
 import { Component, input } from '@angular/core';
 import { MatFabButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { Section } from "../section/section";
+import { DocumentElement } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 import { DocumentService } from '../../../../services/document-service';
 
 @Component({
-  selector: 'app-file-section',
+  selector: 'app-file-element',
   imports: [MatIcon, MatFabButton],
-  templateUrl: './file-section.html',
-  styleUrl: './file-section.css'
+  templateUrl: './file-element.html',
+  styleUrl: './file-element.css'
 })
-export class FileSection {
+export class FileElement {
   sectionModel = input.required<SectionModel>();
 }

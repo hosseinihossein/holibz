@@ -15,5 +15,5 @@ export const libraryRoutes : Routes = [
     {path: "shelf/:shelfGuid", component: ShelfPage},
     {path: "shelf", component: ShelfPage},//use libraryService.currentShelfModel to get data for the selected shelfCard
     //{path: "documents", component: DocumentsList},// equal to shelf page
-    {path: "document/:docGuid", component: DocumentPage},
+    {path: "document/:documentGuid", component: DocumentPage},
 ];

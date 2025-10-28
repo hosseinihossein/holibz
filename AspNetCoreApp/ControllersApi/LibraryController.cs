@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AspNetCoreApp.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -166,11 +168,50 @@ public class LibraryController : ControllerBase
         return Ok(shelfCardModels);
     }
 
-    /*[HttpGet]
+    [HttpGet]
     public async Task<IActionResult> ShelfModel([FromQuery][StringLength(32)] string shelfGuid)
     {
-        
-    }*/
+        var shelfCardModel = await libraryDb.Shelves
+        .Include(shelf => shelf.Library)
+        .Include(shelf => shelf.Documents)
+        .ThenInclude(doc => doc.Elements)
+        .Where(shelf => shelf.Guid == shelfGuid)
+        .Select(shelf => new Library_ShelfCardModel()
+        {
+            CreatedAt = shelf.CreatedAt,
+            Description = shelf.Description,
+            DocumentCardModels = shelf.Documents
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Take(10)
+            .Select(doc => new Library_DocumentCardModel()
+            {
+                Description = doc.Description,
+                Guid = doc.Guid,
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+                OwnerGuid = doc.OwnerGuid,
+                Title = doc.Title,
+            }).ToArray(),
+            Guid = shelf.Guid,
+            LibraryTitle = shelf.Library.Title,
+            Title = shelf.Title,
+            OwnerGuid = shelf.OwnerGuid,
+        })
+        .AsSplitQuery()
+        .FirstOrDefaultAsync();
+
+        if (shelfCardModel is null)
+        {
+            return NotFound();
+        }
+
+        foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
+        {
+            documentCardModel.HasImage =
+            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+        }
+
+        return Ok(shelfCardModel);
+    }
 
     [HttpGet]
     public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
@@ -252,6 +293,45 @@ public class LibraryController : ControllerBase
 
 
 
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateNewLibrary(Library_NewLibraryFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+            Library_LibraryDbModel dbModel = new()
+            {
+                Description = formModel.Decription,
+                OwnerGuid = user.UserGuid,
+                Title = formModel.Title,
+            };
+            await libraryDb.Libraries.AddAsync(dbModel);
+            await libraryDb.SaveChangesAsync();
+
+            return Ok(new { success = true, libraryGuid = dbModel.Guid });
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateNewShelf(Library_NewShelfFormModel formModel)
+    {
+
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(512 * 1024)]//512 KB
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel)
+    {
+
+    }
 
 
 }

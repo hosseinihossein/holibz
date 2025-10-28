@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AspNetCoreApp.Validators;
 using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreApp.Models;
@@ -136,7 +137,7 @@ public class Library_Process //singleton service
     }
 
     public async Task<ProcessResult> CreateNewLibrary(Library_DbContext libraryDb, string ownerGuid,
-    Library_NewLibrayFormModel formModel)
+    Library_NewLibraryFormModel formModel)
     {
         if (!await libraryDb.Libraries.AnyAsync(lib =>
             lib.OwnerGuid == ownerGuid && lib.Title == formModel.Title))
@@ -201,7 +202,7 @@ public class Library_Process //singleton service
     string ownerGuid)
     {
         // creating Default library
-        Library_NewLibrayFormModel libraryFormModel = new()
+        Library_NewLibraryFormModel libraryFormModel = new()
         {
             Title = "Default Library",
             Decription = "Containing all shelves that doesn't belong to anyother libraries."
@@ -328,7 +329,7 @@ public class Library_VersionBrief
     public string VersionName { get; set; } = null!;
 }
 
-public class Library_NewLibrayFormModel
+public class Library_NewLibraryFormModel
 {
     [StringLength(30, MinimumLength = 3)]
     public string Title { get; set; } = null!;
@@ -347,4 +348,17 @@ public class Library_NewShelfFormModel
     [StringLength(32)]
     public string? LibraryGuid { get; set; } = null;
 }
+public class Library_NewDocumentFormModel
+{
+    [StringLength(30, MinimumLength = 3)]
+    public string Title { get; set; } = null!;
 
+    [StringLength(500, MinimumLength = 5)]
+    public string Decription { get; set; } = null!;
+
+    [MaxArrayLength(10)]
+    [StringLength(32)]
+    public string[]? ShelfGuids { get; set; } = null;
+
+    public IFormFile? Image { get; set; }
+}

@@ -6,13 +6,13 @@ import { MatBadge } from '@angular/material/badge';
 import { MatTooltip } from '@angular/material/tooltip';
 import { SingletonModes } from '../../services/singleton-modes';
 import { LibraryService } from '../../services/library-service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { JsonPipe, NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-libraries-list',
-  imports: [LibraryCard, MatButton, MatIcon, MatBadge,MatTooltip, NgOptimizedImage],
+  imports: [LibraryCard, MatButton, MatIcon, MatBadge, MatTooltip, NgOptimizedImage, RouterLink],
   templateUrl: './libraries-list.html',
   styleUrl: './libraries-list.css'
 })

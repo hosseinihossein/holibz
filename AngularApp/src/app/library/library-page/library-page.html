@@ -14,5 +14,13 @@
         <mat-card-content>
             <p>{{libraryModel()?.description}}</p>
         </mat-card-content>
+        <mat-card-actions align="end">
+            @if(isMyLibrary()){
+            <a matButton="elevated" [routerLink]="['/shelf','new']">
+                <mat-icon>shelves</mat-icon>
+                Add a new Shelf
+            </a>
+            }
+        </mat-card-actions>
     </mat-card>
 </app-shelves-list>

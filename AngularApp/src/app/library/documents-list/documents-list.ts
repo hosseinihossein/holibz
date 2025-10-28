@@ -2,8 +2,9 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { MatSidenav, MatSidenavContainer, MatSidenavContent } from "@angular/material/sidenav";
 import { DocumentCard, DocumentCardModel } from '../document-card/document-card';
 import { LibraryService } from '../../services/library-service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-documents-list',

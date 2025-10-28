@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DocumentsList } from "../documents-list/documents-list";
-import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
+import { MatCard, MatCardActions, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { MatBadge } from '@angular/material/badge';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -9,7 +9,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
@@ -17,7 +17,7 @@ import { IdentityService, UserProfileModel } from '../../services/identity-servi
 @Component({
   selector: 'app-shelf-page',
   imports: [DocumentsList, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
-    MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton],
+    MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton, MatCardActions, RouterLink],
   templateUrl: './shelf-page.html',
   styleUrl: './shelf-page.css'
 })

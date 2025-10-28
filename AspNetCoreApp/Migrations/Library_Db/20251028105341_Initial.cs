@@ -41,14 +41,14 @@ namespace AspNetCore.Migrations.Library_Db
                 name: "Library_RelatedVersionsDbModel",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Library_RelatedVersionsDbModel", x => x.ID);
+                    table.PrimaryKey("PK_Library_RelatedVersionsDbModel", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -112,17 +112,17 @@ namespace AspNetCore.Migrations.Library_Db
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Version = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    RelatedVersionsID = table.Column<int>(type: "int", nullable: true),
+                    RelatedVersionsId = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Documents", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Documents_Library_RelatedVersionsDbModel_RelatedVersionsID",
-                        column: x => x.RelatedVersionsID,
+                        name: "FK_Documents_Library_RelatedVersionsDbModel_RelatedVersionsId",
+                        column: x => x.RelatedVersionsId,
                         principalTable: "Library_RelatedVersionsDbModel",
-                        principalColumn: "ID");
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -209,9 +209,9 @@ namespace AspNetCore.Migrations.Library_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Documents_RelatedVersionsID",
+                name: "IX_Documents_RelatedVersionsId",
                 table: "Documents",
-                column: "RelatedVersionsID");
+                column: "RelatedVersionsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Elements_DocumentId",

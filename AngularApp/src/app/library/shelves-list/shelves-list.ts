@@ -3,12 +3,14 @@ import { MatSidenav, MatSidenavContainer, MatSidenavContent } from '@angular/mat
 import { ShelfCard, ShelfCardModel } from "../shelf-card/shelf-card";
 import { MatAccordion } from '@angular/material/expansion';
 import { LibraryService } from '../../services/library-service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-shelves-list',
-  imports: [MatSidenavContainer, MatSidenav, MatSidenavContent, ShelfCard, MatAccordion],
+  imports: [MatSidenavContainer, MatSidenav, MatSidenavContent, ShelfCard, MatAccordion,
+  ],
   templateUrl: './shelves-list.html',
   styleUrl: './shelves-list.css'
 })

@@ -45,7 +45,7 @@ namespace AspNetCore.Migrations.Library_Db
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("RelatedVersionsID")
+                    b.Property<int?>("RelatedVersionsId")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -58,7 +58,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RelatedVersionsID");
+                    b.HasIndex("RelatedVersionsId");
 
                     b.ToTable("Documents");
                 });
@@ -139,17 +139,17 @@ namespace AspNetCore.Migrations.Library_Db
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_RelatedVersionsDbModel", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ID"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Guid")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("Library_RelatedVersionsDbModel");
                 });
@@ -241,7 +241,7 @@ namespace AspNetCore.Migrations.Library_Db
                 {
                     b.HasOne("AspNetCoreApp.Models.Library_RelatedVersionsDbModel", "RelatedVersions")
                         .WithMany("Documents")
-                        .HasForeignKey("RelatedVersionsID");
+                        .HasForeignKey("RelatedVersionsId");
 
                     b.Navigation("RelatedVersions");
                 });

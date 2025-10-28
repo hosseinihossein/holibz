@@ -19,10 +19,10 @@
     </div>
 
     @if(isMyLibraries()){
-    <button matButton="elevated">
+    <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
         <mat-icon>account_balance</mat-icon>
         Add a new Library
-    </button>
+    </a>
     }
 </div>
 

@@ -111,7 +111,7 @@ public class Library_DbContext : DbContext
 
 //********************************************************************************
 //*********************************** Processes **********************************
-public class Library_process //singleton service
+public class Library_Process //singleton service
 {
     public string? BuildTagName(string value)
     {
@@ -196,6 +196,52 @@ public class Library_process //singleton service
             ErrorDescription = $"There's already been a shelf with title '{formModel.Title}'!"
         };
     }
+
+    public async Task CreateDefaultLibraryAndShelf(Library_DbContext libraryDb,
+    string ownerGuid)
+    {
+        // creating Default library
+        Library_NewLibrayFormModel libraryFormModel = new()
+        {
+            Title = "Default Library",
+            Decription = "Containing all shelves that doesn't belong to anyother libraries."
+        };
+        var createDefaultLibraryResult = await CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
+
+        Library_LibraryDbModel? defaultLibrary;
+        if (createDefaultLibraryResult.Success &&
+        createDefaultLibraryResult.ResultObject is not null)
+        {
+            defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
+        }
+        else
+        {
+            defaultLibrary = await libraryDb.Libraries.FirstOrDefaultAsync(lib =>
+            lib.OwnerGuid == ownerGuid && lib.Title == "Default Library");
+        }
+        if (defaultLibrary is null)
+        {
+            //log
+            Console.WriteLine($"\n***** /Identity/CreateDefaultLibraryAndShelf, defaultLibrary is null! Couldn't create Default library for '{ownerGuid}'");
+        }
+        else
+        {
+            // creating Default shelf in Default library
+            Library_NewShelfFormModel shelfFormModel = new()
+            {
+                Title = "Default Shelf",
+                Decription = "Containing all documents that doesn't belong to anyother shelves.",
+                LibraryGuid = defaultLibrary.Guid,
+            };
+            var createDefaultShelfResult = await CreateNewShelf(libraryDb, ownerGuid, shelfFormModel);
+            if (!createDefaultShelfResult.Success)
+            {
+                //log
+                Console.WriteLine($"\n***** /Identity/CreateDefaultLibraryAndShelf, Couldn't create Default shelf for '{ownerGuid}'!");
+            }
+        }
+    }
+
 }
 public class ProcessResult
 {

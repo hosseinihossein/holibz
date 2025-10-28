@@ -6,6 +6,7 @@
 
     <mat-sidenav-content>
         <ng-content />
+
         <mat-accordion multi>
             @for(shelfModel of shelfModels(); track shelfModel.guid){
             <app-shelf-card [shelfModel]="shelfModel"></app-shelf-card>

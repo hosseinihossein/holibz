@@ -229,7 +229,7 @@ public class Program
         builder.Services.AddScoped<Identity_Process>();//convert it to singleton
         builder.Services.AddSingleton<IEmailSender, EmailSender>();
         builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
-        builder.Services.AddSingleton<Library_process>();
+        builder.Services.AddSingleton<Library_Process>();
 
 
 
@@ -251,6 +251,9 @@ public class Program
         /********************** Migrate Pending DataBases **********************/
         Identity_DbContext identityDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_DbContext>();
         identityDb.Database.Migrate();
+
+        Library_DbContext libraryDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Library_DbContext>();
+        libraryDb.Database.Migrate();
 
         Console.WriteLine("** All DB Migration Completed! **");
 
@@ -297,6 +300,22 @@ public class Program
             await account_Process.SeedUsersToDb(userManager);
             Console.WriteLine("** Seeding Identity Service Completed! **");
         }
+
+        //***** Create Default Library and Shelf for everyone *****
+        List<string> AllConfirmedUsersGuidsExceptAdmin =
+        await userManager.Users
+        .Where(u => u.EmailConfirmed && u.UserGuid != "admin")
+        .Select(u => u.UserGuid)
+        .ToListAsync();
+
+        Library_Process libraryProcess = app.Services.CreateScope().ServiceProvider.GetRequiredService<Library_Process>();
+
+        foreach (string userGuid in AllConfirmedUsersGuidsExceptAdmin)
+        {
+            await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, userGuid);
+        }
+
+        //***** Seed Library *****
 
 
 

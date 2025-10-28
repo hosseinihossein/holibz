@@ -1,12 +1,6 @@
 <app-documents-list [shelfGuid]="shelfModel()?.guid!">
     <mat-card appearance="raised">
         <mat-card-header>
-            @if(isMyShelf()){
-            <button matButton="elevated" class="noPaddingBtn" id="edit-mode-btn"
-                (click)="signletonModes.toggleEditMode()" matTooltip="Edit">
-                <mat-icon>{{signletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
-            </button>
-            }
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
                 <mat-icon id="shelf-logo">shelves</mat-icon>
             </div>
@@ -19,19 +13,31 @@
                 }
             </mat-card-title>
             <mat-card-subtitle>
-                Created by {{userModel()?.username}}
+                {{userModel()?.username}}
             </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
             <p>
                 {{shelfModel()?.description}}
-                @if(signletonModes.editMode()){
-                <button matIconButton class="noPaddingBtn" matTooltip="Edit description"
-                    (click)="openEditDescriptionDialog()">
-                    <mat-icon>edit</mat-icon>
-                </button>
-                }
             </p>
+            @if(signletonModes.editMode()){
+            <button matIconButton class="noPaddingBtn" matTooltip="Edit description"
+                (click)="openEditDescriptionDialog()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
         </mat-card-content>
+        <mat-card-actions align="end">
+            @if(isMyShelf()){
+            <button matButton="elevated" class="noPaddingBtn" id="edit-mode-btn"
+                (click)="signletonModes.toggleEditMode()" matTooltip="Edit">
+                <mat-icon>{{signletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
+            </button>
+            <a matButton="elevated" [routerLink]="['/document','new']">
+                <mat-icon>newsstand</mat-icon>
+                Add a new Document
+            </a>
+            }
+        </mat-card-actions>
     </mat-card>
 </app-documents-list>

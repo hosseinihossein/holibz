@@ -18,7 +18,7 @@ public class IdentityController : Controller
 
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token,
     [FromQuery][StringLength(60)] string email, [FromServices] Identity_Process identityProcess,
-    [FromServices] Library_DbContext libraryDb, Library_process libraryProcess)
+    [FromServices] Library_DbContext libraryDb, [FromServices] Library_Process libraryProcess)
     {
         if (ModelState.IsValid)
         {
@@ -43,7 +43,7 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 // creating Default library and shelf
-                await CreateDefaultLibraryAndShelf(libraryProcess, libraryDb, user.UserGuid);
+                await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, user.UserGuid);
 
                 await identityProcess.UpdateUserSeed(user, userManager);
 
@@ -66,7 +66,7 @@ public class IdentityController : Controller
     public async Task<IActionResult> ConfirmNewEmail([FromQuery][StringLength(32)] string userGuid,
     [FromQuery] string token, [FromQuery][StringLength(60)] string newEmail,
     [FromServices] Identity_Process identityProcess, [FromServices] Library_DbContext libraryDb,
-    [FromServices] Library_process libraryProcess)
+    [FromServices] Library_Process libraryProcess)
     {
         if (ModelState.IsValid)
         {
@@ -92,7 +92,7 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 // creating Default library and shelf
-                await CreateDefaultLibraryAndShelf(libraryProcess, libraryDb, user.UserGuid);
+                await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, user.UserGuid);
 
                 await identityProcess.UpdateUserSeed(user, userManager);
 
@@ -111,52 +111,52 @@ public class IdentityController : Controller
         }
         return BadRequest(ModelState);
     }
-
-    private async Task CreateDefaultLibraryAndShelf(Library_process libraryProcess, Library_DbContext libraryDb,
-    string ownerGuid)
-    {
-        // creating Default library
-        Library_NewLibrayFormModel libraryFormModel = new()
+    /*
+        private async Task CreateDefaultLibraryAndShelf(Library_process libraryProcess, Library_DbContext libraryDb,
+        string ownerGuid)
         {
-            Title = "Default Library",
-            Decription = "Containing all shelves that doesn't belong to anyother libraries."
-        };
-        var createDefaultLibraryResult = await libraryProcess.CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
-
-        Library_LibraryDbModel? defaultLibrary;
-        if (createDefaultLibraryResult.Success &&
-        createDefaultLibraryResult.ResultObject is not null)
-        {
-            defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
-        }
-        else
-        {
-            defaultLibrary = await libraryDb.Libraries.FirstOrDefaultAsync(lib =>
-            lib.OwnerGuid == ownerGuid && lib.Title == "Default");
-        }
-        if (defaultLibrary is null)
-        {
-            //log
-            Console.WriteLine("\n***** /Identity/CreateDefaultLibraryAndShelf, defaultLibrary is null! Couldn't create Default library and shelf");
-        }
-        else
-        {
-            // creating Default shelf in Default library
-            Library_NewShelfFormModel shelfFormModel = new()
+            // creating Default library
+            Library_NewLibrayFormModel libraryFormModel = new()
             {
-                Title = "Default Shelf",
-                Decription = "Containing all documents that doesn't belong to anyother shelves.",
-                LibraryGuid = defaultLibrary.Guid,
+                Title = "Default Library",
+                Decription = "Containing all shelves that doesn't belong to anyother libraries."
             };
-            var createDefaultShelfResult = await libraryProcess.CreateNewShelf(libraryDb, ownerGuid, shelfFormModel);
-            if (!createDefaultShelfResult.Success)
+            var createDefaultLibraryResult = await libraryProcess.CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
+
+            Library_LibraryDbModel? defaultLibrary;
+            if (createDefaultLibraryResult.Success &&
+            createDefaultLibraryResult.ResultObject is not null)
+            {
+                defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
+            }
+            else
+            {
+                defaultLibrary = await libraryDb.Libraries.FirstOrDefaultAsync(lib =>
+                lib.OwnerGuid == ownerGuid && lib.Title == "Default Library");
+            }
+            if (defaultLibrary is null)
             {
                 //log
-                Console.WriteLine("\n***** /Identity/CreateDefaultLibraryAndShelf, Couldn't create Default shelf!");
+                Console.WriteLine("\n***** /Identity/CreateDefaultLibraryAndShelf, defaultLibrary is null! Couldn't create Default library and shelf");
+            }
+            else
+            {
+                // creating Default shelf in Default library
+                Library_NewShelfFormModel shelfFormModel = new()
+                {
+                    Title = "Default Shelf",
+                    Decription = "Containing all documents that doesn't belong to anyother shelves.",
+                    LibraryGuid = defaultLibrary.Guid,
+                };
+                var createDefaultShelfResult = await libraryProcess.CreateNewShelf(libraryDb, ownerGuid, shelfFormModel);
+                if (!createDefaultShelfResult.Success)
+                {
+                    //log
+                    Console.WriteLine("\n***** /Identity/CreateDefaultLibraryAndShelf, Couldn't create Default shelf!");
+                }
             }
         }
-    }
-
+    */
 
 
 

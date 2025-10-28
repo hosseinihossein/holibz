@@ -1,17 +1,18 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ShelvesList } from "../shelves-list/shelves-list";
-import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
-import { ActivatedRoute } from '@angular/router';
+import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle, MatCardActions } from "@angular/material/card";
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
 import { LibraryCardModel } from '../library-card/library-card';
 import { NgOptimizedImage } from '@angular/common';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { MatIcon } from '@angular/material/icon';
+import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-library-page',
-  imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar, 
-    MatCardSubtitle, NgOptimizedImage, MatIcon],
+  imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
+    MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })

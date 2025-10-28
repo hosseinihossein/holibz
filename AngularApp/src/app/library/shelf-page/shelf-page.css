@@ -1,13 +1,14 @@
 mat-card{
     margin: 24px;
-    position: relative;
+    /*position: relative;*/
+    width: 100%;
 }
 
-#edit-mode-btn{
+/*#edit-mode-btn{
     position: absolute;
     top: 0;
     right: 0;
-}
+}*/
 
 mat-icon#shelf-logo{
     font-size: 32px;

@@ -297,6 +297,7 @@ public class LibraryController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewLibrary(Library_NewLibraryFormModel formModel)
     {
@@ -323,6 +324,7 @@ public class LibraryController : ControllerBase
 
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewShelf(Library_NewShelfFormModel formModel)
     {

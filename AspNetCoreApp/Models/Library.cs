@@ -176,6 +176,15 @@ public class Library_Process //singleton service
             await libraryDb.Libraries.AddAsync(libraryDbModel);
             await libraryDb.SaveChangesAsync();
 
+            if (formModel.Image is not null)
+            {
+                string libraryImagePath = Path.Combine(Storage_Library.FullName, libraryDbModel.Guid, "image");
+                using (FileStream fs = System.IO.File.Create(libraryImagePath))
+                {
+                    await formModel.Image.CopyToAsync(fs);
+                }
+            }
+
             return new ProcessResult() { Success = true, ResultObject = libraryDbModel };
         }
         return new ProcessResult()
@@ -227,6 +236,15 @@ public class Library_Process //singleton service
 
             await libraryDb.Shelves.AddAsync(shelfDbModel);
             await libraryDb.SaveChangesAsync();
+
+            if (formModel.Image is not null)
+            {
+                string shelfImagePath = Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid, "image");
+                using (FileStream fs = System.IO.File.Create(shelfImagePath))
+                {
+                    await formModel.Image.CopyToAsync(fs);
+                }
+            }
 
             return new ProcessResult() { Success = true, ResultObject = shelfDbModel };
         }
@@ -435,6 +453,8 @@ public class Library_NewLibraryFormModel
 
     [StringLength(200)]
     public string? Decription { get; set; } = null;
+
+    public IFormFile? Image { get; set; }
 }
 public class Library_NewShelfFormModel
 {
@@ -446,10 +466,12 @@ public class Library_NewShelfFormModel
 
     [StringLength(32)]
     public string LibraryGuid { get; set; } = null!;
+
+    public IFormFile? Image { get; set; }
 }
 public class Library_NewDocumentFormModel
 {
-    [StringLength(30, MinimumLength = 3)]
+    [StringLength(60, MinimumLength = 3)]
     public string Title { get; set; } = null!;
 
     [StringLength(500, MinimumLength = 5)]

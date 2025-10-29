@@ -156,7 +156,7 @@ export class Signup implements AfterViewInit {
             this.errorResponse.set(err.error);
           }
           else{
-            throwError(()=>err);
+            throw(err);
           }
           this.displaySubmitSpinner.set(false);
           turnstile.reset(this.widgetId());

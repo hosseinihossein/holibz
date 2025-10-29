@@ -17,19 +17,20 @@ public class LibraryController : ControllerBase
     readonly DirectoryInfo Storage_Library;
     readonly DirectoryInfo Storage_Shelf;
     readonly DirectoryInfo Storage_Document;
-
+    readonly Library_Process libraryProcess;
 
 
 
 
     public LibraryController(Library_DbContext _libraryDb, UserManager<Identity_UserDbModel> _userManager,
-    IWebHostEnvironment _env)
+    Library_Process _libraryProcess)
     {
         libraryDb = _libraryDb;
         userManager = _userManager;
-        Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library"));
-        Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Shelf"));
-        Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Document"));
+        Storage_Library = _libraryProcess.Storage_Library;
+        Storage_Shelf = _libraryProcess.Storage_Shelf;
+        Storage_Document = _libraryProcess.Storage_Document;
+        libraryProcess = _libraryProcess;
     }
 
 
@@ -301,17 +302,21 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-            Library_LibraryDbModel dbModel = new()
-            {
-                Description = formModel.Decription,
-                OwnerGuid = user.UserGuid,
-                Title = formModel.Title,
-            };
-            await libraryDb.Libraries.AddAsync(dbModel);
-            await libraryDb.SaveChangesAsync();
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
 
-            return Ok(new { success = true, libraryGuid = dbModel.Guid });
+            var result = await libraryProcess.CreateNewLibrary(libraryDb, userGuid, formModel);
+            if (result.Success && result.ResultObject is not null)
+            {
+                Library_LibraryDbModel libraryDbModel = (Library_LibraryDbModel)result.ResultObject;
+                return Ok(new { success = true, libraryGuid = libraryDbModel.Guid });
+            }
+
+            ModelState.AddModelError(result.ErrorTitle ?? "New Library Error", result.ErrorDescription ?? "Error Description");
+            return BadRequest(ModelState);
+
         }
         return BadRequest(ModelState);
     }
@@ -321,7 +326,25 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewShelf(Library_NewShelfFormModel formModel)
     {
+        if (ModelState.IsValid)
+        {
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
 
+            var result = await libraryProcess.CreateNewShelf(libraryDb, userGuid, formModel);
+            if (result.Success && result.ResultObject is not null)
+            {
+                Library_ShelfDbModel shelfDbModel = (Library_ShelfDbModel)result.ResultObject;
+                return Ok(new { success = true, shelfGuid = shelfDbModel.Guid });
+            }
+
+            ModelState.AddModelError(result.ErrorTitle ?? "New Shelf Error", result.ErrorDescription ?? "Error Description");
+            return BadRequest(ModelState);
+
+        }
+        return BadRequest(ModelState);
     }
 
     [HttpPost]
@@ -330,7 +353,25 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel)
     {
+        if (ModelState.IsValid)
+        {
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
 
+            var result = await libraryProcess.CreateNewDocument(libraryDb, userGuid, formModel);
+            if (result.Success && result.ResultObject is not null)
+            {
+                Library_DocumentDbModel documentDbModel = (Library_DocumentDbModel)result.ResultObject;
+                return Ok(new { success = true, documentGuid = documentDbModel.Guid });
+            }
+
+            ModelState.AddModelError(result.ErrorTitle ?? "New Document Error", result.ErrorDescription ?? "Error Description");
+            return BadRequest(ModelState);
+
+        }
+        return BadRequest(ModelState);
     }
 
 

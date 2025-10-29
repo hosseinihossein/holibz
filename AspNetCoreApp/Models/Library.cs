@@ -114,6 +114,16 @@ public class Library_DbContext : DbContext
 //*********************************** Processes **********************************
 public class Library_Process //singleton service
 {
+    public readonly DirectoryInfo Storage_Library;
+    public readonly DirectoryInfo Storage_Shelf;
+    public readonly DirectoryInfo Storage_Document;
+
+    public Library_Process(IWebHostEnvironment _env)
+    {
+        Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library"));
+        Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Shelf"));
+        Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Document"));
+    }
     public string? BuildTagName(string value)
     {
         if (!string.IsNullOrWhiteSpace(value))
@@ -142,12 +152,26 @@ public class Library_Process //singleton service
         if (!await libraryDb.Libraries.AnyAsync(lib =>
             lib.OwnerGuid == ownerGuid && lib.Title == formModel.Title))
         {
-            Library_LibraryDbModel libraryDbModel = new()
+            Library_LibraryDbModel libraryDbModel;
+            if (formModel.Title == "Default Library")
             {
-                Title = formModel.Title,
-                OwnerGuid = ownerGuid,
-                Description = formModel.Decription,
-            };
+                libraryDbModel = new()
+                {
+                    Title = formModel.Title,
+                    OwnerGuid = ownerGuid,
+                    Description = formModel.Decription,
+                    Guid = "DefaultLibrary",
+                };
+            }
+            else
+            {
+                libraryDbModel = new()
+                {
+                    Title = formModel.Title,
+                    OwnerGuid = ownerGuid,
+                    Description = formModel.Decription,
+                };
+            }
 
             await libraryDb.Libraries.AddAsync(libraryDbModel);
             await libraryDb.SaveChangesAsync();
@@ -178,13 +202,28 @@ public class Library_Process //singleton service
                 };
             }
 
-            Library_ShelfDbModel shelfDbModel = new()
+            Library_ShelfDbModel shelfDbModel;
+            if (formModel.Title == "Default Shelf")
             {
-                Title = formModel.Title,
-                OwnerGuid = ownerGuid,
-                Description = formModel.Decription,
-                Library = libraryContainer,
-            };
+                shelfDbModel = new()
+                {
+                    Title = formModel.Title,
+                    OwnerGuid = ownerGuid,
+                    Description = formModel.Decription,
+                    Library = libraryContainer,
+                    Guid = "DefaultShelf",
+                };
+            }
+            else
+            {
+                shelfDbModel = new()
+                {
+                    Title = formModel.Title,
+                    OwnerGuid = ownerGuid,
+                    Description = formModel.Decription,
+                    Library = libraryContainer,
+                };
+            }
 
             await libraryDb.Shelves.AddAsync(shelfDbModel);
             await libraryDb.SaveChangesAsync();
@@ -195,6 +234,65 @@ public class Library_Process //singleton service
         {
             ErrorTitle = "Title Conflict",
             ErrorDescription = $"There's already been a shelf with title '{formModel.Title}'!"
+        };
+    }
+    public async Task<ProcessResult> CreateNewDocument(Library_DbContext libraryDb, string ownerGuid,
+    Library_NewDocumentFormModel formModel)
+    {
+        List<Library_ShelfDbModel> shelfDbModels = [];
+        if (formModel.ShelfGuids is null || formModel.ShelfGuids.Length == 0)
+        {
+            bool isThereDefaultShelf = await libraryDb.Shelves
+            .AnyAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Title == "Default Shelf");
+            if (!isThereDefaultShelf)
+            {
+                await CreateDefaultLibraryAndShelf(libraryDb, ownerGuid);
+            }
+
+            Library_ShelfDbModel? defaultShelfDbModel = await libraryDb.Shelves
+            .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Title == "Default Shelf");
+            if (defaultShelfDbModel is null)
+            {
+                return new ProcessResult()
+                {
+                    Success = false,
+                    ErrorTitle = "No Shelf",
+                    ErrorDescription = "There's No shelf to contain the new document!",
+                };
+            }
+            shelfDbModels.Add(defaultShelfDbModel);
+        }
+        else
+        {
+            shelfDbModels = await libraryDb.Shelves
+            .Where(shelf => shelf.OwnerGuid == ownerGuid && formModel.ShelfGuids.Contains(shelf.Guid))
+            .ToListAsync();
+        }
+
+        Library_DocumentDbModel documentDbModel = new()
+        {
+            Description = formModel.Decription,
+            OwnerGuid = ownerGuid,
+            Shelves = shelfDbModels,
+            Title = formModel.Title,
+        };
+
+        await libraryDb.Documents.AddAsync(documentDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        if (formModel.Image is not null)
+        {
+            string documentImagePath = Path.Combine(Storage_Document.FullName, documentDbModel.Guid, "image");
+            using (FileStream fs = System.IO.File.Create(documentImagePath))
+            {
+                await formModel.Image.CopyToAsync(fs);
+            }
+        }
+
+        return new ProcessResult()
+        {
+            Success = true,
+            ResultObject = documentDbModel,
         };
     }
 
@@ -242,6 +340,7 @@ public class Library_Process //singleton service
             }
         }
     }
+
 
 }
 public class ProcessResult
@@ -346,7 +445,7 @@ public class Library_NewShelfFormModel
     public string? Decription { get; set; } = null;
 
     [StringLength(32)]
-    public string? LibraryGuid { get; set; } = null;
+    public string LibraryGuid { get; set; } = null!;
 }
 public class Library_NewDocumentFormModel
 {

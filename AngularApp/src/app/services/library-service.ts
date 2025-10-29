@@ -163,7 +163,7 @@ class NewShelfFormModel{
 }
 class NewDocumentFormModel{
   title?:string;
-  description?:string;
+  description?:string|null;
   shelfGuids?:string[]|null;
   image?:File|null;
 }

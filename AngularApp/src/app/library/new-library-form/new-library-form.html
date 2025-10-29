@@ -1,1 +1,93 @@
-<p>new-library-form works!</p>
+<form [formGroup]="newLibraryForm()" (ngSubmit)="onSubmit()">
+    <h2>
+        <mat-icon>shelves</mat-icon>
+        Creating a new Shelf
+    </h2>
+
+    <mat-form-field>
+        <mat-label>Title</mat-label>
+        <input matInput type="text" required formControlName="title" />
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("required")){
+        <mat-error>
+            Title is required!
+        </mat-error>
+        }
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("maxLength")){
+        <mat-error>
+            Shelt title cannot be more than 30 characters!
+        </mat-error>
+        }
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("minLength")){
+        <mat-error>
+            Shelt title cannot be less than 3 characters!
+        </mat-error>
+        }
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) &&
+        title()?.hasError("submitError")){
+        <mat-error>
+            {{title()?.getError("submitError")}}
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <mat-form-field>
+        <mat-label>Brief Description</mat-label>
+        <textarea matInput formControlName="description"></textarea>
+        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
+        description()?.hasError("maxLength")){
+        <mat-error>
+            Shelt Description cannot be more than 200 characters!
+        </mat-error>
+        }
+        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
+        description()?.hasError("submitError")){
+        <mat-error>
+            {{description()?.getError("submitError")}}
+        </mat-error>
+        }
+    </mat-form-field>
+
+    <div id="img-box" class="clearfix">
+        <button matButton="elevated" type="button" id="selectButton" (click)="fileInput.click()">
+            Select an image <span style="font-size: 12px;">(optional)</span>
+        </button>
+
+        <input type="file" #fileInput (change)="onSelectImage($event)" />
+        @if(image()?.value){
+        <div style="position: relative;width: fit-content;margin: 24px auto 0;">
+            <img [src]="previewImgSrc()" #previewImg>
+            <button matIconButton type="button" class="noPaddingBtn" id="delete-img-btn" (click)="clearImgInput()"
+                matTooltip="Delete image">
+                <mat-icon>cancel</mat-icon>
+            </button>
+        </div>
+        }
+
+        @if(image()?.invalid && (image()?.dirty || image()?.touched) &&
+        image()?.hasError("submitError")){
+        <mat-error>
+            {{image()?.getError("submitError")}}
+        </mat-error>
+        }
+    </div>
+
+    @if(newLibraryForm().invalid && newLibraryForm().hasError("submitError")){
+    <mat-error>
+        {{newLibraryForm().getError("submitError")}}
+    </mat-error>
+    }
+
+    <div style="float: right;margin-top: 50px;">
+        <button type="submit" matButton="elevated" style="width: fit-content;float: right;"
+            [disabled]="!newLibraryForm().valid">
+            Submit
+        </button>
+    </div>
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+</form>
+<div>{{newLibraryForm().value | json}}</div>

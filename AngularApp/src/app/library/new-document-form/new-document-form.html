@@ -4,8 +4,8 @@
         Creating a new document
     </h2>
     <mat-form-field>
-        <mat-label>Library Category</mat-label>
-        <mat-select required formControlName="library">
+        <mat-label>Shelf</mat-label>
+        <mat-select required formControlName="shelfGuid">
             <mat-optgroup label="Frontend">
                 <mat-option value="HtmlCssJs">Html Css JavaScript</mat-option>
                 <mat-option value="Angular">Angular</mat-option>
@@ -15,40 +15,59 @@
                 <mat-option value="AspNetCore">Asp.net Core</mat-option>
             </mat-optgroup>
         </mat-select>
-        @if(library()?.invalid && (library()?.dirty || library()?.touched) && library()?.hasError("required")){
+        @if(shelfGuids()?.invalid && (shelfGuids()?.dirty || shelfGuids()?.touched) &&
+        shelfGuids()?.hasError("required")){
         <mat-error>
-            Library is required!
+            Shelf is required!
+        </mat-error>
+        }
+        @if(shelfGuids()?.invalid && (shelfGuids()?.dirty || shelfGuids()?.touched) &&
+        shelfGuids()?.hasError("submitError")){
+        <mat-error>
+            {{shelfGuids()?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
 
     <mat-form-field>
-        <mat-label>Shelf</mat-label>
-        <mat-select formControlName="shelf">
-            <mat-option value="default">Default</mat-option>
-            <mat-option value="one">Shelf one title</mat-option>
-            <mat-option value="two">Shelf two title</mat-option>
-            <mat-option value="three">Shelf three title</mat-option>
-        </mat-select>
-    </mat-form-field>
-
-    <mat-form-field>
         <mat-label>Title</mat-label>
-        <input matInput type="text" required maxlength="50" formControlName="title" />
+        <input matInput type="text" required formControlName="title" />
         @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("required")){
         <mat-error>
             Title is required!
+        </mat-error>
+        }
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("maxLength")){
+        <mat-error>
+            Shelt title cannot be more than 30 characters!
+        </mat-error>
+        }
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("minLength")){
+        <mat-error>
+            Shelt title cannot be less than 3 characters!
+        </mat-error>
+        }
+        @if(title()?.invalid && (title()?.dirty || title()?.touched) &&
+        title()?.hasError("submitError")){
+        <mat-error>
+            {{title()?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
 
     <mat-form-field>
         <mat-label>Brief Description</mat-label>
-        <textarea name="" matInput required maxlength="500" formControlName="description"></textarea>
+        <textarea matInput formControlName="description"></textarea>
         @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
-        description()?.hasError("required")){
+        description()?.hasError("maxLength")){
         <mat-error>
-            Description is required!
+            Shelt Description cannot be more than 200 characters!
+        </mat-error>
+        }
+        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
+        description()?.hasError("submitError")){
+        <mat-error>
+            {{description()?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -68,7 +87,20 @@
             </button>
         </div>
         }
+
+        @if(image()?.invalid && (image()?.dirty || image()?.touched) &&
+        image()?.hasError("submitError")){
+        <mat-error>
+            {{image()?.getError("submitError")}}
+        </mat-error>
+        }
     </div>
+
+    @if(newDocumentForm().invalid && newDocumentForm().hasError("submitError")){
+    <mat-error>
+        {{newDocumentForm().getError("submitError")}}
+    </mat-error>
+    }
 
     <div style="float: right;margin-top: 50px;">
         <button type="submit" matButton="elevated" style="width: fit-content;float: right;"
@@ -76,11 +108,16 @@
             Submit
         </button>
     </div>
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
 </form>
 <div>
     {{ {
-    library:library()?.value ?? "",
-    shelf:shelf()?.value ?? "",
+    shelf:shelfGuids()?.value ?? "",
     title:title()?.value ?? "",
     description:description()?.value ?? "",
     image:image()?.value?.name ?? "",

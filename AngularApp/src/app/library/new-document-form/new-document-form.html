@@ -12,12 +12,15 @@
     </mat-button-toggle-group>
     <mat-form-field>
         <mat-label>Shelf</mat-label>
-        <mat-select required formControlName="shelfGuid" multiple>
+        <mat-select required formControlName="shelfGuids" multiple>
             @for(libraryName of displayedLibraries(); track libraryName){
             <mat-optgroup [label]="libraryName">
                 @for(shelfModel of allShelfList(); track shelfModel.guid){
                 @if(shelfModel.libraryTitle === libraryName){
-                <mat-option [value]="shelfModel.guid">{{shelfModel.title}}</mat-option>
+                <mat-option [value]="shelfModel.guid">
+                    {{shelfModel.title}}
+                    <span id="libraryName-span">({{libraryName}})</span>
+                </mat-option>
                 }
                 }
             </mat-optgroup>
@@ -123,12 +126,12 @@
     </div>
     }
 </form>
-<div>
+<!--div>
     {{ {
     shelf:shelfGuids()?.value ?? "",
     title:title()?.value ?? "",
     description:description()?.value ?? "",
     image:image()?.value?.name ?? "",
     } | json}}
-</div>
+</div-->
 <div>{{newDocumentForm().value | json}}</div>

@@ -481,8 +481,9 @@ public class Library_NewDocumentFormModel
     [StringLength(500, MinimumLength = 5)]
     public string Description { get; set; } = null!;
 
-    [MaxArrayLength(10)]
-    [StringLength(32)]
+    //[MaxArrayLength(10)]
+    //[StringLength(32)]
+    [MaxStringArrayLength(10, 32)]
     public string[]? ShelfGuids { get; set; } = null;
 
     public IFormFile? Image { get; set; }

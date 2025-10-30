@@ -2,12 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AspNetCoreApp.Validators;
 
-public class MaxArrayLengthAttribute : ValidationAttribute
+public class MaxStringArrayLengthAttribute : ValidationAttribute
 {
-    private readonly int maxLength;
-    public MaxArrayLengthAttribute(int _maxLength)
+    private readonly int maxArrayLength;
+    private readonly int maxStringLength;
+    public MaxStringArrayLengthAttribute(int _maxArrayLength, int _maxStringLength)
     {
-        maxLength = _maxLength;
+        maxArrayLength = _maxArrayLength;
+        maxStringLength = _maxStringLength;
     }
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
@@ -16,10 +18,14 @@ public class MaxArrayLengthAttribute : ValidationAttribute
         {
             if (value.GetType().IsArray)
             {
-                object[] array = (object[])value;
-                if (array.Length > maxLength)
+                string[] stringArray = (string[])value;
+                if (stringArray.Length > maxArrayLength)
                 {
-                    return new ValidationResult($"The array cannot contain more than {maxLength} items!");
+                    return new ValidationResult($"The array cannot contain more than {maxArrayLength} items!");
+                }
+                if (stringArray.Any(s => s.Length > maxStringLength))
+                {
+                    return new ValidationResult($"Each string elements of the array cannot be more than {maxStringLength} characters long!");
                 }
                 return ValidationResult.Success;
             }

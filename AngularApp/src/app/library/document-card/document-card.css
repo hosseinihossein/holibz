@@ -10,13 +10,6 @@ mat-card.alone{
 mat-card.raised{
     border: 1px solid var(--mat-sys-outline-variant);
 }
-mat-card.mini{
-    width: 100px;
-    height: 200px;
-}
-mat-card.mini:hover{
-    width: 150px;
-}
 
 #remove-btn{
     position: absolute;
@@ -27,33 +20,7 @@ mat-card.mini:hover{
     color: red;
 }
 
-mat-card.mini #avatar-img,
-mat-card.mini mat-card-subtitle,
-mat-card.mini mat-card-actions,
-mat-card.mini mat-card-content ul{
-    display: none;
-}
-
-mat-card.mini mat-card-title{
-    font-size: 14px;
-    line-height: 16px;
-}
-mat-card.mini:hover mat-card-title{
-    font-weight: bold;
-}
-
-mat-card.mini mat-card-content{
-    padding: 0;
-}
-
-mat-card.mini mat-card-content p,
-mat-card.mini mat-card-content h3{
-    font-size: 12px;
-    line-height: 14px;
-    margin: 0;
-}
-
-#avatar-img {
+img.owner-avatar {
     width: 50px;
     height: 50px;
     background-size: contain;
@@ -86,4 +53,40 @@ mat-card-content p{
 }
 mat-card-content h3{
     margin: 8px;
+}
+
+/******* mini *******/
+mat-card.mini{
+    width: 100px;
+    height: 200px;
+}
+mat-card.mini:hover{
+    width: 150px;
+}
+
+mat-card.mini .owner-avatar,
+mat-card.mini mat-card-subtitle,
+mat-card.mini mat-card-actions,
+mat-card.mini mat-card-content ul{
+    display: none;
+}
+
+mat-card.mini mat-card-title{
+    font-size: 14px;
+    line-height: 16px;
+}
+mat-card.mini:hover mat-card-title{
+    font-weight: bold;
+}
+
+mat-card.mini mat-card-content{
+    /*padding: 0;*/
+    /*height: 150px;*/
+}
+
+mat-card.mini mat-card-content p,
+mat-card.mini mat-card-content h3{
+    font-size: 12px;
+    line-height: 14px;
+    margin: 0;
 }

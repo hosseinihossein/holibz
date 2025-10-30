@@ -33,7 +33,7 @@
                 (click)="signletonModes.toggleEditMode()" matTooltip="Edit">
                 <mat-icon>{{signletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
             </button>
-            <a matButton="elevated" [routerLink]="['/document','new']">
+            <a matButton="elevated" [routerLink]="['/document','new',shelfModel()?.guid]">
                 <mat-icon>newsstand</mat-icon>
                 Add a new Document
             </a>

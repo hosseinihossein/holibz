@@ -164,6 +164,7 @@ public class LibraryController : ControllerBase
             LibraryTitle = shelf.Library.Title,
             Title = shelf.Title,
             OwnerGuid = shelf.OwnerGuid,
+            TotalNumberOfShelfDocuments = shelf.Documents.Count,
         })
         .AsSplitQuery()
         .ToArrayAsync();
@@ -211,6 +212,7 @@ public class LibraryController : ControllerBase
             LibraryTitle = shelf.Library.Title,
             Title = shelf.Title,
             OwnerGuid = shelf.OwnerGuid,
+            TotalNumberOfShelfDocuments = shelf.Documents.Count,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();

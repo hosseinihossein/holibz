@@ -35,7 +35,7 @@ export class NewDocumentForm {
 
   newDocumentForm = signal(new FormGroup({
     //library: new FormControl(""),
-    shelfGuids: new FormControl("DefaultShelf", {nonNullable:true, validators: [Validators.required]}),
+    shelfGuids: new FormControl(["DefaultShelf"], {nonNullable:true, validators: [Validators.required]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
     description: new FormControl("", {validators: Validators.maxLength(200)}),
     image: new FormControl<File|null>(null),
@@ -58,7 +58,7 @@ export class NewDocumentForm {
   constructor(){
     let currentShelfGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
     if(currentShelfGuidRouteParam){
-      this.newDocumentForm().controls["shelfGuids"].setValue(currentShelfGuidRouteParam);
+      this.newDocumentForm().controls["shelfGuids"].setValue([currentShelfGuidRouteParam]);
     }
 
     effect(() => {
@@ -134,17 +134,17 @@ export class NewDocumentForm {
   onSubmit(){
     if(this.newDocumentForm().valid){
       this.displaySubmitSpinner.set(true);
-      let newDocumentFormModel: NewDocumentFormModel = {
+      /*let newDocumentFormModel: NewDocumentFormModel = {
         description: this.description()?.value,
         image: this.image()?.value,
         shelfGuids: this.shelfGuids()?.value.split(',').map<string>(s=>s.trim()),
         title: this.title()?.value,
-      }
-      this.libraryService.createNewDocument(newDocumentFormModel).subscribe({
+      }*/
+      this.libraryService.createNewDocument(/*newDocumentFormModel*/this.newDocumentForm().value).subscribe({
         next: res => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
-            this.router.navigate(['/shelf',res.documentGuid]);
+            this.router.navigate(['/document',res.documentGuid]);
           }
         },
         error: err => {

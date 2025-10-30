@@ -32,14 +32,9 @@ export class LibraryPage {
     if(libraryGuidRouteParam){
       this.libraryGuid.set(libraryGuidRouteParam);
     }
-    if(!this.libraryGuid()){
-      if(this.librarySerice.currentLibraryModel()){
+    if(this.librarySerice.currentLibraryModel()?.guid === this.libraryGuid()){
         this.libraryModel.set(this.librarySerice.currentLibraryModel());
-        //this.librarySerice.currentLibraryModel.set(null);
-
         this.userModel.set(this.librarySerice.currentOwnerUserModel());
-        //this.librarySerice.currentOwnerUserModel.set(null);
-      }
     }
     else{
       effect(() => {

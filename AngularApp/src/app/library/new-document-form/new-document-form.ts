@@ -8,16 +8,19 @@ import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import { JsonPipe } from '@angular/common';
 import { IdentityService } from '../../services/identity-service';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, NewDocumentFormModel } from '../../services/library-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LibraryCardModel } from '../library-card/library-card';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { ShelfCardModel } from '../shelf-card/shelf-card';
+import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @Component({
   selector: 'app-new-document-form',
   imports: [MatFormField, MatLabel, MatInput, MatButton, MatIconButton, MatIcon, MatTooltip, MatSelect,
-    MatOption, MatOptgroup,ReactiveFormsModule,JsonPipe,MatError,MatProgressSpinner],
+    MatOption, MatOptgroup,ReactiveFormsModule,JsonPipe,MatError,MatProgressSpinner,
+    MatButtonToggleModule],
   templateUrl: './new-document-form.html',
   styleUrl: './new-document-form.css'
 })
@@ -28,11 +31,11 @@ export class NewDocumentForm {
   activatedRoute = inject(ActivatedRoute);
 
   //currentLibraryGuid = signal("DefaultLibrary");
-  currentShelfGuid = signal("DefaultShelf");
+  //currentShelfGuid = signal("DefaultShelf");
 
   newDocumentForm = signal(new FormGroup({
     //library: new FormControl(""),
-    shelfGuids: new FormControl([this.currentShelfGuid()], {nonNullable:true, validators: [Validators.required]}),
+    shelfGuids: new FormControl("DefaultShelf", {nonNullable:true, validators: [Validators.required]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
     description: new FormControl("", {validators: Validators.maxLength(200)}),
     image: new FormControl<File|null>(null),
@@ -45,26 +48,58 @@ export class NewDocumentForm {
   
   previewImgSrc = signal<string|null>(null);
   displaySubmitSpinner = signal(false);
-  libraryList = signal<LibraryCardModel[]>([]);
+  allLibraryList = signal<LibraryCardModel[]>([]);
+  displayedLibraries = signal<string[]>([]);
+  allShelfList = signal<ShelfCardModel[]>([]);
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
   imgInput = viewChild.required<ElementRef<HTMLInputElement>>("fileInput");
 
   constructor(){
-    let currentShelfNameRouteParam = this.activatedRoute.snapshot.paramMap.get("shelf");
-    if(currentShelfNameRouteParam){
-      this.currentShelfGuid.set(currentShelfNameRouteParam);
+    let currentShelfGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
+    if(currentShelfGuidRouteParam){
+      this.newDocumentForm().controls["shelfGuids"].setValue(currentShelfGuidRouteParam);
     }
 
     effect(() => {
       this.libraryService.requestLibraryList(this.identityService.userModel()?.guid)?.subscribe({
         next: res => {
           if(res){
-            this.libraryList.set(res);
+            this.allLibraryList.set(res);
+            this.displayedLibraries.set(res.map(l=>l.title));
           }
         },
       });
+
+      if(this.identityService.userModel()){
+        this.identityService.getCsrf().subscribe({
+          next: () => {
+            console.log("Csrf received successfully.");
+          },
+          error: err => {
+            console.error("Couldn't get Csrf!");
+            //throwError(()=>err);//doesn't pass error to the app-error-handler
+            throw(err);
+          },
+        });
+      }
     });
+
+    effect(() => {
+      for(let libraryModel of this.allLibraryList()){
+        this.libraryService.requestShelfList(libraryModel.guid).subscribe({
+          next: res => {
+            if(res){
+              this.allShelfList.update(shelfList=>[...shelfList, ...res]);
+            }
+          },
+        });
+      }
+    });
+  }
+
+  changeDisplayedLibraries(e:MatButtonToggleChange){
+    this.displayedLibraries.set(e.value);
   }
 
   onSelectImage(event:Event){
@@ -99,7 +134,13 @@ export class NewDocumentForm {
   onSubmit(){
     if(this.newDocumentForm().valid){
       this.displaySubmitSpinner.set(true);
-      this.libraryService.createNewDocument(this.newDocumentForm().value).subscribe({
+      let newDocumentFormModel: NewDocumentFormModel = {
+        description: this.description()?.value,
+        image: this.image()?.value,
+        shelfGuids: this.shelfGuids()?.value.split(',').map<string>(s=>s.trim()),
+        title: this.title()?.value,
+      }
+      this.libraryService.createNewDocument(newDocumentFormModel).subscribe({
         next: res => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);

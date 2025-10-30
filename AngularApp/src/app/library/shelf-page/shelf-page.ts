@@ -41,14 +41,9 @@ export class ShelfPage {
     if(libraryGuidRouteParam){
       this.shelfGuid.set(libraryGuidRouteParam);
     }
-    if(!this.shelfGuid()){
-      if(this.librarySerice.currentShelfModel()){
+    if(this.librarySerice.currentShelfModel()?.guid === this.shelfGuid()){
         this.shelfModel.set(this.librarySerice.currentShelfModel());
-        //this.librarySerice.currentLibraryModel.set(null);
-
         this.userModel.set(this.librarySerice.currentOwnerUserModel());
-        //this.librarySerice.currentOwnerUserModel.set(null);
-      }
     }
     else{
       effect(() => {

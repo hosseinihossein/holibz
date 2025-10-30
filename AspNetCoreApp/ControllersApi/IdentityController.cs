@@ -441,16 +441,16 @@ public class IdentityController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> UserImage([FromQuery][StringLength(32)] string userGuid)
+    public IActionResult UserImage([FromQuery][StringLength(32)] string userGuid)
     {
-        Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+        /*Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
         if (user is null)
         {
             return NotFound("User Not Found!");
-        }
+        }*/
 
         string userImagePath =
-        Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
+        Path.Combine(usersImagesDirectoryInfo.FullName, userGuid);
         if (System.IO.File.Exists(userImagePath))
         {
             return PhysicalFile(userImagePath, "application/octet-stream", "userImage", true);

@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { IdentityService } from '../../services/identity-service';
 import { LibraryService } from '../../services/library-service';
 import { Router } from '@angular/router';
@@ -8,10 +8,14 @@ import { MatIcon } from '@angular/material/icon';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { JsonPipe } from '@angular/common';
+import { MatInput } from '@angular/material/input';
+import { MatButton, MatIconButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-new-library-form',
-  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,MatProgressSpinner,JsonPipe],
+  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,MatProgressSpinner,JsonPipe,
+    MatInput,MatButton,MatIconButton
+  ],
   templateUrl: './new-library-form.html',
   styleUrl: './new-library-form.css'
 })
@@ -35,22 +39,22 @@ export class NewLibraryForm {
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
   imgInput = viewChild.required<ElementRef<HTMLInputElement>>("fileInput");
 
-  /*constructor(){
-    let currentLibraryNameRouteParam = this.activatedRoute.snapshot.paramMap.get("library");
-    if(currentLibraryNameRouteParam){
-      this.currentLibraryGuid.set(currentLibraryNameRouteParam);
-    }
-
+  constructor(){
     effect(() => {
-      this.libraryService.requestLibraryList(this.identityService.userModel()?.guid)?.subscribe({
-        next: res => {
-          if(res){
-            this.libraryList.set(res);
-          }
-        },
-      });
+      if(this.identityService.userModel()){
+        this.identityService.getCsrf().subscribe({
+          next: () => {
+            console.log("Csrf received successfully.");
+          },
+          error: err => {
+            console.error("Couldn't get Csrf!");
+            //throwError(()=>err);//doesn't pass error to the app-error-handler
+            throw(err);
+          },
+        });
+      }
     });
-  }*/
+  }
 
   onSelectImage(event:Event){
     const input = event.target as HTMLInputElement;
@@ -88,7 +92,7 @@ export class NewLibraryForm {
         next: res => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
-            this.router.navigate(['/shelf',res.libraryGuid]);
+            this.router.navigate(['/library',res.libraryGuid]);
           }
         },
         error: err => {

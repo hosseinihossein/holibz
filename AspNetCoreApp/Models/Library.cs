@@ -159,7 +159,7 @@ public class Library_Process //singleton service
                 {
                     Title = formModel.Title,
                     OwnerGuid = ownerGuid,
-                    Description = formModel.Decription,
+                    Description = formModel.Description,
                     Guid = "DefaultLibrary",
                 };
             }
@@ -169,7 +169,7 @@ public class Library_Process //singleton service
                 {
                     Title = formModel.Title,
                     OwnerGuid = ownerGuid,
-                    Description = formModel.Decription,
+                    Description = formModel.Description,
                 };
             }
 
@@ -178,7 +178,8 @@ public class Library_Process //singleton service
 
             if (formModel.Image is not null)
             {
-                string libraryImagePath = Path.Combine(Storage_Library.FullName, libraryDbModel.Guid, "image");
+                DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Library.FullName, libraryDbModel.Guid));
+                string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(libraryImagePath))
                 {
                     await formModel.Image.CopyToAsync(fs);
@@ -218,7 +219,7 @@ public class Library_Process //singleton service
                 {
                     Title = formModel.Title,
                     OwnerGuid = ownerGuid,
-                    Description = formModel.Decription,
+                    Description = formModel.Description,
                     Library = libraryContainer,
                     Guid = "DefaultShelf",
                 };
@@ -229,7 +230,7 @@ public class Library_Process //singleton service
                 {
                     Title = formModel.Title,
                     OwnerGuid = ownerGuid,
-                    Description = formModel.Decription,
+                    Description = formModel.Description,
                     Library = libraryContainer,
                 };
             }
@@ -239,7 +240,8 @@ public class Library_Process //singleton service
 
             if (formModel.Image is not null)
             {
-                string shelfImagePath = Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid, "image");
+                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid));
+                string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(shelfImagePath))
                 {
                     await formModel.Image.CopyToAsync(fs);
@@ -289,7 +291,7 @@ public class Library_Process //singleton service
 
         Library_DocumentDbModel documentDbModel = new()
         {
-            Description = formModel.Decription,
+            Description = formModel.Description,
             OwnerGuid = ownerGuid,
             Shelves = shelfDbModels,
             Title = formModel.Title,
@@ -300,7 +302,8 @@ public class Library_Process //singleton service
 
         if (formModel.Image is not null)
         {
-            string documentImagePath = Path.Combine(Storage_Document.FullName, documentDbModel.Guid, "image");
+            DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Document.FullName, documentDbModel.Guid));
+            string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
             using (FileStream fs = System.IO.File.Create(documentImagePath))
             {
                 await formModel.Image.CopyToAsync(fs);
@@ -321,7 +324,7 @@ public class Library_Process //singleton service
         Library_NewLibraryFormModel libraryFormModel = new()
         {
             Title = "Default Library",
-            Decription = "Containing all shelves that doesn't belong to anyother libraries."
+            Description = "Containing all shelves that doesn't belong to anyother libraries."
         };
         var createDefaultLibraryResult = await CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
 
@@ -347,14 +350,14 @@ public class Library_Process //singleton service
             Library_NewShelfFormModel shelfFormModel = new()
             {
                 Title = "Default Shelf",
-                Decription = "Containing all documents that doesn't belong to anyother shelves.",
+                Description = "Containing all documents that doesn't belong to anyother shelves.",
                 LibraryGuid = defaultLibrary.Guid,
             };
             var createDefaultShelfResult = await CreateNewShelf(libraryDb, ownerGuid, shelfFormModel);
             if (!createDefaultShelfResult.Success)
             {
                 //log
-                Console.WriteLine($"\n***** /Identity/CreateDefaultLibraryAndShelf, Couldn't create Default shelf for '{ownerGuid}'!");
+                Console.WriteLine($"\n***** {createDefaultShelfResult.ErrorTitle}: {createDefaultShelfResult.ErrorDescription}");
             }
         }
     }
@@ -393,6 +396,7 @@ public class Library_ShelfCardModel
     public Library_DocumentCardModel[] DocumentCardModels { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public int TotalNumberOfShelfDocuments { get; set; }
+    public bool HasImage { get; set; }
 }
 public class Library_DocumentCardModel
 {
@@ -452,7 +456,7 @@ public class Library_NewLibraryFormModel
     public string Title { get; set; } = null!;
 
     [StringLength(200)]
-    public string? Decription { get; set; } = null;
+    public string? Description { get; set; } = null;
 
     public IFormFile? Image { get; set; }
 }
@@ -462,7 +466,7 @@ public class Library_NewShelfFormModel
     public string Title { get; set; } = null!;
 
     [StringLength(200)]
-    public string? Decription { get; set; } = null;
+    public string? Description { get; set; } = null;
 
     [StringLength(32)]
     public string LibraryGuid { get; set; } = null!;
@@ -475,7 +479,7 @@ public class Library_NewDocumentFormModel
     public string Title { get; set; } = null!;
 
     [StringLength(500, MinimumLength = 5)]
-    public string Decription { get; set; } = null!;
+    public string Description { get; set; } = null!;
 
     [MaxArrayLength(10)]
     [StringLength(32)]

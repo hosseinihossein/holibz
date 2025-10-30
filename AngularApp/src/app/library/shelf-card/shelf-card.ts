@@ -42,17 +42,18 @@ export class ShelfCard implements OnInit {
 
   openShelf(){
     this.libraryService.currentShelfModel.set(this.shelfModel());
-    this.router.navigate(["/shelf"]);
+    this.router.navigate(["/shelf", this.shelfModel().guid]);
   }
 }
 
 export class ShelfCardModel{
-  guid?:string;
-  ownerGuid?:string;
-  title?:string;
+  guid:string = null!;
+  ownerGuid:string = null!;
+  title:string = null!;
   description?:string;
-  libraryTitle?:string;
-  documentCardModels?:DocumentCardModel[];
-  totalNumberOfShelfDocuments?:number;
-  createdAt?:Date;
+  libraryTitle:string = null!;
+  documentCardModels:DocumentCardModel[] = [];
+  totalNumberOfShelfDocuments:number = 0;
+  createdAt:Date = null!;
+  hasImage:boolean = false;
 }

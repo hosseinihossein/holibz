@@ -10,6 +10,29 @@ form{
     position: relative;
 }
 
+#img-box{
+    margin: 4px auto;
+    width: 100%;
+}
+
+#img-box img{
+    /*width: 150px;*/
+    height: 150px;
+    object-fit: contain;
+    /*float: left;*/
+    display: block;
+}
+
+#delete-img-btn{
+    position: absolute;
+    top: -28px;
+    right: -28px;
+}
+
+mat-error::before{
+    content: "*";
+}
+
 #submit-spinner-layout{
     position: absolute;
     top: 0;

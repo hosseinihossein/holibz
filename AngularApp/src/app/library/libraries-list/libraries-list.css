@@ -16,13 +16,12 @@
     background-color: var(--mat-sys-primary-container);
 }
 
-.top-box #library-icon{
+/*.top-box #library-icon{
     width: 56px;
     height: 56px;
     object-fit: contain;
     float: left;
-    /*margin: 0 24px;*/
-}
+}*/
 .top-box .icon-box mat-icon{
     width: 56px;
     height: 56px;
@@ -31,7 +30,6 @@
     position: relative;
     top: 14px;
     float: left;
-    /*margin: 0 24px;*/
 }
 
 .top-box .topBtn{

@@ -58,7 +58,7 @@ public class LibraryController : ControllerBase
         foreach (var libraryInfo in librariesInfo)
         {
             string libraryImagePath =
-            Path.Combine(Storage_Library.FullName, "Images", libraryInfo.Guid);
+            Path.Combine(Storage_Library.FullName, libraryInfo.Guid, "image");
 
             Library_LibraryCardModel libCard = new()
             {
@@ -109,7 +109,7 @@ public class LibraryController : ControllerBase
         }*/
 
         string libraryImagePath =
-            Path.Combine(Storage_Library.FullName, "Images", libraryInfo.Guid);
+            Path.Combine(Storage_Library.FullName, libraryInfo.Guid, "image");
 
         Library_LibraryCardModel libModel = new()
         {
@@ -124,6 +124,17 @@ public class LibraryController : ControllerBase
         };
 
         return Ok(libModel);
+    }
+
+    [HttpGet]
+    public IActionResult LibraryImage([FromQuery][StringLength(32)] string libraryGuid)
+    {
+        string imagePath = Path.Combine(Storage_Library.FullName, libraryGuid, "image");
+        if (System.IO.File.Exists(imagePath))
+        {
+            return PhysicalFile(imagePath, "application/octet-stream", "libraryImage", true);
+        }
+        return NotFound("Library Image Not Found!");
     }
 
     [HttpGet]
@@ -159,10 +170,14 @@ public class LibraryController : ControllerBase
 
         foreach (var shelfCardModel in shelfCardModels)
         {
+            string shelfImagePath =
+            Path.Combine(Storage_Shelf.FullName, shelfCardModel.Guid, "image");
+            shelfCardModel.HasImage = System.IO.File.Exists(shelfImagePath);
+
             foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
             {
                 documentCardModel.HasImage =
-                System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+                System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
             }
         }
 
@@ -205,13 +220,28 @@ public class LibraryController : ControllerBase
             return NotFound();
         }
 
+        string shelfImagePath =
+            Path.Combine(Storage_Shelf.FullName, shelfCardModel.Guid, "image");
+        shelfCardModel.HasImage = System.IO.File.Exists(shelfImagePath);
+
         foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
         {
             documentCardModel.HasImage =
-            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
         }
 
         return Ok(shelfCardModel);
+    }
+
+    [HttpGet]
+    public IActionResult ShelfImage([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        string imagePath = Path.Combine(Storage_Shelf.FullName, shelfGuid, "image");
+        if (System.IO.File.Exists(imagePath))
+        {
+            return PhysicalFile(imagePath, "application/octet-stream", "shelfImage", true);
+        }
+        return NotFound("Shelf Image Not Found!");
     }
 
     [HttpGet]
@@ -236,7 +266,7 @@ public class LibraryController : ControllerBase
         foreach (var documentCardModel in documentCardModels)
         {
             documentCardModel.HasImage =
-            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
         }
 
         return Ok(documentCardModels);
@@ -264,9 +294,20 @@ public class LibraryController : ControllerBase
         }
 
         documentCardModel.HasImage =
-        System.IO.File.Exists(Path.Combine(Storage_Document.FullName, "Images", documentCardModel.Guid));
+        System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
 
         return Ok(documentCardModel);
+    }
+
+    [HttpGet]
+    public IActionResult DocumentImage([FromQuery][StringLength(32)] string documentGuid)
+    {
+        string imagePath = Path.Combine(Storage_Document.FullName, documentGuid, "image");
+        if (System.IO.File.Exists(imagePath))
+        {
+            return PhysicalFile(imagePath, "application/octet-stream", "documentImage", true);
+        }
+        return NotFound("Document Image Not Found!");
     }
 
 

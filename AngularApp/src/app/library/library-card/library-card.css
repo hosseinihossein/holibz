@@ -30,8 +30,8 @@ mat-card-content li{
     font-size: 12px;
 }
 
-img{
+/*img{
     object-fit: contain;
     border-radius: 50%;
     border: 1px solid var(--mat-sys-outline-variant);
-}
+}*/

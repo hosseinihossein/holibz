@@ -27,10 +27,8 @@ export class NewShelfForm {
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
 
-  currentLibraryGuid = signal("DefaultLibrary");
-
   newShelfForm = signal(new FormGroup({
-    libraryGuid: new FormControl(this.currentLibraryGuid(), {nonNullable:true, validators: [Validators.required, Validators.maxLength(32)]}),
+    libraryGuid: new FormControl("DefaultLibrary", {nonNullable:true, validators: [Validators.required, Validators.maxLength(32)]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
     description: new FormControl("", {validators: Validators.maxLength(200)}),
     image: new FormControl<File|null>(null),
@@ -48,9 +46,9 @@ export class NewShelfForm {
   imgInput = viewChild.required<ElementRef<HTMLInputElement>>("fileInput");
 
   constructor(){
-    let currentLibraryNameRouteParam = this.activatedRoute.snapshot.paramMap.get("library");
-    if(currentLibraryNameRouteParam){
-      this.currentLibraryGuid.set(currentLibraryNameRouteParam);
+    let currentLibraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("libraryGuid");
+    if(currentLibraryGuidRouteParam){
+      this.newShelfForm().controls["libraryGuid"].setValue(currentLibraryGuidRouteParam);
     }
 
     effect(() => {
@@ -61,6 +59,19 @@ export class NewShelfForm {
           }
         },
       });
+
+      if(this.identityService.userModel()){
+        this.identityService.getCsrf().subscribe({
+          next: () => {
+            console.log("Csrf received successfully.");
+          },
+          error: err => {
+            console.error("Couldn't get Csrf!");
+            //throwError(()=>err);//doesn't pass error to the app-error-handler
+            throw(err);
+          },
+        });
+      }
     });
   }
 

@@ -30,17 +30,17 @@ export class LibraryCard {
 
   openLibrary(){
     this.libraryService.currentLibraryModel.set(this.libraryModel());
-    this.router.navigate(["/library"]);
+    this.router.navigate(["/library", this.libraryModel().guid]);
   }
 }
 
 export class LibraryCardModel {
-  guid?: string;
-  title?: string;
+  guid: string = null!;
+  title: string = null!;
   description?: string; 
-  shelvesTitles?: string[];
-  hasImage?:boolean;
+  shelvesTitles: string[] = [];
+  hasImage:boolean = false;
   //ownerUsername?: string;
-  ownerGuid?: string;
-  createdAt?:Date;
+  ownerGuid: string = null!;
+  createdAt:Date = null!;
 }

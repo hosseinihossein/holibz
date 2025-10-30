@@ -1,5 +1,4 @@
-- new actions for CreateNewLibrary and CreateNewShelf
-- pass document guid to each document card so that they can request their data from server individually
+- border-radius: 50% for new-library-form, new-shelf-form and new-document-form
 - 
 
 

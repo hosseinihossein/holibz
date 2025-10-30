@@ -3,17 +3,25 @@
         <mat-icon>newsstand</mat-icon>
         Creating a new document
     </h2>
+
+    <mat-button-toggle-group multiple [value]="displayedLibraries()" (change)="changeDisplayedLibraries($event)"
+        style="width: fit-content;margin: 8px auto;display: flex;">
+        @for(libraryModel of allLibraryList(); track libraryModel.guid){
+        <mat-button-toggle [value]="libraryModel.title">{{libraryModel.title}}</mat-button-toggle>
+        }
+    </mat-button-toggle-group>
     <mat-form-field>
         <mat-label>Shelf</mat-label>
-        <mat-select required formControlName="shelfGuid">
-            <mat-optgroup label="Frontend">
-                <mat-option value="HtmlCssJs">Html Css JavaScript</mat-option>
-                <mat-option value="Angular">Angular</mat-option>
-                <mat-option value="React">React</mat-option>
+        <mat-select required formControlName="shelfGuid" multiple>
+            @for(libraryName of displayedLibraries(); track libraryName){
+            <mat-optgroup [label]="libraryName">
+                @for(shelfModel of allShelfList(); track shelfModel.guid){
+                @if(shelfModel.libraryTitle === libraryName){
+                <mat-option [value]="shelfModel.guid">{{shelfModel.title}}</mat-option>
+                }
+                }
             </mat-optgroup>
-            <mat-optgroup label="Backend">
-                <mat-option value="AspNetCore">Asp.net Core</mat-option>
-            </mat-optgroup>
+            }
         </mat-select>
         @if(shelfGuids()?.invalid && (shelfGuids()?.dirty || shelfGuids()?.touched) &&
         shelfGuids()?.hasError("required")){

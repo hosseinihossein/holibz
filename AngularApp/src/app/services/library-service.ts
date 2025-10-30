@@ -161,7 +161,7 @@ class NewShelfFormModel{
   libraryGuid?:string; 
   image?:File|null
 }
-class NewDocumentFormModel{
+export class NewDocumentFormModel{
   title?:string;
   description?:string|null;
   shelfGuids?:string[]|null;

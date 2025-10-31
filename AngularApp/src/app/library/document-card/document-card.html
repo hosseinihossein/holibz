@@ -16,7 +16,6 @@
         </a>
         <mat-card-title>{{documentCardModel().title}}</mat-card-title>
         <mat-card-subtitle>
-            by
             <a [routerLink]="['/profile', userModel()?.guid]">
                 {{userModel()?.username}}
             </a>
@@ -25,9 +24,18 @@
 
     <mat-card-content>
         @if(documentCardModel().hasImage){
-        <img mat-card-image id="main-img"
-            [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentCardModel().guid}`" width="150" height="150"
+        <!--div style="width: 100%;"-->
+        @if(mini()){
+        <img mat-card-image id="main-img" #mainImg
+            [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentCardModel().guid}`" width="150" height="100"
             alt="document image">
+        }
+        @else {
+        <img mat-card-image id="main-img" #mainImg
+            [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentCardModel().guid}`" width="300" height="200"
+            alt="document image">
+        }
+        <!--/div-->
         }
         <p>{{documentCardModel().description}}</p>
         <ul style="margin: 0px;">

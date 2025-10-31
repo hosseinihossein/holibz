@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardContent, MatCardFooter, MatCardHeader, MatCardSubtitle, MatCardTitle } from '@angular/material/card';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -16,7 +16,7 @@ import { Router, RouterLink } from '@angular/router';
   templateUrl: './document-card.html',
   styleUrl: './document-card.css'
 })
-export class DocumentCard /*implements OnInit*/ {
+export class DocumentCard implements AfterViewInit {
   documentCardModel = input.required<DocumentCardModel>();
   //docGuid = input.required<string>();
   //userGuid = input.required<string>();
@@ -29,6 +29,7 @@ export class DocumentCard /*implements OnInit*/ {
   //router = inject(Router);
 
   documentCard = viewChild(MatCard,{read:ElementRef});
+  mainImg = viewChild<ElementRef<HTMLImageElement>>("mainImg");
   
   appearance = signal<"outlined"|"raised"|"filled">("outlined");
   userModel = signal<UserProfileModel|null>(null);
@@ -37,29 +38,29 @@ export class DocumentCard /*implements OnInit*/ {
 
   constructor(){
     this.userModel.set(this.libraryService.currentOwnerUserModel());
-  }
-  //ngOnInit(): void {
-    /*effect(() => {
-      if()
-      this.identityService.requestUserModel(this.userGuid()).subscribe({
-        next: res => {
-          if(res){
-            this.userModel.set(res);
-          }
-        },
-      });
-    });*/
 
-    /*effect(() => {
-      this.libraryService.requestDocumentCardModel(this.docGuid()).subscribe({
-        next: res => {
-          if(res){
-            this.documentCardModel.set(res);
-          }
-        },
+    effect(()=>{
+      if(this.documentCardModel() && this.userModel()?.guid !== this.documentCardModel().ownerGuid){
+        this.identityService.requestUserModel(this.documentCardModel().ownerGuid).subscribe({
+          next: res => {
+            if(res){
+              this.userModel.set(res);
+            }
+          },
+        });
+      }
+    });
+  }
+  ngAfterViewInit(): void {
+    if(this.mainImg() && this.mini()){
+      this.mainImg()?.nativeElement.addEventListener("mouseenter", ()=>{
+        this.mainImg()!.nativeElement.height = 150;
       });
-    });*/
-  //}
+      this.mainImg()?.nativeElement.addEventListener("mouseleave", ()=>{
+        this.mainImg()!.nativeElement.height = 100;
+      });
+    }
+  }
 
   raiseCard(){
     this.appearance.set("raised");
@@ -72,10 +73,10 @@ export class DocumentCard /*implements OnInit*/ {
 }
 
 export class DocumentCardModel{
-  guid?:string;
-  title?:string;
-  description?:string;
-  headers?:string[];
-  hasImage?:boolean;
-  ownerGuid?:string;
+  guid:string = null!;
+  title:string = null!;
+  description:string = null!;
+  headers:string[] = [];
+  hasImage:boolean = false;
+  ownerGuid:string = null!;
 }

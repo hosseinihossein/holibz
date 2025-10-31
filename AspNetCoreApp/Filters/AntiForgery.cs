@@ -15,7 +15,7 @@ public class GenerateAntiforgeryTokenCookieAttribute : ResultFilterAttribute
         context.HttpContext.Response.Cookies.Append(
             "XSRF-TOKEN",
             tokens.RequestToken!,
-            new CookieOptions() { HttpOnly = false, Secure = true });
+            new CookieOptions() { HttpOnly = false, Secure = true, SameSite = SameSiteMode.Strict });
     }
 
     public override void OnResultExecuted(ResultExecutedContext context)

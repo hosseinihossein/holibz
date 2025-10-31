@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, OnInit, Renderer2, signal, viewChild } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardContent, MatCardFooter, MatCardHeader, MatCardSubtitle, MatCardTitle } from '@angular/material/card';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -16,10 +16,8 @@ import { Router, RouterLink } from '@angular/router';
   templateUrl: './document-card.html',
   styleUrl: './document-card.css'
 })
-export class DocumentCard implements AfterViewInit {
+export class DocumentCard {
   documentCardModel = input.required<DocumentCardModel>();
-  //docGuid = input.required<string>();
-  //userGuid = input.required<string>();
   mini = input(false);
   alone = input(false);
 
@@ -27,14 +25,13 @@ export class DocumentCard implements AfterViewInit {
   identityService = inject(IdentityService);
   libraryService = inject(LibraryService);
   //router = inject(Router);
+  renderer = inject(Renderer2);
 
-  documentCard = viewChild(MatCard,{read:ElementRef});
-  mainImg = viewChild<ElementRef<HTMLImageElement>>("mainImg");
+  documentCard = viewChild.required(MatCard,{read: ElementRef});
   
   appearance = signal<"outlined"|"raised"|"filled">("outlined");
   userModel = signal<UserProfileModel|null>(null);
   userAvatarSrc = computed(()=>this.userModel()?.imageAddress);
-  //documentCardModel = signal<DocumentCardModel|null>(null);
 
   constructor(){
     this.userModel.set(this.libraryService.currentOwnerUserModel());
@@ -51,24 +48,14 @@ export class DocumentCard implements AfterViewInit {
       }
     });
   }
-  ngAfterViewInit(): void {
-    if(this.mainImg() && this.mini()){
-      this.mainImg()?.nativeElement.addEventListener("mouseenter", ()=>{
-        this.mainImg()!.nativeElement.height = 150;
-      });
-      this.mainImg()?.nativeElement.addEventListener("mouseleave", ()=>{
-        this.mainImg()!.nativeElement.height = 100;
-      });
-    }
-  }
 
   raiseCard(){
     this.appearance.set("raised");
-    this.documentCard()?.nativeElement.classList.add("raised");
+    this.renderer.addClass(this.documentCard().nativeElement, "raised");
   }
   outlineCard(){
     this.appearance.set("outlined");
-    this.documentCard()?.nativeElement.classList.remove("raised");
+    this.renderer.removeClass(this.documentCard().nativeElement, "raised");
   }
 }
 

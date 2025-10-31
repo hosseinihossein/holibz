@@ -65,6 +65,12 @@ mat-card.mini{
 mat-card.mini:hover{
     width: 150px;
 }
+mat-card.mini mat-card-content #main-img {
+    height: 100px;
+}
+mat-card.mini:hover mat-card-content #main-img {
+    height: 150px;
+}
 
 mat-card.mini .owner-avatar,
 mat-card.mini mat-card-subtitle,

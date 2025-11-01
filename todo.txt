@@ -5,3 +5,6 @@
 
 - do changedetection onpush and some other performance updates like ssr
 - break the angular app to several sub apps for each service.
+- add the ability for users to follow eachother
+- add the ability for users to send review request to to some other users they wish to read 
+and react to their document.

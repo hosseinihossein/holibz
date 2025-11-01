@@ -13,11 +13,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-shelf-page',
   imports: [DocumentsList, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
-    MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton, MatCardActions, RouterLink],
+    MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton, MatCardActions, RouterLink,
+    NgOptimizedImage],
   templateUrl: './shelf-page.html',
   styleUrl: './shelf-page.css'
 })

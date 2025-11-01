@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Library_Db
 {
     [DbContext(typeof(Library_DbContext))]
-    [Migration("20251030033722_Initial")]
+    [Migration("20251101094205_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -154,7 +154,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasKey("Id");
 
-                    b.ToTable("Library_RelatedVersionsDbModel");
+                    b.ToTable("RelatedVersions");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_ShelfDbModel", b =>

@@ -312,6 +312,106 @@ public class LibraryController : ControllerBase
         return NotFound("Document Image Not Found!");
     }
 
+    [HttpGet]
+    public async Task<IActionResult> DocumentPageModel([FromQuery][StringLength(32)] string documentGuid)
+    {
+        var documentModel = await libraryDb.Documents
+        .Include(doc => doc.Shelves)
+        .Include(doc => doc.Elements)
+        .Include(doc => doc.Tags)
+        .Include(doc => doc.RelatedVersions)
+        .Where(doc => doc.Guid == documentGuid)
+        .Select(doc => new
+        {
+            doc.Guid,
+            doc.OwnerGuid,
+            doc.Title,
+            doc.Description,
+            doc.Version,
+            doc.RelatedVersions,
+            ShelvesGuids = doc.Shelves.Select(shelf => shelf.Guid),
+            doc.Elements,
+            Tags = doc.Tags.Select(tag => tag.Name),
+            doc.CreatedAt,
+        })
+        .AsSplitQuery()
+        .FirstOrDefaultAsync();
+
+        if (documentModel is null)
+        {
+            return NotFound($"Theres no document with id '{documentGuid}' in Db!");
+        }
+
+        Library_VersionBrief[]? versionBriefs = [];
+        if (documentModel.RelatedVersions is not null)
+        {
+            versionBriefs = await libraryDb.RelatedVersions
+            .Include(rv => rv.Documents)
+            .Where(rv => rv.Guid == documentModel.RelatedVersions.Guid)
+            .Select(rv => rv.Documents
+                .Select(doc => new Library_VersionBrief()
+                {
+                    DocumentGuid = doc.Guid,
+                    VersionName = doc.Version,
+                })
+                .ToArray()
+            )
+            .FirstOrDefaultAsync();
+        }
+        if (versionBriefs is null || versionBriefs.Length == 0)
+        {
+            versionBriefs = [new Library_VersionBrief()
+            {
+                DocumentGuid = documentModel.Guid,
+                VersionName = documentModel.Version,
+            }];
+        }
+
+        Library_ShelfBrief[] shelfBriefs = await libraryDb.Shelves
+        .Include(shelf => shelf.Documents)
+        .Where(shelf => documentModel.ShelvesGuids.Contains(shelf.Guid))
+        .Select(shelf => new Library_ShelfBrief()
+        {
+            Description = shelf.Description,
+            Guid = shelf.Guid,
+            Title = shelf.Title,
+            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
+            {
+                Description = doc.Description,
+                Guid = doc.Guid,
+                Title = doc.Title,
+            }).ToArray(),
+        })
+        .ToArrayAsync();
+
+        Library_DocumentPageModel documentPageModel = new()
+        {
+            CreatedAt = documentModel.CreatedAt,
+            Description = documentModel.Description,
+            Elements = documentModel.Elements.Select(elementDbModel => new Library_ElementModel()
+            {
+                Guid = elementDbModel.Guid,
+                Order = elementDbModel.Order,
+                OwnerGuid = elementDbModel.OwnerGuid,
+                Title = elementDbModel.Title,
+                Type = elementDbModel.Type,
+                UpdatedAt = elementDbModel.UpdatedAt,
+                Value = elementDbModel.Value,
+            }).ToArray(),
+            Guid = documentModel.Guid,
+            OwnerGuid = documentModel.OwnerGuid,
+            RelatedVersions = versionBriefs,
+            Shelves = shelfBriefs,
+            Tags = documentModel.Tags.ToArray(),
+            Title = documentModel.Title,
+            Version = documentModel.Version,
+            HasImage = System.IO.File.Exists(Path
+                .Combine(Storage_Document.FullName, documentModel.Guid, "image")
+            ),
+        };
+
+        return Ok(documentPageModel);
+    }
 
 
 

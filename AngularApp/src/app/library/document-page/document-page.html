@@ -16,7 +16,7 @@
                     </mat-panel-title>
                 </mat-expansion-panel-header>
                 @for(doc of shelf.documents; track doc){
-                <a matButton [routerLink]="['document',doc.guid]" class="siblingDocs" [matTooltip]="doc.description"
+                <a matButton [routerLink]="['/document',doc.guid]" class="siblingDocs" [matTooltip]="doc.description"
                     matTooltipShowDelay="500">
                     {{doc.title}}
                 </a>
@@ -41,14 +41,15 @@
 
         <!--------------------- top action box -------------------->
         <div class="actionDiv clearfix">
-            <a matButton="elevated" href="" id="userProfile" class="noPaddingBtn" matTooltip="Owner">
+            <a matButton="elevated" [routerLink]="['/profile',ownerModel()?.guid]" id="userProfile" class="noPaddingBtn"
+                matTooltip="Owner">
                 @if(ownerImgSrc()){
                 <img [ngSrc]="ownerImgSrc()!" priority width="40" height="40" alt="user image">
                 }
                 @else {
                 <mat-icon style="font-size: 40px;width: 40px;height: 40px;">account_circle</mat-icon>
                 }
-                <span id="username">hossein</span>
+                <span id="username">{{ownerModel()?.username}}</span>
             </a>
             <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version of the document">
                 <mat-icon>arrow_drop_down</mat-icon>
@@ -86,18 +87,20 @@
             </button>
             }
             @for(relatedVersion of documentPageModel()?.relatedVersions; track relatedVersion){
-            <a mat-menu-item [routerLink]="['document', relatedVersion.documentGuid]">{{relatedVersion.versionName}}</a>
+            <a mat-menu-item [routerLink]="['/document', relatedVersion.documentGuid]">
+                {{relatedVersion.versionName}}
+            </a>
             }
         </mat-menu>
         <mat-menu #sectionMenu>
             <button mat-menu-item (click)="addNewSection('h1')" matTooltipPosition="left" matTooltip="Add a main title">
                 <mat-icon>format_h1</mat-icon>
-                Header1
+                Main Heading
             </button>
             <button mat-menu-item (click)="addNewSection('h2')" matTooltipPosition="left"
                 matTooltip="Add an subset header">
                 <mat-icon>format_h2</mat-icon>
-                Header2
+                Subheading
             </button>
             <button mat-menu-item (click)="addNewSection('p')" matTooltipPosition="left" matTooltip="Add a paragraph">
                 <mat-icon>subject</mat-icon>

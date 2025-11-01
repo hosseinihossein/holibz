@@ -74,6 +74,7 @@ public class Library_DbContext : DbContext
     public DbSet<Library_LibraryDbModel> Libraries { get; set; } = null!;
     public DbSet<Library_ShelfDbModel> Shelves { get; set; } = null!;
     public DbSet<Library_DocumentDbModel> Documents { get; set; } = null!;
+    public DbSet<Library_RelatedVersionsDbModel> RelatedVersions { get; set; } = null!;
     public DbSet<Library_ElementDbModel> Elements { get; set; } = null!;
     public DbSet<Library_TagDbModel> Tags { get; set; } = null!;
 
@@ -415,13 +416,13 @@ public class Library_DocumentPageModel
     public bool HasImage { get; set; }
     public string Description { get; set; } = null!;
     public string Version { get; set; } = null!;
-    public Library_VersionBrief? RelatedVersions { get; set; }
+    public Library_VersionBrief[] RelatedVersions { get; set; } = [];
     public Library_ShelfBrief[] Shelves { get; set; } = [];
-    public Library_DocumentElementModel[] Elements { get; set; } = [];
+    public Library_ElementModel[] Elements { get; set; } = [];
     public string[] Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }
-public class Library_DocumentElementModel
+public class Library_ElementModel
 {
     public string Guid { get; set; } = null!;
     public string OwnerGuid { get; set; } = null!;

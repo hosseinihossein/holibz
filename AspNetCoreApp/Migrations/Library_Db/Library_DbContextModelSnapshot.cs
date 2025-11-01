@@ -151,7 +151,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasKey("Id");
 
-                    b.ToTable("Library_RelatedVersionsDbModel");
+                    b.ToTable("RelatedVersions");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_ShelfDbModel", b =>

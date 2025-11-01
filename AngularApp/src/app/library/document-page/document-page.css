@@ -70,7 +70,7 @@ mat-sidenav-content a#userProfile img{
 }
 
 mat-sidenav-content a#userProfile #username{
-    transform: translateY(-8px);
+    transform: translateY(10px);
     display: inline-block;
     padding-right: 8px;
 }

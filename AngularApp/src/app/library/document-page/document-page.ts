@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -35,6 +35,9 @@ export class DocumentPage implements AfterViewInit {
   //containerShelves = signal<ShelfCardModel[]|null>(null);
   //documentElements = signal<DocumentElementModel[]|null>(null);
   documentPageModel = signal<DocumentPageModel|null>(null);
+  sortedElements = computed(()=>
+    this.documentPageModel()?.elements.sort((a,b)=>{if(a.order > b.order)return 1;else return -1;})
+  );
 
   //ownerGuid = signal<string|null>(null);
   ownerModel = signal<UserProfileModel|null>(null);
@@ -44,17 +47,14 @@ export class DocumentPage implements AfterViewInit {
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
   singletonModes = inject(SingletonModes);
-  elementRef = inject(ElementRef);
+  hostElement = inject(ElementRef);
   //documentService = inject(DocumentService);
   activatedRoute = inject(ActivatedRoute);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
-
-  sortedElements = computed(()=>this.documentPageModel()?.elements.sort((a,b)=>{if(a.order > b.order)return 1;else return -1;}));
+  renderer = inject(Renderer2);
   
   constructor(){
-    console.log("app-document constructor!");
-    
     let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
     if(documentGuidRouteParam){
       this.documentGuid.set(documentGuidRouteParam);
@@ -86,19 +86,22 @@ export class DocumentPage implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    console.log("app-document after view init!");
-    //a better prefered approach renderer2
     const viewPortObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id)?.classList.add("active");
-        } else {
-          this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id)?.classList.remove("active");
+        let overviewHeader = this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id);
+        if(overviewHeader){
+          if (entry.isIntersecting) {
+            //this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id)?.classList.add("active");
+            this.renderer.addClass(overviewHeader!, "active");
+          } else {
+            //this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id)?.classList.remove("active");
+            this.renderer.removeClass(overviewHeader!, "active");
+          }
         }
       });
     });
 
-    const headers = (this.elementRef.nativeElement as HTMLElement).getElementsByClassName("headerSection");
+    const headers = (this.hostElement.nativeElement as HTMLElement).getElementsByClassName("headerSection");
     for(let header of headers){
       viewPortObserver.observe(header);
     }
@@ -135,7 +138,7 @@ export class DocumentPageModel {
   hasImage:boolean = false;
   description:string = null!;
   version:string = null!;
-  relatedVersions?:{versionName:string, documentGuid:string}[]
+  relatedVersions:{versionName:string, documentGuid:string}[] = [];
   shelves:{guid:string, title:string, description?:string, 
     documents:{guid:string, title:string, description?:string}[]}[] = [];
   elements:DocumentElementModel[] = [];

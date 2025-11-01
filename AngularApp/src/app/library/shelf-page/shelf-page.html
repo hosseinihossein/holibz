@@ -2,7 +2,13 @@
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
+                @if(shelfModel()?.hasImage){
+                <img [ngSrc]="`/api/Library/ShelfImage?shelfGuid=${shelfModel()!.guid}`" width="40" height="40"
+                    alt="shelf image">
+                }
+                @else{
                 <mat-icon id="shelf-logo">shelves</mat-icon>
+                }
             </div>
             <mat-card-title>
                 {{shelfModel()?.title}}

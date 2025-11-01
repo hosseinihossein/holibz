@@ -38,7 +38,7 @@ namespace AspNetCore.Migrations.Library_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Library_RelatedVersionsDbModel",
+                name: "RelatedVersions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -48,7 +48,7 @@ namespace AspNetCore.Migrations.Library_Db
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Library_RelatedVersionsDbModel", x => x.Id);
+                    table.PrimaryKey("PK_RelatedVersions", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -119,9 +119,9 @@ namespace AspNetCore.Migrations.Library_Db
                 {
                     table.PrimaryKey("PK_Documents", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Documents_Library_RelatedVersionsDbModel_RelatedVersionsId",
+                        name: "FK_Documents_RelatedVersions_RelatedVersionsId",
                         column: x => x.RelatedVersionsId,
-                        principalTable: "Library_RelatedVersionsDbModel",
+                        principalTable: "RelatedVersions",
                         principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -259,7 +259,7 @@ namespace AspNetCore.Migrations.Library_Db
                 name: "Libraries");
 
             migrationBuilder.DropTable(
-                name: "Library_RelatedVersionsDbModel");
+                name: "RelatedVersions");
         }
     }
 }

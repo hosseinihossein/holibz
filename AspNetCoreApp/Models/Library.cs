@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Net;
+using System.Text.Encodings.Web;
 using AspNetCoreApp.Validators;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,8 +56,9 @@ public class Library_ElementDbModel
     public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
     public string OwnerGuid { get; set; } = null!;
     public string Type { get; set; } = null!;
-    public string Value { get; set; } = null!;
+    public string? Value { get; set; } = null;
     public string? Title { get; set; } = null;
+    public string? FileName { get; set; } = null;
     public int Order { get; set; }
     public Library_DocumentDbModel Document { get; set; } = null!;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -118,12 +121,14 @@ public class Library_Process //singleton service
     public readonly DirectoryInfo Storage_Library;
     public readonly DirectoryInfo Storage_Shelf;
     public readonly DirectoryInfo Storage_Document;
+    public readonly DirectoryInfo Storage_Element;
 
     public Library_Process(IWebHostEnvironment _env)
     {
         Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library"));
         Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Shelf"));
         Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Document"));
+        Storage_Element = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Element"));
     }
     public string? BuildTagName(string value)
     {
@@ -317,6 +322,113 @@ public class Library_Process //singleton service
             ResultObject = documentDbModel,
         };
     }
+    public async Task<ProcessResult> CreateNewElement(Library_DbContext libraryDb, string ownerGuid,
+    Library_NewElementFormModel formModel)
+    {
+        Library_DocumentDbModel? documentDbmodel = await libraryDb.Documents
+        .FirstOrDefaultAsync(doc => doc.Guid == formModel.DocumentGuid);
+        if (documentDbmodel is null)
+        {
+            return new ProcessResult()
+            {
+                Success = false,
+                ErrorTitle = "Parent Document",
+                ErrorDescription = $"Theres no document with guid '{formModel.DocumentGuid}'!",
+            };
+        }
+
+        if (formModel.Type == "h1" || formModel.Type == "h2" || formModel.Type == "p" ||
+        formModel.Type == "code" || formModel.Type == "link")
+        {
+            Library_ElementDbModel elementDbmodel = new()
+            {
+                Document = documentDbmodel,
+                Order = formModel.Order,
+                OwnerGuid = ownerGuid,
+                Title = formModel.Title,
+                Type = formModel.Type,
+                Value = formModel.Value,
+            };
+
+            await libraryDb.Elements.AddAsync(elementDbmodel);
+            await libraryDb.SaveChangesAsync();
+
+            return new ProcessResult()
+            {
+                Success = true,
+                ResultObject = elementDbmodel,
+            };
+        }
+
+        if ((formModel.Type == "img" || formModel.Type == "file") && formModel.File is not null)
+        {
+            /************************* validating file name **************************/
+            string fileName = WebUtility.HtmlEncode(formModel.File.FileName) ?? "file";
+
+            //validate fileName
+            foreach (char invalidChar in Path.GetInvalidFileNameChars())
+            {
+                fileName = fileName.Replace(invalidChar, '_');
+            }
+
+            string? fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
+            {
+                fileNameWithoutExtension = "file";
+            }
+            if (fileNameWithoutExtension.Length > 32)
+            {
+                fileNameWithoutExtension = fileNameWithoutExtension[..32];//fileNameWithoutExtension.Substring(0, 32);
+            }
+
+            string? extension = Path.GetExtension(fileName);
+            if (!string.IsNullOrWhiteSpace(extension))
+            {
+                extension = string.Empty;
+            }
+            if (extension.Length > 16)
+            {
+                extension = extension[..16];//extension.Substring(0, 16);
+            }
+
+            string validFileName = fileNameWithoutExtension + extension;
+
+            /*************************  **************************/
+
+            Library_ElementDbModel elementDbmodel = new()
+            {
+                Document = documentDbmodel,
+                Order = formModel.Order,
+                OwnerGuid = ownerGuid,
+                Title = formModel.Title,
+                Type = formModel.Type,
+                FileName = validFileName,
+            };
+
+            await libraryDb.Elements.AddAsync(elementDbmodel);
+            await libraryDb.SaveChangesAsync();
+
+            DirectoryInfo elementDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Element.FullName, elementDbmodel.Guid));
+            string elementFilePath = Path.Combine(elementDirectoryInfo.FullName, validFileName);
+            using (FileStream fs = System.IO.File.Create(elementFilePath))
+            {
+                await formModel.File.CopyToAsync(fs);
+            }
+
+            return new ProcessResult()
+            {
+                Success = true,
+                ResultObject = elementDbmodel,
+            };
+        }
+
+        return new ProcessResult()
+        {
+            Success = false,
+            ErrorTitle = "Element Type",
+            ErrorDescription = $"The element Type in unknown! Element type: '{formModel.Type}'",
+        };
+    }
 
     public async Task CreateDefaultLibraryAndShelf(Library_DbContext libraryDb,
     string ownerGuid)
@@ -488,4 +600,22 @@ public class Library_NewDocumentFormModel
     public string[]? ShelfGuids { get; set; } = null;
 
     public IFormFile? Image { get; set; }
+}
+public class Library_NewElementFormModel
+{
+    [StringLength(10, MinimumLength = 1)]
+    public string Type { get; set; } = null!;
+
+    [StringLength(500, MinimumLength = 1)]
+    public string? Value { get; set; } = null!;
+
+    [StringLength(60, MinimumLength = 3)]
+    public string? Title { get; set; }
+
+    public int Order { get; set; }
+
+    [StringLength(32)]
+    public string DocumentGuid { get; set; } = null!;
+
+    public IFormFile? File { get; set; }
 }

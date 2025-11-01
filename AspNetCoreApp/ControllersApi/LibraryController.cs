@@ -137,6 +137,10 @@ public class LibraryController : ControllerBase
         return NotFound("Library Image Not Found!");
     }
 
+
+
+
+
     [HttpGet]
     public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid)
     {
@@ -156,7 +160,7 @@ public class LibraryController : ControllerBase
             {
                 Description = doc.Description,
                 Guid = doc.Guid,
-                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
                 OwnerGuid = doc.OwnerGuid,
                 Title = doc.Title,
             }).ToArray(),
@@ -204,7 +208,7 @@ public class LibraryController : ControllerBase
             {
                 Description = doc.Description,
                 Guid = doc.Guid,
-                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
                 OwnerGuid = doc.OwnerGuid,
                 Title = doc.Title,
             }).ToArray(),
@@ -246,6 +250,10 @@ public class LibraryController : ControllerBase
         return NotFound("Shelf Image Not Found!");
     }
 
+
+
+
+
     [HttpGet]
     public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
     {
@@ -258,7 +266,7 @@ public class LibraryController : ControllerBase
         {
             Description = doc.Description,
             Guid = doc.Guid,
-            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
             OwnerGuid = doc.OwnerGuid,
             Title = doc.Title,
         })
@@ -286,7 +294,7 @@ public class LibraryController : ControllerBase
             Description = doc.Description,
             Title = doc.Title,
             OwnerGuid = doc.OwnerGuid,
-            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value).ToArray(),
+            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
         })
         .FirstOrDefaultAsync();
 
@@ -315,7 +323,7 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentPageModel([FromQuery][StringLength(32)] string documentGuid)
     {
-        var documentModel = await libraryDb.Documents
+        var customDocumentModel = await libraryDb.Documents
         .Include(doc => doc.Shelves)
         .Include(doc => doc.Elements)
         .Include(doc => doc.Tags)
@@ -337,17 +345,17 @@ public class LibraryController : ControllerBase
         .AsSplitQuery()
         .FirstOrDefaultAsync();
 
-        if (documentModel is null)
+        if (customDocumentModel is null)
         {
             return NotFound($"Theres no document with id '{documentGuid}' in Db!");
         }
 
         Library_VersionBrief[]? versionBriefs = [];
-        if (documentModel.RelatedVersions is not null)
+        if (customDocumentModel.RelatedVersions is not null)
         {
             versionBriefs = await libraryDb.RelatedVersions
             .Include(rv => rv.Documents)
-            .Where(rv => rv.Guid == documentModel.RelatedVersions.Guid)
+            .Where(rv => rv.Guid == customDocumentModel.RelatedVersions.Guid)
             .Select(rv => rv.Documents
                 .Select(doc => new Library_VersionBrief()
                 {
@@ -362,14 +370,14 @@ public class LibraryController : ControllerBase
         {
             versionBriefs = [new Library_VersionBrief()
             {
-                DocumentGuid = documentModel.Guid,
-                VersionName = documentModel.Version,
+                DocumentGuid = customDocumentModel.Guid,
+                VersionName = customDocumentModel.Version,
             }];
         }
 
         Library_ShelfBrief[] shelfBriefs = await libraryDb.Shelves
         .Include(shelf => shelf.Documents)
-        .Where(shelf => documentModel.ShelvesGuids.Contains(shelf.Guid))
+        .Where(shelf => customDocumentModel.ShelvesGuids.Contains(shelf.Guid))
         .Select(shelf => new Library_ShelfBrief()
         {
             Description = shelf.Description,
@@ -386,9 +394,9 @@ public class LibraryController : ControllerBase
 
         Library_DocumentPageModel documentPageModel = new()
         {
-            CreatedAt = documentModel.CreatedAt,
-            Description = documentModel.Description,
-            Elements = documentModel.Elements.Select(elementDbModel => new Library_ElementModel()
+            CreatedAt = customDocumentModel.CreatedAt,
+            Description = customDocumentModel.Description,
+            Elements = customDocumentModel.Elements.Select(elementDbModel => new Library_ElementModel()
             {
                 Guid = elementDbModel.Guid,
                 Order = elementDbModel.Order,
@@ -396,22 +404,48 @@ public class LibraryController : ControllerBase
                 Title = elementDbModel.Title,
                 Type = elementDbModel.Type,
                 UpdatedAt = elementDbModel.UpdatedAt,
-                Value = elementDbModel.Value,
+                Value = elementDbModel.Value ?? $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}",
             }).ToArray(),
-            Guid = documentModel.Guid,
-            OwnerGuid = documentModel.OwnerGuid,
+            Guid = customDocumentModel.Guid,
+            OwnerGuid = customDocumentModel.OwnerGuid,
             RelatedVersions = versionBriefs,
             Shelves = shelfBriefs,
-            Tags = documentModel.Tags.ToArray(),
-            Title = documentModel.Title,
-            Version = documentModel.Version,
+            Tags = customDocumentModel.Tags.ToArray(),
+            Title = customDocumentModel.Title,
+            Version = customDocumentModel.Version,
             HasImage = System.IO.File.Exists(Path
-                .Combine(Storage_Document.FullName, documentModel.Guid, "image")
+                .Combine(Storage_Document.FullName, customDocumentModel.Guid, "image")
             ),
         };
 
         return Ok(documentPageModel);
     }
+
+    [HttpDelete]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+        if (documentDbModel is null)
+        {
+            return NotFound($"There's no document with guid '{documentGuid}'!");
+        }
+
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        if (user.UserGuid != documentDbModel.OwnerGuid)
+        {
+            ModelState.AddModelError("Authorization", "You're Not allowed to delete this document!");
+            return BadRequest(ModelState);
+        }
+
+        libraryDb.Documents.Remove(documentDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+
 
 
 
@@ -519,5 +553,42 @@ public class LibraryController : ControllerBase
         return BadRequest(ModelState);
     }
 
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(512 * 1024)]//512 KB
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateNewElement(Library_NewElementFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
+
+            var result = await libraryProcess.CreateNewElement(libraryDb, userGuid, formModel);
+            if (result.Success && result.ResultObject is not null)
+            {
+                Library_ElementDbModel elementDbModel = (Library_ElementDbModel)result.ResultObject;
+
+                var elementModel = new Library_ElementModel()
+                {
+                    Guid = elementDbModel.Guid,
+                    Order = elementDbModel.Order,
+                    OwnerGuid = elementDbModel.OwnerGuid,
+                    Title = elementDbModel.Title,
+                    Type = elementDbModel.Type,
+                    UpdatedAt = elementDbModel.UpdatedAt,
+                    Value = elementDbModel.Value ?? $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}",
+                };
+
+                return Ok(elementModel);
+            }
+
+            ModelState.AddModelError(result.ErrorTitle ?? "New Element Error", result.ErrorDescription ?? "Error Description");
+            return BadRequest(ModelState);
+        }
+        return BadRequest(ModelState);
+    }
 
 }

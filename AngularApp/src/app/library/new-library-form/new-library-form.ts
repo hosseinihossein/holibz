@@ -10,6 +10,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { JsonPipe } from '@angular/common';
 import { MatInput } from '@angular/material/input';
 import { MatButton, MatIconButton } from '@angular/material/button';
+import { Result } from '../../dialogs/result/result';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-new-library-form',
@@ -23,6 +25,7 @@ export class NewLibraryForm {
   identityService = inject(IdentityService);
   libraryService = inject(LibraryService);
   router = inject(Router);
+  readonly dialog = inject(MatDialog);
 
   newLibraryForm = signal(new FormGroup({
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
@@ -60,7 +63,16 @@ export class NewLibraryForm {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       if(input.files[0].size > (128 * 1024)){
-        //create a form validator
+        const dialogRef = this.dialog.open(Result,{
+          data:{
+            status: "warning",
+            title: "Image Size Limit",
+            description: ["The size of the selected image cannot be larger than 120 KB!"]
+          }
+        });
+        dialogRef.afterClosed().subscribe(()=>{
+          this.clearImgInput();
+        });
       }
       else{
         this.newLibraryForm().get("image")?.setValue(input.files[0]);

@@ -15,6 +15,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
+import { Result } from '../../dialogs/result/result';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-new-document-form',
@@ -29,6 +31,7 @@ export class NewDocumentForm {
   libraryService = inject(LibraryService);
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
+  readonly dialog = inject(MatDialog);
 
   //currentLibraryGuid = signal("DefaultLibrary");
   //currentShelfGuid = signal("DefaultShelf");
@@ -105,8 +108,17 @@ export class NewDocumentForm {
   onSelectImage(event:Event){
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      if(input.files[0].size > (250 * 1024)){
-        //create a form validator
+      if(input.files[0].size > (500 * 1024)){
+        const dialogRef = this.dialog.open(Result,{
+          data:{
+            status: "warning",
+            title: "Image Size Limit",
+            description: ["The size of the selected image cannot be larger than 500 KB!"]
+          }
+        });
+        dialogRef.afterClosed().subscribe(()=>{
+          this.clearImgInput();
+        });
       }
       else{
         this.newDocumentForm().get("image")?.setValue(input.files[0]);

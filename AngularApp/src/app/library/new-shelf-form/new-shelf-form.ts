@@ -12,6 +12,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { LibraryCardModel } from '../library-card/library-card';
 import { IdentityService } from '../../services/identity-service';
+import { Result } from '../../dialogs/result/result';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-new-shelf-form',
@@ -26,6 +28,7 @@ export class NewShelfForm {
   libraryService = inject(LibraryService);
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
+  readonly dialog = inject(MatDialog);
 
   newShelfForm = signal(new FormGroup({
     libraryGuid: new FormControl("DefaultLibrary", {nonNullable:true, validators: [Validators.required, Validators.maxLength(32)]}),
@@ -79,7 +82,16 @@ export class NewShelfForm {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       if(input.files[0].size > (128 * 1024)){
-        //create a form validator
+        const dialogRef = this.dialog.open(Result,{
+          data:{
+            status: "warning",
+            title: "Image Size Limit",
+            description: ["The size of the selected image cannot be larger than 120 KB!"]
+          }
+        });
+        dialogRef.afterClosed().subscribe(()=>{
+          this.clearImgInput();
+        });
       }
       else{
         this.newShelfForm().get("image")?.setValue(input.files[0]);

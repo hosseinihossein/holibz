@@ -5,6 +5,7 @@ import { LibraryCardModel } from '../library/library-card/library-card';
 import { ShelfCardModel } from '../library/shelf-card/shelf-card';
 import { DocumentCardModel } from '../library/document-card/document-card';
 import { DocumentPageModel } from '../library/document-page/document-page';
+import { DocumentElementModel } from '../library/document-page/document-elements/document-element/document-element';
 
 @Injectable({
   providedIn: 'root'
@@ -147,6 +148,30 @@ export class LibraryService {
       "/api/Library/CreateNewDocument", formData
     );
   }
+  createNewElement(newElementFormModel: NewElementFormModel){
+    const formData = new FormData();
+    if(newElementFormModel.DocumentGuid){
+      formData.append("DocumentGuid", newElementFormModel.DocumentGuid);
+    }
+    if(newElementFormModel.Order){
+      formData.append("Order", newElementFormModel.Order);
+    }
+    if(newElementFormModel.Title){
+      formData.append("Title", newElementFormModel.Title);
+    }
+    if(newElementFormModel.Type){
+      formData.append("Type", newElementFormModel.Type);
+    }
+    if(newElementFormModel.Value){
+      formData.append("Value", newElementFormModel.Value);
+    }
+    if(newElementFormModel.File){
+      formData.append("File", newElementFormModel.File);
+    }
+    return this.httpClient.post<DocumentElementModel>(
+      "/api/Library/CreateNewElement", formData
+    );
+  }
 
 }
 
@@ -166,4 +191,12 @@ export class NewDocumentFormModel{
   description?:string|null;
   shelfGuids?:string[]|null;
   image?:File|null;
+}
+export class NewElementFormModel{
+  Type?:string;
+  Value?:string;
+  Title?:string;
+  Order?:string;
+  DocumentGuid?:string;
+  File?:File;
 }

@@ -21,7 +21,7 @@ export class EditFile {
 
   constructor(){}
 
-  onSelectImage(event:Event){
+  onSelectFile(event:Event){
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       if(input.files[0].size > (250 * 1024)){
@@ -29,10 +29,10 @@ export class EditFile {
       }
       else{
         this.selectedFile.set(input.files[0]);
-        if(this.fileName()){
-          this.fileNameSrc.set(this.selectedFile()?.name ?? this.data.value);
-        }
-
+        this.fileNameSrc.set(this.selectedFile()?.name ?? "selected file name!");
+        /*if(this.fileName()){
+        }*/
+        /*
         const reader = new FileReader(); // Create a FileReader instance
 
         // Load the image as a Data URL
@@ -40,7 +40,12 @@ export class EditFile {
         };
 
         reader.readAsDataURL(this.selectedFile()!); // Read the file as a Data URL
+        */
       }
+    }
+    else{
+      this.selectedFile.set(null);
+      this.fileNameSrc.set(this.data.value);
     }
   }
 }

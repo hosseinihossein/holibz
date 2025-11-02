@@ -173,6 +173,19 @@ export class LibraryService {
     );
   }
 
+  requestDeleteDocument(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid", documentGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteDocument", {params: httpParams}
+    );
+  }
+  requestDeleteElement(elementGuid:string){
+    let httpParams = new HttpParams().set("elementGuid", elementGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteElement", {params: httpParams}
+    );
+  }
+
 }
 
 class NewLibraryFormModel{

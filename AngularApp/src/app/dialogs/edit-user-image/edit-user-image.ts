@@ -50,7 +50,7 @@ export class EditUserImage {
     }
     else{
       this.selectedFile.set(null);
-      this.previewImgSrc.set(null);
+      this.previewImgSrc.set(this.data.currentImgSrc);
     }
   }
 

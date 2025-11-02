@@ -14,12 +14,19 @@ import { DocumentService } from '../../services/document-service';
 import { DocumentElement, DocumentElementModel } from './document-elements/document-element/document-element';
 import { MatChip, MatChipSet } from "@angular/material/chips";
 import { EditTags } from '../../dialogs/edit-tags/edit-tags';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { LibraryService } from '../../services/library-service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { LibraryService, NewElementFormModel } from '../../services/library-service';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { DocumentCardModel } from '../document-card/document-card';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { NgOptimizedImage } from '@angular/common';
+import { Result } from '../../dialogs/result/result';
+import { EditHeader } from '../../dialogs/edit-header/edit-header';
+import { EditCode } from '../../dialogs/edit-code/edit-code';
+import { EditParagraph } from '../../dialogs/edit-paragraph/edit-paragraph';
+import { EditLink } from '../../dialogs/edit-link/edit-link';
+import { EditImageTitle } from '../../dialogs/edit-image-title/edit-image-title';
+import { EditFile } from '../../dialogs/edit-file/edit-file';
 
 @Component({
   selector: 'app-document-page',
@@ -43,6 +50,8 @@ export class DocumentPage implements AfterViewInit {
   ownerModel = signal<UserProfileModel|null>(null);
   ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
 
+  displaySubmitSpinner = signal(false);
+
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
@@ -53,6 +62,7 @@ export class DocumentPage implements AfterViewInit {
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
   renderer = inject(Renderer2);
+  router = inject(Router);
   
   constructor(){
     let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
@@ -110,8 +120,27 @@ export class DocumentPage implements AfterViewInit {
   confirmDelete(){
     const dialogRef = this.dialog.open(ConfirmDelete);
     dialogRef.afterClosed().subscribe(result=>{
-      if(result === "true"){
-        console.log("this document has been deleted!");
+      if(result === true){
+        this.displaySubmitSpinner.set(true);
+        this.libraryService.requestDeleteDocument(this.documentPageModel()?.guid!).subscribe({
+          next: res => {
+            if(res && res.success){
+              this.router.navigate(['/profile']);
+            }
+          },
+          error: err => {
+            this.dialog.open(Result,{
+              //panelClass: "success-ResultStatus", 
+              data:{
+                status: "warning",
+                title: "Error in document deletion",
+                description: ["Something went wrong in document deletion",
+                  JSON.stringify(err)
+                ],
+              }
+            });
+          },
+        });
       }
     });
   }
@@ -125,8 +154,112 @@ export class DocumentPage implements AfterViewInit {
     });
   }
 
-  addNewSection(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
-    //this.documentService.mockAddSection(type);
+  addNewElement(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
+    if(this.documentPageModel()){
+      let newElementFormModel: NewElementFormModel|null = null;
+      if(type === "h1" || type === "h2"){
+        const dialogRef = this.dialog.open(EditHeader, {data:{value:type === "h1"?"New Main Heading":"New SubHeading"}});
+        dialogRef.afterClosed().subscribe(result=>{
+          if(result){
+            newElementFormModel = {
+              DocumentGuid: this.documentPageModel()?.guid,
+              Order: this.documentPageModel()?.elements.length.toString(),
+              Type: type,
+              Value: result,
+            };
+          }
+        });
+      }
+      else if(type === "code"){
+        const dialogRef = this.dialog.open(EditCode,{data:{value:"New Code"}});
+        dialogRef.afterClosed().subscribe(result=>{
+          if(result){
+            newElementFormModel = {
+              DocumentGuid: this.documentPageModel()?.guid,
+              Order: this.documentPageModel()?.elements.length.toString(),
+              Type: type,
+              Value: result,
+            };
+          }
+        });
+      }
+      else if(type === "p"){
+        const dialogRef = this.dialog.open(EditParagraph, {data:{value:"New Paragraph"}});
+        dialogRef.afterClosed().subscribe(result => {
+          if(result){
+            newElementFormModel = {
+              DocumentGuid: this.documentPageModel()?.guid,
+              Order: this.documentPageModel()?.elements.length.toString(),
+              Type: type,
+              Value: result,
+            };
+          }
+        });
+      }
+      else if(type === "link"){
+        const dialogRef = this.dialog.open(EditLink, {data:{title:"New Link", value:""}});
+        dialogRef.afterClosed().subscribe(result=>{
+          if(result){
+            newElementFormModel = {
+              DocumentGuid: this.documentPageModel()?.guid,
+              Order: this.documentPageModel()?.elements.length.toString(),
+              Type: type,
+              Value: result.value,
+              Title: result.title,
+            };
+          }
+        });
+      }
+      else if(type === "img"){
+        const dialogRef = this.dialog.open(EditImageTitle, {data:{title:"Image Title", value:""}});
+        dialogRef.afterClosed().subscribe(result=>{
+          if(result){
+            newElementFormModel = {
+              DocumentGuid: this.documentPageModel()?.guid,
+              Order: this.documentPageModel()?.elements.length.toString(),
+              Type: type,
+              Title: result.title,
+              File: result.file,
+            };
+          }
+        });
+      }
+      else if(type === "file"){
+        const dialogRef = this.dialog.open(EditFile, {data:{title:"File Title", value:""}});
+        dialogRef.afterClosed().subscribe(result=>{
+          if(result){
+            newElementFormModel = {
+              DocumentGuid: this.documentPageModel()?.guid,
+              Order: this.documentPageModel()?.elements.length.toString(),
+              Type: type,
+              Title: result.title,
+              File: result.file,
+            };
+          }
+        });
+      }
+      
+      if(newElementFormModel){
+        this.libraryService.createNewElement(newElementFormModel).subscribe({
+          next: res => {
+            if(res){
+              this.documentPageModel()?.elements.push(res);
+            }
+          },
+          error: err => {
+            this.dialog.open(Result,{
+              data:{
+                status: "warning",
+                title: "Error in adding element",
+                description: ["Something went wrong in adding the elemenet!",
+                  JSON.stringify(err)
+                ],
+              }
+            });
+          },
+        });
+      }
+    }
   }
 
 }

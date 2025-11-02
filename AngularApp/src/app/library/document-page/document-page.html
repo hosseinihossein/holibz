@@ -56,7 +56,7 @@
                 {{documentPageModel()?.version}}
             </button>
             @if(singletonModes.editMode()){
-            <button matButton="elevated" [matMenuTriggerFor]="sectionMenu"
+            <button matButton="elevated" [matMenuTriggerFor]="elementMenu"
                 matTooltip="Add a new section to the document" class="noPaddingBtn">
                 <mat-icon>arrow_drop_down</mat-icon>
                 <mat-icon>add</mat-icon>
@@ -92,34 +92,34 @@
             </a>
             }
         </mat-menu>
-        <mat-menu #sectionMenu>
-            <button mat-menu-item (click)="addNewSection('h1')" matTooltipPosition="left" matTooltip="Add a main title">
+        <mat-menu #elementMenu>
+            <button mat-menu-item (click)="addNewElement('h1')" matTooltipPosition="left" matTooltip="Add a main title">
                 <mat-icon>format_h1</mat-icon>
                 Main Heading
             </button>
-            <button mat-menu-item (click)="addNewSection('h2')" matTooltipPosition="left"
+            <button mat-menu-item (click)="addNewElement('h2')" matTooltipPosition="left"
                 matTooltip="Add an subset header">
                 <mat-icon>format_h2</mat-icon>
-                Subheading
+                SubHeading
             </button>
-            <button mat-menu-item (click)="addNewSection('p')" matTooltipPosition="left" matTooltip="Add a paragraph">
+            <button mat-menu-item (click)="addNewElement('p')" matTooltipPosition="left" matTooltip="Add a paragraph">
                 <mat-icon>subject</mat-icon>
                 Paragraph
             </button>
-            <button mat-menu-item (click)="addNewSection('img')" matTooltipPosition="left" matTooltip="Add an image">
+            <button mat-menu-item (click)="addNewElement('img')" matTooltipPosition="left" matTooltip="Add an image">
                 <mat-icon>image</mat-icon>
                 Image
             </button>
-            <button mat-menu-item (click)="addNewSection('code')" matTooltipPosition="left"
+            <button mat-menu-item (click)="addNewElement('code')" matTooltipPosition="left"
                 matTooltip="Add a code snippet">
                 <mat-icon>code_blocks</mat-icon>
                 Code
             </button>
-            <button mat-menu-item (click)="addNewSection('link')" matTooltipPosition="left" matTooltip="Add a link">
+            <button mat-menu-item (click)="addNewElement('link')" matTooltipPosition="left" matTooltip="Add a link">
                 <mat-icon>link</mat-icon>
                 Link
             </button>
-            <button mat-menu-item (click)="addNewSection('file')" matTooltipPosition="left"
+            <button mat-menu-item (click)="addNewElement('file')" matTooltipPosition="left"
                 matTooltip="Attach a new file">
                 <mat-icon>file_present</mat-icon>
                 File

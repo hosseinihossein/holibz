@@ -1,8 +1,11 @@
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MatButton } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from "@angular/material/dialog";
+import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from "@angular/material/dialog";
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { LibraryService } from '../../services/library-service';
+import { Result } from '../result/result';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 
 @Component({
   selector: 'app-edit-image-title',
@@ -18,8 +21,6 @@ export class EditImageTitle {
   previewImgSrc = signal(this.data.value);
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
-
-  constructor(){}
 
   onSelectImage(event:Event){
     const input = event.target as HTMLInputElement;
@@ -43,5 +44,11 @@ export class EditImageTitle {
         reader.readAsDataURL(this.selectedFile()!); // Read the file as a Data URL
       }
     }
+    else{
+      this.selectedFile.set(null);
+      this.previewImgSrc.set(this.data.value);
+    }
   }
+
+
 }

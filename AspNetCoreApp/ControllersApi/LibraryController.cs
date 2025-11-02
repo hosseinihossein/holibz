@@ -440,6 +440,18 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        //delete directory path from Storage_Document
+        string directoryPath = Path.Combine(Storage_Document.FullName, documentDbModel.Guid);
+        try
+        {
+            System.IO.Directory.Delete(directoryPath, true);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"\n***** {e.Message}");
+        }
+
+        //remove from Db
         libraryDb.Documents.Remove(documentDbModel);
         await libraryDb.SaveChangesAsync();
 

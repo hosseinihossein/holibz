@@ -4,11 +4,14 @@
         <input matInput type="text" [value]="data.title" #titleInput>
     </mat-form-field>
     <mat-form-field>
-        <mat-label>LinkAddress</mat-label>
+        <mat-label>Link Address</mat-label>
         <input matInput type="text" [value]="data.value" #linkInput>
     </mat-form-field>
     <mat-dialog-actions>
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="{title:titleInput.value, value:linkInput.value}">Save</button>
+    </mat-dialog-actions>
+    <mat-dialog-actions align="start">
+        <button matButton="filled" class="warning" mat-dialog-close="Delete">Delete</button>
     </mat-dialog-actions>
 </mat-dialog-content>

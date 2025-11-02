@@ -5,10 +5,22 @@
             Sections:
         </p>
         <div class="sidenav-option-container">
-            <button matFab extended (click)="activeSection.set('MyLibraries')">
-                <mat-icon>account_balance</mat-icon>
-                My Libraries
+            <a matFab extended [routerLink]="['/profile']">
+                <mat-icon>article_person</mat-icon>
+                Profile
+            </a>
+        </div>
+        <!--div class="sidenav-option-container">
+            <button matFab extended (click)="activeSection.set('UserAccountProfile')">
+                <mat-icon>settings_account_box</mat-icon>
+                User Account Manager
             </button>
+        </div-->
+        <div class="sidenav-option-container">
+            <a matFab extended [routerLink]="['UserAccountManager']">
+                <mat-icon>settings_account_box</mat-icon>
+                User Account Manager
+            </a>
         </div>
         @if(identityService.userModel()?.roles?.includes("Identity_Admins")){
         <div class="sidenav-option-container">
@@ -21,9 +33,7 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-        @if(activeSection() === "MyLibraries"){
-        <app-libraries-list></app-libraries-list>
-        }
+        <router-outlet />
     </mat-sidenav-content>
 
 </mat-sidenav-container>

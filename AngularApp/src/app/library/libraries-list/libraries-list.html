@@ -1,33 +1,45 @@
-<div class="top-box clearfix">
-    <!-- [matBadge]="userModel()?.username" matBadgePosition="below" -->
-    <div class="icon-box" [matTooltip]="userModel()?.username">
-        @if(userImgSrc()){
-        <img [ngSrc]="userImgSrc()!" priority width="56" height="56" alt="user image" id="user-profile-img">
-        }
-        @else {
-        <mat-icon>account_circle</mat-icon>
-        }
-    </div>
-    <div class="icon-box" [matBadge]="libraryModels().length" matTooltip="number of libraries">
-        <mat-icon>account_balance</mat-icon>
-    </div>
-    <div class="icon-box" [matBadge]="totalNumberOfUserShelves()" matTooltip="number of shelves">
-        <mat-icon>shelves</mat-icon>
-    </div>
-    <div class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="number of documents">
-        <mat-icon>newsstand</mat-icon>
-    </div>
+<mat-sidenav-container>
+    <mat-sidenav id="" mode="side" opened position="start" fixedInViewport fixedTopGap="56" fixedBottomGap="16">
 
-    @if(isMyLibraries()){
-    <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
-        <mat-icon>account_balance</mat-icon>
-        Add a new Library
-    </a>
-    }
-</div>
+    </mat-sidenav>
 
-<div class="list">
-    @for(libModel of libraryModels(); track libModel.guid){
-    <app-library-card [libraryModel]="libModel"></app-library-card>
-    }
-</div>
+    <mat-sidenav-content>
+        <ng-content />
+
+        @if(isMyLibraries()){
+        <div class="top-box clearfix">
+            <!-- [matBadge]="userModel()?.username" matBadgePosition="below" -->
+            <!--div class="icon-box" [matTooltip]="userModel()?.username">
+                @if(userImgSrc()){
+                <img [ngSrc]="userImgSrc()!" priority width="56" height="56" alt="user image" id="user-profile-img">
+                }
+                @else {
+                <mat-icon>account_circle</mat-icon>
+                }
+            </div-->
+            <div class="icon-box" [matBadge]="libraryModels().length" matTooltip="number of libraries">
+                <mat-icon>account_balance</mat-icon>
+            </div>
+            <div class="icon-box" [matBadge]="totalNumberOfUserShelves()" matTooltip="number of shelves">
+                <mat-icon>shelves</mat-icon>
+            </div>
+            <div class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="number of documents">
+                <mat-icon>newsstand</mat-icon>
+            </div>
+
+
+            <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
+                <mat-icon>account_balance</mat-icon>
+                Add a new Library
+            </a>
+        </div>
+        }
+
+        <div class="list">
+            @for(libModel of libraryModels(); track libModel.guid){
+            <app-library-card [libraryModel]="libModel"></app-library-card>
+            }
+        </div>
+    </mat-sidenav-content>
+
+</mat-sidenav-container>

@@ -16,55 +16,57 @@ import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
 import { ActivatedRoute } from '@angular/router';
-import { LibrariesList } from "../../library/libraries-list/libraries-list";
 
 @Component({
-  selector: 'app-profile',
+  selector: 'app-user-account-manager',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent,
-    MatIcon, NgOptimizedImage,
-    MatCheckboxModule, MatButtonModule, LibrariesList],
-  templateUrl: './profile.html',
-  styleUrl: './profile.css'
+    MatCardActions, MatIcon, MatTooltip, NgOptimizedImage,
+    MatCheckboxModule, MatButtonModule],
+  templateUrl: './user-account-manager.html',
+  styleUrl: './user-account-manager.css'
 })
-export class Profile {
-  userGuid = signal<string|null>(null);
-  isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid);
+export class UserAccountManager {
+  //userGuid = signal<string|null>(null);
+  //isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid);
 
-  //singletonModes = inject(SingletonModes);
-  //dialog = inject(MatDialog);
+  singletonModes = inject(SingletonModes);
+  dialog = inject(MatDialog);
   identityService = inject(IdentityService);
   activatedRoute = inject(ActivatedRoute);
 
-  userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.userModel()?.imageAddress);
-  username = computed(()=>this.userModel()?.username);
-  description = computed(()=>this.userModel()?.description);
-  email = computed(()=>this.userModel()?.email);
-  displayEmailPublicly = computed(()=>this.userModel()?.displayEmailPublicly);
+  //userModel = signal<UserProfileModel|null>(null);
+  userImgSrc = computed(()=>this.identityService.userModel()?.imageAddress);
+  username = computed(()=>this.identityService.userModel()?.username);
+  description = computed(()=>this.identityService.userModel()?.description);
+  email = computed(()=>this.identityService.userModel()?.email);
+  displayEmailPublicly = computed(()=>this.identityService.userModel()?.displayEmailPublicly);
 
-  //errorResponse = signal("");
+  errorResponse = signal("");
 
   constructor(){
-    let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
+    /*let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
     if(userGuidRouteParam){
       this.userGuid.set(userGuidRouteParam);
-    }
+    }*/
+
+    /*if(!this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid){
+      this.isMyProfile.set(true);
+    }*/
 
     effect(() => {
-      if(this.isMyProfile()){
-        this.identityService.getCsrf().subscribe({
-          next: () => {
-            console.log("Csrf received successfully.");
-          },
-          error: err => {
-            console.error("Couldn't get Csrf!");
-            throw(err);
-          },
-        });
-      }
+      this.identityService.getCsrf().subscribe({
+        next: () => {
+          console.log("Csrf received successfully.");
+        },
+        error: err => {
+          console.error("Couldn't get Csrf!");
+          //throwError(()=>err);//doesn't pass error to the app-error-handler
+          throw(err);
+        },
+      });
     });
     
-    effect(()=>{
+    /*effect(()=>{
       if(!this.isMyProfile()){
         this.identityService.requestUserModel(this.userGuid()!).subscribe({
           next: res=>this.userModel.set(res),
@@ -73,10 +75,10 @@ export class Profile {
       else{
         this.userModel.set(this.identityService.userModel());
       }
-    });
+    });*/
   }
 
-  /*openEditImageDialog(){
+  openEditImageDialog(){
     this.dialog.open(EditUserImage,
     {data:{currentImgSrc: this.identityService.userModel()?.imageAddress}});
   }
@@ -89,7 +91,7 @@ export class Profile {
         this.identityService.submitUserName(result).subscribe({
           next: res=>{
             if(res.success){
-              let newUserModel = new UserProfileModel(this.userModel());
+              let newUserModel = new UserProfileModel(this.identityService.userModel());
               newUserModel.username = result;
               this.identityService.updateUserModel(newUserModel);
             }
@@ -126,7 +128,7 @@ export class Profile {
         this.identityService.submitDescription(result).subscribe({
           next: res=>{
             if(res.success){
-              let newUserModel = new UserProfileModel(this.userModel());
+              let newUserModel = new UserProfileModel(this.identityService.userModel());
               newUserModel.description = result;
               this.identityService.updateUserModel(newUserModel);
             }
@@ -161,7 +163,7 @@ export class Profile {
         this.identityService.submitDisplayEmailPublicly(displayPubliclyEditedTo).subscribe({
           next: res=>{
             if(res.success){
-              let newUserModel = new UserProfileModel(this.userModel());
+              let newUserModel = new UserProfileModel(this.identityService.userModel());
               newUserModel.displayEmailPublicly = displayPubliclyEditedTo;
               this.identityService.updateUserModel(newUserModel);
             }
@@ -188,6 +190,6 @@ export class Profile {
 
   openChangePasswordDialog(){
     this.dialog.open(ChangePassword);
-  }*/
+  }
 
 }

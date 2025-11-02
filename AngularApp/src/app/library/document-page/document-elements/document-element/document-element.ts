@@ -16,16 +16,17 @@ import { LinkElement } from '../link-element/link-element';
   templateUrl: './document-element.html',
   styleUrl: './document-element.css'
 })
-export class DocumentElement implements AfterViewInit {
-  singletonModes = inject(SingletonModes);
+export class DocumentElement /*implements AfterViewInit*/ {
   elementModel = input.required<DocumentElementModel>();
 
-  constructor(){
+  singletonModes = inject(SingletonModes);
+
+  /*constructor(){
     console.log("app-section constructor!");
   }
   ngAfterViewInit(): void {
     console.log("app-section after view init!");
-  }
+  }*/
 }
 
 export class DocumentElementModel {

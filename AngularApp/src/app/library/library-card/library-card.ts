@@ -1,10 +1,10 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, input, OnInit, signal } from '@angular/core';
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { NgOptimizedImage } from "@angular/common";
 import { Router } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
-import { UserProfileModel } from '../../services/identity-service';
+import { IdentityService, UserProfileModel } from '../../services/identity-service';
 
 @Component({
   selector: 'app-library-card',
@@ -16,16 +16,32 @@ import { UserProfileModel } from '../../services/identity-service';
     "(click)": "openLibrary()",
   }
 })
-export class LibraryCard {
+export class LibraryCard implements OnInit {
   libraryModel = input.required<LibraryCardModel>();
 
   router = inject(Router);
   libraryService = inject(LibraryService);
+  identityService = inject(IdentityService);
 
   userModel = signal<UserProfileModel|null>(null);
 
   constructor(){
-    this.userModel.set(this.libraryService.currentOwnerUserModel());
+    effect(()=>{
+      if(this.libraryModel() && !this.userModel()){
+        this.identityService.requestUserModel(this.libraryModel().ownerGuid).subscribe({
+          next: res => {
+            if(res){
+              this.userModel.set(res);
+            }
+          },
+        });
+      }
+    });
+  }
+  ngOnInit(): void {
+    if(this.libraryModel().ownerGuid == this.libraryService.currentOwnerUserModel()?.guid){
+      this.userModel.set(this.libraryService.currentOwnerUserModel());
+    }
   }
 
   openLibrary(){

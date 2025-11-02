@@ -9,10 +9,13 @@ import { LibraryService } from '../../services/library-service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { JsonPipe, NgOptimizedImage } from '@angular/common';
+import { MatSidenavModule } from '@angular/material/sidenav';
 
 @Component({
   selector: 'app-libraries-list',
-  imports: [LibraryCard, MatButton, MatIcon, MatBadge, MatTooltip, NgOptimizedImage, RouterLink],
+  imports: [LibraryCard, MatButton, MatIcon, MatBadge, MatTooltip, RouterLink,
+    MatSidenavModule
+  ],
   templateUrl: './libraries-list.html',
   styleUrl: './libraries-list.css'
 })
@@ -46,19 +49,6 @@ export class LibrariesList {
         this.router.navigateByUrl("/login");
       }
     }
-
-    /*if(this.isMyLibraries()){
-      this.identityService.getCsrf().subscribe({
-        next: () => {
-          console.log("Csrf received successfully.");
-        },
-        error: err => {
-          console.error("Couldn't get Csrf!");
-          //throwError(()=>err);//doesn't pass error to the app-error-handler
-          throw(err);
-        },
-      });
-    }*/
     
     effect(()=>{
       this.libraryService.requestLibraryList(this.userGuid())?.subscribe({
@@ -69,14 +59,6 @@ export class LibrariesList {
           }
         },
       });
-
-      /*this.libraryService.requestTotalNumberOfShelves(this.userGuid())?.subscribe({
-        next: res => {
-          if(res){
-            this.totalNumberOfUserShelves.set(res.totalNumberOfUserShelves);
-          }
-        },
-      });*/
 
       this.libraryService.requestTotalNumberOfDocuments(this.userGuid())?.subscribe({
         next: res => {

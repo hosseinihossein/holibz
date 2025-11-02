@@ -1,0 +1,99 @@
+<mat-card appearance="outlined">
+    <mat-card-header>
+        <div style="float: left;position: relative;">
+            @if(userImgSrc()){
+            <img [ngSrc]="userImgSrc()!" priority width="100" height="100" alt="user image" id="user-profile-img">
+            }
+            @else {
+            <mat-icon style="font-size: 100px;width: 100px;height: 100px;">account_circle</mat-icon>
+            }
+            @if(singletonModes.editMode()){
+            <button matIconButton class="edit-btn" style="bottom: -8px;left: -8px;" matTooltip="Edit user image"
+                (click)="openEditImageDialog()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
+        </div>
+
+        <div style="float: left;position: relative;">
+            <mat-card-title>
+                {{username()}}
+                @if(singletonModes.editMode()){
+                <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit username"
+                    (click)="openEditUsernameDialog()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+            </mat-card-title>
+
+            @if(email()){
+            <mat-card-subtitle>
+                {{email()}}
+                @if(singletonModes.editMode()){
+                <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit email"
+                    (click)="openEditEmailDialog()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                }
+                @if(displayEmailPublicly()){
+                <mat-checkbox [checked]="true" disabled style="margin-left: 48px;">
+                    Displaying email publicly!
+                </mat-checkbox>
+                }
+                @else if(!displayEmailPublicly()){
+                <mat-checkbox [checked]="false" disabled style="margin-left: 48px;">
+                    NOT displaying email publicly!
+                </mat-checkbox>
+                }
+                @if(singletonModes.editMode()){
+                <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Change"
+                    (click)="editDisplayEmailPublicly();">
+                    <mat-icon>change_circle</mat-icon>
+                </button>
+                }
+            </mat-card-subtitle>
+            }
+        </div>
+
+    </mat-card-header>
+
+    <mat-card-content>
+        <p>
+            @if(description()){
+            {{description()}}
+            }
+            @else{
+            About me..
+            }
+            @if(singletonModes.editMode()){
+            <button matIconButton class="edit-btn" style="transform: translateY(-4px);" matTooltip="Edit description"
+                (click)="openEditDescriptionDialog()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
+        </p>
+        @if(errorResponse()){
+        <p style="color:var(--mat-sys-on-error-container);font-size: 12px;">
+            * {{errorResponse()}}
+        </p>
+        }
+    </mat-card-content>
+
+    @if(singletonModes.editMode()){
+    <mat-card-actions align="start">
+        <button matFab extended (click)="openChangePasswordDialog()">
+            <mat-icon>key</mat-icon>
+            Change Password
+        </button>
+    </mat-card-actions>
+    }
+
+    <mat-card-actions align="end">
+        <button matButton="elevated" class="noPaddingBtn" (click)="singletonModes.toggleEditMode()"
+            [matTooltip]="singletonModes.editMode() ? 'Exit from edit mode' : 'Enter edit mode'">
+            <mat-icon>{{singletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
+        </button>
+    </mat-card-actions>
+
+
+</mat-card>

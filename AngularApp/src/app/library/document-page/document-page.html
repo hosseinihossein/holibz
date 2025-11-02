@@ -29,9 +29,11 @@
     <!--------------------- content overview -------------------->
     <mat-sidenav id="endSideNav" mode="side" opened position="end" fixedInViewport fixedTopGap="80" fixedBottomGap="16">
         <p style="font-weight: 500;color: var(--mat-sys-on-surface);margin: 3px;">Contents:</p>
+        <a [href]="`${activatedRoute.snapshot.url.join('/')}#Introduction`" id="overview-headerIntroduction"
+            [style.paddingLeft.px]="4">Introduction</a>
         @for(element of documentPageModel()?.elements; track element.guid){
         @if(element.type === "h1" || element.type === "h2"){
-        <a href="./#{{element.guid}}" id="overview-header{{element.guid}}"
+        <a [href]="`${activatedRoute.snapshot.url.join('/')}#${element.guid}`" id="overview-header{{element.guid}}"
             [style.paddingLeft.px]="element.type === 'h2' ? 12 : 4">{{element.value}}</a>
         }
         }
@@ -93,12 +95,13 @@
             }
         </mat-menu>
         <mat-menu #elementMenu>
-            <button mat-menu-item (click)="addNewElement('h1')" matTooltipPosition="left" matTooltip="Add a main title">
+            <button mat-menu-item (click)="addNewElement('h1')" matTooltipPosition="left"
+                matTooltip="Add a main heading">
                 <mat-icon>format_h1</mat-icon>
                 Main Heading
             </button>
             <button mat-menu-item (click)="addNewElement('h2')" matTooltipPosition="left"
-                matTooltip="Add an subset header">
+                matTooltip="Add a sub heading">
                 <mat-icon>format_h2</mat-icon>
                 SubHeading
             </button>
@@ -146,14 +149,31 @@
         </div>
         <!-------------------------------------------------->
 
-        <!------------------------- introduction ---------------------->
+        <!------------------------- Introduction ---------------------->
+        <div style="position: relative;">
+            <div style="position: absolute; top: -64px; width: 100%;" id="Introduction"></div>
+            <h1 style="font-weight: 400; margin: 30px 0; line-height: 24px;" #introductionHeading
+                id="headerIntroduction">
+                {{documentPageModel()?.title}}
+            </h1>
+
+            @if(documentPageModel()?.hasImage){
+            <img [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentPageModel()?.guid}`" width="100"
+                height="100" [alt]="documentPageModel()?.title" (click)="openLargeImage()">
+            }
+
+            <p>{{documentPageModel()?.description}}</p>
+        </div>
 
         <!-------------------------------------------------->
 
         <!--------------------- sections -------------------->
         @for(element of sortedElements(); track element.guid){
-        <app-document-element [elementModel]="element"></app-document-element>
+        <app-document-element [elementModel]="element"
+            (headingInitialized)="onHeadingInit($event)"></app-document-element>
         }
+
+        <div style="border: 1px solid gray; height: 200vh;"></div>
 
     </mat-sidenav-content>
 

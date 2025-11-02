@@ -2,12 +2,15 @@
     @if(singletonModes.editMode()){
     <app-edit-box [elementModel]="elementModel()"></app-edit-box>
     }
+
     @switch (elementModel().type) {
     @case("h1"){
-    <app-h1-element [elementModel]="elementModel()"></app-h1-element>
+    <app-h1-element [elementModel]="elementModel()"
+        (headingInitialized)="passChildEventToParent($event)"></app-h1-element>
     }
     @case("h2"){
-    <app-h2-element [elementModel]="elementModel()"></app-h2-element>
+    <app-h2-element [elementModel]="elementModel()"
+        (headingInitialized)="passChildEventToParent($event)"></app-h2-element>
     }
     @case("p"){
     <app-p-element [elementModel]="elementModel()"></app-p-element>

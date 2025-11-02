@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal, viewChild, viewChildren } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -27,6 +27,7 @@ import { EditParagraph } from '../../dialogs/edit-paragraph/edit-paragraph';
 import { EditLink } from '../../dialogs/edit-link/edit-link';
 import { EditImageTitle } from '../../dialogs/edit-image-title/edit-image-title';
 import { EditFile } from '../../dialogs/edit-file/edit-file';
+import { LargeImg } from '../../dialogs/large-img/large-img';
 
 @Component({
   selector: 'app-document-page',
@@ -37,16 +38,12 @@ import { EditFile } from '../../dialogs/edit-file/edit-file';
   styleUrl: './document-page.css'
 })
 export class DocumentPage implements AfterViewInit {
-  //documentGuid = input.required<string>();
   documentGuid = signal<string|null>(null);
-  //containerShelves = signal<ShelfCardModel[]|null>(null);
-  //documentElements = signal<DocumentElementModel[]|null>(null);
   documentPageModel = signal<DocumentPageModel|null>(null);
   sortedElements = computed(()=>
     this.documentPageModel()?.elements.sort((a,b)=>{if(a.order > b.order)return 1;else return -1;})
   );
 
-  //ownerGuid = signal<string|null>(null);
   ownerModel = signal<UserProfileModel|null>(null);
   ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
 
@@ -56,13 +53,14 @@ export class DocumentPage implements AfterViewInit {
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
   singletonModes = inject(SingletonModes);
-  hostElement = inject(ElementRef);
-  //documentService = inject(DocumentService);
   activatedRoute = inject(ActivatedRoute);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
   renderer = inject(Renderer2);
   router = inject(Router);
+
+  headingElements = signal<HTMLHeadingElement[]>([]);
+  introductionHeadint = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
   
   constructor(){
     let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
@@ -93,28 +91,37 @@ export class DocumentPage implements AfterViewInit {
         });
       }
     });
+
+    effect(()=>{
+      if(this.headingElements()){
+        const viewPortObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            let overviewHeader = this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id);
+            if(overviewHeader){
+              if (entry.isIntersecting) {
+                this.renderer.addClass(overviewHeader!, "active");
+              } else {
+                this.renderer.removeClass(overviewHeader!, "active");
+              }
+            }
+          });
+        });
+  
+        for(let heading of this.headingElements()){
+          viewPortObserver.observe(heading);
+        }
+      }
+    });
+    
+  }
+  ngAfterViewInit(): void {
+    if(this.introductionHeadint()){
+      this.headingElements.update(elements=>[...elements, this.introductionHeadint().nativeElement]);
+    }
   }
 
-  ngAfterViewInit(): void {
-    const viewPortObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        let overviewHeader = this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id);
-        if(overviewHeader){
-          if (entry.isIntersecting) {
-            //this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id)?.classList.add("active");
-            this.renderer.addClass(overviewHeader!, "active");
-          } else {
-            //this.windowService.nativeWindow.document.getElementById("overview-"+entry.target.id)?.classList.remove("active");
-            this.renderer.removeClass(overviewHeader!, "active");
-          }
-        }
-      });
-    });
-
-    const headers = (this.hostElement.nativeElement as HTMLElement).getElementsByClassName("headerSection");
-    for(let header of headers){
-      viewPortObserver.observe(header);
-    }
+  onHeadingInit(headingElement: HTMLHeadingElement){
+    this.headingElements.update(elements=>[...elements, headingElement]);
   }
 
   confirmDelete(){
@@ -157,6 +164,7 @@ export class DocumentPage implements AfterViewInit {
   addNewElement(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
     if(this.documentPageModel()){
       let newElementFormModel: NewElementFormModel|null = null;
+
       if(type === "h1" || type === "h2"){
         const dialogRef = this.dialog.open(EditHeader, {data:{value:type === "h1"?"New Main Heading":"New SubHeading"}});
         dialogRef.afterClosed().subscribe(result=>{
@@ -167,6 +175,7 @@ export class DocumentPage implements AfterViewInit {
               Type: type,
               Value: result,
             };
+            this.requestForNewElement(newElementFormModel);
           }
         });
       }
@@ -180,6 +189,7 @@ export class DocumentPage implements AfterViewInit {
               Type: type,
               Value: result,
             };
+            this.requestForNewElement(newElementFormModel);
           }
         });
       }
@@ -193,6 +203,7 @@ export class DocumentPage implements AfterViewInit {
               Type: type,
               Value: result,
             };
+            this.requestForNewElement(newElementFormModel);
           }
         });
       }
@@ -207,6 +218,7 @@ export class DocumentPage implements AfterViewInit {
               Value: result.value,
               Title: result.title,
             };
+            this.requestForNewElement(newElementFormModel);
           }
         });
       }
@@ -221,6 +233,7 @@ export class DocumentPage implements AfterViewInit {
               Title: result.title,
               File: result.file,
             };
+            this.requestForNewElement(newElementFormModel);
           }
         });
       }
@@ -235,30 +248,41 @@ export class DocumentPage implements AfterViewInit {
               Title: result.title,
               File: result.file,
             };
+            this.requestForNewElement(newElementFormModel);
           }
         });
       }
-      
-      if(newElementFormModel){
-        this.libraryService.createNewElement(newElementFormModel).subscribe({
-          next: res => {
-            if(res){
-              this.documentPageModel()?.elements.push(res);
-            }
-          },
-          error: err => {
-            this.dialog.open(Result,{
-              data:{
-                status: "warning",
-                title: "Error in adding element",
-                description: ["Something went wrong in adding the elemenet!",
-                  JSON.stringify(err)
-                ],
-              }
-            });
-          },
+    }
+  }
+  private requestForNewElement(newElementFormModel: NewElementFormModel){
+    this.libraryService.createNewElement(newElementFormModel).subscribe({
+      next: res => {
+        if(res){
+          this.documentPageModel()?.elements.push(res);
+        }
+      },
+      error: err => {
+        this.dialog.open(Result,{
+          data:{
+            status: "warning",
+            title: "Error in adding element",
+            description: ["Something went wrong when adding the new elemenet!",
+              JSON.stringify(err)
+            ],
+          }
         });
-      }
+      },
+    });
+  }
+
+  openLargeImage(){
+    if(this.documentPageModel()?.hasImage){
+      this.dialog.open(LargeImg, {
+        data:{
+          imgSrc:`/api/Library/DocumentImage?documentGuid=${this.documentPageModel()?.guid}`, 
+          imgTitle: this.documentPageModel()?.title
+        }
+      });
     }
   }
 

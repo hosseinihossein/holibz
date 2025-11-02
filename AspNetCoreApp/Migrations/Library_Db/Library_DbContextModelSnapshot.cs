@@ -74,6 +74,9 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
 
+                    b.Property<string>("FileName")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Guid")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -96,7 +99,6 @@ namespace AspNetCore.Migrations.Library_Db
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Value")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

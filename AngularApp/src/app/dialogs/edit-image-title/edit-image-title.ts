@@ -15,7 +15,7 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 })
 export class EditImageTitle {
   readonly dialogRef = inject(MatDialogRef<EditImageTitle>);
-  readonly data = inject<{value:string, title:string}>(MAT_DIALOG_DATA);
+  readonly data = inject<{value:string, title:string, enableDelete?:boolean}>(MAT_DIALOG_DATA);
   
   selectedFile = signal<File | null>(null);
   previewImgSrc = signal(this.data.value);

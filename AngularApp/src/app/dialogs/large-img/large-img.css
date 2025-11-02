@@ -6,3 +6,10 @@ mat-dialog-content{
         max-height: 80vh;
     }
 }
+img{
+    display: block;
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+    object-fit: contain;
+}

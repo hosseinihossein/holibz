@@ -3,6 +3,8 @@ img{
     display: block;
     max-width: 70%;
     max-height: 90vh;
+    width: fit-content;
+    height: fit-content;
     margin: auto;
     cursor: zoom-in;
     border: 3px solid var(--mat-sys-outline-variant);

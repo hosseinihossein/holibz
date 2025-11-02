@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, ElementRef, input, output, viewChild } from '@angular/core';
 import { DocumentElement, DocumentElementModel } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 
@@ -10,4 +10,10 @@ import { SectionModel } from '../../../../models/section-model';
 })
 export class H2Element {
   elementModel = input.required<DocumentElementModel>();
+  headingInitialized = output<HTMLHeadingElement>();
+  headingElement = viewChild.required<ElementRef<HTMLHeadingElement>>("headingElement");
+
+  ngAfterViewInit(): void {
+    this.headingInitialized.emit(this.headingElement().nativeElement);
+  }
 }

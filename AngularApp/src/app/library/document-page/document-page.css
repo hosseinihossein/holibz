@@ -14,7 +14,7 @@ mat-sidenav#endSideNav{
 }
 
 mat-sidenav#endSideNav a{
-    font-size: 14px;
+    font-size: 12px;
     display: block;
     text-decoration: none;
     color: var(--mat-sys-secondary);
@@ -24,7 +24,9 @@ mat-sidenav#endSideNav a{
 
 mat-sidenav#endSideNav a:hover,
 mat-sidenav#endSideNav a.active{
-    color: var(--mat-sys-on-primary-container);
+    /*color: var(--mat-sys-on-primary-container);*/
+    color: var(--mat-sys-primary);
+    font-weight: 500;
 }
 
 mat-sidenav#startSideNav{
@@ -97,4 +99,22 @@ mat-sidenav-content div#tags-box h3{
 }
 mat-sidenav-content app-section{
     transition: all 200ms;
+}
+
+mat-sidenav-content img{
+    display: block;
+    max-width: 70%;
+    max-height: 90vh;
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+    cursor: zoom-in;
+    border: 3px solid var(--mat-sys-outline-variant);
+    border-radius: 5px;
+    transition: box-shadow 200ms;
+    object-fit: contain;
+}
+
+mat-sidenav-content img:hover{
+    box-shadow: 0px 5px 10px 0 var(--mat-sys-outline);
 }

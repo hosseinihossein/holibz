@@ -2,10 +2,11 @@ import { Component, inject, input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { LargeImg } from '../../../../dialogs/large-img/large-img';
 import { DocumentElementModel } from '../document-element/document-element';
+import { NgOptimizedImage } from "@angular/common";
 
 @Component({
   selector: 'app-img-element',
-  imports: [],
+  imports: [NgOptimizedImage],
   templateUrl: './img-element.html',
   styleUrl: './img-element.css'
 })

@@ -3,6 +3,7 @@
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 20px;
     position: relative;
+    margin: 16px auto;
 }
 
 .codeSection pre{

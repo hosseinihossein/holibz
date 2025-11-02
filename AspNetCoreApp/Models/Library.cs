@@ -382,7 +382,7 @@ public class Library_Process //singleton service
             }
 
             string? extension = Path.GetExtension(fileName);
-            if (!string.IsNullOrWhiteSpace(extension))
+            if (string.IsNullOrWhiteSpace(extension))
             {
                 extension = string.Empty;
             }

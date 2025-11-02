@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, input } from '@angular/core';
+import { AfterViewInit, Component, inject, input, output } from '@angular/core';
 import { EditBox } from "../edit-box/edit-box";
 import { SingletonModes } from '../../../../services/singleton-modes';
 import { SectionModel } from '../../../../models/section-model';
@@ -21,12 +21,11 @@ export class DocumentElement /*implements AfterViewInit*/ {
 
   singletonModes = inject(SingletonModes);
 
-  /*constructor(){
-    console.log("app-section constructor!");
+  headingInitialized = output<HTMLHeadingElement>();
+
+  passChildEventToParent(headingElement:HTMLHeadingElement){
+    this.headingInitialized.emit(headingElement);
   }
-  ngAfterViewInit(): void {
-    console.log("app-section after view init!");
-  }*/
 }
 
 export class DocumentElementModel {

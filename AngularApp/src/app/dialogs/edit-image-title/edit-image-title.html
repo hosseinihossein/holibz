@@ -17,9 +17,10 @@
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleInput.value}">Save</button>
     </mat-dialog-actions>
+    @if(data.enableDelete){
     <mat-dialog-actions align="start">
         <button matButton="filled" class="warning" mat-dialog-close="Delete">Delete</button>
     </mat-dialog-actions>
-
+    }
 
 </mat-dialog-content>

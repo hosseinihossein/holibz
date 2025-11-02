@@ -14,7 +14,7 @@ import { MatInput } from '@angular/material/input';
 })
 export class EditTextarea {
   readonly dialogRef = inject(MatDialogRef<EditTextarea>);
-  readonly data = inject<{label:string, value:string}>(MAT_DIALOG_DATA);
+  readonly data = inject<{label:string, value:string, enableDelete?:boolean}>(MAT_DIALOG_DATA);
 
   myText = signal(new FormControl(this.data.value,{
     nonNullable:true,

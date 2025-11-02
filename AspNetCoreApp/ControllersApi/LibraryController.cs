@@ -17,6 +17,7 @@ public class LibraryController : ControllerBase
     readonly DirectoryInfo Storage_Library;
     readonly DirectoryInfo Storage_Shelf;
     readonly DirectoryInfo Storage_Document;
+    readonly DirectoryInfo Storage_Element;
     readonly Library_Process libraryProcess;
 
 
@@ -30,6 +31,7 @@ public class LibraryController : ControllerBase
         Storage_Library = _libraryProcess.Storage_Library;
         Storage_Shelf = _libraryProcess.Storage_Shelf;
         Storage_Document = _libraryProcess.Storage_Document;
+        Storage_Element = _libraryProcess.Storage_Element;
         libraryProcess = _libraryProcess;
     }
 
@@ -404,7 +406,8 @@ public class LibraryController : ControllerBase
                 Title = elementDbModel.Title,
                 Type = elementDbModel.Type,
                 UpdatedAt = elementDbModel.UpdatedAt,
-                Value = elementDbModel.Value ?? $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}",
+                Value = elementDbModel.Value ??
+                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
             }).ToArray(),
             Guid = customDocumentModel.Guid,
             OwnerGuid = customDocumentModel.OwnerGuid,
@@ -458,6 +461,34 @@ public class LibraryController : ControllerBase
         return Ok(new { success = true });
     }
 
+
+
+
+
+    [HttpGet]
+    public async Task<IActionResult> ElementFile([FromQuery][StringLength(32)] string elementGuid,
+    [FromQuery][StringLength(50)] string? elementFileName)
+    {
+        if (string.IsNullOrWhiteSpace(elementFileName))
+        {
+            elementFileName = await libraryDb.Elements
+            .Where(el => el.Guid == elementGuid)
+            .Select(el => el.FileName)
+            .FirstOrDefaultAsync();
+
+            if (elementFileName is null)
+            {
+                return NotFound("There's no element file name with the specified guid on Db!");
+            }
+        }
+
+        string filePath = Path.Combine(Storage_Element.FullName, elementGuid, elementFileName);
+        if (System.IO.File.Exists(filePath))
+        {
+            return PhysicalFile(filePath, "application/octet-stream", elementFileName, true);
+        }
+        return NotFound("The element file Not found!");
+    }
 
 
 
@@ -591,7 +622,8 @@ public class LibraryController : ControllerBase
                     Title = elementDbModel.Title,
                     Type = elementDbModel.Type,
                     UpdatedAt = elementDbModel.UpdatedAt,
-                    Value = elementDbModel.Value ?? $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}",
+                    Value = elementDbModel.Value ??
+                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
                 };
 
                 return Ok(elementModel);

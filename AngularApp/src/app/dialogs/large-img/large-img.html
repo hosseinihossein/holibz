@@ -1,3 +1,12 @@
 <mat-dialog-content>
     <img [ngSrc]="data.imgSrc" width="100" height="100" [alt]="data.imgTitle">
+
+    <div class="buttons-box">
+        <button matIconButton matTooltip="Close" mat-dialog-close>
+            <mat-icon>close</mat-icon>
+        </button>
+        <a matIconButton matTooltip="Download" [href]="data.imgSrc" download="">
+            <mat-icon>download</mat-icon>
+        </a>
+    </div>
 </mat-dialog-content>

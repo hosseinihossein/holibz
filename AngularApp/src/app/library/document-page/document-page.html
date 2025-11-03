@@ -9,18 +9,23 @@
         </p>
         <mat-accordion>
             @for(shelf of documentPageModel()?.shelves; track shelf.guid){
-            <mat-expansion-panel>
+            <mat-expansion-panel expanded>
                 <mat-expansion-panel-header>
-                    <mat-panel-title [matTooltip]="shelf.description">
+                    <mat-panel-title [matTooltip]="`Library: ${shelf.libraryTitle}, By: ${shelf.owner.userName}`"
+                        matTooltipPosition="after">
                         {{shelf.title}}
                     </mat-panel-title>
                 </mat-expansion-panel-header>
                 @for(doc of shelf.documents; track doc){
-                <a matButton [routerLink]="['/document',doc.guid]" class="siblingDocs" [matTooltip]="doc.description"
-                    matTooltipShowDelay="500">
+                <a matButton [routerLink]="['/document',doc.guid]" class="siblingDocs"
+                    [style]="doc.guid === documentPageModel()?.guid ? 'font-weight:bold;' : 'font-weight:normal;'">
                     {{doc.title}}
                 </a>
                 }
+                <a matButton="outlined" [routerLink]="['/shelf',shelf.guid]" class="siblingDocs"
+                    style="font-size: 12px;width: fit-content;margin: auto;color: var(--mat-sys-on-surface);">
+                    Open {{shelf.title}} Shelf
+                </a>
             </mat-expansion-panel>
             }
         </mat-accordion>

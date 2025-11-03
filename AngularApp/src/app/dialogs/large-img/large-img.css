@@ -1,5 +1,6 @@
 mat-dialog-content{
     max-height: 95vh;
+    position: relative;
 }
 @media screen and (max-width:800px) {
     mat-dialog-content{
@@ -12,4 +13,11 @@ img{
     height: fit-content;
     margin: auto;
     object-fit: contain;
+}
+div.buttons-box{
+    position: fixed;
+    top: 5vh;
+    right: 5vw;
+    width: 40px;
+    /*overflow: hidden;*/
 }

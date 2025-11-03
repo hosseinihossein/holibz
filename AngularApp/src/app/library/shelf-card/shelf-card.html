@@ -31,7 +31,9 @@
 
     <div class="listOfDocs">
         @for (documentCardModel of shelfModel().documentCardModels; track documentCardModel) {
-        <app-document-card [documentCardModel]="documentCardModel" [mini]="true"></app-document-card>
+        <app-document-card [documentCardModel]="documentCardModel" [mini]="true"
+            (click)="router.navigate(['/document',documentCardModel.guid])"
+            style="cursor: pointer;"></app-document-card>
         }
     </div>
 

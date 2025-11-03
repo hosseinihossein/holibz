@@ -167,7 +167,11 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
             }).ToArray(),
             Guid = shelf.Guid,
-            LibraryTitle = shelf.Library.Title,
+            Library = new Library_LibraryBrief()
+            {
+                Guid = shelf.Library.Guid,
+                Title = shelf.Library.Title,
+            },
             Title = shelf.Title,
             OwnerGuid = shelf.OwnerGuid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
@@ -215,7 +219,11 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
             }).ToArray(),
             Guid = shelf.Guid,
-            LibraryTitle = shelf.Library.Title,
+            Library = new Library_LibraryBrief()
+            {
+                Guid = shelf.Library.Guid,
+                Title = shelf.Library.Title,
+            },
             Title = shelf.Title,
             OwnerGuid = shelf.OwnerGuid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
@@ -379,20 +387,32 @@ public class LibraryController : ControllerBase
 
         Library_ShelfBrief[] shelfBriefs = await libraryDb.Shelves
         .Include(shelf => shelf.Documents)
+        .Include(shelf => shelf.Library)
         .Where(shelf => customDocumentModel.ShelvesGuids.Contains(shelf.Guid))
         .Select(shelf => new Library_ShelfBrief()
         {
-            Description = shelf.Description,
+            //Description = shelf.Description,
+            LibraryTitle = shelf.Library.Title,
+            Owner = new Library_OwnerBrief() { UserGuid = shelf.OwnerGuid },
             Guid = shelf.Guid,
             Title = shelf.Title,
             Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
             {
-                Description = doc.Description,
+                //Description = doc.Description,
                 Guid = doc.Guid,
                 Title = doc.Title,
             }).ToArray(),
         })
+        .AsSplitQuery()
         .ToArrayAsync();
+
+        foreach (var shelfBrief in shelfBriefs)
+        {
+            shelfBrief.Owner.UserName = await userManager.Users
+            .Where(u => u.UserGuid == shelfBrief.Owner.UserGuid)
+            .Select(u => u.UserName)
+            .FirstOrDefaultAsync() ?? "_";
+        }
 
         Library_DocumentPageModel documentPageModel = new()
         {
@@ -410,7 +430,12 @@ public class LibraryController : ControllerBase
                     $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
             }).ToArray(),
             Guid = customDocumentModel.Guid,
-            OwnerGuid = customDocumentModel.OwnerGuid,
+            Owner = new Library_OwnerBrief()
+            {
+                UserGuid = customDocumentModel.OwnerGuid,
+                UserName = await userManager.Users.Where(u => u.UserGuid == customDocumentModel.OwnerGuid)
+                .Select(u => u.UserName).FirstOrDefaultAsync() ?? "_",
+            },
             RelatedVersions = versionBriefs,
             Shelves = shelfBriefs,
             Tags = customDocumentModel.Tags.ToArray(),

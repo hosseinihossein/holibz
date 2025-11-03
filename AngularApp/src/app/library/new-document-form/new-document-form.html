@@ -16,7 +16,7 @@
             @for(libraryName of displayedLibraries(); track libraryName){
             <mat-optgroup [label]="libraryName">
                 @for(shelfModel of allShelfList(); track shelfModel.guid){
-                @if(shelfModel.libraryTitle === libraryName){
+                @if(shelfModel.library.title){
                 <mat-option [value]="shelfModel.guid">
                     {{shelfModel.title}}
                     <span id="libraryName-span">({{libraryName}})</span>

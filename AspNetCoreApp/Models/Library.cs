@@ -505,7 +505,7 @@ public class Library_ShelfCardModel
     public string OwnerGuid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
-    public string LibraryTitle { get; set; } = null!;
+    public Library_LibraryBrief Library { get; set; } = null!;
     public Library_DocumentCardModel[] DocumentCardModels { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public int TotalNumberOfShelfDocuments { get; set; }
@@ -523,7 +523,8 @@ public class Library_DocumentCardModel
 public class Library_DocumentPageModel
 {
     public string Guid { get; set; } = null!;
-    public string OwnerGuid { get; set; } = null!;
+    public Library_OwnerBrief Owner { get; set; } = null!;
+    //public Library_LibraryBrief Library { get; set; } = null!;//could be 
     public string Title { get; set; } = null!;
     public bool HasImage { get; set; }
     public string Description { get; set; } = null!;
@@ -548,19 +549,29 @@ public class Library_ShelfBrief
 {
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;
-    public string? Description { get; set; }
+    public string LibraryTitle { get; set; } = null!;
+    public Library_OwnerBrief Owner { get; set; } = null!;
     public Library_DocumentBrief[] Documents { get; set; } = [];
 }
 public class Library_DocumentBrief
 {
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;
-    public string? Description { get; set; }
 }
 public class Library_VersionBrief
 {
     public string DocumentGuid { get; set; } = null!;
     public string VersionName { get; set; } = null!;
+}
+public class Library_OwnerBrief
+{
+    public string UserGuid { get; set; } = null!;
+    public string UserName { get; set; } = "_";
+}
+public class Library_LibraryBrief
+{
+    public string Guid { get; set; } = null!;
+    public string Title { get; set; } = null!;
 }
 
 public class Library_NewLibraryFormModel

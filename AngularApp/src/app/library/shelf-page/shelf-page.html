@@ -12,6 +12,13 @@
             </div>
             <mat-card-title>
                 {{shelfModel()?.title}}
+                <span style="font-size: 14px;">
+                    in
+                    <a [routerLink]="['/library',shelfModel()?.library?.guid]">
+                        {{shelfModel()?.library?.title}}
+                    </a>
+                    library
+                </span>
                 @if(signletonModes.editMode()){
                 <button matIconButton class="noPaddingBtn" matTooltip="Edit title" (click)="openEditTitleDialog()">
                     <mat-icon>edit</mat-icon>
@@ -19,7 +26,9 @@
                 }
             </mat-card-title>
             <mat-card-subtitle>
-                {{userModel()?.username}}
+                <a [routerLink]="['/profile',userModel()?.guid]">
+                    {{userModel()?.username}}
+                </a>
             </mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>

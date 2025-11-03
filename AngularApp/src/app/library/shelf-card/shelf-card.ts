@@ -51,7 +51,7 @@ export class ShelfCardModel{
   ownerGuid:string = null!;
   title:string = null!;
   description?:string;
-  libraryTitle:string = null!;
+  library:{guid:string, title:string} = null!;
   documentCardModels:DocumentCardModel[] = [];
   totalNumberOfShelfDocuments:number = 0;
   createdAt:Date = null!;

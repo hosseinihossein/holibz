@@ -82,7 +82,7 @@ export class DocumentPage implements AfterViewInit {
 
     effect(() => {
       if(this.documentPageModel()){
-        this.identityService.requestUserModel(this.documentPageModel()!.ownerGuid).subscribe({
+        this.identityService.requestUserModel(this.documentPageModel()!.owner.userGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);
@@ -290,14 +290,15 @@ export class DocumentPage implements AfterViewInit {
 
 export class DocumentPageModel {
   guid:string = null!;
-  ownerGuid:string = null!;
+  owner:{userGuid:string, userName:string} = null!;
   title:string = null!;
   hasImage:boolean = false;
   description:string = null!;
   version:string = null!;
   relatedVersions:{versionName:string, documentGuid:string}[] = [];
-  shelves:{guid:string, title:string, description?:string, 
-    documents:{guid:string, title:string, description?:string}[]}[] = [];
+  shelves:{guid:string, title:string, libraryTitle:string, 
+    owner:{userGuid:string, userName:string},
+    documents:{guid:string, title:string}[]}[] = [];
   elements:DocumentElementModel[] = [];
   tags:string[] = [];
   createdAt:Date = null!;

@@ -1,5 +1,7 @@
 - border-radius: 50% for new-library-form, new-shelf-form and new-document-form
 - after adding new element to a document, navigate to its fragment
+- define formControl for inputs in dialog edit elements
+- add a singleton service for creating a valid filename
 - 
 
 

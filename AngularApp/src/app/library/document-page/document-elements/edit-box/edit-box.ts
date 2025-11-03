@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { SectionModel } from '../../../../models/section-model';
@@ -11,6 +11,8 @@ import { EditLink } from '../../../../dialogs/edit-link/edit-link';
 import { EditFile } from '../../../../dialogs/edit-file/edit-file';
 import { EditImageTitle } from '../../../../dialogs/edit-image-title/edit-image-title';
 import { DocumentElementModel } from '../document-element/document-element';
+import { EditElementFormModel, LibraryService } from '../../../../services/library-service';
+import { Result } from '../../../../dialogs/result/result';
 
 @Component({
   selector: 'app-edit-box',
@@ -20,9 +22,13 @@ import { DocumentElementModel } from '../document-element/document-element';
 })
 export class EditBox {
   elementModel = input.required<DocumentElementModel>();
+  deleteElement = output<string>();
+  editElement = output<{value?:string,title?:string}>();
 
-  documentService = inject(DocumentService);
+  libraryService = inject(LibraryService);
   dialog = inject(MatDialog);
+
+  editResponse = signal<{status:"success"|"fail", message:string}|null>(null);
 
   openDialog(){
     switch(this.elementModel().type){
@@ -54,110 +60,242 @@ export class EditBox {
   }
 
   private openEditHeaderDialog(){
-    const dialogRef = this.dialog.open(EditHeader,{data:{value:this.elementModel().value}});
+    const dialogRef = this.dialog.open(EditHeader, {
+      data:{value:this.elementModel().value, enableEdit:true}
+    });
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        if(result === "delete"){
-          this.documentService.deleteSection(this.elementModel().guid);
+        if(result === "Delete"){
+          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.deleteElement.emit(this.elementModel().guid);
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              console.error(JSON.stringify(err));
+            },
+          });
         }
         else{
-          let sectionInfo = {
-            guid:this.elementModel().guid, 
-            value: result,
+          let editElementFormModel: EditElementFormModel = {
+            Guid: this.elementModel().guid,
+            Value: result,
           };
-          this.documentService.mockEditSection(sectionInfo);
-          //this.documentService.editSectionValue(this.sectionModel().guid, result);
+          this.libraryService.requestEditElement(editElementFormModel).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.editElement.emit({value:result});
+                this.editResponse.set({status:"success", message:"Edited successfully."});
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
+              console.error(JSON.stringify(err));
+            }
+          });
         }
       }
     });
   }
   private openEditParagraphDialog(){
-    const dialogRef = this.dialog.open(EditParagraph,{data:{value:this.elementModel().value}});
+    const dialogRef = this.dialog.open(EditParagraph, {
+      data:{value:this.elementModel().value, enableEdit:true}
+    });
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        if(result === "delete"){
-          this.documentService.deleteSection(this.elementModel().guid);
+        if(result === "Delete"){
+          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.deleteElement.emit(this.elementModel().guid);
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              console.error(JSON.stringify(err));
+            },
+          });
         }
         else{
-          let sectionInfo = {
-            guid:this.elementModel().guid, 
-            value: result,
+          let editElementFormModel: EditElementFormModel = {
+            Guid: this.elementModel().guid,
+            Value: result,
           };
-          this.documentService.mockEditSection(sectionInfo);
-          //this.documentService.editSectionValue(this.sectionModel().guid, result);
+          this.libraryService.requestEditElement(editElementFormModel).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.editElement.emit({value:result});
+                this.editResponse.set({status:"success", message:"Edited successfully."});
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
+              console.error(JSON.stringify(err));
+            }
+          });
         }
       }
     });
   }
   private openEditCodeDialog(){
-    const dialogRef = this.dialog.open(EditCode,{data:{value:this.elementModel().value}});
+    const dialogRef = this.dialog.open(EditCode,{
+      data:{value:this.elementModel().value, enableEdit:true}
+    });
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        if(result === "delete"){
-          this.documentService.deleteSection(this.elementModel().guid);
+        if(result === "Delete"){
+          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.deleteElement.emit(this.elementModel().guid);
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              console.error(JSON.stringify(err));
+            },
+          });
         }
         else{
-          let sectionInfo = {
-            guid:this.elementModel().guid, 
-            value: result,
+          let editElementFormModel: EditElementFormModel = {
+            Guid: this.elementModel().guid,
+            Value: result,
           };
-          this.documentService.mockEditSection(sectionInfo);
-          //this.documentService.editSectionValue(this.sectionModel().guid, result);
+          this.libraryService.requestEditElement(editElementFormModel).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.editElement.emit({value:result});
+                this.editResponse.set({status:"success", message:"Edited successfully."});
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
+              console.error(JSON.stringify(err));
+            }
+          });
         }
       }
     });
   }
   private openEditFileDialog(){
-    const dialogRef = this.dialog.open(EditFile,{data:{value:this.elementModel().value, title:this.elementModel().title }});
+    const dialogRef = this.dialog.open(EditFile,{
+      data:{value:this.elementModel().value, title:this.elementModel().title, enableEdit:true }
+    });
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        if(result === "delete"){
-          this.documentService.deleteSection(this.elementModel().guid);
+        if(result === "Delete"){
+          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.deleteElement.emit(this.elementModel().guid);
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              console.error(JSON.stringify(err));
+            },
+          });
         }
         else{
-          let sectionInfo = {
-            guid:this.elementModel().guid, 
-            file: result.file, 
-            title: result.title, 
+          let editElementFormModel: EditElementFormModel = {
+            Guid: this.elementModel().guid,
+            Title: result,
           };
-          this.documentService.mockEditSection(sectionInfo);
+          this.libraryService.requestEditElement(editElementFormModel).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.editElement.emit({title:result});
+                this.editResponse.set({status:"success", message:"Edited successfully."});
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
+              console.error(JSON.stringify(err));
+            }
+          });
         }
       }
     });
   }
   private openEditImageDialog(){
-    const dialogRef = this.dialog.open(EditImageTitle,{data:{value:this.elementModel().value,title:this.elementModel().title??''}});
+    const dialogRef = this.dialog.open(EditImageTitle,{
+      data:{value:this.elementModel().value,title:this.elementModel().title??'', enableEdit:true}
+    });
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        if(result === "delete"){
-          this.documentService.deleteSection(this.elementModel().guid);
+        if(result === "Delete"){
+          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.deleteElement.emit(this.elementModel().guid);
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              console.error(JSON.stringify(err));
+            },
+          });
         }
         else{
-          let sectionInfo = {
-            guid:this.elementModel().guid, 
-            file: result.file, 
-            title: result.title, 
+          let editElementFormModel: EditElementFormModel = {
+            Guid: this.elementModel().guid,
+            Title: result,
           };
-          this.documentService.mockEditSection(sectionInfo);
+          this.libraryService.requestEditElement(editElementFormModel).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.editElement.emit({title:result});
+                this.editResponse.set({status:"success", message:"Edited successfully."});
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
+              console.error(JSON.stringify(err));
+            }
+          });
         }
       }
     });
   }
   private openEditLinkDialog(){
-    const dialogRef = this.dialog.open(EditLink,{data:{value:this.elementModel().value, title:this.elementModel().title }});
+    const dialogRef = this.dialog.open(EditLink,{
+      data:{value:this.elementModel().value, title:this.elementModel().title, enableEdit:true }
+    });
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
-        if(result === "delete"){
-          this.documentService.deleteSection(this.elementModel().guid);
+        if(result === "Delete"){
+          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.deleteElement.emit(this.elementModel().guid);
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              console.error(JSON.stringify(err));
+            },
+          });
         }
         else{
-          let sectionInfo = {
-            guid:this.elementModel().guid, 
-            value: result.value, 
-            title: result.title, 
+          let editElementFormModel: EditElementFormModel = {
+            Guid: this.elementModel().guid,
+            Title: result.title,
+            Value: result.value,
           };
-          this.documentService.mockEditSection(sectionInfo);
-          //this.documentService.editSectionValueTitle(this.sectionModel().guid, result.value, result.title);
+          this.libraryService.requestEditElement(editElementFormModel).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.editElement.emit({title:result.title, value: result.value});
+                this.editResponse.set({status:"success", message:"Edited successfully."});
+              }
+            },
+            error: err => {
+              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
+              console.error(JSON.stringify(err));
+            }
+          });
         }
       }
     });

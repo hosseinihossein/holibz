@@ -12,5 +12,5 @@ import { MatInput } from '@angular/material/input';
 })
 export class EditLink {
   readonly dialogRef = inject(MatDialogRef<EditLink>);
-  readonly data = inject<{value:string,title:string, enableDelete?:boolean}>(MAT_DIALOG_DATA);
+  readonly data = inject<{value:string,title:string, enableEdit?:boolean}>(MAT_DIALOG_DATA);
 }

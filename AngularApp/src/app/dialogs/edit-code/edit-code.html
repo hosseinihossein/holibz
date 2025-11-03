@@ -7,7 +7,7 @@
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="codeInput.value">Save</button>
     </mat-dialog-actions>
-    @if(data.enableDelete){
+    @if(data.enableEdit){
     <mat-dialog-actions align="start">
         <button matButton="filled" class="warning" mat-dialog-close="Delete">Delete</button>
     </mat-dialog-actions>

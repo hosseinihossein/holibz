@@ -6,6 +6,7 @@ import { ShelfCardModel } from '../library/shelf-card/shelf-card';
 import { DocumentCardModel } from '../library/document-card/document-card';
 import { DocumentPageModel } from '../library/document-page/document-page';
 import { DocumentElementModel } from '../library/document-page/document-elements/document-element/document-element';
+import { Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -186,6 +187,29 @@ export class LibraryService {
     );
   }
 
+  requestEditElement(editElementFormModel: EditElementFormModel){
+    const formData = new FormData();
+    if(editElementFormModel.Guid){
+      formData.append("Guid", editElementFormModel.Guid);
+    }
+    else{
+      return throwError(()=>new Error("Element Guid is needed to request for editing the element!"));
+    }
+    if(editElementFormModel.Order){
+      formData.append("Order", editElementFormModel.Order);
+    }
+    if(editElementFormModel.Title){
+      formData.append("Title", editElementFormModel.Title);
+    }
+    if(editElementFormModel.Value){
+      formData.append("Value", editElementFormModel.Value);
+    }
+
+    return this.httpClient.post<{success:boolean, element?:DocumentElementModel}>(
+      "/api/Library/EditElement", formData
+    );
+  }
+
 }
 
 class NewLibraryFormModel{
@@ -212,4 +236,10 @@ export class NewElementFormModel{
   Order?:string;
   DocumentGuid?:string;
   File?:File;
+}
+export class EditElementFormModel{
+  Guid?:string;
+  Value?:string;
+  Title?:string;
+  Order?:string;
 }

@@ -15,5 +15,5 @@ import { LibraryService } from '../../services/library-service';
 })
 export class EditCode {
   readonly dialogRef = inject(MatDialogRef<EditCode>);
-  readonly data = inject<{value:string, enableDelete?:boolean}>(MAT_DIALOG_DATA);
+  readonly data = inject<{value:string, enableEdit?:boolean}>(MAT_DIALOG_DATA);
 }

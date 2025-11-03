@@ -12,14 +12,12 @@ import { MatInput } from '@angular/material/input';
 })
 export class EditFile {
   readonly dialogRef = inject(MatDialogRef<EditFile>);
-  readonly data = inject<{value:string, title:string, enableDelete?:boolean}>(MAT_DIALOG_DATA);
+  readonly data = inject<{value:string, title:string, enableEdit?:boolean}>(MAT_DIALOG_DATA);
 
   selectedFile = signal<File | null>(null);
   fileNameSrc = signal(this.data.value);
 
   fileName = viewChild<ElementRef<HTMLImageElement>>("fileName");
-
-  constructor(){}
 
   onSelectFile(event:Event){
     const input = event.target as HTMLInputElement;

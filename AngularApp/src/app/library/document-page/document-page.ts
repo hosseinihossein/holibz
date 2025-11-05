@@ -286,6 +286,18 @@ export class DocumentPage implements AfterViewInit {
     }
   }
 
+  onDeleteElement(elementGuid:string){
+    if(this.documentPageModel()){
+      let elementIndex = this.documentPageModel()!.elements.findIndex(el=>el.guid === elementGuid);
+      if(elementIndex >= 0){
+        this.documentPageModel.update(dpm=>{
+          dpm!.elements.splice(elementIndex,1);
+          return dpm;
+        });
+      }
+    }
+  }
+
 }
 
 export class DocumentPageModel {

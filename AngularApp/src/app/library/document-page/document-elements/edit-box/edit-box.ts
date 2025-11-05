@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, inject, input, model, output, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { SectionModel } from '../../../../models/section-model';
@@ -21,9 +21,9 @@ import { Result } from '../../../../dialogs/result/result';
   styleUrl: './edit-box.css'
 })
 export class EditBox {
-  elementModel = input.required<DocumentElementModel>();
+  elementModel = model.required<DocumentElementModel>();
   deleteElement = output<string>();
-  editElement = output<{value?:string,title?:string}>();
+  //elementEdited = output<DocumentElementModel>();
 
   libraryService = inject(LibraryService);
   dialog = inject(MatDialog);
@@ -79,7 +79,13 @@ export class EditBox {
           });
         }
         else{
-          let editElementFormModel: EditElementFormModel = {
+          this.elementModel.update(em=>{
+            em.value = result;
+            return em;
+          });
+          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
+
+          /*let editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Value: result,
           };
@@ -94,7 +100,7 @@ export class EditBox {
               this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
               console.error(JSON.stringify(err));
             }
-          });
+          });*/
         }
       }
     });
@@ -119,7 +125,13 @@ export class EditBox {
           });
         }
         else{
-          let editElementFormModel: EditElementFormModel = {
+          this.elementModel.update(em=>{
+            em.value = result;
+            return em;
+          });
+          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
+
+          /*let editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Value: result,
           };
@@ -134,7 +146,7 @@ export class EditBox {
               this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
               console.error(JSON.stringify(err));
             }
-          });
+          });*/
         }
       }
     });
@@ -159,7 +171,13 @@ export class EditBox {
           });
         }
         else{
-          let editElementFormModel: EditElementFormModel = {
+          this.elementModel.update(em=>{
+            em.value = result;
+            return em;
+          });
+          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
+
+          /*let editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Value: result,
           };
@@ -174,7 +192,7 @@ export class EditBox {
               this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
               console.error(JSON.stringify(err));
             }
-          });
+          });*/
         }
       }
     });
@@ -199,7 +217,13 @@ export class EditBox {
           });
         }
         else{
-          let editElementFormModel: EditElementFormModel = {
+          this.elementModel.update(em=>{
+            em.title = result;
+            return em;
+          });
+          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
+
+          /*let editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Title: result,
           };
@@ -214,7 +238,7 @@ export class EditBox {
               this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
               console.error(JSON.stringify(err));
             }
-          });
+          });*/
         }
       }
     });
@@ -239,7 +263,13 @@ export class EditBox {
           });
         }
         else{
-          let editElementFormModel: EditElementFormModel = {
+          this.elementModel.update(em=>{
+            em.title = result;
+            return em;
+          });
+          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
+
+          /*let editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Title: result,
           };
@@ -254,7 +284,7 @@ export class EditBox {
               this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
               console.error(JSON.stringify(err));
             }
-          });
+          });*/
         }
       }
     });
@@ -279,7 +309,14 @@ export class EditBox {
           });
         }
         else{
-          let editElementFormModel: EditElementFormModel = {
+          this.elementModel.update(em=>{
+            em.value = result.value; 
+            em.title = result.title; 
+            return em;
+          });
+          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
+
+          /*let editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Title: result.title,
             Value: result.value,
@@ -295,7 +332,7 @@ export class EditBox {
               this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
               console.error(JSON.stringify(err));
             }
-          });
+          });*/
         }
       }
     });

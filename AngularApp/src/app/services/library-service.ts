@@ -14,9 +14,13 @@ import { Observable, throwError } from 'rxjs';
 export class LibraryService {
   private httpClient = inject(HttpClient);
   private identityService = inject(IdentityService);
+
   currentLibraryModel = signal<LibraryCardModel|null>(null);
   currentShelfModel = signal<ShelfCardModel|null>(null);
   currentOwnerUserModel = signal<UserProfileModel|null>(null);
+
+  editedElements = signal<Map<string, DocumentElementModel>>(new Map());
+
 
   requestLibraryList(userGuid: string|null = null){
     let quryParams:HttpParams;
@@ -209,6 +213,10 @@ export class LibraryService {
       "/api/Library/EditElement", formData
     );
   }
+
+  /*updateEditedElement(editedElement: DocumentElementModel){
+    this.editedElements().set(editedElement.guid, editedElement);
+  }*/
 
 }
 

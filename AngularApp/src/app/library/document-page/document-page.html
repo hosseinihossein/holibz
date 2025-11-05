@@ -174,8 +174,9 @@
 
         <!--------------------- sections -------------------->
         @for(element of sortedElements(); track element.guid){
-        <app-document-element [elementModel]="element"
-            (headingInitialized)="onHeadingInit($event)"></app-document-element>
+        <app-document-element [(elementModel)]="element" (headingInitialized)="onHeadingInit($event)"
+            (deleteElement)="onDeleteElement($event)">
+        </app-document-element>
         }
 
         <div style="border: 1px solid gray; height: 200vh;"></div>

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, input, output } from '@angular/core';
+import { AfterViewInit, Component, inject, input, model, output } from '@angular/core';
 import { EditBox } from "../edit-box/edit-box";
 import { SingletonModes } from '../../../../services/singleton-modes';
 import { SectionModel } from '../../../../models/section-model';
@@ -17,14 +17,20 @@ import { LinkElement } from '../link-element/link-element';
   styleUrl: './document-element.css'
 })
 export class DocumentElement /*implements AfterViewInit*/ {
-  elementModel = input.required<DocumentElementModel>();
+  elementModel = model.required<DocumentElementModel>();
 
   singletonModes = inject(SingletonModes);
 
   headingInitialized = output<HTMLHeadingElement>();
+  //elementEdited = output<DocumentElementModel>();
+  deleteElement = output<string>();
 
-  passChildEventToParent(headingElement:HTMLHeadingElement){
+  passChildHeadingInitEventToParent(headingElement:HTMLHeadingElement){
     this.headingInitialized.emit(headingElement);
+  }
+
+  passChildDeleteEventToParent(elementGuid:string){
+    this.deleteElement.emit(elementGuid);
   }
 }
 

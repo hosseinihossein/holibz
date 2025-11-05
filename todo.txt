@@ -1,7 +1,10 @@
 - border-radius: 50% for new-library-form, new-shelf-form and new-document-form
 - after adding new element to a document, navigate to its fragment
-- define formControl for inputs in dialog edit elements
+- define formControl for inputs in dialog edit elements and set validators
 - add a singleton service for creating a valid filename
+- rewrite the way of editing elements: add a new property in edit box component for storing
+an array of DocumentElementModels that are edited, then request for saving the changes on server
+after exsiting the edit mode.
 - 
 
 

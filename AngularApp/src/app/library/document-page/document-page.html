@@ -68,6 +68,10 @@
                 <mat-icon>arrow_drop_down</mat-icon>
                 <mat-icon>add</mat-icon>
             </button>
+            <button matButton="elevated" matTooltip="Save changes" class="noPaddingBtn"
+                [disabled]="libraryService.editedElements().size === 0" (click)="saveEditsOnServer()">
+                <mat-icon>database_upload</mat-icon>
+            </button>
             <button matButton="elevated" matTooltip="Exit edit mode" class="noPaddingBtn"
                 (click)="singletonModes.toggleEditMode()">
                 <mat-icon>edit_off</mat-icon>
@@ -174,7 +178,7 @@
 
         <!--------------------- sections -------------------->
         @for(element of sortedElements(); track element.guid){
-        <app-document-element [(elementModel)]="element" (headingInitialized)="onHeadingInit($event)"
+        <app-document-element [elementModel]="element" (headingInitialized)="onHeadingInit($event)"
             (deleteElement)="onDeleteElement($event)">
         </app-document-element>
         }

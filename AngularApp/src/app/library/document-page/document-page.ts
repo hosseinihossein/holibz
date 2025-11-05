@@ -15,7 +15,7 @@ import { DocumentElement, DocumentElementModel } from './document-elements/docum
 import { MatChip, MatChipSet } from "@angular/material/chips";
 import { EditTags } from '../../dialogs/edit-tags/edit-tags';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LibraryService, NewElementFormModel } from '../../services/library-service';
+import { EditElementFormModel, LibraryService, NewElementFormModel } from '../../services/library-service';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { DocumentCardModel } from '../document-card/document-card';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
@@ -295,6 +295,32 @@ export class DocumentPage implements AfterViewInit {
           return dpm;
         });
       }
+    }
+  }
+  onEditElement(editedElement:DocumentElementModel){
+    if(this.documentPageModel()){
+      let elementIndex = this.documentPageModel()!.elements.findIndex(el=>el.guid === editedElement.guid);
+      if(elementIndex >= 0){
+        this.documentPageModel.update(dpm=>{
+          dpm!.elements.splice(elementIndex,1,editedElement);
+          return dpm;
+        });
+      }
+    }
+  }
+  saveEditsOnServer(){
+    if(this.documentPageModel()){
+      this.libraryService.submitEditedElements().subscribe({
+        next: res => {
+          if(res && res.success){
+            this.documentPageModel.update(dpm=>{
+              dpm!.elements = res.elements;
+              return dpm;
+            });
+            this.libraryService.editedElements().clear();
+          }
+        },
+      });
     }
   }
 

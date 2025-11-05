@@ -17,21 +17,23 @@ import { LinkElement } from '../link-element/link-element';
   styleUrl: './document-element.css'
 })
 export class DocumentElement /*implements AfterViewInit*/ {
-  elementModel = model.required<DocumentElementModel>();
+  elementModel = input.required<DocumentElementModel>();
 
   singletonModes = inject(SingletonModes);
 
   headingInitialized = output<HTMLHeadingElement>();
-  //elementEdited = output<DocumentElementModel>();
+  editElement = output<DocumentElementModel>();
   deleteElement = output<string>();
 
-  passChildHeadingInitEventToParent(headingElement:HTMLHeadingElement){
+  /*passChildHeadingInitEventToParent(headingElement:HTMLHeadingElement){
     this.headingInitialized.emit(headingElement);
   }
-
   passChildDeleteEventToParent(elementGuid:string){
     this.deleteElement.emit(elementGuid);
   }
+  passChildEditEventToParent(editedElement:DocumentElementModel){
+    this.editElement.emit(editedElement);
+  }*/
 }
 
 export class DocumentElementModel {

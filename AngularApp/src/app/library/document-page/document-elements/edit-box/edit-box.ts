@@ -13,22 +13,24 @@ import { EditImageTitle } from '../../../../dialogs/edit-image-title/edit-image-
 import { DocumentElementModel } from '../document-element/document-element';
 import { EditElementFormModel, LibraryService } from '../../../../services/library-service';
 import { Result } from '../../../../dialogs/result/result';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-edit-box',
-  imports: [MatIcon,MatButton],
+  imports: [MatIcon,MatButton,MatProgressSpinner],
   templateUrl: './edit-box.html',
   styleUrl: './edit-box.css'
 })
 export class EditBox {
-  elementModel = model.required<DocumentElementModel>();
+  elementModel = input.required<DocumentElementModel>();
   deleteElement = output<string>();
-  //elementEdited = output<DocumentElementModel>();
+  editElement = output<DocumentElementModel>();
 
   libraryService = inject(LibraryService);
   dialog = inject(MatDialog);
 
   editResponse = signal<{status:"success"|"fail", message:string}|null>(null);
+  displaySubmitSpinner = signal(false);
 
   openDialog(){
     switch(this.elementModel().type){
@@ -66,41 +68,33 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
             next: res => {
               if(res && res.success){
+                this.displaySubmitSpinner.set(false);
                 this.deleteElement.emit(this.elementModel().guid);
               }
             },
             error: err => {
               this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              this.displaySubmitSpinner.set(false);
               console.error(JSON.stringify(err));
             },
           });
         }
         else{
-          this.elementModel.update(em=>{
-            em.value = result;
-            return em;
-          });
-          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
-
-          /*let editElementFormModel: EditElementFormModel = {
+          //save the changes on the Map
+          const editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Value: result,
-          };
-          this.libraryService.requestEditElement(editElementFormModel).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.editElement.emit({value:result});
-                this.editResponse.set({status:"success", message:"Edited successfully."});
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
-              console.error(JSON.stringify(err));
-            }
-          });*/
+          }
+          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
+
+          //emit changes to the parent
+          const editedElement = this.elementModel();
+          editedElement.value = result;
+          this.editElement.emit(editedElement);
         }
       }
     });
@@ -112,41 +106,33 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
             next: res => {
               if(res && res.success){
+                this.displaySubmitSpinner.set(false);
                 this.deleteElement.emit(this.elementModel().guid);
               }
             },
             error: err => {
               this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              this.displaySubmitSpinner.set(false);
               console.error(JSON.stringify(err));
             },
           });
         }
         else{
-          this.elementModel.update(em=>{
-            em.value = result;
-            return em;
-          });
-          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
-
-          /*let editElementFormModel: EditElementFormModel = {
+          //save the changes on the Map
+          const editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Value: result,
-          };
-          this.libraryService.requestEditElement(editElementFormModel).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.editElement.emit({value:result});
-                this.editResponse.set({status:"success", message:"Edited successfully."});
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
-              console.error(JSON.stringify(err));
-            }
-          });*/
+          }
+          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
+
+          //emit changes to the parent
+          const editedElement = this.elementModel();
+          editedElement.value = result;
+          this.editElement.emit(editedElement);
         }
       }
     });
@@ -158,41 +144,33 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
             next: res => {
               if(res && res.success){
+                this.displaySubmitSpinner.set(false);
                 this.deleteElement.emit(this.elementModel().guid);
               }
             },
             error: err => {
               this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              this.displaySubmitSpinner.set(false);
               console.error(JSON.stringify(err));
             },
           });
         }
         else{
-          this.elementModel.update(em=>{
-            em.value = result;
-            return em;
-          });
-          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
-
-          /*let editElementFormModel: EditElementFormModel = {
+          //save the changes on the Map
+          const editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Value: result,
-          };
-          this.libraryService.requestEditElement(editElementFormModel).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.editElement.emit({value:result});
-                this.editResponse.set({status:"success", message:"Edited successfully."});
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
-              console.error(JSON.stringify(err));
-            }
-          });*/
+          }
+          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
+
+          //emit changes to the parent
+          const editedElement = this.elementModel();
+          editedElement.value = result;
+          this.editElement.emit(editedElement);
         }
       }
     });
@@ -204,41 +182,33 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
             next: res => {
               if(res && res.success){
+                this.displaySubmitSpinner.set(false);
                 this.deleteElement.emit(this.elementModel().guid);
               }
             },
             error: err => {
               this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              this.displaySubmitSpinner.set(false);
               console.error(JSON.stringify(err));
             },
           });
         }
         else{
-          this.elementModel.update(em=>{
-            em.title = result;
-            return em;
-          });
-          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
-
-          /*let editElementFormModel: EditElementFormModel = {
+          //save the changes on the Map
+          const editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Title: result,
-          };
-          this.libraryService.requestEditElement(editElementFormModel).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.editElement.emit({title:result});
-                this.editResponse.set({status:"success", message:"Edited successfully."});
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
-              console.error(JSON.stringify(err));
-            }
-          });*/
+          }
+          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
+
+          //emit changes to the parent
+          const editedElement = this.elementModel();
+          editedElement.title = result;
+          this.editElement.emit(editedElement);
         }
       }
     });
@@ -250,41 +220,33 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
             next: res => {
               if(res && res.success){
+                this.displaySubmitSpinner.set(false);
                 this.deleteElement.emit(this.elementModel().guid);
               }
             },
             error: err => {
               this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              this.displaySubmitSpinner.set(false);
               console.error(JSON.stringify(err));
             },
           });
         }
         else{
-          this.elementModel.update(em=>{
-            em.title = result;
-            return em;
-          });
-          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
-
-          /*let editElementFormModel: EditElementFormModel = {
+          //save the changes on the Map
+          const editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
             Title: result,
-          };
-          this.libraryService.requestEditElement(editElementFormModel).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.editElement.emit({title:result});
-                this.editResponse.set({status:"success", message:"Edited successfully."});
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
-              console.error(JSON.stringify(err));
-            }
-          });*/
+          }
+          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
+
+          //emit changes to the parent
+          const editedElement = this.elementModel();
+          editedElement.title = result;
+          this.editElement.emit(editedElement);
         }
       }
     });
@@ -296,43 +258,35 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
             next: res => {
               if(res && res.success){
+                this.displaySubmitSpinner.set(false);
                 this.deleteElement.emit(this.elementModel().guid);
               }
             },
             error: err => {
               this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+              this.displaySubmitSpinner.set(false);
               console.error(JSON.stringify(err));
             },
           });
         }
         else{
-          this.elementModel.update(em=>{
-            em.value = result.value; 
-            em.title = result.title; 
-            return em;
-          });
-          this.libraryService.editedElements().set(this.elementModel().guid, this.elementModel());
-
-          /*let editElementFormModel: EditElementFormModel = {
+          //save the changes on the Map
+          const editElementFormModel: EditElementFormModel = {
             Guid: this.elementModel().guid,
-            Title: result.title,
             Value: result.value,
-          };
-          this.libraryService.requestEditElement(editElementFormModel).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.editElement.emit({title:result.title, value: result.value});
-                this.editResponse.set({status:"success", message:"Edited successfully."});
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when editing this element!"});
-              console.error(JSON.stringify(err));
-            }
-          });*/
+            Title: result.title,
+          }
+          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
+
+          //emit changes to the parent
+          const editedElement = this.elementModel();
+          editedElement.value = result.value;
+          editedElement.title = result.title;
+          this.editElement.emit(editedElement);
         }
       }
     });

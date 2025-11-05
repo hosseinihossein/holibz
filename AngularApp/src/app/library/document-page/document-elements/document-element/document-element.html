@@ -1,16 +1,18 @@
 <div class="mainDiv" [class.editMode]="singletonModes.editMode()">
     @if(singletonModes.editMode()){
-    <app-edit-box [(elementModel)]="elementModel" (deleteElement)="passChildDeleteEventToParent($event)"></app-edit-box>
+    <app-edit-box [elementModel]="elementModel()" (deleteElement)="deleteElement.emit($event)"
+        (editElement)="editElement.emit($event)">
+    </app-edit-box>
     }
 
     @switch (elementModel().type) {
     @case("h1"){
     <app-h1-element [elementModel]="elementModel()"
-        (headingInitialized)="passChildHeadingInitEventToParent($event)"></app-h1-element>
+        (headingInitialized)="headingInitialized.emit($event)"></app-h1-element>
     }
     @case("h2"){
     <app-h2-element [elementModel]="elementModel()"
-        (headingInitialized)="passChildHeadingInitEventToParent($event)"></app-h2-element>
+        (headingInitialized)="headingInitialized.emit($event)"></app-h2-element>
     }
     @case("p"){
     <app-p-element [elementModel]="elementModel()"></app-p-element>

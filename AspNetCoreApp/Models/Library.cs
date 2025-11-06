@@ -630,3 +630,19 @@ public class Library_NewElementFormModel
 
     public IFormFile? File { get; set; }
 }
+
+public class Library_EditElementFormModel
+{
+    [StringLength(32)]
+    public string Guid { get; set; } = null!;
+
+    [StringLength(500, MinimumLength = 1)]
+    public string? Value { get; set; } = null!;
+
+    [StringLength(60, MinimumLength = 3)]
+    public string? Title { get; set; }
+
+    public int Order { get; set; }
+}
+
+

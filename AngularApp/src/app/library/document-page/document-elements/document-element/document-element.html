@@ -1,7 +1,6 @@
 <div class="mainDiv" [class.editMode]="singletonModes.editMode()">
     @if(singletonModes.editMode()){
-    <app-edit-box [elementModel]="elementModel()" (deleteElement)="deleteElement.emit($event)"
-        (editElement)="editElement.emit($event)">
+    <app-edit-box [elementModel]="elementModel()">
     </app-edit-box>
     }
 

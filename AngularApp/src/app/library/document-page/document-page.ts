@@ -28,27 +28,19 @@ import { EditLink } from '../../dialogs/edit-link/edit-link';
 import { EditImageTitle } from '../../dialogs/edit-image-title/edit-image-title';
 import { EditFile } from '../../dialogs/edit-file/edit-file';
 import { LargeImg } from '../../dialogs/large-img/large-img';
+import { DocumentPageService } from './document-page-service';
+import { MatBadge } from "@angular/material/badge";
 
 @Component({
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
     MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip, RouterLink,
-  NgOptimizedImage],
+    NgOptimizedImage, MatBadge],
   templateUrl: './document-page.html',
-  styleUrl: './document-page.css'
+  styleUrl: './document-page.css',
+  providers: [DocumentPageService]
 })
 export class DocumentPage implements AfterViewInit {
-  documentGuid = signal<string|null>(null);
-  documentPageModel = signal<DocumentPageModel|null>(null);
-  sortedElements = computed(()=>
-    this.documentPageModel()?.elements.sort((a,b)=>{if(a.order > b.order)return 1;else return -1;})
-  );
-
-  ownerModel = signal<UserProfileModel|null>(null);
-  ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
-
-  displaySubmitSpinner = signal(false);
-
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
@@ -58,6 +50,20 @@ export class DocumentPage implements AfterViewInit {
   identityService = inject(IdentityService);
   renderer = inject(Renderer2);
   router = inject(Router);
+  documentPageService = inject(DocumentPageService);
+
+  documentGuid = signal<string|null>(null);
+  //documentPageModel = signal<DocumentPageModel|null>(this.documentPageService.documentPageService.documentPageModel());
+  sortedElements = computed(()=>
+    this.documentPageService.documentPageModel()?.elements.sort((a,b)=>{
+      if(a.order > b.order)return 1;else return -1;
+    })
+  );
+
+  ownerModel = signal<UserProfileModel|null>(null);
+  ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
+
+  displaySubmitSpinner = signal(false);
 
   headingElements = signal<HTMLHeadingElement[]>([]);
   introductionHeadint = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
@@ -73,7 +79,7 @@ export class DocumentPage implements AfterViewInit {
         this.libraryService.requestDocumentPageModel(this.documentGuid()!).subscribe({
           next: res => {
             if(res){
-              this.documentPageModel.set(res);
+              this.documentPageService.documentPageModel.set(res);
             }
           },
         });
@@ -81,8 +87,8 @@ export class DocumentPage implements AfterViewInit {
     });
 
     effect(() => {
-      if(this.documentPageModel()){
-        this.identityService.requestUserModel(this.documentPageModel()!.owner.userGuid).subscribe({
+      if(this.documentPageService.documentPageModel()){
+        this.identityService.requestUserModel(this.documentPageService.documentPageModel()!.owner.userGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);
@@ -129,7 +135,7 @@ export class DocumentPage implements AfterViewInit {
     dialogRef.afterClosed().subscribe(result=>{
       if(result === true){
         this.displaySubmitSpinner.set(true);
-        this.libraryService.requestDeleteDocument(this.documentPageModel()?.guid!).subscribe({
+        this.libraryService.requestDeleteDocument(this.documentPageService.documentPageModel()?.guid!).subscribe({
           next: res => {
             if(res && res.success){
               this.router.navigate(['/profile']);
@@ -162,7 +168,7 @@ export class DocumentPage implements AfterViewInit {
   }
 
   addNewElement(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
-    if(this.documentPageModel()){
+    if(this.documentPageService.documentPageModel()){
       let newElementFormModel: NewElementFormModel|null = null;
 
       if(type === "h1" || type === "h2"){
@@ -170,8 +176,8 @@ export class DocumentPage implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result=>{
           if(result){
             newElementFormModel = {
-              DocumentGuid: this.documentPageModel()?.guid,
-              Order: this.documentPageModel()?.elements.length.toString(),
+              DocumentGuid: this.documentPageService.documentPageModel()?.guid,
+              Order: this.documentPageService.documentPageModel()?.elements.length.toString(),
               Type: type,
               Value: result,
             };
@@ -184,8 +190,8 @@ export class DocumentPage implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result=>{
           if(result){
             newElementFormModel = {
-              DocumentGuid: this.documentPageModel()?.guid,
-              Order: this.documentPageModel()?.elements.length.toString(),
+              DocumentGuid: this.documentPageService.documentPageModel()?.guid,
+              Order: this.documentPageService.documentPageModel()?.elements.length.toString(),
               Type: type,
               Value: result,
             };
@@ -198,8 +204,8 @@ export class DocumentPage implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result => {
           if(result){
             newElementFormModel = {
-              DocumentGuid: this.documentPageModel()?.guid,
-              Order: this.documentPageModel()?.elements.length.toString(),
+              DocumentGuid: this.documentPageService.documentPageModel()?.guid,
+              Order: this.documentPageService.documentPageModel()?.elements.length.toString(),
               Type: type,
               Value: result,
             };
@@ -212,8 +218,8 @@ export class DocumentPage implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result=>{
           if(result){
             newElementFormModel = {
-              DocumentGuid: this.documentPageModel()?.guid,
-              Order: this.documentPageModel()?.elements.length.toString(),
+              DocumentGuid: this.documentPageService.documentPageModel()?.guid,
+              Order: this.documentPageService.documentPageModel()?.elements.length.toString(),
               Type: type,
               Value: result.value,
               Title: result.title,
@@ -227,8 +233,8 @@ export class DocumentPage implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result=>{
           if(result){
             newElementFormModel = {
-              DocumentGuid: this.documentPageModel()?.guid,
-              Order: this.documentPageModel()?.elements.length.toString(),
+              DocumentGuid: this.documentPageService.documentPageModel()?.guid,
+              Order: this.documentPageService.documentPageModel()?.elements.length.toString(),
               Type: type,
               Title: result.title,
               File: result.file,
@@ -242,8 +248,8 @@ export class DocumentPage implements AfterViewInit {
         dialogRef.afterClosed().subscribe(result=>{
           if(result){
             newElementFormModel = {
-              DocumentGuid: this.documentPageModel()?.guid,
-              Order: this.documentPageModel()?.elements.length.toString(),
+              DocumentGuid: this.documentPageService.documentPageModel()?.guid,
+              Order: this.documentPageService.documentPageModel()?.elements.length.toString(),
               Type: type,
               Title: result.title,
               File: result.file,
@@ -258,7 +264,7 @@ export class DocumentPage implements AfterViewInit {
     this.libraryService.createNewElement(newElementFormModel).subscribe({
       next: res => {
         if(res){
-          this.documentPageModel()?.elements.push(res);
+          this.documentPageService.documentPageModel()?.elements.push(res);
         }
       },
       error: err => {
@@ -276,48 +282,27 @@ export class DocumentPage implements AfterViewInit {
   }
 
   openLargeImage(){
-    if(this.documentPageModel()?.hasImage){
+    if(this.documentPageService.documentPageModel()?.hasImage){
       this.dialog.open(LargeImg, {
         data:{
-          imgSrc:`/api/Library/DocumentImage?documentGuid=${this.documentPageModel()?.guid}`, 
-          imgTitle: this.documentPageModel()?.title
+          imgSrc:`/api/Library/DocumentImage?documentGuid=${this.documentPageService.documentPageModel()?.guid}`, 
+          imgTitle: this.documentPageService.documentPageModel()?.title
         }
       });
     }
   }
 
-  onDeleteElement(elementGuid:string){
-    if(this.documentPageModel()){
-      let elementIndex = this.documentPageModel()!.elements.findIndex(el=>el.guid === elementGuid);
-      if(elementIndex >= 0){
-        this.documentPageModel.update(dpm=>{
-          dpm!.elements.splice(elementIndex,1);
-          return dpm;
-        });
-      }
-    }
-  }
-  onEditElement(editedElement:DocumentElementModel){
-    if(this.documentPageModel()){
-      let elementIndex = this.documentPageModel()!.elements.findIndex(el=>el.guid === editedElement.guid);
-      if(elementIndex >= 0){
-        this.documentPageModel.update(dpm=>{
-          dpm!.elements.splice(elementIndex,1,editedElement);
-          return dpm;
-        });
-      }
-    }
-  }
   saveEditsOnServer(){
-    if(this.documentPageModel()){
-      this.libraryService.submitEditedElements().subscribe({
+    if(this.documentPageService.documentPageModel() && 
+    this.documentPageService.editedElementFormModels().size > 0){
+      this.libraryService.submitEditedElements(this.documentPageService.getEditElementFormModelArray()).subscribe({
         next: res => {
           if(res && res.success){
-            this.documentPageModel.update(dpm=>{
+            this.documentPageService.documentPageModel.update(dpm=>{
               dpm!.elements = res.elements;
               return dpm;
             });
-            this.libraryService.editedElements().clear();
+            this.documentPageService.editedElementFormModels().clear();
           }
         },
       });

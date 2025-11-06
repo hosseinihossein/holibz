@@ -19,7 +19,7 @@ export class LibraryService {
   currentShelfModel = signal<ShelfCardModel|null>(null);
   currentOwnerUserModel = signal<UserProfileModel|null>(null);
 
-  editedElements = signal<Map<string, EditElementFormModel>>(new Map());
+  //editedElements = signal<Map<string, EditElementFormModel>>(new Map());
 
 
   requestLibraryList(userGuid: string|null = null){
@@ -191,7 +191,7 @@ export class LibraryService {
     );
   }
 
-  requestEditElement(editElementFormModel: EditElementFormModel){
+  /*requestEditElement(editElementFormModel: EditElementFormModel){
     const formData = new FormData();
     if(editElementFormModel.Guid){
       formData.append("Guid", editElementFormModel.Guid);
@@ -212,25 +212,12 @@ export class LibraryService {
     return this.httpClient.post<{success:boolean, element?:DocumentElementModel}>(
       "/api/Library/EditElement", formData
     );
-  }
-  submitEditedElements(){
-    if(this.editedElements().size > 0){
-      const editElementFormModelArray: EditElementFormModel[] = [];
-      for(let v of this.editedElements().values()){
-        editElementFormModelArray.push(v);
-      }
-      return this.httpClient.post<{success:boolean, elements:DocumentElementModel[]}>(
-        "/api/Library/EditElement", editElementFormModelArray
-      );
-    }
-    else{
-      return throwError(()=>"There's no edited element!");
-    }
-  }
-
-  /*updateEditedElement(editedElement: DocumentElementModel){
-    this.editedElements().set(editedElement.guid, editedElement);
   }*/
+  submitEditedElements(editElementFormModelArray:EditElementFormModel[]){
+    return this.httpClient.post<{success:boolean, elements:DocumentElementModel[]}>(
+      "/api/Library/EditElements", editElementFormModelArray
+    );
+  }
 
 }
 
@@ -260,8 +247,8 @@ export class NewElementFormModel{
   File?:File;
 }
 export class EditElementFormModel{
-  Guid?:string;
-  Value?:string;
-  Title?:string;
-  Order?:string;
+  Guid:string = null!;
+  Value:string|null = null;
+  Title:string|null = null;
+  Order:string = null!;
 }

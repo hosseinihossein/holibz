@@ -22,8 +22,8 @@ export class DocumentElement /*implements AfterViewInit*/ {
   singletonModes = inject(SingletonModes);
 
   headingInitialized = output<HTMLHeadingElement>();
-  editElement = output<DocumentElementModel>();
-  deleteElement = output<string>();
+  //editElement = output<DocumentElementModel>();
+  //deleteElement = output<string>();
 
   /*passChildHeadingInitEventToParent(headingElement:HTMLHeadingElement){
     this.headingInitialized.emit(headingElement);

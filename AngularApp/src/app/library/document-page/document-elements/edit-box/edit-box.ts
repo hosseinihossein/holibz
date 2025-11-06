@@ -14,6 +14,7 @@ import { DocumentElementModel } from '../document-element/document-element';
 import { EditElementFormModel, LibraryService } from '../../../../services/library-service';
 import { Result } from '../../../../dialogs/result/result';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { DocumentPageService } from '../../document-page-service';
 
 @Component({
   selector: 'app-edit-box',
@@ -23,11 +24,10 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 })
 export class EditBox {
   elementModel = input.required<DocumentElementModel>();
-  deleteElement = output<string>();
-  editElement = output<DocumentElementModel>();
 
   libraryService = inject(LibraryService);
   dialog = inject(MatDialog);
+  documentPageService = inject(DocumentPageService);
 
   editResponse = signal<{status:"success"|"fail", message:string}|null>(null);
   displaySubmitSpinner = signal(false);
@@ -68,33 +68,10 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
-          this.displaySubmitSpinner.set(true);
-          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.displaySubmitSpinner.set(false);
-                this.deleteElement.emit(this.elementModel().guid);
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-              this.displaySubmitSpinner.set(false);
-              console.error(JSON.stringify(err));
-            },
-          });
+          this.deleteElement();
         }
         else{
-          //save the changes on the Map
-          const editElementFormModel: EditElementFormModel = {
-            Guid: this.elementModel().guid,
-            Value: result,
-          }
-          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
-
-          //emit changes to the parent
-          const editedElement = this.elementModel();
-          editedElement.value = result;
-          this.editElement.emit(editedElement);
+          this.editValueTitle(result);
         }
       }
     });
@@ -106,33 +83,10 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
-          this.displaySubmitSpinner.set(true);
-          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.displaySubmitSpinner.set(false);
-                this.deleteElement.emit(this.elementModel().guid);
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-              this.displaySubmitSpinner.set(false);
-              console.error(JSON.stringify(err));
-            },
-          });
+          this.deleteElement();
         }
         else{
-          //save the changes on the Map
-          const editElementFormModel: EditElementFormModel = {
-            Guid: this.elementModel().guid,
-            Value: result,
-          }
-          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
-
-          //emit changes to the parent
-          const editedElement = this.elementModel();
-          editedElement.value = result;
-          this.editElement.emit(editedElement);
+          this.editValueTitle(result);
         }
       }
     });
@@ -144,33 +98,10 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
-          this.displaySubmitSpinner.set(true);
-          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.displaySubmitSpinner.set(false);
-                this.deleteElement.emit(this.elementModel().guid);
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-              this.displaySubmitSpinner.set(false);
-              console.error(JSON.stringify(err));
-            },
-          });
+          this.deleteElement();
         }
         else{
-          //save the changes on the Map
-          const editElementFormModel: EditElementFormModel = {
-            Guid: this.elementModel().guid,
-            Value: result,
-          }
-          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
-
-          //emit changes to the parent
-          const editedElement = this.elementModel();
-          editedElement.value = result;
-          this.editElement.emit(editedElement);
+          this.editValueTitle(result);
         }
       }
     });
@@ -182,33 +113,10 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
-          this.displaySubmitSpinner.set(true);
-          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.displaySubmitSpinner.set(false);
-                this.deleteElement.emit(this.elementModel().guid);
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-              this.displaySubmitSpinner.set(false);
-              console.error(JSON.stringify(err));
-            },
-          });
+          this.deleteElement();
         }
         else{
-          //save the changes on the Map
-          const editElementFormModel: EditElementFormModel = {
-            Guid: this.elementModel().guid,
-            Title: result,
-          }
-          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
-
-          //emit changes to the parent
-          const editedElement = this.elementModel();
-          editedElement.title = result;
-          this.editElement.emit(editedElement);
+          this.editValueTitle(undefined,result);
         }
       }
     });
@@ -220,33 +128,10 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
-          this.displaySubmitSpinner.set(true);
-          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.displaySubmitSpinner.set(false);
-                this.deleteElement.emit(this.elementModel().guid);
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-              this.displaySubmitSpinner.set(false);
-              console.error(JSON.stringify(err));
-            },
-          });
+          this.deleteElement();
         }
         else{
-          //save the changes on the Map
-          const editElementFormModel: EditElementFormModel = {
-            Guid: this.elementModel().guid,
-            Title: result,
-          }
-          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
-
-          //emit changes to the parent
-          const editedElement = this.elementModel();
-          editedElement.title = result;
-          this.editElement.emit(editedElement);
+          this.editValueTitle(undefined, result);
         }
       }
     });
@@ -258,38 +143,153 @@ export class EditBox {
     dialogRef.afterClosed().subscribe(result=>{
       if(result){
         if(result === "Delete"){
-          this.displaySubmitSpinner.set(true);
-          this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.displaySubmitSpinner.set(false);
-                this.deleteElement.emit(this.elementModel().guid);
-              }
-            },
-            error: err => {
-              this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-              this.displaySubmitSpinner.set(false);
-              console.error(JSON.stringify(err));
-            },
-          });
+          this.deleteElement();
         }
         else{
-          //save the changes on the Map
-          const editElementFormModel: EditElementFormModel = {
-            Guid: this.elementModel().guid,
-            Value: result.value,
-            Title: result.title,
-          }
-          this.libraryService.editedElements().set(this.elementModel().guid, editElementFormModel);
-
-          //emit changes to the parent
-          const editedElement = this.elementModel();
-          editedElement.value = result.value;
-          editedElement.title = result.title;
-          this.editElement.emit(editedElement);
+          this.editValueTitle(result.value,result.title);
         }
       }
     });
+  }
+
+  deleteElement(){
+    this.displaySubmitSpinner.set(true);
+
+    //request server to delete this element
+    this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
+      next: res => {
+        if(res && res.success){
+          this.deleteElementFromDocumentPage();
+          this.displaySubmitSpinner.set(false);
+        }
+      },
+      error: err => {
+        this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
+        console.error(JSON.stringify(err));
+        this.displaySubmitSpinner.set(false);
+      },
+    });
+  }
+  deleteElementFromDocumentPage(){
+    if(this.documentPageService.documentPageModel()){
+      let elementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>
+        el.guid === this.elementModel().guid
+      );
+      if(elementIndex >= 0){
+        this.documentPageService.documentPageModel.update(dpm=>{
+          dpm!.elements.splice(elementIndex,1);
+          return dpm;
+        });
+      }
+    }
+  }
+
+  editValueTitle(value?:string, title?:string){
+    const editElementFormModel: EditElementFormModel = {
+      Guid: this.elementModel().guid,
+      Order: this.elementModel().order.toString(),
+      Title: title ?? this.elementModel().title ?? null,
+      Value: value ?? this.elementModel().value,
+    }
+    const editedElement = this.elementModel();
+    
+    if(value){
+      editedElement.value = value;
+    }
+    if(title){
+      editedElement.title = title;
+    }
+
+    this.documentPageService.editedElementFormModels().set(editElementFormModel.Guid!, editElementFormModel);
+    this.editElementOnDocumentPage(editedElement);
+  }
+  editElementOnDocumentPage(editedElement:DocumentElementModel){
+    if(this.documentPageService.documentPageModel()){
+      let elementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>el.guid === editedElement.guid);
+      if(elementIndex >= 0){
+        this.documentPageService.documentPageModel.update(dpm=>{
+          dpm!.elements.splice(elementIndex,1,editedElement);
+          return dpm;
+        });
+      }
+    }
+  }
+  
+  increaseOrder(){
+    if(this.documentPageService.documentPageModel()){
+      let totalElementNumber = this.documentPageService.documentPageModel()!.elements.length;
+      let editedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>el.guid === this.elementModel().guid);
+      if(editedElementIndex >= 0 && editedElementIndex < (totalElementNumber - 1)){
+        let editedElement = this.documentPageService.documentPageModel()!.elements[editedElementIndex];
+        let substitutedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(
+          el=>el.order === (editedElement.order + 1)
+        );
+        editedElement.order++;
+        if(substitutedElementIndex >= 0){
+          let substitutedElement = this.documentPageService.documentPageModel()!.elements[substitutedElementIndex];
+          substitutedElement.order--;
+
+          //save to edited elements fom models
+          this.documentPageService.editedElementFormModels().set(editedElement.guid, {
+            Guid: editedElement.guid,
+            Order: editedElement.order.toString(),
+            Title: editedElement.title ?? null,
+            Value: editedElement.value,
+          });
+          this.documentPageService.editedElementFormModels().set(substitutedElement.guid, {
+            Guid: substitutedElement.guid,
+            Order: substitutedElement.order.toString(),
+            Title: substitutedElement.title ?? null,
+            Value: substitutedElement.value,
+          });
+          
+          //substitute the edited element with it's substituted element 
+          this.documentPageService.documentPageModel.update(dpm=>{
+            dpm!.elements.splice(editedElementIndex,1,substitutedElement);
+            dpm!.elements.splice(substitutedElementIndex,1,editedElement);
+            return dpm;
+          });
+        }
+      }
+    }
+  }
+  decreaseOrder(){
+    if(this.documentPageService.documentPageModel()){
+      let totalElementNumber = this.documentPageService.documentPageModel()!.elements.length;
+      let editedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>el.guid === this.elementModel().guid);
+      if(editedElementIndex > 1){
+        let editedElement = this.documentPageService.documentPageModel()!.elements[editedElementIndex];
+        let substitutedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(
+          el=>el.order === (editedElement.order - 1)
+        );
+        editedElement.order--;
+        if(substitutedElementIndex >= 0){
+          let substitutedElement = this.documentPageService.documentPageModel()!.elements[substitutedElementIndex];
+          substitutedElement.order++;
+
+          //save to edited elements fom models
+          this.documentPageService.editedElementFormModels().set(editedElement.guid, {
+            Guid: editedElement.guid,
+            Order: editedElement.order.toString(),
+            Title: editedElement.title ?? null,
+            Value: editedElement.value,
+          });
+          this.documentPageService.editedElementFormModels().set(substitutedElement.guid, {
+            Guid: substitutedElement.guid,
+            Order: substitutedElement.order.toString(),
+            Title: substitutedElement.title ?? null,
+            Value: substitutedElement.value,
+          });
+          
+          //substitute the edited element with it's substituted element 
+          this.documentPageService.documentPageModel.update(dpm=>{
+            dpm!.elements.splice(editedElementIndex,1,substitutedElement);
+            dpm!.elements.splice(substitutedElementIndex,1,editedElement);
+            return dpm;
+          });
+        }
+      }
+    }
   }
   
 }

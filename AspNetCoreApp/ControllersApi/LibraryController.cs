@@ -515,6 +515,58 @@ public class LibraryController : ControllerBase
         return NotFound("The element file Not found!");
     }
 
+    [HttpPost]
+    public async Task<IActionResult> EditElements([FromBody] Library_EditElementFormModel[] formModels)
+    {
+        if (ModelState.IsValid)
+        {
+            IEnumerable<string> elementGuids = formModels.Select(m => m.Guid);
+
+            List<Library_ElementDbModel> elementDbModels = await libraryDb.Elements
+            .Where(el => elementGuids.Contains(el.Guid))
+            .ToListAsync();
+
+            foreach (var elementDbModel in elementDbModels)
+            {
+                var formModel = formModels.FirstOrDefault(fm => fm.Guid == elementDbModel.Guid);
+                if (formModel is not null)
+                {
+                    elementDbModel.Order = formModel.Order;
+                    elementDbModel.Title = formModel.Title ?? elementDbModel.Title;
+                    elementDbModel.Value = formModel.Value ?? elementDbModel.Value;
+                }
+            }
+
+            await libraryDb.SaveChangesAsync();
+
+            List<Library_ElementDbModel> allDocumentElements = (await libraryDb.Elements
+            .Include(el => el.Document)
+            .ThenInclude(doc => doc.Elements)
+            .Where(el => el.Id == elementDbModels.First().Id)
+            .Select(el => el.Document.Elements)
+            .FirstOrDefaultAsync())!;
+
+            Library_ElementModel[] elementModelArray = allDocumentElements
+            .Select(elementDbModel => new Library_ElementModel()
+            {
+                Guid = elementDbModel.Guid,
+                Order = elementDbModel.Order,
+                OwnerGuid = elementDbModel.OwnerGuid,
+                Title = elementDbModel.Title,
+                Type = elementDbModel.Type,
+                UpdatedAt = elementDbModel.UpdatedAt,
+                Value = elementDbModel.Value ??
+                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
+            })
+            .ToArray();
+
+            return Ok(new { success = true, elements = elementModelArray });
+        }
+
+        return BadRequest(ModelState);
+    }
+
+
 
 
 

@@ -12,3 +12,4 @@
 - add the ability for users to follow eachother
 - add the ability for users to send review request to to some other users they wish to read 
 and react to their document.
+- set Guid columns as index columns in the database models of asp app to increase the read performance

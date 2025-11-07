@@ -44,7 +44,7 @@
         }
     </mat-sidenav>
 
-    <mat-sidenav-content [class.editMode]="singletonModes.editMode()">
+    <mat-sidenav-content [class.editMode]="documentPageService.editMode()">
 
         <!--------------------- top action box -------------------->
         <div class="actionDiv clearfix">
@@ -62,7 +62,8 @@
                 <mat-icon>arrow_drop_down</mat-icon>
                 {{documentPageService.documentPageModel()?.version}}
             </button>
-            @if(singletonModes.editMode()){
+            @if(isMyDocument()){
+            @if(documentPageService.editMode()){
             <button matButton="elevated" [matMenuTriggerFor]="elementMenu"
                 matTooltip="Add a new section to the document" class="noPaddingBtn">
                 <mat-icon>arrow_drop_down</mat-icon>
@@ -74,7 +75,7 @@
                 <mat-icon>database_upload</mat-icon>
             </button>
             <button matButton="elevated" matTooltip="Exit edit mode" class="noPaddingBtn"
-                (click)="singletonModes.toggleEditMode()">
+                (click)="confirmExitEditModeWithoutSaving();">
                 <mat-icon>edit_off</mat-icon>
             </button>
 
@@ -84,16 +85,16 @@
             </button>
             }
             @else {
-            <button matButton="elevated" matTooltip="Enter edit mode" class="noPaddingBtn"
-                (click)="singletonModes.toggleEditMode()">
+            <button matButton="elevated" matTooltip="Enter edit mode" class="noPaddingBtn" (click)="enterEditMode()">
                 <mat-icon>edit</mat-icon>
             </button>
+            }
             }
         </div>
 
         <!--------------------- matmenu -------------------->
         <mat-menu #version>
-            @if(singletonModes.editMode()){
+            @if(documentPageService.editMode()){
             <button mat-menu-item matTooltipPosition="left" matTooltip="Add a new version">
                 <mat-icon>difference</mat-icon> New
             </button>
@@ -141,10 +142,10 @@
         <!-------------------------------------------------->
 
         <!--------------------- tags box -------------------->
-        <div id="tags-box" [class.editMode]="singletonModes.editMode()">
+        <div id="tags-box" [class.editMode]="documentPageService.editMode()">
             <h3>
                 Tags:
-                @if(singletonModes.editMode()){
+                @if(isMyDocument() && documentPageService.editMode()){
                 <button matButton="elevated" class="noPaddingBtn" matTooltip="Edit tags" matTooltipPosition="after"
                     (click)="editTags()">
                     <mat-icon>edit</mat-icon>
@@ -184,7 +185,12 @@
         </app-document-element>
         }
 
-        <div style="border: 1px solid gray; height: 200vh;"></div>
+        <!--div style="border: 1px solid gray; height: 200vh;"></div-->
+        @if(displaySubmitSpinner()){
+        <div id="submit-spinner-layout">
+            <mat-spinner id="submit-spinner"></mat-spinner>
+        </div>
+        }
 
     </mat-sidenav-content>
 

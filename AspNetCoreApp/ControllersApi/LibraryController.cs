@@ -516,6 +516,8 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditElements([FromBody] Library_EditElementFormModel[] formModels)
     {
         if (ModelState.IsValid)
@@ -526,27 +528,53 @@ public class LibraryController : ControllerBase
             .Where(el => elementGuids.Contains(el.Guid))
             .ToListAsync();
 
+            string ownerGuid = (await userManager.Users
+            .Where(user => user.UserName == User.Identity!.Name!)
+            .Select(user => user.UserGuid)
+            .FirstOrDefaultAsync())!;
+
+            foreach (var elementDbModel in elementDbModels)
+            {
+                if (elementDbModel.OwnerGuid != ownerGuid)
+                {
+                    ModelState.AddModelError("Owner", "You are Not the owner of all of the edited elements!");
+                    return BadRequest(ModelState);
+                }
+            }
+
+            List<Library_ElementDbModel> deletedElements = [];
             foreach (var elementDbModel in elementDbModels)
             {
                 var formModel = formModels.FirstOrDefault(fm => fm.Guid == elementDbModel.Guid);
+
                 if (formModel is not null)
                 {
-                    elementDbModel.Order = formModel.Order;
-                    elementDbModel.Title = formModel.Title ?? elementDbModel.Title;
-                    elementDbModel.Value = formModel.Value ?? elementDbModel.Value;
+                    if (formModel.Delete ?? false)
+                    {
+                        deletedElements.Add(elementDbModel);
+                        libraryDb.Elements.Remove(elementDbModel);
+                    }
+                    else
+                    {
+                        elementDbModel.Order = formModel.Order ?? elementDbModel.Order;
+                        elementDbModel.Title = formModel.Title ?? elementDbModel.Title;
+                        elementDbModel.Value = formModel.Value ?? elementDbModel.Value;
+                    }
                 }
             }
 
             await libraryDb.SaveChangesAsync();
 
-            List<Library_ElementDbModel> allDocumentElements = (await libraryDb.Elements
+            elementDbModels.RemoveAll(el => deletedElements.Contains(el));
+
+            /*List<Library_ElementDbModel> allDocumentElements = (await libraryDb.Elements
             .Include(el => el.Document)
             .ThenInclude(doc => doc.Elements)
             .Where(el => el.Id == elementDbModels.First().Id)
             .Select(el => el.Document.Elements)
-            .FirstOrDefaultAsync())!;
+            .FirstOrDefaultAsync())!;*/
 
-            Library_ElementModel[] elementModelArray = allDocumentElements
+            Library_ElementModel[] elementModelArray = elementDbModels
             .Select(elementDbModel => new Library_ElementModel()
             {
                 Guid = elementDbModel.Guid,

@@ -642,7 +642,9 @@ public class Library_EditElementFormModel
     [StringLength(60, MinimumLength = 3)]
     public string? Title { get; set; }
 
-    public int Order { get; set; }
+    public int? Order { get; set; }
+
+    public bool? Delete { get; set; } = false;
 }
 
 

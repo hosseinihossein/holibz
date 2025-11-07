@@ -18,7 +18,7 @@ import { DocumentPageService } from '../../document-page-service';
 
 @Component({
   selector: 'app-edit-box',
-  imports: [MatIcon,MatButton,MatProgressSpinner],
+  imports: [MatIcon,MatButton],
   templateUrl: './edit-box.html',
   styleUrl: './edit-box.css'
 })
@@ -28,9 +28,6 @@ export class EditBox {
   libraryService = inject(LibraryService);
   dialog = inject(MatDialog);
   documentPageService = inject(DocumentPageService);
-
-  editResponse = signal<{status:"success"|"fail", message:string}|null>(null);
-  displaySubmitSpinner = signal(false);
 
   openDialog(){
     switch(this.elementModel().type){
@@ -153,22 +150,13 @@ export class EditBox {
   }
 
   deleteElement(){
-    this.displaySubmitSpinner.set(true);
+    const editElementFormModel: EditElementFormModel = {
+      Guid: this.elementModel().guid,
+      Delete: true,
+    }
+    this.documentPageService.editedElementFormModels().set(editElementFormModel.Guid!, editElementFormModel);
 
-    //request server to delete this element
-    this.libraryService.requestDeleteElement(this.elementModel().guid).subscribe({
-      next: res => {
-        if(res && res.success){
-          this.deleteElementFromDocumentPage();
-          this.displaySubmitSpinner.set(false);
-        }
-      },
-      error: err => {
-        this.editResponse.set({status:"fail", message:"Something went wrong when deleting this element!"});
-        console.error(JSON.stringify(err));
-        this.displaySubmitSpinner.set(false);
-      },
-    });
+    this.deleteElementFromDocumentPage();
   }
   deleteElementFromDocumentPage(){
     if(this.documentPageService.documentPageModel()){
@@ -188,8 +176,8 @@ export class EditBox {
     const editElementFormModel: EditElementFormModel = {
       Guid: this.elementModel().guid,
       Order: this.elementModel().order.toString(),
-      Title: title ?? this.elementModel().title ?? null,
-      Value: value ?? this.elementModel().value,
+      Title: title,
+      Value: value,
     }
     const editedElement = this.elementModel();
     
@@ -233,13 +221,13 @@ export class EditBox {
           this.documentPageService.editedElementFormModels().set(editedElement.guid, {
             Guid: editedElement.guid,
             Order: editedElement.order.toString(),
-            Title: editedElement.title ?? null,
+            Title: editedElement.title,
             Value: editedElement.value,
           });
           this.documentPageService.editedElementFormModels().set(substitutedElement.guid, {
             Guid: substitutedElement.guid,
             Order: substitutedElement.order.toString(),
-            Title: substitutedElement.title ?? null,
+            Title: substitutedElement.title,
             Value: substitutedElement.value,
           });
           
@@ -255,9 +243,9 @@ export class EditBox {
   }
   decreaseOrder(){
     if(this.documentPageService.documentPageModel()){
-      let totalElementNumber = this.documentPageService.documentPageModel()!.elements.length;
+      //let totalElementNumber = this.documentPageService.documentPageModel()!.elements.length;
       let editedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>el.guid === this.elementModel().guid);
-      if(editedElementIndex > 1){
+      if(editedElementIndex >= 1){
         let editedElement = this.documentPageService.documentPageModel()!.elements[editedElementIndex];
         let substitutedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(
           el=>el.order === (editedElement.order - 1)
@@ -271,13 +259,13 @@ export class EditBox {
           this.documentPageService.editedElementFormModels().set(editedElement.guid, {
             Guid: editedElement.guid,
             Order: editedElement.order.toString(),
-            Title: editedElement.title ?? null,
+            Title: editedElement.title,
             Value: editedElement.value,
           });
           this.documentPageService.editedElementFormModels().set(substitutedElement.guid, {
             Guid: substitutedElement.guid,
             Order: substitutedElement.order.toString(),
-            Title: substitutedElement.title ?? null,
+            Title: substitutedElement.title,
             Value: substitutedElement.value,
           });
           

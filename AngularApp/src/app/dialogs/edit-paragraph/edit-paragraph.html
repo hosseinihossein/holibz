@@ -4,7 +4,7 @@
         <textarea matInput [value]="data.value" #paragraphInput placeholder="Write your paragraph here.."
             rows="5"></textarea>
     </mat-form-field>
-    <mat-dialog-actions>
+    <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="paragraphInput.value">Save</button>
     </mat-dialog-actions>

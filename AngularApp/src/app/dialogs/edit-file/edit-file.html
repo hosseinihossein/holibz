@@ -14,7 +14,7 @@
     </mat-form-field>
 
     @if(data.enableEdit){
-    <mat-dialog-actions align="end" style="float: right;">
+    <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="titleInput.value">Save</button>
     </mat-dialog-actions>
@@ -23,7 +23,7 @@
     </mat-dialog-actions>
     }
     @else {
-    <mat-dialog-actions align="end" style="float: right;">
+    <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleInput.value}">Save</button>
     </mat-dialog-actions>

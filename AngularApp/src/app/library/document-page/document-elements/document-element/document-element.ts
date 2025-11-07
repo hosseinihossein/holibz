@@ -9,6 +9,7 @@ import { ImgElement } from '../img-element/img-element';
 import { CodeElement } from '../code-element/code-element';
 import { FileElement } from '../file-element/file-element';
 import { LinkElement } from '../link-element/link-element';
+import { DocumentPageService } from '../../document-page-service';
 
 @Component({
   selector: 'app-document-element',
@@ -19,7 +20,8 @@ import { LinkElement } from '../link-element/link-element';
 export class DocumentElement /*implements AfterViewInit*/ {
   elementModel = input.required<DocumentElementModel>();
 
-  singletonModes = inject(SingletonModes);
+  //singletonModes = inject(SingletonModes);
+  documentPageService = inject(DocumentPageService);
 
   headingInitialized = output<HTMLHeadingElement>();
   //editElement = output<DocumentElementModel>();

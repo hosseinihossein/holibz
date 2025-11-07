@@ -1,5 +1,5 @@
-<div class="mainDiv" [class.editMode]="singletonModes.editMode()">
-    @if(singletonModes.editMode()){
+<div class="mainDiv" [class.editMode]="documentPageService.editMode()">
+    @if(documentPageService.editMode()){
     <app-edit-box [elementModel]="elementModel()">
     </app-edit-box>
     }

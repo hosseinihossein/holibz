@@ -248,7 +248,8 @@ export class NewElementFormModel{
 }
 export class EditElementFormModel{
   Guid:string = null!;
-  Value:string|null = null;
-  Title:string|null = null;
-  Order:string = null!;
+  Value?:string;
+  Title?:string;
+  Order?:string;
+  Delete?:boolean;
 }

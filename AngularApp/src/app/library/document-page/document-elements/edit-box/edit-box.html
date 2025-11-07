@@ -8,14 +8,5 @@
     <button matButton="elevated" class="noPaddingBtn" (click)="increaseOrder()">
         <mat-icon>arrow_cool_down</mat-icon>
     </button>
-    <span style="font-size: 12px;"
-        [style]="editResponse()?.status === 'fail'?'color:var(--mat-sys-error)':'color:var(--mat-sys-primary)'">
-        {{editResponse()?.message}}
-    </span>
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
-    }
 </div>

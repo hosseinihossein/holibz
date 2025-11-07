@@ -3,7 +3,7 @@
         <mat-label>Header Text</mat-label>
         <input matInput [value]="data.value" #headerInput>
     </mat-form-field>
-    <mat-dialog-actions>
+    <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="headerInput.value">Save</button>
     </mat-dialog-actions>

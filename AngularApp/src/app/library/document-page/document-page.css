@@ -53,6 +53,7 @@ mat-sidenav#startSideNav a.siblingDocs{
 
 mat-sidenav-content{
     padding: 16px 32px 128px 32px;
+    position: relative;
 }
 mat-sidenav-content.editMode{
     padding: 8px 24px 120px 24px;
@@ -117,4 +118,21 @@ mat-sidenav-content img{
 
 mat-sidenav-content img:hover{
     box-shadow: 0px 5px 10px 0 var(--mat-sys-outline);
+}
+
+#submit-spinner-layout{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(5px);
+    z-index: 1;
+}
+mat-spinner#submit-spinner{
+    display: block;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
 }

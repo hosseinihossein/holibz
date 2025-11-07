@@ -3,7 +3,7 @@
         <mat-label>Code</mat-label>
         <textarea matInput [value]="data.value" #codeInput placeholder="Write your code here.." rows="5"></textarea>
     </mat-form-field>
-    <mat-dialog-actions>
+    <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="codeInput.value">Save</button>
     </mat-dialog-actions>

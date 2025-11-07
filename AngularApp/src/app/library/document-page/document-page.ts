@@ -30,12 +30,15 @@ import { EditFile } from '../../dialogs/edit-file/edit-file';
 import { LargeImg } from '../../dialogs/large-img/large-img';
 import { DocumentPageService } from './document-page-service';
 import { MatBadge } from "@angular/material/badge";
+import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
     MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip, RouterLink,
-    NgOptimizedImage, MatBadge],
+    NgOptimizedImage, MatBadge,MatProgressSpinner],
   templateUrl: './document-page.html',
   styleUrl: './document-page.css',
   providers: [DocumentPageService]
@@ -44,7 +47,7 @@ export class DocumentPage implements AfterViewInit {
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
-  singletonModes = inject(SingletonModes);
+  //singletonModes = inject(SingletonModes);
   activatedRoute = inject(ActivatedRoute);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
@@ -62,11 +65,12 @@ export class DocumentPage implements AfterViewInit {
 
   ownerModel = signal<UserProfileModel|null>(null);
   ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
+  isMyDocument = computed(()=>this.ownerModel()?.guid === this.identityService.userModel()?.guid);
 
   displaySubmitSpinner = signal(false);
 
   headingElements = signal<HTMLHeadingElement[]>([]);
-  introductionHeadint = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
+  introductionHeading = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
   
   constructor(){
     let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
@@ -80,6 +84,7 @@ export class DocumentPage implements AfterViewInit {
           next: res => {
             if(res){
               this.documentPageService.documentPageModel.set(res);
+              this.documentPageService.unchangedDocumentPageModel.set(res);
             }
           },
         });
@@ -121,8 +126,8 @@ export class DocumentPage implements AfterViewInit {
     
   }
   ngAfterViewInit(): void {
-    if(this.introductionHeadint()){
-      this.headingElements.update(elements=>[...elements, this.introductionHeadint().nativeElement]);
+    if(this.introductionHeading()){
+      this.headingElements.update(elements=>[...elements, this.introductionHeading().nativeElement]);
     }
   }
 
@@ -294,18 +299,90 @@ export class DocumentPage implements AfterViewInit {
 
   saveEditsOnServer(){
     if(this.documentPageService.documentPageModel() && 
-    this.documentPageService.editedElementFormModels().size > 0){
+    this.documentPageService.editedElementFormModels().size > 0 &&
+    this.isMyDocument()){
+      this.displaySubmitSpinner.set(true);
       this.libraryService.submitEditedElements(this.documentPageService.getEditElementFormModelArray()).subscribe({
         next: res => {
           if(res && res.success){
             this.documentPageService.documentPageModel.update(dpm=>{
-              dpm!.elements = res.elements;
+              for(let editedElement of res.elements){
+                let elIndex = dpm!.elements.findIndex(el=>el.guid === editedElement.guid);
+                dpm!.elements.splice(elIndex,1,editedElement);
+              }
               return dpm;
             });
+
+            this.documentPageService.unchangedDocumentPageModel.set(
+              this.documentPageService.documentPageModel()
+            );
             this.documentPageService.editedElementFormModels().clear();
+
+            this.displaySubmitSpinner.set(false);
           }
         },
+        error: err => {
+          let errorMessage = "";
+          if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
+            if(err.error?.Owner){
+              errorMessage = err.error?.Owner;
+            }
+            else if(err.error?.Guid || err.error?.errors?.Guid){
+              errorMessage = err.error?.Guid || err.error?.errors?.Guid;
+            }
+          }
+          else{
+            errorMessage = "Something went wrong during saving the changes!";
+          }
+
+          this.dialog.open(Result,{data:{
+            status: "warning",
+            title: "Error in saving changes",
+            description: [errorMessage],
+          }});
+
+          throw(err);
+        },
       });
+    }
+  }
+
+  confirmExitEditModeWithoutSaving(){
+    if(this.documentPageService.editedElementFormModels().size > 0){
+      this.dialog.open(ConfirmChange,{
+        data:{change:"exit edit mode without saving the changes"}
+      }).afterClosed().subscribe(result=>{
+        if(result === "yes"){
+          this.documentPageService.editedElementFormModels().clear();
+          this.documentPageService.documentPageModel.update(doc=>{
+            doc!.elements = this.documentPageService.unchangedDocumentPageModel()!.elements!;
+            return doc;
+          });
+          console.log(JSON.stringify(this.documentPageService.documentPageModel()?.elements));
+          console.log(JSON.stringify(this.documentPageService.unchangedDocumentPageModel()?.elements));
+          
+          this.documentPageService.toggleEditMode();
+        }
+      });
+    }
+    else{
+      this.documentPageService.toggleEditMode();
+    }
+  }
+
+  enterEditMode(){
+    if(this.isMyDocument()){
+      this.identityService.getCsrf().subscribe({
+        next: () => {
+          console.log("csrf token recieved successfully.");
+        },
+        error: err => {
+          console.log("couldn't get csrf token");
+          throw(err);
+        }
+      });
+
+      this.documentPageService.toggleEditMode();
     }
   }
 

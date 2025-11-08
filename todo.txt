@@ -1,9 +1,9 @@
 - border-radius: 50% for images in new-library-form, new-shelf-form and new-document-form
 - after adding new element to a document, navigate to its fragment
 - define formControl for inputs in dialog edit elements and set validators
-- add a singleton service for creating a valid filename
 - set edit and delete for library and shelf
 - doesn't need to send the order changed elements caused by deleting an element to the server
+- do the reorder before adding new element
 - 
 
 

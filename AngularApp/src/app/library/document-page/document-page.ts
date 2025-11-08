@@ -328,10 +328,13 @@ export class DocumentPage implements AfterViewInit {
           let errorMessage = "";
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             if(err.error?.Owner){
-              errorMessage = err.error?.Owner;
+              errorMessage += err.error?.Owner;
             }
-            else if(err.error?.Guid || err.error?.errors?.Guid){
-              errorMessage = err.error?.Guid || err.error?.errors?.Guid;
+            if(err.error?.ParentDocument){
+              errorMessage += err.error?.ParentDocument;
+            }
+            if(err.error?.Guid || err.error?.errors?.Guid){
+              errorMessage += err.error?.Guid || err.error?.errors?.Guid;
             }
           }
           else{

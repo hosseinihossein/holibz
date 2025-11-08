@@ -230,6 +230,7 @@ public class Program
         builder.Services.AddSingleton<IEmailSender, EmailSender>();
         builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
         builder.Services.AddSingleton<Library_Process>();
+        builder.Services.AddSingleton<FileNameValidator>();
 
 
 

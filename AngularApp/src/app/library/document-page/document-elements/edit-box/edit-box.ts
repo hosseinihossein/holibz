@@ -158,16 +158,11 @@ export class EditBox {
     
     const elementOrder = this.elementModel().order;
     this.deleteElementFromDocumentPage();
-    console.log(elementOrder);
     
     if(this.documentPageService.documentPageModel()){
       let biggerOrderElements = this.documentPageService.documentPageModel()!.elements.filter(el=>
         el.order > elementOrder
       );
-      console.log("biggerOrderElements.length: "+biggerOrderElements.length);
-      biggerOrderElements.forEach(el=>{
-        console.log(el.value + " : " + el.order);
-      });
       this.decreaseOrderOfElements(biggerOrderElements);
     }
   }
@@ -185,7 +180,7 @@ export class EditBox {
     }
   }
   decreaseOrderOfElements(elements: DocumentElementModel[]){
-    elements.forEach(element=>{
+    /*elements.forEach(element=>{
       element.order -= 1;
       //save to edited elements fom models
       this.documentPageService.editedElementFormModels().set(element.guid, {
@@ -195,11 +190,11 @@ export class EditBox {
         Value: element.value,
       });
 
-    });
+    });*/
     //substitute the edited element with it's older version 
     this.documentPageService.documentPageModel.update(dpm=>{
       elements.forEach(element=>{
-        //element.order -= 1;
+        element.order -= 1;
         let elementIndex = dpm!.elements.findIndex(el=>{
           el.guid === element.guid
         });

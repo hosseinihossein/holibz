@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -524,9 +525,30 @@ public class LibraryController : ControllerBase
         {
             IEnumerable<string> elementGuids = formModels.Select(m => m.Guid);
 
-            List<Library_ElementDbModel> elementDbModels = await libraryDb.Elements
+            /*List<Library_ElementDbModel>*/
+            var elementDbModels = await libraryDb.Elements
+            .Include(el => el.Document)
             .Where(el => elementGuids.Contains(el.Guid))
+            .Select(el => new Library_ElementDbModel()
+            {
+                Guid = el.Guid,
+                Order = el.Order,
+                OwnerGuid = el.OwnerGuid,
+                Title = el.Title,
+                Type = el.Type,
+                UpdatedAt = el.UpdatedAt,
+                Value = el.Value,
+                Document = new Library_DocumentDbModel() { Guid = el.Document.Guid },
+            })
             .ToListAsync();
+            Console.WriteLine($"elementDbModels[0]: {JsonSerializer.Serialize(elementDbModels[0])}");
+
+            IEnumerable<string> parentDocumentGuids = elementDbModels.Select(el => el.Document.Guid).Distinct();
+            if (parentDocumentGuids.Count() > 1)
+            {
+                ModelState.AddModelError("ParentDocument", "The edited elements don't belong to the same parent document!");
+                return BadRequest(ModelState);
+            }
 
             string ownerGuid = (await userManager.Users
             .Where(user => user.UserName == User.Identity!.Name!)
@@ -542,7 +564,8 @@ public class LibraryController : ControllerBase
                 }
             }
 
-            List<Library_ElementDbModel> deletedElements = [];
+            //List<Library_ElementDbModel> deletedElements = [];
+            bool needToReorder = false;
             foreach (var elementDbModel in elementDbModels)
             {
                 var formModel = formModels.FirstOrDefault(fm => fm.Guid == elementDbModel.Guid);
@@ -551,8 +574,19 @@ public class LibraryController : ControllerBase
                 {
                     if (formModel.Delete ?? false)
                     {
-                        deletedElements.Add(elementDbModel);
+                        //deletedElements.Add(elementDbModel);
                         libraryDb.Elements.Remove(elementDbModel);
+                        needToReorder = true;
+
+                        if (!string.IsNullOrWhiteSpace(elementDbModel.FileName))
+                        {
+                            string filePath = Path.Combine(Storage_Element.FullName,
+                            elementDbModel.Guid, elementDbModel.FileName);
+                            if (System.IO.File.Exists(filePath))
+                            {
+                                System.IO.File.Delete(filePath);
+                            }
+                        }
                     }
                     else
                     {
@@ -565,7 +599,26 @@ public class LibraryController : ControllerBase
 
             await libraryDb.SaveChangesAsync();
 
-            elementDbModels.RemoveAll(el => deletedElements.Contains(el));
+            //elementDbModels.RemoveAll(el => deletedElements.Contains(el));
+            if (needToReorder)
+            {
+                List<Library_ElementDbModel> elementsToReorder = (await libraryDb.Documents
+                .Include(doc => doc.Elements)
+                .Where(doc => doc.Guid == parentDocumentGuids.Single())
+                .Select(doc => doc.Elements)
+                .FirstOrDefaultAsync())!
+                .OrderBy(el => el.Order)
+                .ToList();
+
+                for (int i = 0; i < elementsToReorder.Count; i++)
+                {
+                    elementsToReorder[i].Order = i;
+                }
+
+                await libraryDb.SaveChangesAsync();
+
+                elementDbModels = elementsToReorder;
+            }
 
             /*List<Library_ElementDbModel> allDocumentElements = (await libraryDb.Elements
             .Include(el => el.Document)

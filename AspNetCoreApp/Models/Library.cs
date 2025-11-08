@@ -122,13 +122,15 @@ public class Library_Process //singleton service
     public readonly DirectoryInfo Storage_Shelf;
     public readonly DirectoryInfo Storage_Document;
     public readonly DirectoryInfo Storage_Element;
+    public readonly FileNameValidator fileNameValidator;
 
-    public Library_Process(IWebHostEnvironment _env)
+    public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator)
     {
         Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library"));
         Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Shelf"));
         Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Document"));
         Storage_Element = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Element"));
+        fileNameValidator = _fileNameValidator;
     }
     public string? BuildTagName(string value)
     {
@@ -362,38 +364,8 @@ public class Library_Process //singleton service
 
         if ((formModel.Type == "img" || formModel.Type == "file") && formModel.File is not null)
         {
-            /************************* validating file name **************************/
-            string fileName = WebUtility.HtmlEncode(formModel.File.FileName) ?? "file";
-
-            //validate fileName
-            foreach (char invalidChar in Path.GetInvalidFileNameChars())
-            {
-                fileName = fileName.Replace(invalidChar, '_');
-            }
-
-            string? fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-            if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
-            {
-                fileNameWithoutExtension = "file";
-            }
-            if (fileNameWithoutExtension.Length > 32)
-            {
-                fileNameWithoutExtension = fileNameWithoutExtension[..32];//fileNameWithoutExtension.Substring(0, 32);
-            }
-
-            string? extension = Path.GetExtension(fileName);
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = string.Empty;
-            }
-            if (extension.Length > 16)
-            {
-                extension = extension[..16];//extension.Substring(0, 16);
-            }
-
-            string validFileName = fileNameWithoutExtension + extension;
-
-            /*************************  **************************/
+            //get a valid file name
+            string validFileName = fileNameValidator.GetValidFileName(WebUtility.HtmlEncode(formModel.File.FileName));
 
             Library_ElementDbModel elementDbmodel = new()
             {

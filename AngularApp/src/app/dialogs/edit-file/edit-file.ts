@@ -22,7 +22,7 @@ export class EditFile {
   onSelectFile(event:Event){
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      if(input.files[0].size > (250 * 1024)){
+      if(input.files[0].size > (500 * 1024)){
         //create a form validator
       }
       else{

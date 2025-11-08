@@ -529,19 +529,7 @@ public class LibraryController : ControllerBase
             var elementDbModels = await libraryDb.Elements
             .Include(el => el.Document)
             .Where(el => elementGuids.Contains(el.Guid))
-            .Select(el => new Library_ElementDbModel()
-            {
-                Guid = el.Guid,
-                Order = el.Order,
-                OwnerGuid = el.OwnerGuid,
-                Title = el.Title,
-                Type = el.Type,
-                UpdatedAt = el.UpdatedAt,
-                Value = el.Value,
-                Document = new Library_DocumentDbModel() { Guid = el.Document.Guid },
-            })
             .ToListAsync();
-            Console.WriteLine($"elementDbModels[0]: {JsonSerializer.Serialize(elementDbModels[0])}");
 
             IEnumerable<string> parentDocumentGuids = elementDbModels.Select(el => el.Document.Guid).Distinct();
             if (parentDocumentGuids.Count() > 1)
@@ -619,13 +607,6 @@ public class LibraryController : ControllerBase
 
                 elementDbModels = elementsToReorder;
             }
-
-            /*List<Library_ElementDbModel> allDocumentElements = (await libraryDb.Elements
-            .Include(el => el.Document)
-            .ThenInclude(doc => doc.Elements)
-            .Where(el => el.Id == elementDbModels.First().Id)
-            .Select(el => el.Document.Elements)
-            .FirstOrDefaultAsync())!;*/
 
             Library_ElementModel[] elementModelArray = elementDbModels
             .Select(elementDbModel => new Library_ElementModel()

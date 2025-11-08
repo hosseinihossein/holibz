@@ -1,11 +1,24 @@
 <mat-dialog-content>
     <mat-form-field>
         <mat-label>Code</mat-label>
-        <textarea matInput [value]="data.value" #codeInput placeholder="Write your code here.." rows="5"></textarea>
+        <textarea matInput [formControl]="inputControl" placeholder="Write your code here.." rows="5">
+        </textarea>
+        @if(inputControl.invalid && (inputControl.dirty || inputControl.touched) &&
+        inputControl.hasError("required")){
+        <mat-error>
+            code is required!
+        </mat-error>
+        }
+        @if(inputControl.invalid && (inputControl.dirty || inputControl.touched) &&
+        inputControl.hasError("maxlength")){
+        <mat-error>
+            code cannot be more than 500 characters long!
+        </mat-error>
+        }
     </mat-form-field>
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="codeInput.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="inputControl.value">Save</button>
     </mat-dialog-actions>
     @if(data.enableEdit){
     <mat-dialog-actions align="start">

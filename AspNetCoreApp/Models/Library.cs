@@ -586,10 +586,10 @@ public class Library_NewDocumentFormModel
 }
 public class Library_NewElementFormModel
 {
-    [StringLength(10, MinimumLength = 1)]
+    [StringLength(10)]
     public string Type { get; set; } = null!;
 
-    [StringLength(500, MinimumLength = 1)]
+    [StringLength(500)]
     public string? Value { get; set; } = null!;
 
     [StringLength(60, MinimumLength = 3)]
@@ -608,7 +608,7 @@ public class Library_EditElementFormModel
     [StringLength(32)]
     public string Guid { get; set; } = null!;
 
-    [StringLength(500, MinimumLength = 1)]
+    [StringLength(500)]
     public string? Value { get; set; } = null!;
 
     [StringLength(60, MinimumLength = 3)]

@@ -155,8 +155,21 @@ export class EditBox {
       Delete: true,
     }
     this.documentPageService.editedElementFormModels().set(editElementFormModel.Guid!, editElementFormModel);
-
+    
+    const elementOrder = this.elementModel().order;
     this.deleteElementFromDocumentPage();
+    console.log(elementOrder);
+    
+    if(this.documentPageService.documentPageModel()){
+      let biggerOrderElements = this.documentPageService.documentPageModel()!.elements.filter(el=>
+        el.order > elementOrder
+      );
+      console.log("biggerOrderElements.length: "+biggerOrderElements.length);
+      biggerOrderElements.forEach(el=>{
+        console.log(el.value + " : " + el.order);
+      });
+      this.decreaseOrderOfElements(biggerOrderElements);
+    }
   }
   deleteElementFromDocumentPage(){
     if(this.documentPageService.documentPageModel()){
@@ -170,6 +183,30 @@ export class EditBox {
         });
       }
     }
+  }
+  decreaseOrderOfElements(elements: DocumentElementModel[]){
+    elements.forEach(element=>{
+      element.order -= 1;
+      //save to edited elements fom models
+      this.documentPageService.editedElementFormModels().set(element.guid, {
+        Guid: element.guid,
+        Order: element.order.toString(),
+        Title: element.title,
+        Value: element.value,
+      });
+
+    });
+    //substitute the edited element with it's older version 
+    this.documentPageService.documentPageModel.update(dpm=>{
+      elements.forEach(element=>{
+        //element.order -= 1;
+        let elementIndex = dpm!.elements.findIndex(el=>{
+          el.guid === element.guid
+        });
+        dpm!.elements.splice(elementIndex,1,element);
+      });
+      return dpm;
+    });
   }
 
   editValueTitle(value?:string, title?:string){
@@ -203,7 +240,7 @@ export class EditBox {
     }
   }
   
-  increaseOrder(){
+  increaseOrderSubstitute(){
     if(this.documentPageService.documentPageModel()){
       let totalElementNumber = this.documentPageService.documentPageModel()!.elements.length;
       let editedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>el.guid === this.elementModel().guid);
@@ -241,7 +278,7 @@ export class EditBox {
       }
     }
   }
-  decreaseOrder(){
+  decreaseOrderSubstitute(){
     if(this.documentPageService.documentPageModel()){
       //let totalElementNumber = this.documentPageService.documentPageModel()!.elements.length;
       let editedElementIndex = this.documentPageService.documentPageModel()!.elements.findIndex(el=>el.guid === this.elementModel().guid);

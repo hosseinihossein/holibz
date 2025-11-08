@@ -84,7 +84,10 @@ export class DocumentPage implements AfterViewInit {
           next: res => {
             if(res){
               this.documentPageService.documentPageModel.set(res);
-              this.documentPageService.unchangedDocumentPageModel.set(res);
+              this.documentPageService.unchangedDocumentPageModel.set(new DocumentPageModel(res));
+              res.elements.forEach(el=>{
+                console.log(el.value + " : " + el.order);
+              });
             }
           },
         });
@@ -314,7 +317,7 @@ export class DocumentPage implements AfterViewInit {
             });
 
             this.documentPageService.unchangedDocumentPageModel.set(
-              this.documentPageService.documentPageModel()
+              new DocumentPageModel(this.documentPageService.documentPageModel()!)
             );
             this.documentPageService.editedElementFormModels().clear();
 
@@ -354,12 +357,11 @@ export class DocumentPage implements AfterViewInit {
       }).afterClosed().subscribe(result=>{
         if(result === "yes"){
           this.documentPageService.editedElementFormModels().clear();
-          this.documentPageService.documentPageModel.update(doc=>{
-            doc!.elements = this.documentPageService.unchangedDocumentPageModel()!.elements!;
-            return doc;
-          });
-          console.log(JSON.stringify(this.documentPageService.documentPageModel()?.elements));
-          console.log(JSON.stringify(this.documentPageService.unchangedDocumentPageModel()?.elements));
+          this.documentPageService.documentPageModel.set(
+            new DocumentPageModel(this.documentPageService.unchangedDocumentPageModel()!)
+          );
+          //console.log(JSON.stringify(this.documentPageService.documentPageModel()?.elements));
+          //console.log(JSON.stringify(this.documentPageService.unchangedDocumentPageModel()?.elements));
           
           this.documentPageService.toggleEditMode();
         }
@@ -389,6 +391,20 @@ export class DocumentPage implements AfterViewInit {
 }
 
 export class DocumentPageModel {
+  constructor(documentPageModel:DocumentPageModel){
+    this.guid = documentPageModel.guid;
+    this.owner = documentPageModel.owner;
+    this.title = documentPageModel.title;
+    this.hasImage = documentPageModel.hasImage;
+    this.description = documentPageModel.description;
+    this.version = documentPageModel.version;
+    this.relatedVersions = [...(documentPageModel.relatedVersions.map(a=>Object.create(a)))];
+    this.shelves = documentPageModel.shelves;//[...(documentPageModel.shelves.map(a=>Object.create(a)))];
+    this.elements = [...(documentPageModel.elements.map(a=>new DocumentElementModel(a)))];
+    this.tags = [...documentPageModel.tags];
+    this.createdAt = documentPageModel.createdAt;
+  }
+
   guid:string = null!;
   owner:{userGuid:string, userName:string} = null!;
   title:string = null!;

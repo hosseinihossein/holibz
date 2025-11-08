@@ -3,7 +3,7 @@
 - define formControl for inputs in dialog edit elements and set validators
 - add a singleton service for creating a valid filename
 - set edit and delete for library and shelf
-- set exit without change
+- doesn't need to send the order changed elements caused by deleting an element to the server
 - 
 
 

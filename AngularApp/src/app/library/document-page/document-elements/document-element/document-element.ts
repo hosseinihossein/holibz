@@ -39,6 +39,15 @@ export class DocumentElement /*implements AfterViewInit*/ {
 }
 
 export class DocumentElementModel {
+  constructor(documentElementModel:DocumentElementModel){
+    this.guid = documentElementModel.guid;
+    this.ownerGuid = documentElementModel.ownerGuid;
+    this.type = documentElementModel.type;
+    this.value = documentElementModel.value;
+    this.order = documentElementModel.order;
+    this.title = documentElementModel.title;
+    this.updatedAt = documentElementModel.updatedAt;
+  }
   guid:string = null!;
   ownerGuid:string = null!;
   type: "h1"|"h2"|"p"|"img"|"code"|"file"|"link" = null!;

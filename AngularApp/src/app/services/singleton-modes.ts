@@ -18,16 +18,17 @@ export class SingletonModes {
   }
 
   windowService = inject(WindowService);
-
   readonly turnstileSiteKey = "0x4AAAAAAAkeZ2wTzJxqgC_K";
-
   editMode = signal(false);
   darkMode = signal(false);
+  elementValueMaxLength = signal(1000);//max characters for each element value
+  elementTitleMaxLength = signal(60);//max characters for each element title
+  elementTitleMinLength = signal(3);//min characters for each element title
+  elementFileMaxSize = signal(500);// max file size in KB for each element file
 
   toggleEditMode(){
     this.editMode.update(mode=>!mode);
   }
-
   toggleDarkMode(){
     this.darkMode.update(mode=>!mode);
     if(this.darkMode()){

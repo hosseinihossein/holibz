@@ -1,12 +1,24 @@
 <mat-dialog-content>
     <mat-form-field>
         <mat-label>Paragraph</mat-label>
-        <textarea matInput [value]="data.value" #paragraphInput placeholder="Write your paragraph here.."
-            rows="5"></textarea>
+        <textarea matInput [formControl]="valueControl" placeholder="Write your paragraph here.." rows="5">
+        </textarea>
+        @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
+        valueControl.hasError("required")){
+        <mat-error>
+            paragraph is required!
+        </mat-error>
+        }
+        @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
+        valueControl.hasError("maxlength")){
+        <mat-error>
+            paragraph cannot be more than {{singletonModes.elementValueMaxLength()}} characters long!
+        </mat-error>
+        }
     </mat-form-field>
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="paragraphInput.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="valueControl.value">Save</button>
     </mat-dialog-actions>
     @if(data.enableEdit){
     <mat-dialog-actions align="start">

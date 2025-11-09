@@ -1,11 +1,29 @@
 <mat-dialog-content>
     <mat-form-field>
-        <mat-label>Header Text</mat-label>
-        <input matInput [value]="data.value" #headerInput>
+        <mat-label>Heading Text</mat-label>
+        <input matInput [formControl]="valueControl">
+        @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
+        valueControl.hasError("required")){
+        <mat-error>
+            heading is required!
+        </mat-error>
+        }
+        @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
+        valueControl.hasError("maxlength")){
+        <mat-error>
+            heading cannot be more than {{singletonModes.elementTitleMaxLength()}} characters long!
+        </mat-error>
+        }
+        @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
+        valueControl.hasError("minlength")){
+        <mat-error>
+            heading cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+        </mat-error>
+        }
     </mat-form-field>
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="headerInput.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="valueControl.value">Save</button>
     </mat-dialog-actions>
     @if(data.enableEdit){
     <mat-dialog-actions align="start">

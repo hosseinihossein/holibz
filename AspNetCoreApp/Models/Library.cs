@@ -398,7 +398,7 @@ public class Library_Process //singleton service
         {
             Success = false,
             ErrorTitle = "Element Type",
-            ErrorDescription = $"The element Type in unknown! Element type: '{formModel.Type}'",
+            ErrorDescription = $"The element Type is unknown! Element type: '{formModel.Type}'",
         };
     }
 
@@ -589,7 +589,7 @@ public class Library_NewElementFormModel
     [StringLength(10)]
     public string Type { get; set; } = null!;
 
-    [StringLength(500)]
+    [StringLength(1000)]
     public string? Value { get; set; } = null!;
 
     [StringLength(60, MinimumLength = 3)]
@@ -608,7 +608,7 @@ public class Library_EditElementFormModel
     [StringLength(32)]
     public string Guid { get; set; } = null!;
 
-    [StringLength(500)]
+    [StringLength(1000)]
     public string? Value { get; set; } = null!;
 
     [StringLength(60, MinimumLength = 3)]

@@ -6,6 +6,7 @@ import { MatInput } from '@angular/material/input';
 import { CdkTextareaAutosize } from "@angular/cdk/text-field";
 import { LibraryService } from '../../services/library-service';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SingletonModes } from '../../services/singleton-modes';
 
 @Component({
   selector: 'app-edit-code',
@@ -17,8 +18,9 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 export class EditCode {
   readonly dialogRef = inject(MatDialogRef<EditCode>);
   readonly data = inject<{value:string, enableEdit?:boolean}>(MAT_DIALOG_DATA);
+  readonly singletonModes = inject(SingletonModes);
 
   inputControl = new FormControl(this.data.value,{nonNullable:true, validators:[Validators.required,
-    Validators.maxLength(500)
+    Validators.maxLength(this.singletonModes.elementValueMaxLength())
   ]})
 }

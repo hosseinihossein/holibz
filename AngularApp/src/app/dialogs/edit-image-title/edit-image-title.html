@@ -10,13 +10,36 @@
 
     <mat-form-field>
         <mat-label>Image Title</mat-label>
-        <input matInput [value]="data.title" #titleInput>
+        <input matInput [formControl]="titleControl">
+        @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
+        titleControl.hasError("required")){
+        <mat-error>
+            title is required!
+        </mat-error>
+        }
+        @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
+        titleControl.hasError("maxlength")){
+        <mat-error>
+            title cannot be more than {{singletonModes.elementTitleMaxLength()}} characters long!
+        </mat-error>
+        }
+        @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
+        titleControl.hasError("minlength")){
+        <mat-error>
+            title cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+        </mat-error>
+        }
+        @if(imageSizeError()){
+        <mat-error>
+            {{imageSizeError()}}
+        </mat-error>
+        }
     </mat-form-field>
 
     @if(data.enableEdit){
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="titleInput.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="titleControl.value">Save</button>
     </mat-dialog-actions>
     <mat-dialog-actions align="start">
         <button matButton="filled" class="warning" mat-dialog-close="Delete">Delete</button>
@@ -25,7 +48,7 @@
     @else {
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleInput.value}">Save</button>
+        <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleControl.value}">Save</button>
     </mat-dialog-actions>
     }
 

@@ -12,7 +12,7 @@
         @if(inputControl.invalid && (inputControl.dirty || inputControl.touched) &&
         inputControl.hasError("maxlength")){
         <mat-error>
-            code cannot be more than 500 characters long!
+            code cannot be more than {{singletonModes.elementValueMaxLength()}} characters long!
         </mat-error>
         }
     </mat-form-field>

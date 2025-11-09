@@ -166,27 +166,19 @@
             <h1 style="font-weight: 400; margin: 30px 0; line-height: 24px;" #introductionHeading
                 id="headerIntroduction">
                 {{documentPageService.documentPageModel()?.title}}
-                @if(isMyDocument() && documentPageService.editMode()){
-                <button matButton="elevated" matTooltip="Edit title" class="noPaddingBtn" (click)="editTitle()">
-                    <mat-icon>edit</mat-icon>
-                </button>
-                }
             </h1>
 
             @if(documentPageService.documentPageModel()?.hasImage){
             <img [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentPageService.documentPageModel()?.guid}`"
                 width="100" height="100" [alt]="documentPageService.documentPageModel()?.title"
                 (click)="openLargeImage()">
-            @if(isMyDocument() && documentPageService.editMode()){
-            <button matButton="elevated" matTooltip="Edit image" class="noPaddingBtn" (click)="editImage()">
-                <mat-icon>edit</mat-icon>
-            </button>
-            }
             }
 
             <p>{{documentPageService.documentPageModel()?.description}}</p>
+
             @if(isMyDocument() && documentPageService.editMode()){
-            <button matButton="elevated" matTooltip="Edit description" class="noPaddingBtn" (click)="editDescription()">
+            <button matButton="elevated" matTooltip="Edit introduction" class="noPaddingBtn"
+                (click)="editIntroduction()">
                 <mat-icon>edit</mat-icon>
             </button>
             }

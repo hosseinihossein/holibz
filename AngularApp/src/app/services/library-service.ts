@@ -219,7 +219,7 @@ export class LibraryService {
     );
   }
 
-  requestEditDocumentTitle(documentGuid:string, title:string){
+  /*requestEditDocumentTitle(documentGuid:string, title:string){
     return this.httpClient.post<{success:boolean}>(
       "/api/Library/EditDocumentTitle", {Guid:documentGuid, Title:title}
     );
@@ -227,6 +227,65 @@ export class LibraryService {
   requestEditDocumentDescription(documentGuid:string, description:string){
     return this.httpClient.post<{success:boolean}>(
       "/api/Library/EditDocumentDescription", {Guid:documentGuid, Description:description}
+    );
+  }*/
+
+  editDocumentIntroduction(documentGuid:string, title:string, description:string, image?:File){
+    const formData = new FormData();
+    formData.append("Guid",documentGuid);
+    formData.append("Title",title);
+    formData.append("Description", description);
+    if(image){
+      formData.append("Image", image);
+    }
+
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,image?:string}}>(
+      "/api/Library/EditDocumentIntroduction", formData
+    );
+  }
+  editLibraryIntroduction(libraryGuid:string, title:string, description:string, image?:File){
+    const formData = new FormData();
+    formData.append("Guid",libraryGuid);
+    formData.append("Title",title);
+    formData.append("Description", description);
+    if(image){
+      formData.append("Image", image);
+    }
+
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,image?:string}}>(
+      "/api/Library/EditLibraryIntroduction", formData
+    );
+  }
+  editShelfIntroduction(shelfGuid:string, title:string, description:string, image?:File){
+    const formData = new FormData();
+    formData.append("Guid",shelfGuid);
+    formData.append("Title",title);
+    formData.append("Description", description);
+    if(image){
+      formData.append("Image", image);
+    }
+
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,image?:string}}>(
+      "/api/Library/EditShelfIntroduction", formData
+    );
+  }
+  
+  deleteDocumentIntroductionImage(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid", documentGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteDocumentIntroductionImage", {params:httpParams}
+    );
+  }
+  deleteLibraryIntroductionImage(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteLibraryIntroductionImage", {params:httpParams}
+    );
+  }
+  deleteShelfIntroductionImage(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteShelfIntroductionImage", {params:httpParams}
     );
   }
 

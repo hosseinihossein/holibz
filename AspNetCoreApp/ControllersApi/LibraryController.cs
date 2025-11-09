@@ -774,4 +774,93 @@ public class LibraryController : ControllerBase
         return BadRequest(ModelState);
     }
 
+
+
+
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(512 * 1024)]//512 KB
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditDocumentIntroduction(
+        [FromForm] Library_EditIntroductionFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+            .FirstOrDefaultAsync(doc => doc.Guid == formModel.Guid);
+            if (documentDbModel is null)
+            {
+                ModelState.AddModelError("Guid", "Couldn't find the specified document!");
+                return BadRequest(ModelState);
+            }
+
+            string ownerGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
+            if (ownerGuid != documentDbModel.OwnerGuid)
+            {
+                ModelState.AddModelError("Authorization", "Only the owner can edit the document!");
+                return BadRequest(ModelState);
+            }
+
+            documentDbModel.Title = formModel.Title;
+            documentDbModel.Description = formModel.Description;
+            await libraryDb.SaveChangesAsync();
+
+            if (formModel.Image is not null)
+            {
+                DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Document.FullName, documentDbModel.Guid));
+                string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
+                using (FileStream fs = System.IO.File.Create(documentImagePath))
+                {
+                    await formModel.Image.CopyToAsync(fs);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    introduction = new
+                    {
+                        title = documentDbModel.Title,
+                        description = documentDbModel.Description,
+                        image = $"/api/Library/DocumentImage?documentGuid={documentDbModel.Guid}&v={Guid.NewGuid()}",
+                    },
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                introduction = new
+                {
+                    title = documentDbModel.Title,
+                    description = documentDbModel.Description,
+                },
+            });
+        }
+
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(128 * 1024)]//128 KB
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditLibraryIntroduction(
+        [FromForm] Library_EditIntroductionFormModel formModel)
+    {
+
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [RequestSizeLimit(128 * 1024)]//128 KB
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditShelfIntroduction(
+        [FromForm] Library_EditIntroductionFormModel formModel)
+    {
+
+    }
 }

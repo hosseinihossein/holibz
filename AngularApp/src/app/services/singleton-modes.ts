@@ -25,6 +25,11 @@ export class SingletonModes {
   elementTitleMaxLength = signal(60);//max characters for each element title
   elementTitleMinLength = signal(3);//min characters for each element title
   elementFileMaxSize = signal(500);// max file size in KB for each element file
+  introductionTitleMaxLength = signal(60);//max characters for introduction title
+  introductionTitleMinLength = signal(3);//min characters for introduction title
+  introductionDescriptionMaxLength = signal(500);//max characters for introduction description
+  documentIntroductionImageMaxSize = signal(500);// max file size in KB for introduction image of documents
+  libraryShelfIntroductionImageMaxSize = signal(120);// max file size in KB for introduction image of libraries anshelves
 
   toggleEditMode(){
     this.editMode.update(mode=>!mode);

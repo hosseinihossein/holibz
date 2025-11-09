@@ -171,15 +171,6 @@ export class IdentityService {
 
 }
 
-/*export interface UserModel2
-{
-  guid: string;
-  username: string;
-  description: string;
-  imageAddress: string;
-  email: string;
-}*/
-
 export class UserProfileModel
 {
   constructor(userModel:Partial<UserProfileModel>|null = null){

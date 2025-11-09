@@ -1,0 +1,108 @@
+<mat-dialog-content>
+
+    <form [formGroup]="introductionForm" (ngSubmit)="onSubmit()" id="introduction-form">
+        <h2>
+            <mat-icon>contract_edit</mat-icon>
+            Edit Introduction
+        </h2>
+
+        <mat-form-field>
+            <mat-label>Title</mat-label>
+            <input matInput type="text" required formControlName="title" />
+            @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("required")){
+            <mat-error>
+                title is required!
+            </mat-error>
+            }
+            @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("maxLength")){
+            <mat-error>
+                title cannot be more than 30 characters!
+            </mat-error>
+            }
+            @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("minLength")){
+            <mat-error>
+                title cannot be less than 3 characters!
+            </mat-error>
+            }
+            @if(title?.invalid && (title?.dirty || title?.touched) &&
+            title?.hasError("submitError")){
+            <mat-error>
+                {{title?.getError("submitError")}}
+            </mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Brief Description</mat-label>
+            <textarea matInput formControlName="description"></textarea>
+            @if(description?.invalid && (description?.dirty || description?.touched) &&
+            description?.hasError("maxLength")){
+            <mat-error>
+                Description cannot be more than 200 characters!
+            </mat-error>
+            }
+            @if(description?.invalid && (description?.dirty || description?.touched) &&
+            description?.hasError("submitError")){
+            <mat-error>
+                {{description?.getError("submitError")}}
+            </mat-error>
+            }
+        </mat-form-field>
+
+        <div id="img-box" class="clearfix">
+            <button matButton="elevated" type="button" id="selectButton" (click)="fileInput.click()">
+                Select an image <span style="font-size: 12px;">(optional)</span>
+            </button>
+
+            <input type="file" hidden #fileInput (change)="onSelectImage($event)" />
+            @if(image?.value){
+            <div style="position: relative;width: fit-content;margin: 24px auto 0;">
+                <img [src]="previewImgSrc()" #previewImg
+                    [class.border-radius]="data.introductionOf==='library'||data.introductionOf==='shelf'">
+                <button matIconButton type="button" class="noPaddingBtn" id="delete-img-btn" (click)="clearImgInput()"
+                    matTooltip="Delete image">
+                    <mat-icon>cancel</mat-icon>
+                </button>
+            </div>
+            }
+
+            @if(image?.hasError("submitError")){
+            <mat-error>
+                {{image?.getError("submitError")}}
+            </mat-error>
+            }
+            @if(image?.hasError("sizeError")){
+            <mat-error>
+                {{image?.getError("sizeError")}}
+            </mat-error>
+            }
+        </div>
+
+        @if(introductionForm.invalid && introductionForm.hasError("submitError")){
+        <mat-error>
+            {{introductionForm.getError("submitError")}}
+        </mat-error>
+        }
+
+    </form>
+
+    <mat-dialog-actions align="end">
+        <button matButton mat-dialog-close>Cancel</button>
+        <button type="submit" form="introduction-form" matButton="elevated" [disabled]="!introductionForm.valid">
+            Submit
+        </button>
+    </mat-dialog-actions>
+    @if(data.imageSrc){
+    <mat-dialog-actions align="start">
+        <button matButton="filled" class="warning" (click)="onDeleteImage()">Delete Image</button>
+    </mat-dialog-actions>
+    }
+
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
+
+</mat-dialog-content>
+<div>{{introductionForm.value | json}}</div>

@@ -17,7 +17,7 @@ button#selectButton{
     object-fit: contain;
     float: left;
 }
-mat-dialog-actions button.warning{
+/*mat-dialog-actions button.warning{
     display: block;
     float: left;
-}
+}*/

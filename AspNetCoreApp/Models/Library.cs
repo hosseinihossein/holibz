@@ -86,8 +86,8 @@ public class Library_DbContext : DbContext
         //*********** Library-Shelves One-To-Many *********
         modelBuilder.Entity<Library_LibraryDbModel>()
         .HasMany<Library_ShelfDbModel>(l => l.Shelves)
-        .WithOne(sh => sh.Library)
-        .IsRequired(true);
+        .WithOne(sh => sh.Library);
+        //.IsRequired(true);
         //.OnDelete(DeleteBehavior.Cascade);
 
         //*********** Shelves-Documents Many-To-Many *********
@@ -549,20 +549,20 @@ public class Library_LibraryBrief
 
 public class Library_NewLibraryFormModel
 {
-    [StringLength(30, MinimumLength = 3)]
+    [StringLength(60, MinimumLength = 3)]
     public string Title { get; set; } = null!;
 
-    [StringLength(200)]
+    [StringLength(500)]
     public string? Description { get; set; } = null;
 
     public IFormFile? Image { get; set; }
 }
 public class Library_NewShelfFormModel
 {
-    [StringLength(30, MinimumLength = 3)]
+    [StringLength(60, MinimumLength = 3)]
     public string Title { get; set; } = null!;
 
-    [StringLength(200)]
+    [StringLength(500)]
     public string? Description { get; set; } = null;
 
     [StringLength(32)]
@@ -575,7 +575,7 @@ public class Library_NewDocumentFormModel
     [StringLength(60, MinimumLength = 3)]
     public string Title { get; set; } = null!;
 
-    [StringLength(500, MinimumLength = 5)]
+    [StringLength(500)]
     public string Description { get; set; } = null!;
 
     //[MaxArrayLength(10)]
@@ -620,4 +620,16 @@ public class Library_EditElementFormModel
     public bool? Delete { get; set; } = false;
 }
 
+public class Library_EditIntroductionFormModel
+{
+    [StringLength(32)]
+    public string Guid { get; set; } = null!;
 
+    [StringLength(60, MinimumLength = 3)]
+    public string Title { get; set; } = null!;
+
+    [StringLength(500)]
+    public string Description { get; set; } = null!;
+
+    public IFormFile? Image { get; set; }
+}

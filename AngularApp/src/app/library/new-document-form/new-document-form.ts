@@ -36,7 +36,7 @@ export class NewDocumentForm {
   newDocumentForm = new FormGroup({
     shelfGuids: new FormControl(["DefaultShelf"], {nonNullable:true, validators: [Validators.required]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
-    description: new FormControl("", {validators: Validators.maxLength(500)}),
+    description: new FormControl("", {validators: Validators.maxLength(200)}),
     image: new FormControl<File|null>(null),
   });
   shelfGuids = this.newDocumentForm.get("shelfGuids");

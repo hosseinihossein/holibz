@@ -35,6 +35,7 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
+import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 
 @Component({
   selector: 'app-document-page',
@@ -393,7 +394,7 @@ export class DocumentPage implements AfterViewInit {
     }
   }
 
-  editTitle(){
+  /*editTitle(){
     if(this.isMyDocument() && this.documentPageService.documentPageModel()){
       this.dialog.open(EditInput,{
         data:{
@@ -455,8 +456,45 @@ export class DocumentPage implements AfterViewInit {
         }
       });
     }
-  }
+  }*/
 
+  editIntroduction(){
+    this.dialog.open(EditIntroduction,{data:{
+      introductionOf:"document", 
+      imageSrc: this.documentPageService.documentPageModel()?.hasImage ? 
+      `/api/Library/DocumentImage?documentGuid=${this.documentPageService.documentPageModel()?.guid}` : 
+      undefined,
+      guid: this.documentPageService.documentPageModel()?.guid
+    }}).afterClosed().subscribe(result=>{
+      if(result){
+        if(result === "ImageDelete"){
+          this.documentPageService.documentPageModel.update(dpm=>{
+            dpm!.hasImage = false;
+            return dpm;
+          });
+          this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+            dpm!.hasImage = false;
+            return dpm;
+          });
+        }
+        else{
+          this.documentPageService.documentPageModel.update(dpm=>{
+            dpm!.title = result.title;
+            dpm!.description = result?.description ?? "";
+            dpm!.hasImage = !!(result?.image)
+            return dpm;
+          });
+          this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+            dpm!.title = result.title;
+            dpm!.description = result?.description ?? "";
+            dpm!.hasImage = !!(result?.image)
+            return dpm;
+          });
+        }
+      }
+    });
+  }
+  
 }
 
 export class DocumentPageModel {

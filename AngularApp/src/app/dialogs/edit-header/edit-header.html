@@ -1,6 +1,6 @@
 <mat-dialog-content>
     <mat-form-field>
-        <mat-label>Heading Text</mat-label>
+        <mat-label>Heading</mat-label>
         <input matInput [formControl]="valueControl">
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("required")){

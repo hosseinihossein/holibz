@@ -33,27 +33,23 @@ export class NewDocumentForm {
   activatedRoute = inject(ActivatedRoute);
   readonly dialog = inject(MatDialog);
 
-  //currentLibraryGuid = signal("DefaultLibrary");
-  //currentShelfGuid = signal("DefaultShelf");
-
-  newDocumentForm = signal(new FormGroup({
-    //library: new FormControl(""),
+  newDocumentForm = new FormGroup({
     shelfGuids: new FormControl(["DefaultShelf"], {nonNullable:true, validators: [Validators.required]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
-    description: new FormControl("", {validators: Validators.maxLength(200)}),
+    description: new FormControl("", {validators: Validators.maxLength(500)}),
     image: new FormControl<File|null>(null),
-  }));
-  //library = computed(()=>this.newDocumentForm().get("library"));
-  shelfGuids = computed(()=>this.newDocumentForm().get("shelfGuids"));
-  title = computed(()=>this.newDocumentForm().get("title"));
-  description = computed(()=>this.newDocumentForm().get("description"));
-  image = computed(()=>this.newDocumentForm().get("image"));
+  });
+  shelfGuids = this.newDocumentForm.get("shelfGuids");
+  title = this.newDocumentForm.get("title");
+  description = this.newDocumentForm.get("description");
+  image = this.newDocumentForm.get("image");
   
   previewImgSrc = signal<string|null>(null);
   displaySubmitSpinner = signal(false);
   allLibraryList = signal<LibraryCardModel[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ShelfCardModel[]>([]);
+  //editing = signal(false);
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
   imgInput = viewChild.required<ElementRef<HTMLInputElement>>("fileInput");
@@ -61,8 +57,11 @@ export class NewDocumentForm {
   constructor(){
     let currentShelfGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
     if(currentShelfGuidRouteParam){
-      this.newDocumentForm().controls["shelfGuids"].setValue([currentShelfGuidRouteParam]);
+      this.newDocumentForm.controls["shelfGuids"].setValue([currentShelfGuidRouteParam]);
     }
+
+    //let editingQueryParam = this.activatedRoute.snapshot.queryParamMap.get("editing");
+    //this.editing.set(editingQueryParam === "true");
 
     effect(() => {
       this.libraryService.requestLibraryList(this.identityService.userModel()?.guid)?.subscribe({
@@ -121,7 +120,7 @@ export class NewDocumentForm {
         });
       }
       else{
-        this.newDocumentForm().get("image")?.setValue(input.files[0]);
+        this.newDocumentForm.get("image")?.setValue(input.files[0]);
 
         const reader = new FileReader(); // Create a FileReader instance
         // Load the image as a Data URL
@@ -133,26 +132,20 @@ export class NewDocumentForm {
     }
     else{
       this.previewImgSrc.set(null);
-      this.newDocumentForm().get("image")?.setValue(null);
+      this.newDocumentForm.get("image")?.setValue(null);
     }
   }
 
   clearImgInput(){
     this.imgInput().nativeElement.value = '';
     this.previewImgSrc.set(null);
-    this.newDocumentForm().get("image")?.setValue(null);
+    this.newDocumentForm.get("image")?.setValue(null);
   }
 
   onSubmit(){
-    if(this.newDocumentForm().valid){
+    if(this.newDocumentForm.valid){
       this.displaySubmitSpinner.set(true);
-      /*let newDocumentFormModel: NewDocumentFormModel = {
-        description: this.description()?.value,
-        image: this.image()?.value,
-        shelfGuids: this.shelfGuids()?.value.split(',').map<string>(s=>s.trim()),
-        title: this.title()?.value,
-      }*/
-      this.libraryService.createNewDocument(/*newDocumentFormModel*/this.newDocumentForm().value).subscribe({
+      this.libraryService.createNewDocument(this.newDocumentForm.value).subscribe({
         next: res => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
@@ -162,19 +155,19 @@ export class NewDocumentForm {
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             if(err.error?.Title || err.error?.errors?.Title){
-              this.title()?.setErrors({submitError: err.error?.Title || err.error?.errors?.Title});
+              this.title?.setErrors({submitError: err.error?.Title || err.error?.errors?.Title});
             }
             else if(err.error?.Description || err.error?.errors?.Description){
-              this.description()?.setErrors({submitError: err.error?.Description || err.error?.errors?.Description});
+              this.description?.setErrors({submitError: err.error?.Description || err.error?.errors?.Description});
             }
             else if(err.error?.ShelfGuids || err.error?.errors?.ShelfGuids){
-              this.shelfGuids()?.setErrors({submitError: err.error?.ShelfGuids || err.error?.errors?.ShelfGuids});
+              this.shelfGuids?.setErrors({submitError: err.error?.ShelfGuids || err.error?.errors?.ShelfGuids});
             }
             else if(err.error?.Image || err.error?.errors?.Image){
-              this.image()?.setErrors({submitError: err.error?.Image || err.error?.errors?.Image});
+              this.image?.setErrors({submitError: err.error?.Image || err.error?.errors?.Image});
             }
             else{
-              this.newDocumentForm().setErrors({submitError: err.error});
+              this.newDocumentForm.setErrors({submitError: err.error});
             }
           }
           else{

@@ -21,6 +21,8 @@ form{
     object-fit: contain;
     /*float: left;*/
     display: block;
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 #delete-img-btn{

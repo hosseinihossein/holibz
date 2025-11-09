@@ -219,6 +219,17 @@ export class LibraryService {
     );
   }
 
+  requestEditDocumentTitle(documentGuid:string, title:string){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Library/EditDocumentTitle", {Guid:documentGuid, Title:title}
+    );
+  }
+  requestEditDocumentDescription(documentGuid:string, description:string){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Library/EditDocumentDescription", {Guid:documentGuid, Description:description}
+    );
+  }
+
 }
 
 class NewLibraryFormModel{

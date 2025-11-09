@@ -1,4 +1,4 @@
-<form [formGroup]="newDocumentForm()" (ngSubmit)="onSubmit()">
+<form [formGroup]="newDocumentForm" (ngSubmit)="onSubmit()">
     <h2>
         <mat-icon>newsstand</mat-icon>
         Creating a new document
@@ -16,7 +16,7 @@
             @for(libraryName of displayedLibraries(); track libraryName){
             <mat-optgroup [label]="libraryName">
                 @for(shelfModel of allShelfList(); track shelfModel.guid){
-                @if(shelfModel.library.title){
+                @if(shelfModel.library.title === libraryName){
                 <mat-option [value]="shelfModel.guid">
                     {{shelfModel.title}}
                     <span id="libraryName-span">({{libraryName}})</span>
@@ -26,16 +26,16 @@
             </mat-optgroup>
             }
         </mat-select>
-        @if(shelfGuids()?.invalid && (shelfGuids()?.dirty || shelfGuids()?.touched) &&
-        shelfGuids()?.hasError("required")){
+        @if(shelfGuids?.invalid && (shelfGuids?.dirty || shelfGuids?.touched) &&
+        shelfGuids?.hasError("required")){
         <mat-error>
             Shelf is required!
         </mat-error>
         }
-        @if(shelfGuids()?.invalid && (shelfGuids()?.dirty || shelfGuids()?.touched) &&
-        shelfGuids()?.hasError("submitError")){
+        @if(shelfGuids?.invalid && (shelfGuids?.dirty || shelfGuids?.touched) &&
+        shelfGuids?.hasError("submitError")){
         <mat-error>
-            {{shelfGuids()?.getError("submitError")}}
+            {{shelfGuids?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -43,42 +43,42 @@
     <mat-form-field>
         <mat-label>Title</mat-label>
         <input matInput type="text" required formControlName="title" />
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("required")){
+        @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("required")){
         <mat-error>
             Title is required!
         </mat-error>
         }
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("maxLength")){
+        @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("maxLength")){
         <mat-error>
             Shelt title cannot be more than 30 characters!
         </mat-error>
         }
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("minLength")){
+        @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("minLength")){
         <mat-error>
             Shelt title cannot be less than 3 characters!
         </mat-error>
         }
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) &&
-        title()?.hasError("submitError")){
+        @if(title?.invalid && (title?.dirty || title?.touched) &&
+        title?.hasError("submitError")){
         <mat-error>
-            {{title()?.getError("submitError")}}
+            {{title?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
 
     <mat-form-field>
-        <mat-label>Brief Description</mat-label>
+        <mat-label>Brief Introduction</mat-label>
         <textarea matInput formControlName="description"></textarea>
-        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
-        description()?.hasError("maxLength")){
+        @if(description?.invalid && (description?.dirty || description?.touched) &&
+        description?.hasError("maxLength")){
         <mat-error>
-            Shelt Description cannot be more than 200 characters!
+            Shelt Description cannot be more than 500 characters!
         </mat-error>
         }
-        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
-        description()?.hasError("submitError")){
+        @if(description?.invalid && (description?.dirty || description?.touched) &&
+        description?.hasError("submitError")){
         <mat-error>
-            {{description()?.getError("submitError")}}
+            {{description?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -88,8 +88,8 @@
             Select an image <span style="font-size: 12px;">(optional)</span>
         </button>
 
-        <input type="file" #fileInput (change)="onSelectImage($event)" />
-        @if(image()?.value){
+        <input type="file" hidden #fileInput (change)="onSelectImage($event)" />
+        @if(image?.value){
         <div style="position: relative;width: fit-content;margin: 24px auto 0;">
             <img [src]="previewImgSrc()" #previewImg>
             <button matIconButton type="button" class="noPaddingBtn" id="delete-img-btn" (click)="clearImgInput()"
@@ -99,23 +99,23 @@
         </div>
         }
 
-        @if(image()?.invalid && (image()?.dirty || image()?.touched) &&
-        image()?.hasError("submitError")){
+        @if(image?.invalid && (image?.dirty || image?.touched) &&
+        image?.hasError("submitError")){
         <mat-error>
-            {{image()?.getError("submitError")}}
+            {{image?.getError("submitError")}}
         </mat-error>
         }
     </div>
 
-    @if(newDocumentForm().invalid && newDocumentForm().hasError("submitError")){
+    @if(newDocumentForm.invalid && newDocumentForm.hasError("submitError")){
     <mat-error>
-        {{newDocumentForm().getError("submitError")}}
+        {{newDocumentForm.getError("submitError")}}
     </mat-error>
     }
 
     <div style="float: right;margin-top: 50px;">
         <button type="submit" matButton="elevated" style="width: fit-content;float: right;"
-            [disabled]="!newDocumentForm().valid">
+            [disabled]="!newDocumentForm.valid">
             Submit
         </button>
     </div>
@@ -126,12 +126,5 @@
     </div>
     }
 </form>
-<!--div>
-    {{ {
-    shelf:shelfGuids()?.value ?? "",
-    title:title()?.value ?? "",
-    description:description()?.value ?? "",
-    image:image()?.value?.name ?? "",
-    } | json}}
-</div-->
-<div>{{newDocumentForm().value | json}}</div>
+
+<div>{{newDocumentForm.value | json}}</div>

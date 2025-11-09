@@ -88,6 +88,7 @@ public class Library_DbContext : DbContext
         .HasMany<Library_ShelfDbModel>(l => l.Shelves)
         .WithOne(sh => sh.Library)
         .IsRequired(true);
+        //.OnDelete(DeleteBehavior.Cascade);
 
         //*********** Shelves-Documents Many-To-Many *********
         modelBuilder.Entity<Library_ShelfDbModel>()

@@ -33,6 +33,8 @@ import { MatBadge } from "@angular/material/badge";
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { EditInput } from '../../dialogs/edit-input/edit-input';
+import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 
 @Component({
   selector: 'app-document-page',
@@ -388,6 +390,70 @@ export class DocumentPage implements AfterViewInit {
       });
 
       this.documentPageService.toggleEditMode();
+    }
+  }
+
+  editTitle(){
+    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
+      this.dialog.open(EditInput,{
+        data:{
+          label: "Title",
+          value: this.documentPageService.documentPageModel()?.title,
+        }
+      }).afterClosed().subscribe(result=>{
+        if(result){
+          this.libraryService.requestEditDocumentTitle(
+            this.documentPageService.documentPageModel()!.guid,
+            result
+          ).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.documentPageService.documentPageModel.update(dpm=>{
+                  dpm!.title = result;
+                  return dpm;
+                });
+                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+                  dpm!.title = result;
+                  return dpm;
+                });
+              }
+            },
+          });
+        }
+      });
+    }
+  }
+  editImage(){
+
+  }
+  editDescription(){
+    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
+      this.dialog.open(EditTextarea,{
+        data:{
+          label: "Brief Introduction",
+          value: this.documentPageService.documentPageModel()?.description,
+        }
+      }).afterClosed().subscribe(result=>{
+        if(result){
+          this.libraryService.requestEditDocumentDescription(
+            this.documentPageService.documentPageModel()!.guid,
+            result
+          ).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.documentPageService.documentPageModel.update(dpm=>{
+                  dpm!.description = result;
+                  return dpm;
+                });
+                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+                  dpm!.description = result;
+                  return dpm;
+                });
+              }
+            },
+          });
+        }
+      });
     }
   }
 

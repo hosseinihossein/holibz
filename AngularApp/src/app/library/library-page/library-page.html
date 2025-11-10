@@ -2,8 +2,7 @@
     <mat-card appearance="raised">
         <mat-card-header>
             @if(libraryModel()?.hasImage){
-            <img [ngSrc]="`/api/Library/LibraryImage?libraryGuid=${libraryModel()!.guid}`" width="40" height="40"
-                alt="library logo" matCardAvatar>
+            <img [ngSrc]="introductionImage()" width="40" height="40" alt="library logo" matCardAvatar>
             }
             @else {
             <mat-icon matCardAvatar
@@ -17,6 +16,9 @@
         </mat-card-content>
         <mat-card-actions align="end">
             @if(isMyLibrary()){
+            <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
+                <mat-icon>edit</mat-icon>
+            </button>
             <a matButton="elevated" [routerLink]="['/shelf','new', libraryGuid()]">
                 <mat-icon>shelves</mat-icon>
                 Add a new Shelf

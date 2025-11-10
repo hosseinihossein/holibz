@@ -143,14 +143,14 @@
 
         <!--------------------- tags box -------------------->
         <div id="tags-box" [class.editMode]="documentPageService.editMode()">
+            @if(isMyDocument() && documentPageService.editMode()){
+            <button matButton="elevated" class="noPaddingBtn" matTooltip="Edit tags" matTooltipPosition="after"
+                (click)="editTags()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
             <h3>
                 Tags:
-                @if(isMyDocument() && documentPageService.editMode()){
-                <button matButton="elevated" class="noPaddingBtn" matTooltip="Edit tags" matTooltipPosition="after"
-                    (click)="editTags()">
-                    <mat-icon>edit</mat-icon>
-                </button>
-                }
             </h3>
             <mat-chip-set>
                 @for(tag of documentPageService.documentPageModel()?.tags; track tag){
@@ -161,8 +161,15 @@
         <!-------------------------------------------------->
 
         <!------------------------- Introduction ---------------------->
-        <div style="position: relative;">
+        <div id="introduction-box">
             <div style="position: absolute; top: -64px; width: 100%;" id="Introduction"></div>
+            @if(isMyDocument() && documentPageService.editMode()){
+            <button matButton="elevated" matTooltip="Edit introduction" class="noPaddingBtn"
+                (click)="editIntroduction()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            }
+
             <h1 style="font-weight: 400; margin: 30px 0; line-height: 24px;" #introductionHeading
                 id="headerIntroduction">
                 {{documentPageService.documentPageModel()?.title}}
@@ -174,13 +181,6 @@
             }
 
             <p>{{documentPageService.documentPageModel()?.description}}</p>
-
-            @if(isMyDocument() && documentPageService.editMode()){
-            <button matButton="elevated" matTooltip="Edit introduction" class="noPaddingBtn"
-                (click)="editIntroduction()">
-                <mat-icon>edit</mat-icon>
-            </button>
-            }
         </div>
 
         <!-------------------------------------------------->

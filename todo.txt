@@ -3,6 +3,8 @@
 - define formControl for inputs in dialog edit elements and set validators
 - set edit and delete for library and shelf
 - set some static data like maxLength for string inputs in a singleton class name settings
+- add reference element to other elements
+- set many-to-many relationship for library to shelf
 - 
 
 

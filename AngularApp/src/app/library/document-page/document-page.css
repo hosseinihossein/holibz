@@ -93,6 +93,10 @@ mat-sidenav-content div#tags-box.editMode{
     border-radius: 16px;
     margin: 4px;
     padding: 3px;
+    transition: all 200ms;
+}
+mat-sidenav-content div#tags-box.editMode:hover{
+    box-shadow: 0 1px 5px var(--mat-sys-outline);
 }
 mat-sidenav-content div#tags-box h3{
     margin-bottom: 0;
@@ -119,6 +123,25 @@ mat-sidenav-content img{
 mat-sidenav-content img:hover{
     box-shadow: 0px 5px 10px 0 var(--mat-sys-outline);
 }
+
+/*mat-sidenav-content #introduction-box{
+    position: relative;
+}*/
+mat-sidenav-content.editMode #introduction-box{
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 16px;
+    padding: 3px;
+    margin: 4px;
+    transition: all 200ms;
+}
+mat-sidenav-content.editMode #introduction-box:hover{
+    box-shadow: 0 1px 5px var(--mat-sys-outline);
+}
+/*mat-sidenav-content #introduction-box button{
+    position: absolute;
+    top: 16px;
+    right: 8px;
+}*/
 
 #submit-spinner-layout{
     position: absolute;

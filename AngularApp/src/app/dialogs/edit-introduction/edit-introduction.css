@@ -1,12 +1,12 @@
 mat-dialog-content{
     position: relative;
-    width: 50%;
+    width: 50vw;
 }
 
 form{
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: calc(100% - 50px);
     min-width: 400px;
     margin: 16px auto 56px;
     border: 1px solid var(--mat-sys-outline-variant);
@@ -28,6 +28,8 @@ form{
     display: block;
 }
 #img-box img.border-radius{
+    width: 150px;
+    object-fit: cover;
     border-radius: 50%;
     overflow: hidden;
 }

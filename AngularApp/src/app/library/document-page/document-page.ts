@@ -298,7 +298,7 @@ export class DocumentPage implements AfterViewInit {
     if(this.documentPageService.documentPageModel()?.hasImage){
       this.dialog.open(LargeImg, {
         data:{
-          imgSrc:`/api/Library/DocumentImage?documentGuid=${this.documentPageService.documentPageModel()?.guid}`, 
+          imgSrc:this.introductionImage(), 
           imgTitle: this.documentPageService.documentPageModel()?.title
         }
       });
@@ -461,44 +461,46 @@ export class DocumentPage implements AfterViewInit {
   }*/
 
   editIntroduction(){
-    this.dialog.open(EditIntroduction,{data:{
-      introductionOf:"document", 
-      imageSrc: this.documentPageService.documentPageModel()?.hasImage ? 
-      `/api/Library/DocumentImage?documentGuid=${this.documentPageService.documentPageModel()?.guid}` : 
-      undefined,
-      guid: this.documentPageService.documentPageModel()?.guid
-    }}).afterClosed().subscribe(result=>{
-      if(result){
-        if(result === "ImageDelete"){
-          this.documentPageService.documentPageModel.update(dpm=>{
-            dpm!.hasImage = false;
-            return dpm;
-          });
-          this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
-            dpm!.hasImage = false;
-            return dpm;
-          });
-        }
-        else{
-          this.documentPageService.documentPageModel.update(dpm=>{
-            dpm!.title = result.title;
-            dpm!.description = result.description;
-            dpm!.hasImage = result.hasImage ?? dpm!.hasImage;
-            return dpm;
-          });
-          this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
-            dpm!.title = result.title;
-            dpm!.description = result.description;
-            dpm!.hasImage = result.hasImage ?? dpm!.hasImage;
-            return dpm;
-          });
-          
-          if(result.hasImage){
-            this.introductionImageVersion.update(v=>{return ++v;});
+    if(this.isMyDocument()){
+      this.dialog.open(EditIntroduction,{data:{
+        introductionOf:"document", 
+        title: this.documentPageService.documentPageModel()!.title,
+        description: this.documentPageService.documentPageModel()!.description,
+        imageSrc: this.documentPageService.documentPageModel()?.hasImage ? this.introductionImage() : undefined,
+        guid: this.documentPageService.documentPageModel()!.guid
+      }}).afterClosed().subscribe(result=>{
+        if(result){
+          if(result === "ImageDelete"){
+            this.documentPageService.documentPageModel.update(dpm=>{
+              dpm!.hasImage = false;
+              return dpm;
+            });
+            this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+              dpm!.hasImage = false;
+              return dpm;
+            });
+          }
+          else{
+            this.documentPageService.documentPageModel.update(dpm=>{
+              dpm!.title = result.title;
+              dpm!.description = result.description;
+              dpm!.hasImage = result.imageChanged ?? dpm!.hasImage;
+              return dpm;
+            });
+            this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+              dpm!.title = result.title;
+              dpm!.description = result.description;
+              dpm!.hasImage = result.imageChanged ?? dpm!.hasImage;
+              return dpm;
+            });
+            
+            if(result.imageChanged){
+              this.introductionImageVersion.update(v=>{return ++v;});
+            }
           }
         }
-      }
-    });
+      });
+    }
   }
   
 }

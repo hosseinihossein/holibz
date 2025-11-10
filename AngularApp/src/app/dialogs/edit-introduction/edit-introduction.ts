@@ -9,30 +9,30 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../services/identity-service';
 import { LibraryService } from '../../services/library-service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogClose } from '@angular/material/dialog';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { SingletonModes } from '../../services/singleton-modes';
 
 @Component({
   selector: 'app-edit-introduction',
-  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,MatProgressSpinner,JsonPipe,
-    MatInput,MatButton,MatIconButton,MatDialogContent,MatDialogActions],
+  imports: [ReactiveFormsModule, MatIcon, MatFormField, MatLabel, MatError, MatProgressSpinner,
+    MatInput, MatButton, MatIconButton, MatDialogContent, MatDialogActions, MatDialogClose],
   templateUrl: './edit-introduction.html',
   styleUrl: './edit-introduction.css'
 })
 export class EditIntroduction {
   readonly dialogRef = inject(MatDialogRef<EditIntroduction>);
-  readonly data = inject<{introductionOf:string, imageSrc?:string, guid:string}>(MAT_DIALOG_DATA);
+  readonly data = inject<{introductionOf:string, title:string, description:string, imageSrc?:string, guid:string}>(MAT_DIALOG_DATA);
 
   identityService = inject(IdentityService);
   libraryService = inject(LibraryService);
   singletonModes = inject(SingletonModes);
 
   introductionForm = new FormGroup({
-    title: new FormControl("", {nonNullable:true, validators: [Validators.required, 
+    title: new FormControl(this.data.title, {nonNullable:true, validators: [Validators.required, 
       Validators.maxLength(this.singletonModes.introductionTitleMaxLength()),
       Validators.minLength(this.singletonModes.introductionTitleMinLength())]}),
-    description: new FormControl("", {nonNullable:true,validators: Validators.maxLength(this.singletonModes.introductionDescriptionMaxLength())}),
+    description: new FormControl(this.data.description, {nonNullable:true,validators: Validators.maxLength(this.singletonModes.introductionDescriptionMaxLength())}),
     image: new FormControl<File|null>(null),
   });
   title = this.introductionForm.get("title");
@@ -103,7 +103,7 @@ export class EditIntroduction {
       this.displaySubmitSpinner.set(true);
       
       const callbacks = {
-        next: (res:{success:boolean, introduction:{title:string,description?:string,hasImage?:boolean}}) => {
+        next: (res:{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}) => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
             this.dialogRef.close(res.introduction);

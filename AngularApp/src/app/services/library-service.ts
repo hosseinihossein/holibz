@@ -239,7 +239,7 @@ export class LibraryService {
       formData.append("Image", image);
     }
 
-    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,hasImage?:boolean}}>(
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}>(
       "/api/Library/EditDocumentIntroduction", formData
     );
   }
@@ -252,7 +252,7 @@ export class LibraryService {
       formData.append("Image", image);
     }
 
-    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,hasImage?:boolean}}>(
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}>(
       "/api/Library/EditLibraryIntroduction", formData
     );
   }
@@ -265,7 +265,7 @@ export class LibraryService {
       formData.append("Image", image);
     }
 
-    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,hasImage?:boolean}}>(
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}>(
       "/api/Library/EditShelfIntroduction", formData
     );
   }

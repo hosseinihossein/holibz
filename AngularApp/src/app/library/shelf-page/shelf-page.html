@@ -3,8 +3,7 @@
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
                 @if(shelfModel()?.hasImage){
-                <img [ngSrc]="`/api/Library/ShelfImage?shelfGuid=${shelfModel()!.guid}`" width="40" height="40"
-                    alt="shelf image">
+                <img [ngSrc]="introductionImage()" width="40" height="40" alt="shelf image">
                 }
                 @else{
                 <mat-icon id="shelf-logo">shelves</mat-icon>
@@ -12,18 +11,13 @@
             </div>
             <mat-card-title>
                 {{shelfModel()?.title}}
-                <span style="font-size: 14px;">
+                <!--span style="font-size: 14px;">
                     in
                     <a [routerLink]="['/library',shelfModel()?.library?.guid]">
                         {{shelfModel()?.library?.title}}
                     </a>
                     library
-                </span>
-                @if(signletonModes.editMode()){
-                <button matIconButton class="noPaddingBtn" matTooltip="Edit title" (click)="openEditTitleDialog()">
-                    <mat-icon>edit</mat-icon>
-                </button>
-                }
+                </span-->
             </mat-card-title>
             <mat-card-subtitle>
                 <a [routerLink]="['/profile',userModel()?.guid]">
@@ -35,18 +29,11 @@
             <p>
                 {{shelfModel()?.description}}
             </p>
-            @if(signletonModes.editMode()){
-            <button matIconButton class="noPaddingBtn" matTooltip="Edit description"
-                (click)="openEditDescriptionDialog()">
-                <mat-icon>edit</mat-icon>
-            </button>
-            }
         </mat-card-content>
         <mat-card-actions align="end">
             @if(isMyShelf()){
-            <button matButton="elevated" class="noPaddingBtn" id="edit-mode-btn"
-                (click)="signletonModes.toggleEditMode()" matTooltip="Edit">
-                <mat-icon>{{signletonModes.editMode() ? 'edit_off' : 'edit'}}</mat-icon>
+            <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
+                <mat-icon>edit</mat-icon>
             </button>
             <a matButton="elevated" [routerLink]="['/document','new',shelfModel()?.guid]">
                 <mat-icon>newsstand</mat-icon>

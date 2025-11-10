@@ -7,12 +7,16 @@ import { LibraryCardModel } from '../library-card/library-card';
 import { NgOptimizedImage } from '@angular/common';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { MatIcon } from '@angular/material/icon';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-library-page',
   imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
-    MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton],
+    MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton, MatIconButton,
+    MatTooltip],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })
@@ -22,10 +26,15 @@ export class LibraryPage {
   activatedRoute = inject(ActivatedRoute);
   librarySerice = inject(LibraryService);
   identityService = inject(IdentityService);
+  dialog = inject(MatDialog);
+
   libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
   this.libraryModel()?.ownerGuid === this.identityService.userModel()?.guid);
   userModel = signal<UserProfileModel|null>(null);
+
+  introductionImageVersion = signal(0);
+  introductionImage = computed(()=>`/api/Library/LibraryImage?libraryGuid=${this.libraryModel()!.guid}&v=${this.introductionImageVersion()}`);
 
   constructor(){
     let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("libraryGuid");
@@ -65,4 +74,38 @@ export class LibraryPage {
       }
     });
   }
+
+  editIntroduction(){
+    if(this.isMyLibrary()){
+      this.dialog.open(EditIntroduction,{data:{
+        introductionOf:"library", 
+        title: this.libraryModel()!.title,
+        description: this.libraryModel()!.description ?? "",
+        imageSrc: this.libraryModel()?.hasImage ? this.introductionImage() : undefined,
+        guid: this.libraryModel()!.guid
+      }}).afterClosed().subscribe(result=>{
+        if(result){
+          if(result === "ImageDelete"){
+            this.libraryModel.update(lm=>{
+              lm!.hasImage = false;
+              return lm;
+            });
+          }
+          else{
+            this.libraryModel.update(lm=>{
+              lm!.title = result.title;
+              lm!.description = result.description;
+              lm!.hasImage = result.imageChanged ?? lm!.hasImage;
+              return lm;
+            });
+            
+            if(result.imageChanged){
+              this.introductionImageVersion.update(v=>{return ++v;});
+            }
+          }
+        }
+      });
+    }
+  }
+
 }

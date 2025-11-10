@@ -15,9 +15,11 @@ img{
     object-fit: contain;
 }
 div.buttons-box{
-    position: fixed;
-    top: 5vh;
-    right: 5vw;
+    float: right;
+    position: sticky;
+    top: 0;
+    right: 0;
+    left: calc(100% - 40px);
     width: 40px;
     /*overflow: hidden;*/
 }

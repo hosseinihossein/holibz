@@ -14,6 +14,7 @@ import { LibraryService } from '../../services/library-service';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
+import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 
 @Component({
   selector: 'app-shelf-page',
@@ -37,6 +38,9 @@ export class ShelfPage {
   userModel = signal<UserProfileModel|null>(null);
   isMyShelf = computed(() => this.identityService.isAuthenticated() && 
   this.shelfModel()?.ownerGuid === this.identityService.userModel()?.guid);
+
+  introductionImageVersion = signal(0);
+  introductionImage = computed(()=>`/api/Library/ShelfImage?shelfGuid=${this.shelfModel()!.guid}&v=${this.introductionImageVersion()}`);
 
   constructor(){
     let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
@@ -77,21 +81,37 @@ export class ShelfPage {
     });
   }
 
-  openEditTitleDialog(){
-    const dialogRef = this.dialog.open(EditInput,{data:{label: 'Edit Shelf Title', value: this.shelfModel()?.title}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        //this.shelfTitle.set(result);
-      }
-    });
+  editIntroduction(){
+    if(this.isMyShelf()){
+      this.dialog.open(EditIntroduction,{data:{
+        introductionOf:"shelf", 
+        title: this.shelfModel()!.title,
+        description: this.shelfModel()!.description ?? "",
+        imageSrc: this.shelfModel()!.hasImage ? this.introductionImage() : undefined,
+        guid: this.shelfModel()!.guid
+      }}).afterClosed().subscribe(result=>{
+        if(result){
+          if(result === "ImageDelete"){
+            this.shelfModel.update(shm=>{
+              shm!.hasImage = false;
+              return shm;
+            });
+          }
+          else{
+            this.shelfModel.update(shm=>{
+              shm!.title = result.title;
+              shm!.description = result.description;
+              shm!.hasImage = result.imageChanged ?? shm!.hasImage;
+              return shm;
+            });
+            
+            if(result.imageChanged){
+              this.introductionImageVersion.update(v=>{return ++v;});
+            }
+          }
+        }
+      });
+    }
   }
   
-  openEditDescriptionDialog(){
-    const dialogRef = this.dialog.open(EditTextarea,{data:{label: 'Edit Shelf Description', value: this.shelfModel()?.description}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        //this.shelfDescription.set(result);
-      }
-    });
-  }
 }

@@ -4,6 +4,11 @@ mat-card{
     width: 100%;
 }
 
+mat-card-header img{
+    border-radius: 50%;
+    overflow: hidden;
+}
+
 /*#edit-mode-btn{
     position: absolute;
     top: 0;

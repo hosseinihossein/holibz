@@ -55,14 +55,16 @@
             </button>
 
             <input type="file" hidden #fileInput (change)="onSelectImage($event)" />
-            @if(image?.value){
+            @if(image?.value || data.imageSrc){
             <div style="position: relative;width: fit-content;margin: 24px auto 0;">
                 <img [src]="previewImgSrc()" #previewImg
                     [class.border-radius]="data.introductionOf==='library'||data.introductionOf==='shelf'">
+                @if(image?.value){
                 <button matIconButton type="button" class="noPaddingBtn" id="delete-img-btn" (click)="clearImgInput()"
                     matTooltip="Delete image">
                     <mat-icon>cancel</mat-icon>
                 </button>
+                }
             </div>
             }
 
@@ -86,8 +88,8 @@
 
     </form>
 
-    <mat-dialog-actions align="end">
-        <button matButton mat-dialog-close>Cancel</button>
+    <mat-dialog-actions align="end" style="float: inline-end;">
+        <button matButton mat-dialog-close="">Cancel</button>
         <button type="submit" form="introduction-form" matButton="elevated" [disabled]="!introductionForm.valid">
             Submit
         </button>
@@ -105,4 +107,4 @@
     }
 
 </mat-dialog-content>
-<div>{{introductionForm.value | json}}</div>
+<!--div>{{introductionForm.value | json}}</div-->

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Text.Json;
 using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -795,11 +796,11 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            string ownerGuid = (await userManager.Users
+            string userGuid = (await userManager.Users
             .Where(u => u.UserName == User.Identity!.Name!)
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
-            if (ownerGuid != documentDbModel.OwnerGuid)
+            if (userGuid != documentDbModel.OwnerGuid)
             {
                 ModelState.AddModelError("Authorization", "Only the owner can edit the document!");
                 return BadRequest(ModelState);
@@ -825,7 +826,7 @@ public class LibraryController : ControllerBase
                     {
                         title = documentDbModel.Title,
                         description = documentDbModel.Description,
-                        hasImage = true,//$"/api/Library/DocumentImage?documentGuid={documentDbModel.Guid}&v={Guid.NewGuid()}",
+                        imageChanged = true,
                     },
                 });
             }
@@ -851,7 +852,63 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> EditLibraryIntroduction(
         [FromForm] Library_EditIntroductionFormModel formModel)
     {
+        if (ModelState.IsValid)
+        {
+            Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
+            .FirstOrDefaultAsync(lib => lib.Guid == formModel.Guid);
+            if (libraryDbModel is null)
+            {
+                ModelState.AddModelError("Guid", "Couldn't find the specified library!");
+                return BadRequest(ModelState);
+            }
 
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
+            if (userGuid != libraryDbModel.OwnerGuid)
+            {
+                ModelState.AddModelError("Authorization", "Only the owner can edit the library!");
+                return BadRequest(ModelState);
+            }
+
+            libraryDbModel.Title = formModel.Title;
+            libraryDbModel.Description = string.IsNullOrWhiteSpace(formModel.Description) ? null : formModel.Description;
+            await libraryDb.SaveChangesAsync();
+
+            if (formModel.Image is not null)
+            {
+                DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Library.FullName, libraryDbModel.Guid));
+                string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
+                using (FileStream fs = System.IO.File.Create(libraryImagePath))
+                {
+                    await formModel.Image.CopyToAsync(fs);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    introduction = new
+                    {
+                        title = libraryDbModel.Title,
+                        description = libraryDbModel.Description,
+                        imageChanged = true,
+                    },
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                introduction = new
+                {
+                    title = libraryDbModel.Title,
+                    description = libraryDbModel.Description,
+                },
+            });
+        }
+
+        return BadRequest(ModelState);
     }
 
     [HttpPost]
@@ -861,6 +918,194 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> EditShelfIntroduction(
         [FromForm] Library_EditIntroductionFormModel formModel)
     {
+        if (ModelState.IsValid)
+        {
+            Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
+            .FirstOrDefaultAsync(shelf => shelf.Guid == formModel.Guid);
+            if (shelfDbModel is null)
+            {
+                ModelState.AddModelError("Guid", "Couldn't find the specified shelf!");
+                return BadRequest(ModelState);
+            }
 
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
+            if (userGuid != shelfDbModel.OwnerGuid)
+            {
+                ModelState.AddModelError("Authorization", "Only the owner can edit the shelf!");
+                return BadRequest(ModelState);
+            }
+
+            shelfDbModel.Title = formModel.Title;
+            shelfDbModel.Description = string.IsNullOrWhiteSpace(formModel.Description) ? null : formModel.Description;
+            await libraryDb.SaveChangesAsync();
+
+            if (formModel.Image is not null)
+            {
+                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid));
+                string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
+                using (FileStream fs = System.IO.File.Create(shelfImagePath))
+                {
+                    await formModel.Image.CopyToAsync(fs);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    introduction = new
+                    {
+                        title = shelfDbModel.Title,
+                        description = shelfDbModel.Description,
+                        imageChanged = true,
+                    },
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                introduction = new
+                {
+                    title = shelfDbModel.Title,
+                    description = shelfDbModel.Description,
+                },
+            });
+        }
+
+        return BadRequest(ModelState);
     }
+
+
+
+
+
+    [HttpDelete]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteDocumentIntroductionImage([FromQuery][StringLength(32)]
+    string documentGuid)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+            .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+        if (documentDbModel is null)
+        {
+            ModelState.AddModelError("Guid", "Couldn't find the specified document!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(u => u.UserName == User.Identity!.Name!)
+        .Select(u => u.UserGuid)
+        .FirstOrDefaultAsync())!;
+        if (userGuid != documentDbModel.OwnerGuid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner can delete the image of the document's introduction!");
+            return BadRequest(ModelState);
+        }
+
+        DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Document.FullName, documentDbModel.Guid));
+        string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
+        if (System.IO.File.Exists(documentImagePath))
+        {
+            try
+            {
+                System.IO.File.Delete(documentImagePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return Ok(new { success = false });
+            }
+        }
+
+        return Ok(new { success = true });
+    }
+
+    [HttpDelete]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteLibraryIntroductionImage([FromQuery][StringLength(32)]
+    string libraryGuid)
+    {
+        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
+            .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
+        if (libraryDbModel is null)
+        {
+            ModelState.AddModelError("Guid", "Couldn't find the specified library!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(u => u.UserName == User.Identity!.Name!)
+        .Select(u => u.UserGuid)
+        .FirstOrDefaultAsync())!;
+        if (userGuid != libraryDbModel.OwnerGuid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner can delete the image of the library's introduction!");
+            return BadRequest(ModelState);
+        }
+
+        DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Library.FullName, libraryDbModel.Guid));
+        string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
+        if (System.IO.File.Exists(libraryImagePath))
+        {
+            try
+            {
+                System.IO.File.Delete(libraryImagePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return Ok(new { success = false });
+            }
+        }
+
+        return Ok(new { success = true });
+    }
+
+    [HttpDelete]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteShelfIntroductionImage([FromQuery][StringLength(32)]
+    string shelfGuid)
+    {
+        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
+            .FirstOrDefaultAsync(doc => doc.Guid == shelfGuid);
+        if (shelfDbModel is null)
+        {
+            ModelState.AddModelError("Guid", "Couldn't find the specified shelf!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(u => u.UserName == User.Identity!.Name!)
+        .Select(u => u.UserGuid)
+        .FirstOrDefaultAsync())!;
+        if (userGuid != shelfDbModel.OwnerGuid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner can delete the image of the shelf's introduction!");
+            return BadRequest(ModelState);
+        }
+
+        DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid));
+        string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
+        if (System.IO.File.Exists(shelfImagePath))
+        {
+            try
+            {
+                System.IO.File.Delete(shelfImagePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return Ok(new { success = false });
+            }
+        }
+
+        return Ok(new { success = true });
+    }
+
+
 }

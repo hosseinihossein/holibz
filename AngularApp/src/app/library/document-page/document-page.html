@@ -169,9 +169,8 @@
             </h1>
 
             @if(documentPageService.documentPageModel()?.hasImage){
-            <img [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentPageService.documentPageModel()?.guid}`"
-                width="100" height="100" [alt]="documentPageService.documentPageModel()?.title"
-                (click)="openLargeImage()">
+            <img [ngSrc]="introductionImage()" width="100" height="100"
+                [alt]="documentPageService.documentPageModel()?.title" (click)="openLargeImage()">
             }
 
             <p>{{documentPageService.documentPageModel()?.description}}</p>

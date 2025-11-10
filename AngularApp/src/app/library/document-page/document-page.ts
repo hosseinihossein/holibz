@@ -59,12 +59,14 @@ export class DocumentPage implements AfterViewInit {
   documentPageService = inject(DocumentPageService);
 
   documentGuid = signal<string|null>(null);
-  //documentPageModel = signal<DocumentPageModel|null>(this.documentPageService.documentPageService.documentPageModel());
   sortedElements = computed(()=>
     this.documentPageService.documentPageModel()?.elements.sort((a,b)=>{
       if(a.order > b.order)return 1;else return -1;
     })
   );
+
+  introductionImageVersion = signal(0);
+  introductionImage = computed(()=>`/api/Library/DocumentImage?documentGuid=${this.documentPageService.documentPageModel()?.guid}&v=${this.introductionImageVersion()}`);
 
   ownerModel = signal<UserProfileModel|null>(null);
   ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
@@ -88,9 +90,9 @@ export class DocumentPage implements AfterViewInit {
             if(res){
               this.documentPageService.documentPageModel.set(res);
               this.documentPageService.unchangedDocumentPageModel.set(new DocumentPageModel(res));
-              res.elements.forEach(el=>{
+              /*res.elements.forEach(el=>{
                 console.log(el.value + " : " + el.order);
-              });
+              });*/
             }
           },
         });
@@ -480,16 +482,20 @@ export class DocumentPage implements AfterViewInit {
         else{
           this.documentPageService.documentPageModel.update(dpm=>{
             dpm!.title = result.title;
-            dpm!.description = result?.description ?? "";
-            dpm!.hasImage = !!(result?.image)
+            dpm!.description = result.description;
+            dpm!.hasImage = result.hasImage ?? dpm!.hasImage;
             return dpm;
           });
           this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
             dpm!.title = result.title;
-            dpm!.description = result?.description ?? "";
-            dpm!.hasImage = !!(result?.image)
+            dpm!.description = result.description;
+            dpm!.hasImage = result.hasImage ?? dpm!.hasImage;
             return dpm;
           });
+          
+          if(result.hasImage){
+            this.introductionImageVersion.update(v=>{return ++v;});
+          }
         }
       }
     });

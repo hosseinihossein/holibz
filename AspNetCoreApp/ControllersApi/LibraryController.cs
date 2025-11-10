@@ -825,7 +825,7 @@ public class LibraryController : ControllerBase
                     {
                         title = documentDbModel.Title,
                         description = documentDbModel.Description,
-                        image = $"/api/Library/DocumentImage?documentGuid={documentDbModel.Guid}&v={Guid.NewGuid()}",
+                        hasImage = true,//$"/api/Library/DocumentImage?documentGuid={documentDbModel.Guid}&v={Guid.NewGuid()}",
                     },
                 });
             }

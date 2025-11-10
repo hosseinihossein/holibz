@@ -103,7 +103,7 @@ export class EditIntroduction {
       this.displaySubmitSpinner.set(true);
       
       const callbacks = {
-        next: (res:{success:boolean, introduction:{title:string,description?:string,image?:string}}) => {
+        next: (res:{success:boolean, introduction:{title:string,description?:string,hasImage?:boolean}}) => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
             this.dialogRef.close(res.introduction);

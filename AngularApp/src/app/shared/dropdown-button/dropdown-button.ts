@@ -9,14 +9,14 @@ import { MatMenuTrigger, MatMenu } from '@angular/material/menu';
   templateUrl: './dropdown-button.html',
   styleUrl: './dropdown-button.css'
 })
-export class DropdownButton implements OnInit {
+export class DropdownButton /*implements OnInit*/ {
   menu = input.required<MatMenu>();
   btn = viewChild.required(MatButton);
   icon = viewChild.required(MatIcon);
 
-  ngOnInit(){
+  /*ngOnInit(){
     this.icon()._elementRef.nativeElement.style.transition = "all 100ms";
-  }
+  }*/
 
   open(){
     this.btn()._elementRef.nativeElement.classList.add("open");

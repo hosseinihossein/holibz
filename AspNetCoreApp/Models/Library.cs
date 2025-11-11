@@ -272,14 +272,14 @@ public class Library_Process //singleton service
         if (formModel.ShelfGuids is null || formModel.ShelfGuids.Length == 0)
         {
             bool isThereDefaultShelf = await libraryDb.Shelves
-            .AnyAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Title == "Default Shelf");
+            .AnyAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf");
             if (!isThereDefaultShelf)
             {
                 await CreateDefaultLibraryAndShelf(libraryDb, ownerGuid);
             }
 
             Library_ShelfDbModel? defaultShelfDbModel = await libraryDb.Shelves
-            .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Title == "Default Shelf");
+            .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf");
             if (defaultShelfDbModel is null)
             {
                 return new ProcessResult()
@@ -580,7 +580,7 @@ public class Library_NewDocumentFormModel
 
     //[MaxArrayLength(10)]
     //[StringLength(32)]
-    [MaxStringArrayLength(10, 32)]
+    [MaxStringArrayLength(100, 32)]
     public string[]? ShelfGuids { get; set; } = null;
 
     public IFormFile? Image { get; set; }

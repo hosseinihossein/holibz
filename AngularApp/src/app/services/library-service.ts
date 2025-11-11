@@ -191,44 +191,11 @@ export class LibraryService {
     );
   }
 
-  /*requestEditElement(editElementFormModel: EditElementFormModel){
-    const formData = new FormData();
-    if(editElementFormModel.Guid){
-      formData.append("Guid", editElementFormModel.Guid);
-    }
-    else{
-      return throwError(()=>new Error("Element Guid is needed to request for editing the element!"));
-    }
-    if(editElementFormModel.Order){
-      formData.append("Order", editElementFormModel.Order);
-    }
-    if(editElementFormModel.Title){
-      formData.append("Title", editElementFormModel.Title);
-    }
-    if(editElementFormModel.Value){
-      formData.append("Value", editElementFormModel.Value);
-    }
-
-    return this.httpClient.post<{success:boolean, element?:DocumentElementModel}>(
-      "/api/Library/EditElement", formData
-    );
-  }*/
   submitEditedElements(editElementFormModelArray:EditElementFormModel[]){
     return this.httpClient.post<{success:boolean, elements:DocumentElementModel[]}>(
       "/api/Library/EditElements", editElementFormModelArray
     );
   }
-
-  /*requestEditDocumentTitle(documentGuid:string, title:string){
-    return this.httpClient.post<{success:boolean}>(
-      "/api/Library/EditDocumentTitle", {Guid:documentGuid, Title:title}
-    );
-  }
-  requestEditDocumentDescription(documentGuid:string, description:string){
-    return this.httpClient.post<{success:boolean}>(
-      "/api/Library/EditDocumentDescription", {Guid:documentGuid, Description:description}
-    );
-  }*/
 
   editDocumentIntroduction(documentGuid:string, title:string, description:string, image?:File){
     const formData = new FormData();
@@ -286,6 +253,19 @@ export class LibraryService {
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteShelfIntroductionImage", {params:httpParams}
+    );
+  }
+
+  editDocumentParentShelves(documentGuid:string, shelfGuids:string[]){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Library/EditDocumentParentShelves", 
+      {documentGuid:documentGuid, shelfGuids:shelfGuids}
+    );
+  }
+  editShelfParentLibraries(shelfGuid:string, libraryGuids:string[]){
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Library/EditShelfParentLibraries", 
+      {shelfGuid:shelfGuid, libraryGuids:libraryGuids}
     );
   }
 

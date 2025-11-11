@@ -1,5 +1,15 @@
+
+button{
+    padding-bottom: 6px;
+}
 button.open{
     background-color: var(--mat-sys-primary-container);
+}
+
+button mat-icon{
+    position: relative;
+    top: 6px;
+    transition: all 100ms;
 }
 button.open mat-icon{
     rotate: 90deg;

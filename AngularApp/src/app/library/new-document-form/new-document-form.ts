@@ -17,6 +17,7 @@ import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Result } from '../../dialogs/result/result';
 import { MatDialog } from '@angular/material/dialog';
+import { SingletonModes } from '../../services/singleton-modes';
 
 @Component({
   selector: 'app-new-document-form',
@@ -32,11 +33,15 @@ export class NewDocumentForm {
   router = inject(Router);
   activatedRoute = inject(ActivatedRoute);
   readonly dialog = inject(MatDialog);
+  readonly singleton = inject(SingletonModes);
 
   newDocumentForm = new FormGroup({
     shelfGuids: new FormControl(["DefaultShelf"], {nonNullable:true, validators: [Validators.required]}),
-    title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
-    description: new FormControl("", {validators: Validators.maxLength(200)}),
+    title: new FormControl("", {nonNullable:true, validators: [Validators.required, 
+      Validators.maxLength(this.singleton.introductionTitleMaxLength()),
+      Validators.minLength(this.singleton.introductionTitleMinLength())]}),
+    description: new FormControl("", {nonNullable:true, validators: 
+      Validators.maxLength(this.singleton.introductionDescriptionMaxLength())}),
     image: new FormControl<File|null>(null),
   });
   shelfGuids = this.newDocumentForm.get("shelfGuids");

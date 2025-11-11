@@ -173,7 +173,7 @@ export class IdentityService {
 
 export class UserProfileModel
 {
-  constructor(userModel:Partial<UserProfileModel>|null = null){
+  constructor(userModel:Partial<UserProfileModel>|null=null){
     this.guid = userModel?.guid;
     this.username = userModel?.username;
     this.description = userModel?.description;

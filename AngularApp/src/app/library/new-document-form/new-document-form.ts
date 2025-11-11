@@ -69,30 +69,37 @@ export class NewDocumentForm {
     //this.editing.set(editingQueryParam === "true");
 
     effect(() => {
-      this.libraryService.requestLibraryList(this.identityService.userModel()?.guid)?.subscribe({
-        next: res => {
-          if(res){
-            this.allLibraryList.set(res);
-            this.displayedLibraries.set(res.map(l=>l.title));
-          }
-        },
-      });
+      if(this.identityService.userModel()?.guid){
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!)?.subscribe({
+          next: res => {
+            if(res){
+              this.allLibraryList.set(res);
+              this.displayedLibraries.set(res.map(l=>l.title));
+            }
+          },
+        });
 
-      if(this.identityService.userModel()){
+        this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
+          next: res => {
+            if(res){
+              this.allShelfList.update(shelfList=>[...shelfList, ...res]);
+            }
+          },
+        });
+
         this.identityService.getCsrf().subscribe({
           next: () => {
             console.log("Csrf received successfully.");
           },
           error: err => {
             console.error("Couldn't get Csrf!");
-            //throwError(()=>err);//doesn't pass error to the app-error-handler
             throw(err);
           },
         });
       }
     });
 
-    effect(() => {
+    /*effect(() => {
       for(let libraryModel of this.allLibraryList()){
         this.libraryService.requestShelfList(libraryModel.guid).subscribe({
           next: res => {
@@ -102,7 +109,7 @@ export class NewDocumentForm {
           },
         });
       }
-    });
+    });*/
   }
 
   changeDisplayedLibraries(e:MatButtonToggleChange){

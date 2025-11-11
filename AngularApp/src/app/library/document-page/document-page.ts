@@ -527,8 +527,8 @@ export class DocumentPageModel {
   description:string = null!;
   version:string = null!;
   relatedVersions:{versionName:string, documentGuid:string}[] = [];
-  shelves:{guid:string, title:string, libraryTitle:string, 
-    owner:{userGuid:string, userName:string},
+  shelves:{guid:string, title:string, libraries:{guid:string, title:string}[], 
+    //owner:{userGuid:string, userName:string},
     documents:{guid:string, title:string}[]}[] = [];
   elements:DocumentElementModel[] = [];
   tags:string[] = [];

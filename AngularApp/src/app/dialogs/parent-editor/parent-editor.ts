@@ -44,16 +44,24 @@ export class ParentEditor {
 
   constructor(){
     effect(() => {
-      this.libraryService.requestLibraryList(this.identityService.userModel()?.guid)?.subscribe({
-        next: res => {
-          if(res){
-            this.allLibraryList.set(res);
-            this.displayedLibraries.set(res.map(l=>l.title));
-          }
-        },
-      });
+      if(this.identityService.userModel()?.guid){
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!)?.subscribe({
+          next: res => {
+            if(res){
+              this.allLibraryList.set(res);
+              this.displayedLibraries.set(res.map(l=>l.title));
+            }
+          },
+        });
 
-      if(this.identityService.userModel()){
+        this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
+          next: res => {
+            if(res){
+              this.allShelfList.update(shelfList=>[...shelfList, ...res]);
+            }
+          },
+        });
+
         this.identityService.getCsrf().subscribe({
           next: () => {
             console.log("Csrf received successfully.");
@@ -66,7 +74,7 @@ export class ParentEditor {
       }
     });
 
-    effect(() => {
+    /*effect(() => {
       for(let libraryModel of this.allLibraryList()){
         this.libraryService.requestShelfList(libraryModel.guid).subscribe({
           next: res => {
@@ -76,7 +84,7 @@ export class ParentEditor {
           },
         });
       }
-    });
+    });*/
   }
 
   changeDisplayedLibraries(e:MatButtonToggleChange){

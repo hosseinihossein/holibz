@@ -515,7 +515,7 @@ public class Library_ShelfBrief
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public Library_LibraryBrief[] Libraries { get; set; } = [];
-    public Library_OwnerBrief Owner { get; set; } = null!;
+    //public Library_OwnerBrief Owner { get; set; } = null!;
     public Library_DocumentBrief[] Documents { get; set; } = [];
 }
 public class Library_DocumentBrief

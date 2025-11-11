@@ -568,11 +568,11 @@ public class LibraryController : ControllerBase
                     Guid = shelfLib.Guid,
                     Title = shelfLib.Title,
                 }).ToArray(),
-                Owner = new Library_OwnerBrief()
+                /*Owner = new Library_OwnerBrief()
                 {
                     UserGuid = shelf.OwnerGuid,
                     UserName = "_",
-                },
+                },*/
                 Title = shelf.Title,
             }).ToArray(),
         })
@@ -590,10 +590,10 @@ public class LibraryController : ControllerBase
         .Where(u => u.UserGuid == documentPageModel.Owner.UserGuid)
         .Select(u => u.UserName)
         .FirstOrDefaultAsync())!;
-        foreach (var shelf in documentPageModel.Shelves)
+        /*foreach (var shelf in documentPageModel.Shelves)
         {
             shelf.Owner = documentPageModel.Owner;
-        }
+        }*/
 
         return Ok(documentPageModel);
     }

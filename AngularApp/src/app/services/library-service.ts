@@ -39,6 +39,10 @@ export class LibraryService {
     let quryParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.get<ShelfCardModel[]>("/api/Library/ShelfList", { params: quryParams});
   }
+  requestUserShelfList(ownerGuid: string){
+    let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
+    return this.httpClient.get<ShelfCardModel[]>("/api/Library/UserShelfList", { params: quryParams});
+  }
   requestDocumentCardList(shelfGuid: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.get<DocumentCardModel[]>("/api/Library/DocumentCardList", { params: quryParams});

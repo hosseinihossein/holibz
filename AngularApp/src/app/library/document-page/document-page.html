@@ -3,15 +3,25 @@
     <!--------------------- shelves accordion -------------------->
     <mat-sidenav id="startSideNav" mode="side" opened position="start" fixedInViewport fixedTopGap="56"
         fixedBottomGap="16">
+
+        @if(isMyDocument()){
+        <button matButton="elevated" matTooltip="Edit Parent Shelves" class="noPaddingBtn"
+            (click)="editParentShelves()">
+            <mat-icon>edit</mat-icon>
+        </button>
+        }
+
         <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;"
             matTooltip="This document is included in these shelves" matTooltipShowDelay="500">
             Shelves:
         </p>
+
         <mat-accordion>
             @for(shelf of documentPageService.documentPageModel()?.shelves; track shelf.guid){
             <mat-expansion-panel expanded>
                 <mat-expansion-panel-header>
-                    <mat-panel-title [matTooltip]="`By: ${documentPageService.documentPageModel()?.owner?.userName}`"
+                    <mat-panel-title
+                        [matTooltip]="`Library: ${shelfGuidToParentLibrariesTitlesMap().get(shelf.guid)}, By: '${documentPageService.documentPageModel()?.owner?.userName}'`"
                         matTooltipPosition="after">
                         {{shelf.title}}
                     </mat-panel-title>

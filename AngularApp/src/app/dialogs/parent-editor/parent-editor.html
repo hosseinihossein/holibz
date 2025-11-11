@@ -1,6 +1,6 @@
 <mat-dialog-content>
 
-    <form [formGroup]="parentForm" (ngSubmit)="onSubmit()" id="parent-form">
+    <form (ngSubmit)="onSubmit()" id="parent-form">
         <h2>
             <mat-icon>newsstand</mat-icon>
             Edit Parent {{data.parentOf === "document" ? 'Shelves' : 'Libraries'}}
@@ -12,50 +12,64 @@
             <mat-button-toggle [value]="libraryModel.guid">{{libraryModel.title}}</mat-button-toggle>
             }
         </mat-button-toggle-group>
-        @if(libraryGuids?.invalid && libraryGuids?.hasError("required")){
+        @if(libraryGuids.invalid && libraryGuids.hasError("required")){
         <mat-error>
             Library is required!
         </mat-error>
         }
 
+        @if(data.parentOf === "document"){
         <mat-form-field>
             <mat-label>Shelf</mat-label>
             <mat-select required formControlName="shelfGuids" multiple>
-                @for(libraryTitle of displayedLibraries(); track libraryTitle){
-                <mat-optgroup [label]="libraryTitle">
-                    @for(shelfModel of allShelfList(); track shelfModel.guid){
-                    @if(shelfModel.library.title === libraryTitle){
-                    <mat-option [value]="shelfModel.guid">
-                        {{shelfModel.title}}
-                        <span id="libraryName-span">({{libraryTitle}})</span>
-                    </mat-option>
-                    }
-                    }
-                </mat-optgroup>
+                <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
+                <!--mat-optgroup [label]="libraryTitle"-->
+                @for(shelfModel of allShelfList(); track shelfModel.guid){
+                <!--@if(shelfModel.libraries.title === libraryTitle){-->
+                <mat-option [value]="shelfModel.guid"
+                    [matTooltip]="shelfGuidToParentLibrariesTitlesMap().get(shelfModel.guid)">
+                    {{shelfModel.title}}
+                    <!--span id="libraryName-span">({{libraryTitle}})</span-->
+                </mat-option>
+                <!--}-->
                 }
+                <!--/mat-optgroup-->
+                <!--}-->
             </mat-select>
-            @if(shelfGuids?.invalid && (shelfGuids?.dirty || shelfGuids?.touched) &&
-            shelfGuids?.hasError("required")){
+            @if(shelfGuids.invalid && (shelfGuids.dirty || shelfGuids.touched) &&
+            shelfGuids.hasError("required")){
             <mat-error>
                 Shelf is required!
             </mat-error>
             }
         </mat-form-field>
+        }
 
-        @if(parentForm.invalid && parentForm.hasError("submitError")){
+        @if(submitErrors()){
         <mat-error>
-            {{parentForm.getError("submitError")}}
+            {{submitErrors()}}
         </mat-error>
         }
 
     </form>
 
+    @if(data.parentOf === 'document'){
     <mat-dialog-actions align="end" style="float: inline-end;">
         <button matButton mat-dialog-close="">Cancel</button>
-        <button type="submit" form="parent-form" matButton="elevated" [disabled]="!parentForm.valid">
+        <button type="button" matButton="elevated" [disabled]="libraryGuids.invalid || shelfGuids.invalid"
+            (click)="onSubmit()">
             Submit
         </button>
     </mat-dialog-actions>
+    }
+    @if(data.parentOf === 'shelf'){
+    <mat-dialog-actions align="end" style="float: inline-end;">
+        <button matButton mat-dialog-close="">Cancel</button>
+        <button type="button" matButton="elevated" [disabled]="libraryGuids.invalid" (click)="onSubmit()">
+            Submit
+        </button>
+    </mat-dialog-actions>
+    }
 
     @if(displaySubmitSpinner()){
     <div id="submit-spinner-layout">

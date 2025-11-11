@@ -10,21 +10,23 @@
         <mat-button-toggle [value]="libraryModel.title">{{libraryModel.title}}</mat-button-toggle>
         }
     </mat-button-toggle-group>
+
     <mat-form-field>
         <mat-label>Shelf</mat-label>
         <mat-select required formControlName="shelfGuids" multiple>
-            @for(libraryName of displayedLibraries(); track libraryName){
-            <mat-optgroup [label]="libraryName">
-                @for(shelfModel of allShelfList(); track shelfModel.guid){
-                @if(shelfModel.library.title === libraryName){
-                <mat-option [value]="shelfModel.guid">
-                    {{shelfModel.title}}
-                    <span id="libraryName-span">({{libraryName}})</span>
-                </mat-option>
-                }
-                }
-            </mat-optgroup>
+            <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
+            <!--mat-optgroup [label]="libraryTitle"-->
+            @for(shelfModel of allShelfList(); track shelfModel.guid){
+            <!--@if(shelfModel.libraries.title === libraryTitle){-->
+            <mat-option [value]="shelfModel.guid"
+                [matTooltip]="shelfGuidToParentLibrariesTitlesMap().get(shelfModel.guid)">
+                {{shelfModel.title}}
+                <!--span id="libraryName-span">({{libraryTitle}})</span-->
+            </mat-option>
+            <!--}-->
             }
+            <!--/mat-optgroup-->
+            <!--}-->
         </mat-select>
         @if(shelfGuids?.invalid && (shelfGuids?.dirty || shelfGuids?.touched) &&
         shelfGuids?.hasError("required")){

@@ -36,6 +36,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
+import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
 
 @Component({
   selector: 'app-document-page',
@@ -76,6 +77,24 @@ export class DocumentPage implements AfterViewInit {
 
   headingElements = signal<HTMLHeadingElement[]>([]);
   introductionHeading = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
+
+  shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
+    let map = new Map<string,string>();
+    this.documentPageService.documentPageModel()?.shelves.forEach(shelf=>
+      map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
+    );
+    return map;
+  });
+  parentLibraryGuids = computed<string[]>(()=>{
+    let allParentLibraries = this.documentPageService.documentPageModel()?.shelves.flatMap(shelf=>shelf.libraries);
+    let uniqueParentLibraries:{guid:string,title:string}[] = [];
+    allParentLibraries?.forEach(pl=>{
+      if(!uniqueParentLibraries.map(upl=>upl.guid).includes(pl.guid)){
+        uniqueParentLibraries.push(pl);
+      }
+    });
+    return uniqueParentLibraries.map(upl=>upl.guid);
+  });
   
   constructor(){
     let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
@@ -498,6 +517,30 @@ export class DocumentPage implements AfterViewInit {
               this.introductionImageVersion.update(v=>{return ++v;});
             }
           }
+        }
+      });
+    }
+  }
+
+  editParentShelves(){
+    if(this.isMyDocument()){
+      this.dialog.open(ParentEditor,{data:{
+        parentOf:"document",
+        parentLibraryGuids: this.parentLibraryGuids(),
+        parentShelfGuids: this.documentPageService.documentPageModel()?.shelves.map(shelf=>shelf.guid),
+        childGuid: this.documentPageService.documentPageModel()?.guid,
+      }}).afterClosed().subscribe(result=>{
+        if(result){
+          this.documentPageService.documentPageModel.update(dpm=>{
+            let filteredShelves = dpm!.shelves.filter(shelf=>(result as string[]).includes(shelf.guid));
+            dpm!.shelves = filteredShelves;
+            return dpm;
+          });
+          this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+            let filteredShelves = dpm!.shelves.filter(shelf=>(result as string[]).includes(shelf.guid));
+            dpm!.shelves = filteredShelves;
+            return dpm;
+          });
         }
       });
     }

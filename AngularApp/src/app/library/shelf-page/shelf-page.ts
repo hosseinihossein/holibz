@@ -15,6 +15,7 @@ import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
+import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
 
 @Component({
   selector: 'app-shelf-page',
@@ -109,6 +110,25 @@ export class ShelfPage {
               this.introductionImageVersion.update(v=>{return ++v;});
             }
           }
+        }
+      });
+    }
+  }
+
+  editParentLibraries(){
+    if(this.isMyShelf()){
+      this.dialog.open(ParentEditor,{data:{
+        parentOf:"shelf",
+        parentLibraryGuids: this.shelfModel()?.libraries.map(lib=>lib.guid),
+        //parentShelfGuids: this.documentPageService.documentPageModel()?.shelves.map(shelf=>shelf.guid),
+        childGuid: this.shelfModel()?.guid,
+      }}).afterClosed().subscribe(result=>{
+        if(result){
+          this.shelfModel.update(shelf=>{
+            let filteredLibraries = shelf!.libraries.filter(lib=>(result as string[]).includes(lib.guid));
+            shelf!.libraries = filteredLibraries;
+            return shelf;
+          });
         }
       });
     }

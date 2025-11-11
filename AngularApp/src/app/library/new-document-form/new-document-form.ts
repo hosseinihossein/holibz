@@ -22,7 +22,7 @@ import { SingletonModes } from '../../services/singleton-modes';
 @Component({
   selector: 'app-new-document-form',
   imports: [MatFormField, MatLabel, MatInput, MatButton, MatIconButton, MatIcon, MatTooltip, MatSelect,
-    MatOption, MatOptgroup,ReactiveFormsModule,JsonPipe,MatError,MatProgressSpinner,
+    MatOption, /*MatOptgroup,*/ReactiveFormsModule,JsonPipe,MatError,MatProgressSpinner,
     MatButtonToggleModule],
   templateUrl: './new-document-form.html',
   styleUrl: './new-document-form.css'
@@ -50,11 +50,19 @@ export class NewDocumentForm {
   image = this.newDocumentForm.get("image");
   
   previewImgSrc = signal<string|null>(null);
+  
   displaySubmitSpinner = signal(false);
-  allLibraryList = signal<LibraryCardModel[]>([]);
+  allLibraryList = signal</*LibraryCardModel*/{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ShelfCardModel[]>([]);
-  //editing = signal(false);
+  //shelfGuidToParentLibrariesTitlesMap = signal<Map<string,string>>(new Map<string,string>());
+  shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
+    let map = new Map<string,string>();
+    this.allShelfList().forEach(shelf=>
+      map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
+    );
+    return map;
+  });
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
   imgInput = viewChild.required<ElementRef<HTMLInputElement>>("fileInput");
@@ -70,19 +78,35 @@ export class NewDocumentForm {
 
     effect(() => {
       if(this.identityService.userModel()?.guid){
-        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!)?.subscribe({
+        /*this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!)?.subscribe({
           next: res => {
             if(res){
               this.allLibraryList.set(res);
               this.displayedLibraries.set(res.map(l=>l.title));
             }
           },
-        });
+        });*/
 
         this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
-              this.allShelfList.update(shelfList=>[...shelfList, ...res]);
+              this.allShelfList.set(res);
+
+              let allParentLibraries = res.flatMap(shelf=>shelf.libraries);
+              let uniqueParentLibraries:{guid:string,title:string}[] = [];
+              allParentLibraries.forEach(pl=>{
+                if(!uniqueParentLibraries.map(upl=>upl.guid).includes(pl.guid)){
+                  uniqueParentLibraries.push(pl);
+                }
+              });
+              this.allLibraryList.set(uniqueParentLibraries);
+
+              /*this.shelfGuidToParentLibrariesTitlesMap.update(map=>{
+                res.forEach(shelf=>
+                  map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
+                );
+                return map;
+              });*/
             }
           },
         });

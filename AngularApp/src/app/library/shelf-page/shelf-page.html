@@ -32,6 +32,10 @@
         </mat-card-content>
         <mat-card-actions align="end">
             @if(isMyShelf()){
+            <button matIconButton class="noPaddingBtn" matTooltip="Edit Parent Libraries"
+                (click)="editParentLibraries()">
+                <mat-icon>edit</mat-icon>
+            </button>
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
                 <mat-icon>edit</mat-icon>
             </button>

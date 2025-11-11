@@ -26,7 +26,7 @@ public class Library_ShelfDbModel
     public string OwnerGuid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
-    public Library_LibraryDbModel Library { get; set; } = null!;
+    public List<Library_LibraryDbModel> Libraries { get; set; } = [];
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -83,10 +83,10 @@ public class Library_DbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //*********** Library-Shelves One-To-Many *********
+        //*********** Libraries-Shelves Many-To-Many *********
         modelBuilder.Entity<Library_LibraryDbModel>()
         .HasMany<Library_ShelfDbModel>(l => l.Shelves)
-        .WithOne(sh => sh.Library);
+        .WithMany(sh => sh.Libraries);
         //.IsRequired(true);
         //.OnDelete(DeleteBehavior.Cascade);
 
@@ -209,17 +209,9 @@ public class Library_Process //singleton service
         if (!await libraryDb.Shelves.AnyAsync(shelf =>
             shelf.OwnerGuid == ownerGuid && shelf.Title == formModel.Title))
         {
-            Library_LibraryDbModel? libraryContainer =
-            await libraryDb.Libraries.FirstOrDefaultAsync(lib => lib.Guid == formModel.LibraryGuid);
-
-            if (libraryContainer is null)
-            {
-                return new ProcessResult()
-                {
-                    ErrorTitle = "Library",
-                    ErrorDescription = $"There's no library with guid '{formModel.LibraryGuid}'!"
-                };
-            }
+            List<Library_LibraryDbModel> parentLibraries = await libraryDb.Libraries
+            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
+            .ToListAsync();
 
             Library_ShelfDbModel shelfDbModel;
             if (formModel.Title == "Default Shelf")
@@ -229,7 +221,6 @@ public class Library_Process //singleton service
                     Title = formModel.Title,
                     OwnerGuid = ownerGuid,
                     Description = formModel.Description,
-                    Library = libraryContainer,
                     Guid = "DefaultShelf",
                 };
             }
@@ -240,9 +231,10 @@ public class Library_Process //singleton service
                     Title = formModel.Title,
                     OwnerGuid = ownerGuid,
                     Description = formModel.Description,
-                    Library = libraryContainer,
                 };
             }
+
+            shelfDbModel.Libraries = parentLibraries;
 
             await libraryDb.Shelves.AddAsync(shelfDbModel);
             await libraryDb.SaveChangesAsync();
@@ -407,12 +399,12 @@ public class Library_Process //singleton service
     string ownerGuid)
     {
         // creating Default library
-        Library_NewLibraryFormModel libraryFormModel = new()
+        Library_NewLibraryFormModel defaultLibraryFormModel = new()
         {
             Title = "Default Library",
             Description = "Containing all shelves that doesn't belong to anyother libraries."
         };
-        var createDefaultLibraryResult = await CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
+        var createDefaultLibraryResult = await CreateNewLibrary(libraryDb, ownerGuid, defaultLibraryFormModel);
 
         Library_LibraryDbModel? defaultLibrary;
         if (createDefaultLibraryResult.Success &&
@@ -433,18 +425,18 @@ public class Library_Process //singleton service
         else
         {
             // creating Default shelf in Default library
-            Library_NewShelfFormModel shelfFormModel = new()
+            Library_NewShelfFormModel defaultShelfFormModel = new()
             {
                 Title = "Default Shelf",
                 Description = "Containing all documents that doesn't belong to anyother shelves.",
-                LibraryGuid = defaultLibrary.Guid,
+                LibraryGuids = [defaultLibrary.Guid],
             };
-            var createDefaultShelfResult = await CreateNewShelf(libraryDb, ownerGuid, shelfFormModel);
-            if (!createDefaultShelfResult.Success)
+            var createDefaultShelfResult = await CreateNewShelf(libraryDb, ownerGuid, defaultShelfFormModel);
+            /*if (!createDefaultShelfResult.Success)
             {
                 //log
                 Console.WriteLine($"\n***** {createDefaultShelfResult.ErrorTitle}: {createDefaultShelfResult.ErrorDescription}");
-            }
+            }*/
         }
     }
 
@@ -478,7 +470,7 @@ public class Library_ShelfCardModel
     public string OwnerGuid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
-    public Library_LibraryBrief Library { get; set; } = null!;
+    public Library_LibraryBrief[] Libraries { get; set; } = [];
     public Library_DocumentCardModel[] DocumentCardModels { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public int TotalNumberOfShelfDocuments { get; set; }
@@ -522,7 +514,7 @@ public class Library_ShelfBrief
 {
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;
-    public string LibraryTitle { get; set; } = null!;
+    public Library_LibraryBrief[] Libraries { get; set; } = [];
     public Library_OwnerBrief Owner { get; set; } = null!;
     public Library_DocumentBrief[] Documents { get; set; } = [];
 }
@@ -565,8 +557,8 @@ public class Library_NewShelfFormModel
     [StringLength(500)]
     public string? Description { get; set; } = null;
 
-    [StringLength(32)]
-    public string LibraryGuid { get; set; } = null!;
+    [MaxStringArrayLength(100, 32)]
+    public string[] LibraryGuids { get; set; } = [];
 
     public IFormFile? Image { get; set; }
 }
@@ -633,3 +625,21 @@ public class Library_EditIntroductionFormModel
 
     public IFormFile? Image { get; set; }
 }
+
+public class Library_DocumentParentShelvesFormModel
+{
+    [StringLength(32)]
+    public string DocumentGuid { get; set; } = null!;
+
+    [MaxStringArrayLength(100, 32)]
+    public string[] ShelfGuids { get; set; } = [];
+}
+public class Library_ShelfParentLibrariesFormModel
+{
+    [StringLength(32)]
+    public string ShelfGuid { get; set; } = null!;
+
+    [MaxStringArrayLength(100, 32)]
+    public string[] LibraryGuids { get; set; } = [];
+}
+

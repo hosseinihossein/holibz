@@ -148,11 +148,69 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid)
     {
-        var shelfCardModels = await libraryDb.Shelves
-        .Include(shelf => shelf.Library)
+        Library_ShelfCardModel[]? shelfCardModels = await libraryDb.Libraries
+        .Include(lib => lib.Shelves)
+        .ThenInclude(shelf => shelf.Documents)
+        .ThenInclude(doc => doc.Elements)
+        .Where(lib => lib.Guid == libraryGuid)
+        .Select(lib => lib.Shelves.Select(shelf => new Library_ShelfCardModel()
+        {
+            CreatedAt = shelf.CreatedAt,
+            Description = shelf.Description,
+            DocumentCardModels = shelf.Documents
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Take(10)
+            .Select(doc => new Library_DocumentCardModel()
+            {
+                Description = doc.Description,
+                Guid = doc.Guid,
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+                OwnerGuid = doc.OwnerGuid,
+                Title = doc.Title,
+            }).ToArray(),
+            Guid = shelf.Guid,
+            Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
+            {
+                Guid = shelfLib.Guid,
+                Title = shelfLib.Title,
+            }).ToArray(),
+            Title = shelf.Title,
+            OwnerGuid = shelf.OwnerGuid,
+            TotalNumberOfShelfDocuments = shelf.Documents.Count,
+        }).ToArray())
+        .AsSplitQuery()
+        .FirstOrDefaultAsync();
+
+        if (shelfCardModels is null)
+        {
+            ModelState.AddModelError("libraryGuid", "Couldn't find any library with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        foreach (var shelfCardModel in shelfCardModels)
+        {
+            string shelfImagePath =
+            Path.Combine(Storage_Shelf.FullName, shelfCardModel.Guid, "image");
+            shelfCardModel.HasImage = System.IO.File.Exists(shelfImagePath);
+
+            foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
+            {
+                documentCardModel.HasImage =
+                System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
+            }
+        }
+
+        return Ok(shelfCardModels);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> UserShelfList([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        Library_ShelfCardModel[] shelfCardModels = await libraryDb.Shelves
+        .Include(shelf => shelf.Libraries)
         .Include(shelf => shelf.Documents)
         .ThenInclude(doc => doc.Elements)
-        .Where(shelf => shelf.Library.Guid == libraryGuid)
+        .Where(shelf => shelf.OwnerGuid == ownerGuid)
         .Select(shelf => new Library_ShelfCardModel()
         {
             CreatedAt = shelf.CreatedAt,
@@ -169,11 +227,11 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
             }).ToArray(),
             Guid = shelf.Guid,
-            Library = new Library_LibraryBrief()
+            Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
             {
-                Guid = shelf.Library.Guid,
-                Title = shelf.Library.Title,
-            },
+                Guid = shelfLib.Guid,
+                Title = shelfLib.Title,
+            }).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.OwnerGuid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
@@ -201,7 +259,7 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> ShelfModel([FromQuery][StringLength(32)] string shelfGuid)
     {
         var shelfCardModel = await libraryDb.Shelves
-        .Include(shelf => shelf.Library)
+        .Include(shelf => shelf.Libraries)
         .Include(shelf => shelf.Documents)
         .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Guid == shelfGuid)
@@ -221,11 +279,11 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
             }).ToArray(),
             Guid = shelf.Guid,
-            Library = new Library_LibraryBrief()
+            Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
             {
-                Guid = shelf.Library.Guid,
-                Title = shelf.Library.Title,
-            },
+                Guid = shelfLib.Guid,
+                Title = shelfLib.Title,
+            }).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.OwnerGuid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
@@ -335,7 +393,7 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentPageModel([FromQuery][StringLength(32)] string documentGuid)
     {
-        var customDocumentModel = await libraryDb.Documents
+        /*var customDocumentModel = await libraryDb.Documents
         .Include(doc => doc.Shelves)
         .Include(doc => doc.Elements)
         .Include(doc => doc.Tags)
@@ -389,12 +447,16 @@ public class LibraryController : ControllerBase
 
         Library_ShelfBrief[] shelfBriefs = await libraryDb.Shelves
         .Include(shelf => shelf.Documents)
-        .Include(shelf => shelf.Library)
+        .Include(shelf => shelf.Libraries)
         .Where(shelf => customDocumentModel.ShelvesGuids.Contains(shelf.Guid))
         .Select(shelf => new Library_ShelfBrief()
         {
             //Description = shelf.Description,
-            LibraryTitle = shelf.Library.Title,
+            Libraries = shelf.Libraries.Select(lib => new Library_LibraryBrief()
+            {
+                Guid = lib.Guid,
+                Title = lib.Title,
+            }).ToArray(),
             Owner = new Library_OwnerBrief() { UserGuid = shelf.OwnerGuid },
             Guid = shelf.Guid,
             Title = shelf.Title,
@@ -443,10 +505,95 @@ public class LibraryController : ControllerBase
             Tags = customDocumentModel.Tags.ToArray(),
             Title = customDocumentModel.Title,
             Version = customDocumentModel.Version,
-            HasImage = System.IO.File.Exists(Path
-                .Combine(Storage_Document.FullName, customDocumentModel.Guid, "image")
+            HasImage = System.IO.File.Exists(
+                Path.Combine(Storage_Document.FullName, customDocumentModel.Guid, "image")
             ),
         };
+
+        return Ok(documentPageModel);*/
+
+        Library_DocumentPageModel? documentPageModel = await libraryDb.Documents
+        .Include(doc => doc.Tags)
+        .Include(doc => doc.Elements)
+        .Include(doc => doc.RelatedVersions)
+            .ThenInclude(rv => rv!.Documents)
+        .Include(doc => doc.Shelves)
+            .ThenInclude(shelf => shelf.Documents)
+        .Include(doc => doc.Shelves)
+            .ThenInclude(shelf => shelf.Libraries)
+        .Where(doc => doc.Guid == documentGuid)
+        .Select(doc => new Library_DocumentPageModel()
+        {
+            CreatedAt = doc.CreatedAt,
+            Description = doc.Description,
+            Guid = doc.Guid,
+            HasImage = System.IO.File.Exists(
+                Path.Combine(Storage_Document.FullName, doc.Guid, "image")
+            ),
+            Tags = doc.Tags.Select(tag => tag.Name).ToArray(),
+            Title = doc.Title,
+            Version = doc.Version,
+            Owner = new Library_OwnerBrief()
+            {
+                UserGuid = doc.OwnerGuid,
+                UserName = "_",
+            },
+            Elements = doc.Elements.Select(el => new Library_ElementModel()
+            {
+                Guid = el.Guid,
+                Order = el.Order,
+                OwnerGuid = el.OwnerGuid,
+                Title = el.Title,
+                Type = el.Type,
+                UpdatedAt = el.UpdatedAt,
+                Value = el.Value ??
+                    $"/api/Library/ElementFile?elementGuid={el.Guid}&elementFileName={el.FileName}",
+            }).ToArray(),
+            RelatedVersions = doc.RelatedVersions == null ? new Library_VersionBrief[0] :
+                doc.RelatedVersions!.Documents.Select(rvDoc => new Library_VersionBrief()
+                {
+                    DocumentGuid = rvDoc.Guid,
+                    VersionName = rvDoc.Version,
+                }).ToArray(),
+            Shelves = doc.Shelves.Select(shelf => new Library_ShelfBrief()
+            {
+                Documents = shelf.Documents.Select(shelfDoc => new Library_DocumentBrief()
+                {
+                    Guid = shelfDoc.Guid,
+                    Title = shelfDoc.Title,
+                }).ToArray(),
+                Guid = shelf.Guid,
+                Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
+                {
+                    Guid = shelfLib.Guid,
+                    Title = shelfLib.Title,
+                }).ToArray(),
+                Owner = new Library_OwnerBrief()
+                {
+                    UserGuid = shelf.OwnerGuid,
+                    UserName = "_",
+                },
+                Title = shelf.Title,
+            }).ToArray(),
+        })
+        .AsSplitQuery()
+        .FirstOrDefaultAsync();
+
+        if (documentPageModel is null)
+        {
+            ModelState.AddModelError("documentGuid", "Couldn't find any document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+
+        documentPageModel.Owner.UserName = (await userManager.Users
+        .Where(u => u.UserGuid == documentPageModel.Owner.UserGuid)
+        .Select(u => u.UserName)
+        .FirstOrDefaultAsync())!;
+        foreach (var shelf in documentPageModel.Shelves)
+        {
+            shelf.Owner = documentPageModel.Owner;
+        }
 
         return Ok(documentPageModel);
     }
@@ -1105,6 +1252,98 @@ public class LibraryController : ControllerBase
         }
 
         return Ok(new { success = true });
+    }
+
+
+
+
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditDocumentParentShelves([FromBody]
+    Library_DocumentParentShelvesFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+                .FirstOrDefaultAsync(doc => doc.Guid == formModel.DocumentGuid);
+            if (documentDbModel is null)
+            {
+                ModelState.AddModelError("Guid", "Couldn't find the specified document!");
+                return BadRequest(ModelState);
+            }
+
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
+            if (userGuid != documentDbModel.OwnerGuid)
+            {
+                ModelState.AddModelError("Authorization", "Only the owner can edit the parent shelves of the document!");
+                return BadRequest(ModelState);
+            }
+
+            List<Library_ShelfDbModel> parentShelfDbModels = await libraryDb.Shelves
+            .Include(shelf => shelf.Documents)
+            .Where(shelf => formModel.ShelfGuids.Contains(shelf.Guid))
+            .ToListAsync();
+
+            foreach (var shelfDbModel in parentShelfDbModels)
+            {
+                shelfDbModel.Documents.Add(documentDbModel);
+            }
+
+            await libraryDb.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+
+        return BadRequest(ModelState);
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditShelfParentLibraries([FromBody]
+    Library_ShelfParentLibrariesFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
+            .FirstOrDefaultAsync(doc => doc.Guid == formModel.ShelfGuid);
+            if (shelfDbModel is null)
+            {
+                ModelState.AddModelError("Guid", "Couldn't find the specified shelf!");
+                return BadRequest(ModelState);
+            }
+
+            string userGuid = (await userManager.Users
+            .Where(u => u.UserName == User.Identity!.Name!)
+            .Select(u => u.UserGuid)
+            .FirstOrDefaultAsync())!;
+            if (userGuid != shelfDbModel.OwnerGuid)
+            {
+                ModelState.AddModelError("Authorization", "Only the owner can edit the parents of the shelf!");
+                return BadRequest(ModelState);
+            }
+
+            List<Library_LibraryDbModel> libraryDbModels = await libraryDb.Libraries
+            .Include(lib => lib.Shelves)
+            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
+            .ToListAsync();
+
+            foreach (var libraryDbModel in libraryDbModels)
+            {
+                libraryDbModel.Shelves.Add(shelfDbModel);
+            }
+
+            await libraryDb.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+
+        return BadRequest(ModelState);
     }
 
 

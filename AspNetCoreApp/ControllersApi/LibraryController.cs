@@ -687,7 +687,7 @@ public class LibraryController : ControllerBase
             }
 
             string ownerGuid = (await userManager.Users
-            .Where(user => user.UserName == User.Identity!.Name!)
+            .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(user => user.UserGuid)
             .FirstOrDefaultAsync())!;
 
@@ -811,7 +811,7 @@ public class LibraryController : ControllerBase
         if (ModelState.IsValid)
         {
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
 
@@ -838,7 +838,7 @@ public class LibraryController : ControllerBase
         if (ModelState.IsValid)
         {
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
 
@@ -865,7 +865,7 @@ public class LibraryController : ControllerBase
         if (ModelState.IsValid)
         {
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
 
@@ -892,7 +892,7 @@ public class LibraryController : ControllerBase
         if (ModelState.IsValid)
         {
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
 
@@ -944,7 +944,7 @@ public class LibraryController : ControllerBase
             }
 
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
             if (userGuid != documentDbModel.OwnerGuid)
@@ -1010,7 +1010,7 @@ public class LibraryController : ControllerBase
             }
 
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
             if (userGuid != libraryDbModel.OwnerGuid)
@@ -1076,7 +1076,7 @@ public class LibraryController : ControllerBase
             }
 
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
             if (userGuid != shelfDbModel.OwnerGuid)
@@ -1143,7 +1143,7 @@ public class LibraryController : ControllerBase
         }
 
         string userGuid = (await userManager.Users
-        .Where(u => u.UserName == User.Identity!.Name!)
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstOrDefaultAsync())!;
         if (userGuid != documentDbModel.OwnerGuid)
@@ -1185,7 +1185,7 @@ public class LibraryController : ControllerBase
         }
 
         string userGuid = (await userManager.Users
-        .Where(u => u.UserName == User.Identity!.Name!)
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstOrDefaultAsync())!;
         if (userGuid != libraryDbModel.OwnerGuid)
@@ -1227,7 +1227,7 @@ public class LibraryController : ControllerBase
         }
 
         string userGuid = (await userManager.Users
-        .Where(u => u.UserName == User.Identity!.Name!)
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstOrDefaultAsync())!;
         if (userGuid != shelfDbModel.OwnerGuid)
@@ -1275,7 +1275,7 @@ public class LibraryController : ControllerBase
             }
 
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
             if (userGuid != documentDbModel.OwnerGuid)
@@ -1319,7 +1319,7 @@ public class LibraryController : ControllerBase
             }
 
             string userGuid = (await userManager.Users
-            .Where(u => u.UserName == User.Identity!.Name!)
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
             if (userGuid != shelfDbModel.OwnerGuid)

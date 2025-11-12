@@ -19,6 +19,15 @@ namespace AspNetCoreApp.Models;
 public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identity_RoleDbModel, int>
 {
     public Identity_DbContext(DbContextOptions<Identity_DbContext> options) : base(options) { }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        //*************************** Index Columns *********************************
+        modelBuilder.Entity<Identity_UserDbModel>()
+        .HasIndex(u => u.UserGuid)
+        .IsUnique(true);
+    }
 }
 
 public class Identity_UserDbModel : IdentityUser<int>
@@ -259,11 +268,13 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 /******************************** Identity Process *******************************/
 public class Identity_Process
 {
-    readonly DirectoryInfo UserSeedDirectoryInfo;
+    //readonly DirectoryInfo UserSeedDirectoryInfo;
+    public readonly DirectoryInfo Storage_Users;
     //readonly IWebHostEnvironment env;
     public Identity_Process(IWebHostEnvironment _env)
     {
-        UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UsersSeedData"));
+        //UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UsersSeedData"));
+        Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "Users"));
     }
 
     public async Task UpdateUserSeed(Identity_UserDbModel user,
@@ -283,25 +294,27 @@ public class Identity_Process
         };
 
         string json = JsonSerializer.Serialize(userSeedModel);
-        string userSeedPath = Path.Combine(UserSeedDirectoryInfo.FullName, user.UserGuid);
+        string userSeedPath = Path.Combine(Storage_Users.FullName, user.UserGuid, "data");
 
         await File.WriteAllTextAsync(userSeedPath, json);
     }
 
     public void DeleteUserSeed(Identity_UserDbModel user)
     {
-        string userSeedPath = Path.Combine(UserSeedDirectoryInfo.FullName, user.UserGuid);
+        string userSeedPath = Path.Combine(Storage_Users.FullName, user.UserGuid, "data");
         File.Delete(userSeedPath);
     }
 
     public async Task SeedUsersToDb(UserManager<Identity_UserDbModel> userManager)
     {
-        foreach (var fileInfo in UserSeedDirectoryInfo.EnumerateFiles())
+        foreach (var userDirectory in Storage_Users.EnumerateDirectories())
         {
-            var myUser = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == fileInfo.Name);
+            var myUser = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userDirectory.Name);
             if (myUser != null) continue;
 
-            string json = await File.ReadAllTextAsync(fileInfo.FullName);
+            //here myUser is null
+            string userSeedPath = Path.Combine(Storage_Users.FullName, userDirectory.Name, "data");
+            string json = await File.ReadAllTextAsync(userSeedPath);
             Identity_UserSeedModel? userSeedModel;
             try
             {
@@ -310,6 +323,7 @@ public class Identity_Process
             catch
             {
                 //log
+                Console.WriteLine($"\n***** an exception occured during deserializing user data! userGuid: '{userDirectory.Name}'");
                 continue;
             }
             if (userSeedModel is not null)

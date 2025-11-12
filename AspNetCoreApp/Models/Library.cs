@@ -83,6 +83,7 @@ public class Library_DbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        //*************************** Relationships *********************************
         //*********** Libraries-Shelves Many-To-Many *********
         modelBuilder.Entity<Library_LibraryDbModel>()
         .HasMany<Library_ShelfDbModel>(l => l.Shelves)
@@ -112,6 +113,31 @@ public class Library_DbContext : DbContext
         .HasMany<Library_TagDbModel>(d => d.Tags)
         .WithMany(t => t.Documents);
 
+        //*************************** Index Columns *********************************
+        modelBuilder.Entity<Library_LibraryDbModel>()
+        .HasIndex(lib => lib.Guid)
+        .IsUnique(true);
+
+        modelBuilder.Entity<Library_ShelfDbModel>()
+        .HasIndex(shelf => shelf.Guid)
+        .IsUnique(true);
+
+        modelBuilder.Entity<Library_DocumentDbModel>()
+        .HasIndex(doc => doc.Guid)
+        .IsUnique(true);
+
+        modelBuilder.Entity<Library_RelatedVersionsDbModel>()
+        .HasIndex(rv => rv.Guid)
+        .IsUnique(true);
+
+        modelBuilder.Entity<Library_ElementDbModel>()
+        .HasIndex(el => el.Guid)
+        .IsUnique(true);
+
+        modelBuilder.Entity<Library_TagDbModel>()
+        .HasIndex(tag => tag.Name)
+        .IsUnique(true);
+
     }
 }
 
@@ -127,29 +153,30 @@ public class Library_Process //singleton service
 
     public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator)
     {
-        Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library"));
-        Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Shelf"));
-        Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Document"));
-        Storage_Element = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Element"));
+        Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
+        Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
+        Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Documents"));
+        Storage_Element = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Elements"));
         fileNameValidator = _fileNameValidator;
     }
     public string? BuildTagName(string value)
     {
         if (!string.IsNullOrWhiteSpace(value))
         {
-            string v1 = value.Trim().Replace(" ", "_").ToUpper();
-            string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-            string v2 = "";
-            foreach (char c in v1)
+            value = value.Trim().Replace(" ", "_").ToUpper();
+            string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";//"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+            for (int i = 0; i < value.Length; i++)
             {
-                if (!allowedChars.Contains(c))
+                if (!allowedChars.Contains(value[i]))
                 {
-                    v2 = v1.Replace(c.ToString(), "");
+                    value = value.Replace(value[i].ToString(), "");
+                    i--;
+                    continue;
                 }
             }
-            if (v2.Length > 3)
+            if (value.Length > 3)
             {
-                return v2;
+                return value;
             }
         }
         return null;

@@ -20,20 +20,23 @@ public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
-    readonly DirectoryInfo usersImagesDirectoryInfo;
+    //readonly DirectoryInfo usersImagesDirectoryInfo;
+    readonly Identity_Process identityProcess;
+    readonly DirectoryInfo Storage_Users;
 
 
 
 
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager,
-    UserManager<Identity_UserDbModel> userManager, IWebHostEnvironment env)
+    UserManager<Identity_UserDbModel> userManager, Identity_Process identityProcess)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
-
-        usersImagesDirectoryInfo =
-        Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UsersImages"));
+        this.identityProcess = identityProcess;
+        Storage_Users = identityProcess.Storage_Users;
+        //usersImagesDirectoryInfo =
+        //Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UsersImages"));
     }
 
 
@@ -246,7 +249,7 @@ public class IdentityController : ControllerBase
         }
         return Ok(new { isTaken = false });*/
 
-        bool userExist = await userManager.Users.AnyAsync(u => u.UserName == username);
+        bool userExist = await userManager.Users.AnyAsync(u => u.NormalizedUserName == userManager.NormalizeName(username));
         return Ok(new { isTaken = userExist });
     }
 
@@ -414,7 +417,7 @@ public class IdentityController : ControllerBase
         }
 
         string userImagePath =
-        Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
+        Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
         if (System.IO.File.Exists(userImagePath))
         {
             return $"/api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}";
@@ -431,7 +434,7 @@ public class IdentityController : ControllerBase
         }*/
 
         string userImagePath =
-        Path.Combine(usersImagesDirectoryInfo.FullName, userGuid);
+        Path.Combine(Storage_Users.FullName, userGuid, "image");
         if (System.IO.File.Exists(userImagePath))
         {
             return $"/api/Identity/UserImage?userGuid={userGuid}&v={version}";
@@ -450,7 +453,7 @@ public class IdentityController : ControllerBase
         }*/
 
         string userImagePath =
-        Path.Combine(usersImagesDirectoryInfo.FullName, userGuid);
+        Path.Combine(Storage_Users.FullName, userGuid, "image");
         if (System.IO.File.Exists(userImagePath))
         {
             return PhysicalFile(userImagePath, "application/octet-stream", "userImage", true);
@@ -468,7 +471,8 @@ public class IdentityController : ControllerBase
         if (ModelState.IsValid)
         {
             Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-            string userImagePath = Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
+            string userImagePath =
+            Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
             /*if (model.UserImageFile is null)
             {
                 if (System.IO.File.Exists(userImagePath))
@@ -504,7 +508,8 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> DeleteUserImage()
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-        string userImagePath = Path.Combine(usersImagesDirectoryInfo.FullName, user.UserGuid);
+        string userImagePath =
+        Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
 
         if (System.IO.File.Exists(userImagePath))
         {
@@ -700,8 +705,8 @@ public class IdentityController : ControllerBase
             {
                 allFilteredUsers = await userManager.Users
                 .Where(user =>
-                    (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
-                    (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                    (filter.UserName == null || user.NormalizedUserName!.Contains(userManager.NormalizeName(filter.UserName))) &&
+                    (filter.Email == null || user.NormalizedEmail!.Contains(userManager.NormalizeEmail(filter.Email))) &&
                     (createdFrom == null || user.CreatedAt >= createdFrom) &&
                     (createdTo == null || user.CreatedAt <= createdTo) &&
                     (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
@@ -731,8 +736,8 @@ public class IdentityController : ControllerBase
             {
                 allFilteredUsers = await userManager.Users
                 .Where(user =>
-                    (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
-                    (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                    (filter.UserName == null || user.NormalizedUserName!.Contains(userManager.NormalizeName(filter.UserName))) &&
+                    (filter.Email == null || user.NormalizedEmail!.Contains(userManager.NormalizeEmail(filter.Email))) &&
                     (createdFrom == null || user.CreatedAt >= createdFrom) &&
                     (createdTo == null || user.CreatedAt <= createdTo) &&
                     (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
@@ -758,8 +763,8 @@ public class IdentityController : ControllerBase
             {
                 allFilteredUsers = await userManager.Users
                 .Where(user =>
-                    (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
-                    (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                    (filter.UserName == null || user.NormalizedUserName!.Contains(userManager.NormalizeName(filter.UserName))) &&
+                    (filter.Email == null || user.NormalizedEmail!.Contains(userManager.NormalizeEmail(filter.Email))) &&
                     (createdFrom == null || user.CreatedAt >= createdFrom) &&
                     (createdTo == null || user.CreatedAt <= createdTo) &&
                     (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&
@@ -788,8 +793,8 @@ public class IdentityController : ControllerBase
         {
             allFilteredUsersLength = await userManager.Users
             .Where(user =>
-                (filter.UserName == null || user.UserName!.Contains(filter.UserName)) &&
-                (filter.Email == null || user.Email!.Contains(filter.Email)) &&
+                (filter.UserName == null || user.NormalizedUserName!.Contains(userManager.NormalizeName(filter.UserName))) &&
+                (filter.Email == null || user.NormalizedEmail!.Contains(userManager.NormalizeEmail(filter.Email))) &&
                 (createdFrom == null || user.CreatedAt >= createdFrom) &&
                 (createdTo == null || user.CreatedAt <= createdTo) &&
                 (filter.DisplayEmailPublicly == null || filter.DisplayEmailPublicly == user.DisplayEmailPublicly) &&

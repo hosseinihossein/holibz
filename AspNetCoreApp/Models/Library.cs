@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using AspNetCoreApp.Validators;
 using Microsoft.EntityFrameworkCore;
 
@@ -145,18 +146,22 @@ public class Library_DbContext : DbContext
 //*********************************** Processes **********************************
 public class Library_Process //singleton service
 {
-    public readonly DirectoryInfo Storage_Library;
-    public readonly DirectoryInfo Storage_Shelf;
-    public readonly DirectoryInfo Storage_Document;
-    public readonly DirectoryInfo Storage_Element;
-    public readonly FileNameValidator fileNameValidator;
+    public readonly DirectoryInfo Storage_Libraries;
+    public readonly DirectoryInfo Storage_Shelves;
+    public readonly DirectoryInfo Storage_Documents;
+    public readonly DirectoryInfo Storage_Elements;
+    readonly DirectoryInfo Storage_Tags;
+    readonly DirectoryInfo Storage_RelatedVersions;
+    readonly FileNameValidator fileNameValidator;
 
     public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator)
     {
-        Storage_Library = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
-        Storage_Shelf = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
-        Storage_Document = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Documents"));
-        Storage_Element = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Elements"));
+        Storage_Libraries = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
+        Storage_Shelves = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
+        Storage_Documents = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Documents"));
+        Storage_Elements = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Elements"));
+        Storage_Tags = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Tags"));
+        Storage_RelatedVersions = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "RelatedVersions"));
         fileNameValidator = _fileNameValidator;
     }
     public string? BuildTagName(string value)
@@ -214,7 +219,7 @@ public class Library_Process //singleton service
 
             if (formModel.Image is not null)
             {
-                DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Library.FullName, libraryDbModel.Guid));
+                DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
                 string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(libraryImagePath))
                 {
@@ -268,7 +273,7 @@ public class Library_Process //singleton service
 
             if (formModel.Image is not null)
             {
-                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid));
+                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
                 string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(shelfImagePath))
                 {
@@ -330,7 +335,7 @@ public class Library_Process //singleton service
 
         if (formModel.Image is not null)
         {
-            DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Document.FullName, documentDbModel.Guid));
+            DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Documents.FullName, documentDbModel.Guid));
             string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
             using (FileStream fs = System.IO.File.Create(documentImagePath))
             {
@@ -400,7 +405,7 @@ public class Library_Process //singleton service
             await libraryDb.Elements.AddAsync(elementDbmodel);
             await libraryDb.SaveChangesAsync();
 
-            DirectoryInfo elementDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Element.FullName, elementDbmodel.Guid));
+            DirectoryInfo elementDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Elements.FullName, elementDbmodel.Guid));
             string elementFilePath = Path.Combine(elementDirectoryInfo.FullName, validFileName);
             using (FileStream fs = System.IO.File.Create(elementFilePath))
             {
@@ -467,6 +472,294 @@ public class Library_Process //singleton service
         }
     }
 
+    //************************************ seed Library data **********************************
+    public async Task Update_LibrarySeed(Library_LibraryDbModel libraryDbModel)
+    {
+        Library_LibrarySeedModel seedModel = new(libraryDbModel);
+        string json = JsonSerializer.Serialize(seedModel);
+        string seedPath = Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid, "data.json");
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_LibrarySeed(string libraryGuid)
+    {
+        string seedPath = Path.Combine(Storage_Libraries.FullName, libraryGuid, "data.json");
+        if (File.Exists(seedPath))
+        {
+            File.Delete(seedPath);
+        }
+    }
+    public async Task Seed_LibrariesToDb(Library_DbContext libraryDb)
+    {
+        foreach (var libraryDirectory in Storage_Libraries.EnumerateDirectories())
+        {
+            var libraryDbModel = await libraryDb.Libraries
+            .FirstOrDefaultAsync(lib => lib.Guid == libraryDirectory.Name);
+            if (libraryDbModel is not null) continue;
+
+            //here librariDbmodel is null
+            string seedPath = Path.Combine(Storage_Libraries.FullName, libraryDirectory.Name, "data.json");
+            string json = await File.ReadAllTextAsync(seedPath);
+            Library_LibrarySeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Library_LibrarySeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n***** an exception occured during deserializing library seed data! libraryGuid: '{libraryDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                libraryDbModel = await seedModel.Create_LibraryDbModel(libraryDb);
+                await libraryDb.Libraries.AddAsync(libraryDbModel);
+            }
+        }
+        await libraryDb.SaveChangesAsync();
+    }
+
+    //************************************ seed Shelf data **********************************
+    public async Task Update_ShelfSeed(Library_ShelfDbModel shelfDbModel)
+    {
+        Library_ShelfSeedModel seedModel = new(shelfDbModel);
+        string json = JsonSerializer.Serialize(seedModel);
+        string seedPath = Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid, "data.json");
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_ShelfSeed(string shelfGuid)
+    {
+        string seedPath = Path.Combine(Storage_Shelves.FullName, shelfGuid, "data.json");
+        if (File.Exists(seedPath))
+        {
+            File.Delete(seedPath);
+        }
+    }
+    public async Task Seed_ShelvesToDb(Library_DbContext libraryDb)
+    {
+        foreach (var shelfDirectory in Storage_Shelves.EnumerateDirectories())
+        {
+            var shelfDbModel = await libraryDb.Shelves
+            .FirstOrDefaultAsync(shelf => shelf.Guid == shelfDirectory.Name);
+            if (shelfDbModel is not null) continue;
+
+            //here shelfDbModel is null
+            string seedPath = Path.Combine(Storage_Shelves.FullName, shelfDirectory.Name, "data.json");
+            string json = await File.ReadAllTextAsync(seedPath);
+            Library_ShelfSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Library_ShelfSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n***** an exception occured during deserializing shelf seed data! shelfGuid: '{shelfDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                shelfDbModel = await seedModel.Create_ShelfDbModel(libraryDb);
+                await libraryDb.Shelves.AddAsync(shelfDbModel);
+            }
+        }
+        await libraryDb.SaveChangesAsync();
+    }
+
+    //************************************ seed Document data **********************************
+    public async Task Update_DocumentSeed(Library_DocumentDbModel documentDbModel)
+    {
+        Library_DocumentSeedModel seedModel = new(documentDbModel);
+        string json = JsonSerializer.Serialize(seedModel);
+        string seedPath = Path.Combine(Storage_Documents.FullName, documentDbModel.Guid, "data.json");
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_DocumentSeed(string documentGuid)
+    {
+        string seedPath = Path.Combine(Storage_Documents.FullName, documentGuid, "data.json");
+        if (File.Exists(seedPath))
+        {
+            File.Delete(seedPath);
+        }
+    }
+    public async Task Seed_DocumentsToDb(Library_DbContext libraryDb)
+    {
+        foreach (var documentDirectory in Storage_Documents.EnumerateDirectories())
+        {
+            var documentDbModel = await libraryDb.Documents
+            .FirstOrDefaultAsync(doc => doc.Guid == documentDirectory.Name);
+            if (documentDbModel is not null) continue;
+
+            //here documentDbModel is null
+            string seedPath = Path.Combine(Storage_Documents.FullName, documentDirectory.Name, "data.json");
+            string json = await File.ReadAllTextAsync(seedPath);
+            Library_DocumentSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Library_DocumentSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n***** an exception occured during deserializing document seed data! documentGuid: '{documentDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                documentDbModel = await seedModel.Create_DocumentDbModel(libraryDb);
+                await libraryDb.Documents.AddAsync(documentDbModel);
+            }
+        }
+        await libraryDb.SaveChangesAsync();
+    }
+
+    //************************************ seed Element data **********************************
+    public async Task Update_ElementSeed(Library_ElementDbModel elementDbModel)
+    {
+        Library_ElementSeedModel seedModel = new(elementDbModel);
+        string json = JsonSerializer.Serialize(seedModel);
+        string seedPath = Path.Combine(Storage_Elements.FullName, elementDbModel.Guid, "data.json");
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_ElementSeed(string elementGuid)
+    {
+        string seedPath = Path.Combine(Storage_Elements.FullName, elementGuid, "data.json");
+        if (File.Exists(seedPath))
+        {
+            File.Delete(seedPath);
+        }
+    }
+    public async Task Seed_ElementsToDb(Library_DbContext libraryDb)
+    {
+        foreach (var elementDirectory in Storage_Elements.EnumerateDirectories())
+        {
+            var elementDbModel = await libraryDb.Elements
+            .FirstOrDefaultAsync(el => el.Guid == elementDirectory.Name);
+            if (elementDbModel is not null) continue;
+
+            //here elementDbModel is null
+            string seedPath = Path.Combine(Storage_Elements.FullName, elementDirectory.Name, "data.json");
+            string json = await File.ReadAllTextAsync(seedPath);
+            Library_ElementSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Library_ElementSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n***** an exception occured during deserializing element seed data! elementGuid: '{elementDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                elementDbModel = await seedModel.Create_ElementDbModel(libraryDb);
+                if (elementDbModel is null)
+                {
+                    Console.WriteLine($"\n***** Parent document for the element is null! You first need to seed the parent document.");
+                    continue;
+                }
+                await libraryDb.Elements.AddAsync(elementDbModel);
+            }
+        }
+        await libraryDb.SaveChangesAsync();
+    }
+
+    //************************************ seed RelatedVersions data **********************************
+    public async Task Update_RelatedVersionsSeed(Library_RelatedVersionsDbModel rvDbModel)
+    {
+        Library_RelatedVersionsSeedModel seedModel = new(rvDbModel);
+        string json = JsonSerializer.Serialize(seedModel);
+        string seedPath = Path.Combine(Storage_RelatedVersions.FullName, rvDbModel.Guid, "data.json");
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_RelatedVersionsSeed(string rvGuid)
+    {
+        string seedPath = Path.Combine(Storage_RelatedVersions.FullName, rvGuid, "data.json");
+        if (File.Exists(seedPath))
+        {
+            File.Delete(seedPath);
+        }
+    }
+    public async Task Seed_RelatedVersionsToDb(Library_DbContext libraryDb)
+    {
+        foreach (var rvDirectory in Storage_RelatedVersions.EnumerateDirectories())
+        {
+            var rvDbModel = await libraryDb.RelatedVersions
+            .FirstOrDefaultAsync(el => el.Guid == rvDirectory.Name);
+            if (rvDbModel is not null) continue;
+
+            //here rvDbModel is null
+            string seedPath = Path.Combine(Storage_RelatedVersions.FullName, rvDirectory.Name, "data.json");
+            string json = await File.ReadAllTextAsync(seedPath);
+            Library_RelatedVersionsSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Library_RelatedVersionsSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n***** an exception occured during deserializing related versions seed data! rvGuid: '{rvDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                rvDbModel = await seedModel.Create_RelatedVersionsDbModel(libraryDb);
+                await libraryDb.RelatedVersions.AddAsync(rvDbModel);
+            }
+        }
+        await libraryDb.SaveChangesAsync();
+    }
+
+    //************************************ seed Tag data **********************************
+    public async Task Update_TagSeed(Library_TagDbModel tagDbModel)
+    {
+        Library_TagSeedModel seedModel = new(tagDbModel);
+        string json = JsonSerializer.Serialize(seedModel);
+        string seedPath = Path.Combine(Storage_Tags.FullName, tagDbModel.Name, "data.json");
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_TagSeed(string tagGuid)
+    {
+        string seedPath = Path.Combine(Storage_Tags.FullName, tagGuid, "data.json");
+        if (File.Exists(seedPath))
+        {
+            File.Delete(seedPath);
+        }
+    }
+    public async Task Seed_TagsToDb(Library_DbContext libraryDb)
+    {
+        foreach (var tagDirectory in Storage_Tags.EnumerateDirectories())
+        {
+            var tagDbModel = await libraryDb.Tags
+            .FirstOrDefaultAsync(tag => tag.Name == tagDirectory.Name);
+            if (tagDbModel is not null) continue;
+
+            //here rvDbModel is null
+            string seedPath = Path.Combine(Storage_Tags.FullName, tagDirectory.Name, "data.json");
+            string json = await File.ReadAllTextAsync(seedPath);
+            Library_TagSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Library_TagSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n***** an exception occured during deserializing tag seed data! tagName: '{tagDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                tagDbModel = await seedModel.Create_TagDbModel(libraryDb);
+                await libraryDb.Tags.AddAsync(tagDbModel);
+            }
+        }
+        await libraryDb.SaveChangesAsync();
+    }
+
+
 
 }
 public class ProcessResult
@@ -477,9 +770,271 @@ public class ProcessResult
     public object? ResultObject { get; set; } = null;
 }
 
+//************************************ Seed Data Models ********************************
+public class Library_LibrarySeedModel
+{
+    public string Guid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string? Description { get; set; } = null;
+    public string[] ShelvesGuids { get; set; } = [];
+    public DateTime CreatedAt { get; set; }
+
+    public Library_LibrarySeedModel() { }
+    public Library_LibrarySeedModel(Library_LibraryDbModel libraryDbModel)
+    {
+        Guid = libraryDbModel.Guid;
+        OwnerGuid = libraryDbModel.OwnerGuid;
+        Title = libraryDbModel.Title;
+        Description = libraryDbModel.Description;
+        ShelvesGuids = libraryDbModel.Shelves.Select(shelf => shelf.Guid).ToArray();
+        CreatedAt = libraryDbModel.CreatedAt;
+    }
+
+    public async Task<Library_LibraryDbModel> Create_LibraryDbModel(Library_DbContext libraryDb)
+    {
+        List<Library_ShelfDbModel> shelves = await libraryDb.Shelves
+        .Where(shelf => ShelvesGuids.Contains(shelf.Guid))
+        .ToListAsync();
+
+        Library_LibraryDbModel libraryDbModel = new()
+        {
+            CreatedAt = CreatedAt,
+            Description = Description,
+            Guid = Guid,
+            OwnerGuid = OwnerGuid,
+            Shelves = shelves,
+            Title = Title,
+        };
+
+        return libraryDbModel;
+    }
+}
+
+public class Library_ShelfSeedModel
+{
+    public string Guid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string? Description { get; set; } = null;
+    public string[] LibrariesGuids { get; set; } = [];
+    public string[] DocumentsGuids { get; set; } = [];
+    public DateTime CreatedAt { get; set; }
+
+    public Library_ShelfSeedModel() { }
+    public Library_ShelfSeedModel(Library_ShelfDbModel shelfDbModel)
+    {
+        Guid = shelfDbModel.Guid;
+        OwnerGuid = shelfDbModel.OwnerGuid;
+        Title = shelfDbModel.Title;
+        Description = shelfDbModel.Description;
+        LibrariesGuids = shelfDbModel.Libraries.Select(lib => lib.Guid).ToArray();
+        DocumentsGuids = shelfDbModel.Documents.Select(doc => doc.Guid).ToArray();
+        CreatedAt = shelfDbModel.CreatedAt;
+    }
+
+    public async Task<Library_ShelfDbModel> Create_ShelfDbModel(Library_DbContext libraryDb)
+    {
+        List<Library_LibraryDbModel> libraries = await libraryDb.Libraries
+        .Where(lib => LibrariesGuids.Contains(lib.Guid))
+        .ToListAsync();
+
+        List<Library_DocumentDbModel> documents = await libraryDb.Documents
+        .Where(doc => DocumentsGuids.Contains(doc.Guid))
+        .ToListAsync();
+
+        Library_ShelfDbModel shelfDbModel = new()
+        {
+            CreatedAt = CreatedAt,
+            Description = Description,
+            Documents = documents,
+            Guid = Guid,
+            Libraries = libraries,
+            OwnerGuid = OwnerGuid,
+            Title = Title,
+        };
+
+        return shelfDbModel;
+    }
+}
+
+public class Library_DocumentSeedModel
+{
+    public string Guid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public string Version { get; set; } = null!;
+    public string? RelatedVersionsGuid { get; set; }
+    public string[] ShelvesGuids { get; set; } = [];
+    public string[] ElementsGuids { get; set; } = [];
+    public string[] TagsNames { get; set; } = [];
+    public DateTime CreatedAt { get; set; }
+
+    public Library_DocumentSeedModel() { }
+    public Library_DocumentSeedModel(Library_DocumentDbModel documentDbModel)
+    {
+        Guid = documentDbModel.Guid;
+        OwnerGuid = documentDbModel.OwnerGuid;
+        Title = documentDbModel.Title;
+        Description = documentDbModel.Description;
+        Version = documentDbModel.Version;
+        RelatedVersionsGuid = documentDbModel.RelatedVersions?.Guid;
+        ShelvesGuids = documentDbModel.Shelves.Select(shelf => shelf.Guid).ToArray();
+        ElementsGuids = documentDbModel.Elements.Select(el => el.Guid).ToArray();
+        TagsNames = documentDbModel.Tags.Select(tag => tag.Name).ToArray();
+        CreatedAt = documentDbModel.CreatedAt;
+    }
+
+    public async Task<Library_DocumentDbModel> Create_DocumentDbModel(Library_DbContext libraryDb)
+    {
+        Library_RelatedVersionsDbModel? relaredVersionsDbmodel = await libraryDb.RelatedVersions
+        .FirstOrDefaultAsync(rv => rv.Guid == RelatedVersionsGuid);
+
+        List<Library_ShelfDbModel> shelves = await libraryDb.Shelves
+        .Where(shelf => ShelvesGuids.Contains(shelf.Guid))
+        .ToListAsync();
+
+        List<Library_ElementDbModel> elements = await libraryDb.Elements
+        .Where(el => ElementsGuids.Contains(el.Guid))
+        .ToListAsync();
+
+        List<Library_TagDbModel> tags = await libraryDb.Tags
+        .Where(tag => TagsNames.Contains(tag.Name))
+        .ToListAsync();
+
+        Library_DocumentDbModel documentDbModel = new()
+        {
+            CreatedAt = CreatedAt,
+            Description = Description,
+            Elements = elements,
+            Guid = Guid,
+            OwnerGuid = OwnerGuid,
+            RelatedVersions = relaredVersionsDbmodel,
+            Shelves = shelves,
+            Tags = tags,
+            Title = Title,
+            Version = Version,
+        };
+
+        return documentDbModel;
+    }
+}
+
+public class Library_ElementSeedModel
+{
+    public string Guid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
+    public string Type { get; set; } = null!;
+    public string? Value { get; set; }
+    public string? Title { get; set; }
+    public string? FileName { get; set; }
+    public int Order { get; set; }
+    public string DocumentGuid { get; set; } = null!;
+    public DateTime UpdatedAt { get; set; }
+
+    public Library_ElementSeedModel() { }
+    public Library_ElementSeedModel(Library_ElementDbModel elementDbModel)
+    {
+        Guid = elementDbModel.Guid;
+        OwnerGuid = elementDbModel.OwnerGuid;
+        Type = elementDbModel.Type;
+        Value = elementDbModel.Value;
+        Title = elementDbModel.Title;
+        FileName = elementDbModel.FileName;
+        Order = elementDbModel.Order;
+        DocumentGuid = elementDbModel.Document.Guid;
+        UpdatedAt = elementDbModel.UpdatedAt;
+    }
+
+    public async Task<Library_ElementDbModel?> Create_ElementDbModel(Library_DbContext libraryDb)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .FirstOrDefaultAsync(doc => doc.Guid == DocumentGuid);
+
+        if (documentDbModel is null)
+        {
+            return null;
+        }
+
+        Library_ElementDbModel elementDbModel = new()
+        {
+            Document = documentDbModel,
+            FileName = FileName,
+            Guid = Guid,
+            Order = Order,
+            OwnerGuid = OwnerGuid,
+            Title = Title,
+            Type = Type,
+            UpdatedAt = UpdatedAt,
+            Value = Value,
+        };
+
+        return elementDbModel;
+    }
+}
+
+public class Library_RelatedVersionsSeedModel
+{
+    public string Guid { get; set; } = null!;
+    public string[] DocumentsGuids { get; set; } = [];
+
+    public Library_RelatedVersionsSeedModel() { }
+    public Library_RelatedVersionsSeedModel(Library_RelatedVersionsDbModel relatedVersionsDbModel)
+    {
+        Guid = relatedVersionsDbModel.Guid;
+        DocumentsGuids = relatedVersionsDbModel.Documents.Select(doc => doc.Guid).ToArray();
+    }
+
+    public async Task<Library_RelatedVersionsDbModel> Create_RelatedVersionsDbModel(Library_DbContext libraryDb)
+    {
+        List<Library_DocumentDbModel> documents = await libraryDb.Documents
+        .Where(doc => DocumentsGuids.Contains(doc.Guid))
+        .ToListAsync();
+
+        Library_RelatedVersionsDbModel relatedversionsDbmodel = new()
+        {
+            Documents = documents,
+            Guid = Guid,
+        };
+
+        return relatedversionsDbmodel;
+    }
+}
+
+public class Library_TagSeedModel
+{
+    public string Name { get; set; } = null!;
+    public string[] DocumentsGuids { get; set; } = [];
+
+    public Library_TagSeedModel() { }
+    public Library_TagSeedModel(Library_TagDbModel tagDbmodel)
+    {
+        Name = tagDbmodel.Name;
+        DocumentsGuids = tagDbmodel.Documents.Select(doc => doc.Guid).ToArray();
+    }
+
+    public async Task<Library_TagDbModel> Create_TagDbModel(Library_DbContext libraryDb)
+    {
+        List<Library_DocumentDbModel> documents = await libraryDb.Documents
+        .Where(doc => DocumentsGuids.Contains(doc.Guid))
+        .ToListAsync();
+
+        Library_TagDbModel tagDbModel = new()
+        {
+            Documents = documents,
+            Name = Name,
+        };
+
+        return tagDbModel;
+    }
+}
+
+
+
 
 //********************************************************************************
-//************************************ DataModels ********************************
+//************************************ Data Models ********************************
 public class Library_LibraryCardModel
 {
     public string Guid { get; set; } = null!;

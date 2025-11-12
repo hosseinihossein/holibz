@@ -16,10 +16,10 @@ public class LibraryController : ControllerBase
 {
     readonly Library_DbContext libraryDb;
     readonly UserManager<Identity_UserDbModel> userManager;
-    readonly DirectoryInfo Storage_Library;
-    readonly DirectoryInfo Storage_Shelf;
-    readonly DirectoryInfo Storage_Document;
-    readonly DirectoryInfo Storage_Element;
+    readonly DirectoryInfo Storage_Libraries;
+    readonly DirectoryInfo Storage_Shelves;
+    readonly DirectoryInfo Storage_Documents;
+    readonly DirectoryInfo Storage_Elements;
     readonly Library_Process libraryProcess;
 
 
@@ -30,10 +30,10 @@ public class LibraryController : ControllerBase
     {
         libraryDb = _libraryDb;
         userManager = _userManager;
-        Storage_Library = _libraryProcess.Storage_Library;
-        Storage_Shelf = _libraryProcess.Storage_Shelf;
-        Storage_Document = _libraryProcess.Storage_Document;
-        Storage_Element = _libraryProcess.Storage_Element;
+        Storage_Libraries = _libraryProcess.Storage_Libraries;
+        Storage_Shelves = _libraryProcess.Storage_Shelves;
+        Storage_Documents = _libraryProcess.Storage_Documents;
+        Storage_Elements = _libraryProcess.Storage_Elements;
         libraryProcess = _libraryProcess;
     }
 
@@ -62,7 +62,7 @@ public class LibraryController : ControllerBase
         foreach (var libraryInfo in librariesInfo)
         {
             string libraryImagePath =
-            Path.Combine(Storage_Library.FullName, libraryInfo.Guid, "image");
+            Path.Combine(Storage_Libraries.FullName, libraryInfo.Guid, "image");
 
             Library_LibraryCardModel libCard = new()
             {
@@ -113,7 +113,7 @@ public class LibraryController : ControllerBase
         }*/
 
         string libraryImagePath =
-            Path.Combine(Storage_Library.FullName, libraryInfo.Guid, "image");
+            Path.Combine(Storage_Libraries.FullName, libraryInfo.Guid, "image");
 
         Library_LibraryCardModel libModel = new()
         {
@@ -133,7 +133,7 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public IActionResult LibraryImage([FromQuery][StringLength(32)] string libraryGuid)
     {
-        string imagePath = Path.Combine(Storage_Library.FullName, libraryGuid, "image");
+        string imagePath = Path.Combine(Storage_Libraries.FullName, libraryGuid, "image");
         if (System.IO.File.Exists(imagePath))
         {
             return PhysicalFile(imagePath, "application/octet-stream", "libraryImage", true);
@@ -190,13 +190,13 @@ public class LibraryController : ControllerBase
         foreach (var shelfCardModel in shelfCardModels)
         {
             string shelfImagePath =
-            Path.Combine(Storage_Shelf.FullName, shelfCardModel.Guid, "image");
+            Path.Combine(Storage_Shelves.FullName, shelfCardModel.Guid, "image");
             shelfCardModel.HasImage = System.IO.File.Exists(shelfImagePath);
 
             foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
             {
                 documentCardModel.HasImage =
-                System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
+                System.IO.File.Exists(Path.Combine(Storage_Documents.FullName, documentCardModel.Guid, "image"));
             }
         }
 
@@ -242,13 +242,13 @@ public class LibraryController : ControllerBase
         foreach (var shelfCardModel in shelfCardModels)
         {
             string shelfImagePath =
-            Path.Combine(Storage_Shelf.FullName, shelfCardModel.Guid, "image");
+            Path.Combine(Storage_Shelves.FullName, shelfCardModel.Guid, "image");
             shelfCardModel.HasImage = System.IO.File.Exists(shelfImagePath);
 
             foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
             {
                 documentCardModel.HasImage =
-                System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
+                System.IO.File.Exists(Path.Combine(Storage_Documents.FullName, documentCardModel.Guid, "image"));
             }
         }
 
@@ -297,13 +297,13 @@ public class LibraryController : ControllerBase
         }
 
         string shelfImagePath =
-            Path.Combine(Storage_Shelf.FullName, shelfCardModel.Guid, "image");
+            Path.Combine(Storage_Shelves.FullName, shelfCardModel.Guid, "image");
         shelfCardModel.HasImage = System.IO.File.Exists(shelfImagePath);
 
         foreach (var documentCardModel in shelfCardModel.DocumentCardModels)
         {
             documentCardModel.HasImage =
-            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
+            System.IO.File.Exists(Path.Combine(Storage_Documents.FullName, documentCardModel.Guid, "image"));
         }
 
         return Ok(shelfCardModel);
@@ -312,7 +312,7 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public IActionResult ShelfImage([FromQuery][StringLength(32)] string shelfGuid)
     {
-        string imagePath = Path.Combine(Storage_Shelf.FullName, shelfGuid, "image");
+        string imagePath = Path.Combine(Storage_Shelves.FullName, shelfGuid, "image");
         if (System.IO.File.Exists(imagePath))
         {
             return PhysicalFile(imagePath, "application/octet-stream", "shelfImage", true);
@@ -346,7 +346,7 @@ public class LibraryController : ControllerBase
         foreach (var documentCardModel in documentCardModels)
         {
             documentCardModel.HasImage =
-            System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
+            System.IO.File.Exists(Path.Combine(Storage_Documents.FullName, documentCardModel.Guid, "image"));
         }
 
         return Ok(documentCardModels);
@@ -374,7 +374,7 @@ public class LibraryController : ControllerBase
         }
 
         documentCardModel.HasImage =
-        System.IO.File.Exists(Path.Combine(Storage_Document.FullName, documentCardModel.Guid, "image"));
+        System.IO.File.Exists(Path.Combine(Storage_Documents.FullName, documentCardModel.Guid, "image"));
 
         return Ok(documentCardModel);
     }
@@ -382,7 +382,7 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public IActionResult DocumentImage([FromQuery][StringLength(32)] string documentGuid)
     {
-        string imagePath = Path.Combine(Storage_Document.FullName, documentGuid, "image");
+        string imagePath = Path.Combine(Storage_Documents.FullName, documentGuid, "image");
         if (System.IO.File.Exists(imagePath))
         {
             return PhysicalFile(imagePath, "application/octet-stream", "documentImage", true);
@@ -528,7 +528,7 @@ public class LibraryController : ControllerBase
             Description = doc.Description,
             Guid = doc.Guid,
             HasImage = System.IO.File.Exists(
-                Path.Combine(Storage_Document.FullName, doc.Guid, "image")
+                Path.Combine(Storage_Documents.FullName, doc.Guid, "image")
             ),
             Tags = doc.Tags.Select(tag => tag.Name).ToArray(),
             Title = doc.Title,
@@ -618,7 +618,7 @@ public class LibraryController : ControllerBase
         }
 
         //delete directory path from Storage_Document
-        string directoryPath = Path.Combine(Storage_Document.FullName, documentDbModel.Guid);
+        string directoryPath = Path.Combine(Storage_Documents.FullName, documentDbModel.Guid);
         try
         {
             System.IO.Directory.Delete(directoryPath, true);
@@ -656,7 +656,7 @@ public class LibraryController : ControllerBase
             }
         }
 
-        string filePath = Path.Combine(Storage_Element.FullName, elementGuid, elementFileName);
+        string filePath = Path.Combine(Storage_Elements.FullName, elementGuid, elementFileName);
         if (System.IO.File.Exists(filePath))
         {
             return PhysicalFile(filePath, "application/octet-stream", elementFileName, true);
@@ -716,7 +716,7 @@ public class LibraryController : ControllerBase
 
                         if (!string.IsNullOrWhiteSpace(elementDbModel.FileName))
                         {
-                            string filePath = Path.Combine(Storage_Element.FullName,
+                            string filePath = Path.Combine(Storage_Elements.FullName,
                             elementDbModel.Guid, elementDbModel.FileName);
                             if (System.IO.File.Exists(filePath))
                             {
@@ -959,7 +959,7 @@ public class LibraryController : ControllerBase
 
             if (formModel.Image is not null)
             {
-                DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Document.FullName, documentDbModel.Guid));
+                DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Documents.FullName, documentDbModel.Guid));
                 string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(documentImagePath))
                 {
@@ -1025,7 +1025,7 @@ public class LibraryController : ControllerBase
 
             if (formModel.Image is not null)
             {
-                DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Library.FullName, libraryDbModel.Guid));
+                DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
                 string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(libraryImagePath))
                 {
@@ -1091,7 +1091,7 @@ public class LibraryController : ControllerBase
 
             if (formModel.Image is not null)
             {
-                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid));
+                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
                 string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
                 using (FileStream fs = System.IO.File.Create(shelfImagePath))
                 {
@@ -1152,7 +1152,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Document.FullName, documentDbModel.Guid));
+        DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Documents.FullName, documentDbModel.Guid));
         string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
         if (System.IO.File.Exists(documentImagePath))
         {
@@ -1194,7 +1194,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Library.FullName, libraryDbModel.Guid));
+        DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
         string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
         if (System.IO.File.Exists(libraryImagePath))
         {
@@ -1236,7 +1236,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelf.FullName, shelfDbModel.Guid));
+        DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
         string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
         if (System.IO.File.Exists(shelfImagePath))
         {

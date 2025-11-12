@@ -294,15 +294,18 @@ public class Identity_Process
         };
 
         string json = JsonSerializer.Serialize(userSeedModel);
-        string userSeedPath = Path.Combine(Storage_Users.FullName, user.UserGuid, "data");
+        string userSeedPath = Path.Combine(Storage_Users.FullName, user.UserGuid, "data.json");
 
         await File.WriteAllTextAsync(userSeedPath, json);
     }
 
-    public void DeleteUserSeed(Identity_UserDbModel user)
+    public void DeleteUserSeed(string userGuid)
     {
-        string userSeedPath = Path.Combine(Storage_Users.FullName, user.UserGuid, "data");
-        File.Delete(userSeedPath);
+        string userSeedPath = Path.Combine(Storage_Users.FullName, userGuid, "data.json");
+        if (File.Exists(userSeedPath))
+        {
+            File.Delete(userSeedPath);
+        }
     }
 
     public async Task SeedUsersToDb(UserManager<Identity_UserDbModel> userManager)
@@ -313,7 +316,7 @@ public class Identity_Process
             if (myUser != null) continue;
 
             //here myUser is null
-            string userSeedPath = Path.Combine(Storage_Users.FullName, userDirectory.Name, "data");
+            string userSeedPath = Path.Combine(Storage_Users.FullName, userDirectory.Name, "data.json");
             string json = await File.ReadAllTextAsync(userSeedPath);
             Identity_UserSeedModel? userSeedModel;
             try
@@ -323,7 +326,7 @@ public class Identity_Process
             catch
             {
                 //log
-                Console.WriteLine($"\n***** an exception occured during deserializing user data! userGuid: '{userDirectory.Name}'");
+                Console.WriteLine($"\n***** an exception occured during deserializing user seed data! userGuid: '{userDirectory.Name}'");
                 continue;
             }
             if (userSeedModel is not null)

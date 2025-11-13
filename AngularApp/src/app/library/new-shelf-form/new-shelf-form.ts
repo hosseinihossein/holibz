@@ -14,11 +14,12 @@ import { LibraryCardModel } from '../library-card/library-card';
 import { IdentityService } from '../../services/identity-service';
 import { Result } from '../../dialogs/result/result';
 import { MatDialog } from '@angular/material/dialog';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @Component({
   selector: 'app-new-shelf-form',
-  imports: [MatFormField,MatSelect,MatOption,MatButton,MatLabel,MatInput,MatIcon,
-    ReactiveFormsModule,MatError,MatProgressSpinner,MatIconButton
+  imports: [MatFormField,/*MatSelect,MatOption,*/MatButton,MatLabel,MatInput,MatIcon,
+    ReactiveFormsModule,MatError,MatProgressSpinner,MatIconButton,MatButtonToggleModule
   ],
   templateUrl: './new-shelf-form.html',
   styleUrl: './new-shelf-form.css'
@@ -30,16 +31,16 @@ export class NewShelfForm {
   activatedRoute = inject(ActivatedRoute);
   readonly dialog = inject(MatDialog);
 
-  newShelfForm = signal(new FormGroup({
-    libraryGuid: new FormControl("DefaultLibrary", {nonNullable:true, validators: [Validators.required, Validators.maxLength(32)]}),
+  newShelfForm = new FormGroup({
+    libraryGuids: new FormControl<string[]>([], {nonNullable:true, validators: [Validators.required, Validators.maxLength(32)]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, Validators.maxLength(30),Validators.minLength(3)]}),
     description: new FormControl("", {validators: Validators.maxLength(200)}),
     image: new FormControl<File|null>(null),
-  }));
-  libraryGuid = computed(()=>this.newShelfForm().get("libraryGuid"));
-  title = computed(()=>this.newShelfForm().get("title"));
-  description = computed(()=>this.newShelfForm().get("description"));
-  image = computed(()=>this.newShelfForm().get("image"));
+  });
+  libraryGuid = this.newShelfForm.get("libraryGuid");
+  title = this.newShelfForm.get("title");
+  description = this.newShelfForm.get("description");
+  image = this.newShelfForm.get("image");
 
   previewImgSrc = signal<string|null>(null);
   displaySubmitSpinner = signal(false);
@@ -51,7 +52,7 @@ export class NewShelfForm {
   constructor(){
     let currentLibraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("libraryGuid");
     if(currentLibraryGuidRouteParam){
-      this.newShelfForm().controls["libraryGuid"].setValue(currentLibraryGuidRouteParam);
+      this.newShelfForm.controls["libraryGuids"].setValue([currentLibraryGuidRouteParam]);
     }
 
     effect(() => {
@@ -94,7 +95,7 @@ export class NewShelfForm {
         });
       }
       else{
-        this.newShelfForm().get("image")?.setValue(input.files[0]);
+        this.newShelfForm.get("image")?.setValue(input.files[0]);
 
         const reader = new FileReader(); // Create a FileReader instance
         // Load the image as a Data URL
@@ -106,20 +107,21 @@ export class NewShelfForm {
     }
     else{
       this.previewImgSrc.set(null);
-      this.newShelfForm().get("image")?.setValue(null);
+      this.newShelfForm.get("image")?.setValue(null);
     }
   }
 
   clearImgInput(){
     this.imgInput().nativeElement.value = '';
     this.previewImgSrc.set(null);
-    this.newShelfForm().get("image")?.setValue(null);
+    this.newShelfForm.get("image")?.setValue(null);
   }
 
   onSubmit(){
-    if(this.newShelfForm().valid){
+    if(this.newShelfForm.valid){
+      console.log(JSON.stringify(this.newShelfForm.value));
       this.displaySubmitSpinner.set(true);
-      this.libraryService.createNewShelf(this.newShelfForm().value).subscribe({
+      this.libraryService.createNewShelf(this.newShelfForm.value).subscribe({
         next: res => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
@@ -129,19 +131,19 @@ export class NewShelfForm {
         error: err => {
           if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
             if(err.error?.Title || err.error?.errors?.Title){
-              this.title()?.setErrors({submitError: err.error?.Title || err.error?.errors?.Title});
+              this.title?.setErrors({submitError: err.error?.Title || err.error?.errors?.Title});
             }
             else if(err.error?.Description || err.error?.errors?.Description){
-              this.description()?.setErrors({submitError: err.error?.Description || err.error?.errors?.Description});
+              this.description?.setErrors({submitError: err.error?.Description || err.error?.errors?.Description});
             }
             else if(err.error?.Libraryguid || err.error?.errors?.Libraryguid){
-              this.libraryGuid()?.setErrors({submitError: err.error?.Libraryguid || err.error?.errors?.Libraryguid});
+              this.libraryGuid?.setErrors({submitError: err.error?.Libraryguid || err.error?.errors?.Libraryguid});
             }
             else if(err.error?.Image || err.error?.errors?.Image){
-              this.image()?.setErrors({submitError: err.error?.Image || err.error?.errors?.Image});
+              this.image?.setErrors({submitError: err.error?.Image || err.error?.errors?.Image});
             }
             else{
-              this.newShelfForm().setErrors({submitError: err.error});
+              this.newShelfForm.setErrors({submitError: JSON.stringify(err.error)});
             }
           }
           else{

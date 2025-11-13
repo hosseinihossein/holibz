@@ -58,6 +58,12 @@ public class LibraryController : ControllerBase
         })
         .ToListAsync();
 
+        List<string> noLibraryShelvesTitles = await libraryDb.Shelves
+        .Include(shelf => shelf.Libraries)
+        .Where(shelf => shelf.OwnerGuid == userGuid && shelf.Libraries.Count == 0)
+        .Select(shelf => shelf.Title)
+        .ToListAsync();
+
         List<Library_LibraryCardModel> cardModelList = [];
         foreach (var libraryInfo in librariesInfo)
         {
@@ -69,7 +75,9 @@ public class LibraryController : ControllerBase
                 Guid = libraryInfo.Guid,
                 Title = libraryInfo.Title,
                 Description = libraryInfo.Description,
-                ShelvesTitles = libraryInfo.ShelvesTitles.ToArray(),
+                ShelvesTitles = libraryInfo.Guid == "DefaultLibrary" ?
+                [.. libraryInfo.ShelvesTitles, .. noLibraryShelvesTitles] :
+                [.. libraryInfo.ShelvesTitles],
                 //OwnerUsername = owner.UserName!,
                 OwnerGuid = libraryInfo.OwnerGuid,
                 HasImage = System.IO.File.Exists(libraryImagePath),

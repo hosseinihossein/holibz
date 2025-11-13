@@ -240,59 +240,73 @@ public class Library_Process //singleton service
     public async Task<ProcessResult> CreateNewShelf(Library_DbContext libraryDb, string ownerGuid,
     Library_NewShelfFormModel formModel)
     {
-        if (!await libraryDb.Shelves.AnyAsync(shelf =>
-            shelf.OwnerGuid == ownerGuid && shelf.Title == formModel.Title))
+        /*if (!await libraryDb.Shelves.Include(shelf=>shelf.Libraries).AnyAsync(shelf =>
+            shelf.OwnerGuid == ownerGuid && shelf.Libraries.sele && shelf.Title == formModel.Title))
+        {*/
+        Console.Write("\n***** ");
+        Console.WriteLine("formModel.LibraryGuids: " + JsonSerializer.Serialize(formModel.LibraryGuids));
+
+        List<Library_LibraryDbModel> parentLibraries = await libraryDb.Libraries
+        .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
+        .ToListAsync();
+
+        Library_ShelfDbModel shelfDbModel;
+        if (formModel.Title == "Default Shelf")
         {
-            List<Library_LibraryDbModel> parentLibraries = await libraryDb.Libraries
-            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
-            .ToListAsync();
-
-            Library_ShelfDbModel shelfDbModel;
-            if (formModel.Title == "Default Shelf")
+            if (await libraryDb.Shelves.Include(shelf => shelf.Libraries).AnyAsync(shelf =>
+            shelf.OwnerGuid == ownerGuid && shelf.Title == formModel.Title))//formModel.Title = "Default Shelf"
             {
-                shelfDbModel = new()
+                return new ProcessResult()
                 {
-                    Title = formModel.Title,
-                    OwnerGuid = ownerGuid,
-                    Description = formModel.Description,
-                    Guid = "DefaultShelf",
+                    ErrorTitle = "Default Shelf",
+                    ErrorDescription = $"There's already been a default shelf!"
                 };
             }
-            else
+            shelfDbModel = new()
             {
-                shelfDbModel = new()
-                {
-                    Title = formModel.Title,
-                    OwnerGuid = ownerGuid,
-                    Description = formModel.Description,
-                };
-            }
-
-            shelfDbModel.Libraries = parentLibraries;
-
-            await libraryDb.Shelves.AddAsync(shelfDbModel);
-            await libraryDb.SaveChangesAsync();
-
-            if (formModel.Image is not null)
-            {
-                DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
-                string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
-                using (FileStream fs = System.IO.File.Create(shelfImagePath))
-                {
-                    await formModel.Image.CopyToAsync(fs);
-                }
-            }
-
-            // seed
-            //_ = Update_ShelfSeed(shelfDbModel);
-
-            return new ProcessResult() { Success = true, ResultObject = shelfDbModel };
+                Title = formModel.Title,
+                OwnerGuid = ownerGuid,
+                Description = formModel.Description,
+                Guid = "DefaultShelf",
+            };
         }
+        else
+        {
+            shelfDbModel = new()
+            {
+                Title = formModel.Title,
+                OwnerGuid = ownerGuid,
+                Description = formModel.Description,
+            };
+        }
+
+        shelfDbModel.Libraries = parentLibraries;
+
+        await libraryDb.Shelves.AddAsync(shelfDbModel);
+        await libraryDb.SaveChangesAsync();
+        Console.Write("\n***** ");
+        Console.WriteLine("lib.Titles: " + JsonSerializer.Serialize(shelfDbModel.Libraries.Select(lib => lib.Title)));
+
+        if (formModel.Image is not null)
+        {
+            DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
+            string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
+            using (FileStream fs = System.IO.File.Create(shelfImagePath))
+            {
+                await formModel.Image.CopyToAsync(fs);
+            }
+        }
+
+        // seed
+        //_ = Update_ShelfSeed(shelfDbModel);
+
+        return new ProcessResult() { Success = true, ResultObject = shelfDbModel };
+        /*}
         return new ProcessResult()
         {
             ErrorTitle = "Title Conflict",
             ErrorDescription = $"There's already been a shelf with title '{formModel.Title}'!"
-        };
+        };*/
     }
     public async Task<ProcessResult> CreateNewDocument(Library_DbContext libraryDb, string ownerGuid,
     Library_NewDocumentFormModel formModel)

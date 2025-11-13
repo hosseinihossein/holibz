@@ -119,14 +119,13 @@ export class ShelfPage {
     if(this.isMyShelf()){
       this.dialog.open(ParentEditor,{data:{
         parentOf:"shelf",
-        parentLibraryGuids: this.shelfModel()?.libraries.map(lib=>lib.guid),
+        parentLibraryGuids: this.shelfModel()?.libraries.map(value=>value.guid),
         //parentShelfGuids: this.documentPageService.documentPageModel()?.shelves.map(shelf=>shelf.guid),
         childGuid: this.shelfModel()?.guid,
       }}).afterClosed().subscribe(result=>{
         if(result){
           this.shelfModel.update(shelf=>{
-            let filteredLibraries = shelf!.libraries.filter(lib=>(result as string[]).includes(lib.guid));
-            shelf!.libraries = filteredLibraries;
+            shelf!.libraries = result;
             return shelf;
           });
         }

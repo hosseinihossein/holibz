@@ -1,57 +1,81 @@
-<form [formGroup]="newShelfForm()" (ngSubmit)="onSubmit()">
+<form [formGroup]="newShelfForm" (ngSubmit)="onSubmit()">
     <h2>
         <mat-icon>shelves</mat-icon>
         Creating a new Shelf
     </h2>
-    <mat-form-field>
+    <!--mat-form-field>
         <mat-label>Library</mat-label>
-        <mat-select required formControlName="libraryGuid">
+        <mat-select required formControlName="libraryGuids">
             @for(library of libraryList(); track library.guid){
             <mat-option [value]="library.guid">{{library.title}}</mat-option>
             }
         </mat-select>
-        @if(libraryGuid()?.invalid && (libraryGuid()?.dirty || libraryGuid()?.touched) &&
-        libraryGuid()?.hasError("required")){
+        @if(libraryGuid?.invalid && (libraryGuid?.dirty || libraryGuid?.touched) &&
+        libraryGuid?.hasError("required")){
         <mat-error>
             Library is required!
         </mat-error>
         }
-        @if(libraryGuid()?.invalid && (libraryGuid()?.dirty || libraryGuid()?.touched) &&
-        libraryGuid()?.hasError("maxLength")){
+        @if(libraryGuid?.invalid && (libraryGuid?.dirty || libraryGuid?.touched) &&
+        libraryGuid?.hasError("maxLength")){
         <mat-error>
             Library Guid cannot be more than 32 characters!
         </mat-error>
         }
-        @if(libraryGuid()?.invalid && (libraryGuid()?.dirty || libraryGuid()?.touched) &&
-        libraryGuid()?.hasError("submitError")){
+        @if(libraryGuid?.invalid && (libraryGuid?.dirty || libraryGuid?.touched) &&
+        libraryGuid?.hasError("submitError")){
         <mat-error>
-            {{libraryGuid()?.getError("submitError")}}
+            {{libraryGuid?.getError("submitError")}}
         </mat-error>
         }
-    </mat-form-field>
+    </mat-form-field-->
+    <mat-button-toggle-group multiple formControlName="libraryGuids"
+        style="width: fit-content;margin: 8px auto;display: flex;">
+        @for(libraryModel of libraryList(); track libraryModel.guid){
+        <mat-button-toggle [value]="libraryModel.guid">{{libraryModel.title}}</mat-button-toggle>
+        }
+    </mat-button-toggle-group>
+    @if(libraryGuid?.invalid && (libraryGuid?.dirty || libraryGuid?.touched) &&
+    libraryGuid?.hasError("required")){
+    <mat-error>
+        Library is required!
+    </mat-error>
+    }
+    @if(libraryGuid?.invalid && (libraryGuid?.dirty || libraryGuid?.touched) &&
+    libraryGuid?.hasError("maxLength")){
+    <mat-error>
+        Library Guid cannot be more than 32 characters!
+    </mat-error>
+    }
+    @if(libraryGuid?.invalid && (libraryGuid?.dirty || libraryGuid?.touched) &&
+    libraryGuid?.hasError("submitError")){
+    <mat-error>
+        {{libraryGuid?.getError("submitError")}}
+    </mat-error>
+    }
 
     <mat-form-field>
         <mat-label>Title</mat-label>
         <input matInput type="text" required formControlName="title" />
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("required")){
+        @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("required")){
         <mat-error>
             Title is required!
         </mat-error>
         }
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("maxLength")){
+        @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("maxLength")){
         <mat-error>
             Shelt title cannot be more than 30 characters!
         </mat-error>
         }
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) && title()?.hasError("minLength")){
+        @if(title?.invalid && (title?.dirty || title?.touched) && title?.hasError("minLength")){
         <mat-error>
             Shelt title cannot be less than 3 characters!
         </mat-error>
         }
-        @if(title()?.invalid && (title()?.dirty || title()?.touched) &&
-        title()?.hasError("submitError")){
+        @if(title?.invalid && (title?.dirty || title?.touched) &&
+        title?.hasError("submitError")){
         <mat-error>
-            {{title()?.getError("submitError")}}
+            {{title?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -59,16 +83,16 @@
     <mat-form-field>
         <mat-label>Brief Description</mat-label>
         <textarea matInput formControlName="description"></textarea>
-        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
-        description()?.hasError("maxLength")){
+        @if(description?.invalid && (description?.dirty || description?.touched) &&
+        description?.hasError("maxLength")){
         <mat-error>
             Shelt Description cannot be more than 200 characters!
         </mat-error>
         }
-        @if(description()?.invalid && (description()?.dirty || description()?.touched) &&
-        description()?.hasError("submitError")){
+        @if(description?.invalid && (description?.dirty || description?.touched) &&
+        description?.hasError("submitError")){
         <mat-error>
-            {{description()?.getError("submitError")}}
+            {{description?.getError("submitError")}}
         </mat-error>
         }
     </mat-form-field>
@@ -79,7 +103,7 @@
         </button>
 
         <input type="file" hidden #fileInput (change)="onSelectImage($event)" />
-        @if(image()?.value){
+        @if(image?.value){
         <div style="position: relative;width: fit-content;margin: 24px auto 0;">
             <img [src]="previewImgSrc()" #previewImg>
             <button matIconButton type="button" class="noPaddingBtn" id="delete-img-btn" (click)="clearImgInput()"
@@ -89,23 +113,23 @@
         </div>
         }
 
-        @if(image()?.invalid && (image()?.dirty || image()?.touched) &&
-        image()?.hasError("submitError")){
+        @if(image?.invalid && (image?.dirty || image?.touched) &&
+        image?.hasError("submitError")){
         <mat-error>
-            {{image()?.getError("submitError")}}
+            {{image?.getError("submitError")}}
         </mat-error>
         }
     </div>
 
-    @if(newShelfForm().invalid && newShelfForm().hasError("submitError")){
+    @if(newShelfForm.invalid && newShelfForm.hasError("submitError")){
     <mat-error>
-        {{newShelfForm().getError("submitError")}}
+        {{newShelfForm.getError("submitError")}}
     </mat-error>
     }
 
     <div style="float: right;margin-top: 50px;">
         <button type="submit" matButton="elevated" style="width: fit-content;float: right;"
-            [disabled]="!newShelfForm().valid">
+            [disabled]="!newShelfForm.valid">
             Submit
         </button>
     </div>
@@ -116,4 +140,4 @@
     </div>
     }
 </form>
-<!--div>{{newShelfForm().value | json}}</div-->
+<!--div>{{newShelfForm.value | json}}</div-->

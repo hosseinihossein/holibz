@@ -12,12 +12,13 @@ import { LibraryCardModel } from '../../library/library-card/library-card';
 import { ShelfCardModel } from '../../library/shelf-card/shelf-card';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { MatTooltip } from "@angular/material/tooltip";
+import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-parent-editor',
   imports: [MatDialogContent, MatDialogActions, MatDialogClose, ReactiveFormsModule, MatIcon,
     MatButtonToggleModule, MatFormField, MatError, MatLabel, MatSelect, /*MatOptgroup,*/ MatOption,
-    MatProgressSpinner, MatTooltip],
+    MatProgressSpinner, MatTooltip, MatButton],
   templateUrl: './parent-editor.html',
   styleUrl: './parent-editor.css'
 })
@@ -129,10 +130,14 @@ export class ParentEditor {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
             if(this.data.parentOf === "document"){
-              this.dialogRef.close(this.shelfGuids?.value);
+              let filteredShelves = 
+              this.allShelfList().filter(shelf=>this.shelfGuids.value.includes(shelf.guid));
+              this.dialogRef.close(filteredShelves);
             }
             else if(this.data.parentOf === "shelf"){
-              this.dialogRef.close(this.libraryGuids?.value);
+              let filteredLibs:{guid:string,title:string}[] = 
+              this.allLibraryList().filter(lib=>this.libraryGuids.value.includes(lib.guid));
+              this.dialogRef.close(filteredLibs);
             }
           }
         },

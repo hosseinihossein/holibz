@@ -532,13 +532,11 @@ export class DocumentPage implements AfterViewInit {
       }}).afterClosed().subscribe(result=>{
         if(result){
           this.documentPageService.documentPageModel.update(dpm=>{
-            let filteredShelves = dpm!.shelves.filter(shelf=>(result as string[]).includes(shelf.guid));
-            dpm!.shelves = filteredShelves;
+            dpm!.shelves = result;
             return dpm;
           });
           this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
-            let filteredShelves = dpm!.shelves.filter(shelf=>(result as string[]).includes(shelf.guid));
-            dpm!.shelves = filteredShelves;
+            dpm!.shelves = result;
             return dpm;
           });
         }

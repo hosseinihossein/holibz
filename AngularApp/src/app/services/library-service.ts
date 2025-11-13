@@ -124,8 +124,10 @@ export class LibraryService {
     if(newShelfFormModel.title){
       formData.append("Title", newShelfFormModel.title);
     }
-    if(newShelfFormModel.libraryGuid){
-      formData.append("LibraryGuid", newShelfFormModel.libraryGuid);
+    if(newShelfFormModel.libraryGuids){
+      newShelfFormModel.libraryGuids.forEach((value,index)=>{
+        formData.append(`LibraryGuids[${index}]`, value);
+      });
     }
     if(newShelfFormModel.image){
       formData.append('Image', newShelfFormModel.image);
@@ -283,7 +285,7 @@ class NewLibraryFormModel{
 class NewShelfFormModel{
   title?:string; 
   description?:string|null; 
-  libraryGuid?:string; 
+  libraryGuids?:string[]; 
   image?:File|null
 }
 export class NewDocumentFormModel{

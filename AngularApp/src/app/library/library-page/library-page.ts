@@ -52,9 +52,9 @@ export class LibraryPage {
             next: res => {
               if(res){
                 this.libraryModel.set(res);
-                if(res.guid){
+                /*if(res.guid){
                   this.libraryGuid.set(res.guid);//not necessary
-                }
+                }*/
               }
             },
           });

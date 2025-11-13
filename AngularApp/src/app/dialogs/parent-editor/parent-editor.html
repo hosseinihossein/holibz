@@ -6,7 +6,7 @@
             Edit Parent {{data.parentOf === "document" ? 'Shelves' : 'Libraries'}}
         </h2>
 
-        <mat-button-toggle-group multiple formControlName="libraryGuids" (change)="changeDisplayedLibraries($event)"
+        <mat-button-toggle-group multiple [formControl]="libraryGuids" (change)="changeDisplayedLibraries($event)"
             style="width: fit-content;margin: 8px auto;display: flex;">
             @for(libraryModel of allLibraryList(); track libraryModel.guid){
             <mat-button-toggle [value]="libraryModel.guid">{{libraryModel.title}}</mat-button-toggle>
@@ -21,7 +21,7 @@
         @if(data.parentOf === "document"){
         <mat-form-field>
             <mat-label>Shelf</mat-label>
-            <mat-select required formControlName="shelfGuids" multiple>
+            <mat-select required [formControl]="shelfGuids" multiple>
                 <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
                 <!--mat-optgroup [label]="libraryTitle"-->
                 @for(shelfModel of allShelfList(); track shelfModel.guid){

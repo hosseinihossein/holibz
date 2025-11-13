@@ -294,13 +294,13 @@ public class Program
         }
 
         //***** Seed Users *****
-        if (app.Configuration["Seed:Identity"] == "true")
+        /*if (app.Configuration["Seed:Identity"] == "true")
         {
             Console.WriteLine("** Seeding Identity Service Started... **");
             Identity_Process account_Process = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_Process>();
             await account_Process.SeedUsersToDb(userManager);
             Console.WriteLine("** Seeding Identity Service Completed! **");
-        }
+        }*/
 
         //***** Create Default Library and Shelf for everyone *****
         List<string> AllConfirmedUsersGuidsExceptAdmin =

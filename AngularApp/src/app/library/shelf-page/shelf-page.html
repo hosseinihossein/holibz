@@ -1,4 +1,4 @@
-<app-documents-list [shelfGuid]="shelfModel()?.guid!">
+<app-documents-list [shelfGuid]="shelfGuid()!">
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
@@ -32,7 +32,7 @@
         </mat-card-content>
         <mat-card-actions align="end">
             @if(isMyShelf()){
-            @if(shelfModel()?.guid !== "DefaultShelf"){
+            @if(shelfGuid() !== "DefaultShelf"){
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Parent Libraries"
                 (click)="editParentLibraries()">
                 <mat-icon>account_tree</mat-icon>
@@ -41,7 +41,7 @@
                 <mat-icon>edit_note</mat-icon>
             </button>
             }
-            <a matButton="elevated" [routerLink]="['/document','new',shelfModel()?.guid]">
+            <a matButton="elevated" [routerLink]="['/document','new',shelfGuid()]">
                 <mat-icon>newsstand</mat-icon>
                 Add a new Document
             </a>

@@ -16,9 +16,9 @@ form{
 }
 
 #img-box img{
-    /*width: 150px;*/
+    width: 150px;
     height: 150px;
-    object-fit: contain;
+    object-fit: cover;
     /*float: left;*/
     display: block;
     border-radius: 50%;

@@ -45,7 +45,7 @@ public class IdentityController : Controller
                 // creating Default library and shelf
                 await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, user.UserGuid);
 
-                await identityProcess.UpdateUserSeed(user, userManager);
+                //await identityProcess.UpdateUserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Confirmed.</h2>";
                 ViewBag.ResultState = "success";
@@ -94,7 +94,7 @@ public class IdentityController : Controller
                 // creating Default library and shelf
                 await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, user.UserGuid);
 
-                await identityProcess.UpdateUserSeed(user, userManager);
+                //await identityProcess.UpdateUserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Changed. You need to login again to see changes.</h2>";
                 ViewBag.ResultState = "success";
@@ -203,7 +203,7 @@ public class IdentityController : Controller
             await userManager.ResetPasswordAsync(user, formModel.Token, formModel.NewPassword);
             if (result.Succeeded)
             {
-                await identityProcess.UpdateUserSeed(user, userManager);
+                //await identityProcess.UpdateUserSeed(user, userManager);
 
                 object successMessage = "<h2>Your new password successfully set.</h2>";
                 ViewBag.ResultState = "success";

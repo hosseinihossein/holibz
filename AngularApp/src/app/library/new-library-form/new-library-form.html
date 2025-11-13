@@ -52,7 +52,7 @@
             Select an image <span style="font-size: 12px;">(optional)</span>
         </button>
 
-        <input type="file" #fileInput (change)="onSelectImage($event)" />
+        <input type="file" hidden #fileInput (change)="onSelectImage($event)" />
         @if(image()?.value){
         <div style="position: relative;width: fit-content;margin: 24px auto 0;">
             <img [src]="previewImgSrc()" #previewImg>
@@ -90,4 +90,4 @@
     </div>
     }
 </form>
-<div>{{newLibraryForm().value | json}}</div>
+<!--div>{{newLibraryForm().value | json}}</div-->

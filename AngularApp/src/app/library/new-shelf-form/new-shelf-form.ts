@@ -1,6 +1,6 @@
 import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
@@ -18,7 +18,7 @@ import { MatDialog } from '@angular/material/dialog';
 @Component({
   selector: 'app-new-shelf-form',
   imports: [MatFormField,MatSelect,MatOption,MatButton,MatLabel,MatInput,MatIcon,
-    ReactiveFormsModule,JsonPipe,MatError,MatProgressSpinner
+    ReactiveFormsModule,MatError,MatProgressSpinner,MatIconButton
   ],
   templateUrl: './new-shelf-form.html',
   styleUrl: './new-shelf-form.css'

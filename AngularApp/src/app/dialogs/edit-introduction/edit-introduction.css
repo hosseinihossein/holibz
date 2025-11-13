@@ -15,6 +15,10 @@ form{
     /*position: relative;*/
 }
 
+mat-form-field{
+    width: 100%;
+}
+
 #img-box{
     margin: 4px auto;
     width: 100%;
@@ -23,7 +27,7 @@ form{
 #img-box img{
     /*width: 150px;*/
     height: 150px;
-    object-fit: contain;
+    object-fit: cover;
     /*float: left;*/
     display: block;
 }

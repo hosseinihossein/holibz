@@ -15,7 +15,7 @@ import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-new-library-form',
-  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,MatProgressSpinner,JsonPipe,
+  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,MatProgressSpinner,
     MatInput,MatButton,MatIconButton
   ],
   templateUrl: './new-library-form.html',

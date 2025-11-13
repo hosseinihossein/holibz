@@ -22,7 +22,7 @@ import { SingletonModes } from '../../services/singleton-modes';
 @Component({
   selector: 'app-new-document-form',
   imports: [MatFormField, MatLabel, MatInput, MatButton, MatIconButton, MatIcon, MatTooltip, MatSelect,
-    MatOption, /*MatOptgroup,*/ReactiveFormsModule,JsonPipe,MatError,MatProgressSpinner,
+    MatOption, /*MatOptgroup,*/ReactiveFormsModule,MatError,MatProgressSpinner,
     MatButtonToggleModule],
   templateUrl: './new-document-form.html',
   styleUrl: './new-document-form.css'

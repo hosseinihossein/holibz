@@ -59,9 +59,9 @@ export class ShelfPage {
             next: res => {
               if(res){
                 this.shelfModel.set(res);
-                if(res.guid){
+                /*if(res.guid){
                   this.shelfGuid.set(res.guid);//not necessary
-                }
+                }*/
               }
             },
           });

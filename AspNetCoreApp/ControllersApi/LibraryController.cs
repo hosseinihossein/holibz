@@ -604,6 +604,7 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid)
     {
         Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .Include(doc => doc.Elements)
         .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
         if (documentDbModel is null)
         {
@@ -617,6 +618,10 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        //remove from Db
+        libraryDb.Documents.Remove(documentDbModel);
+        await libraryDb.SaveChangesAsync();
+
         //delete directory path from Storage_Document
         string directoryPath = Path.Combine(Storage_Documents.FullName, documentDbModel.Guid);
         try
@@ -628,9 +633,19 @@ public class LibraryController : ControllerBase
             Console.WriteLine($"\n***** {e.Message}");
         }
 
-        //remove from Db
-        libraryDb.Documents.Remove(documentDbModel);
-        await libraryDb.SaveChangesAsync();
+        //delete directory path of elements from storage
+        foreach (string elementGuid in documentDbModel.Elements.Select(el => el.Guid))
+        {
+            string elemenDirPath = Path.Combine(Storage_Elements.FullName, elementGuid);
+            try
+            {
+                System.IO.Directory.Delete(elemenDirPath, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"\n***** {e.Message}");
+            }
+        }
 
         return Ok(new { success = true });
     }
@@ -756,6 +771,13 @@ public class LibraryController : ControllerBase
                 elementDbModels = elementsToReorder;
             }
 
+            //seed
+            /*foreach (var elementDbModel in elementDbModels)
+            {
+                _ = libraryProcess.Update_ElementSeed(elementDbModel);
+            }*/
+
+            //create response
             Library_ElementModel[] elementModelArray = elementDbModels
             .Select(elementDbModel => new Library_ElementModel()
             {
@@ -957,6 +979,9 @@ public class LibraryController : ControllerBase
             documentDbModel.Description = formModel.Description;
             await libraryDb.SaveChangesAsync();
 
+            //seed
+            //_ = libraryProcess.Update_DocumentSeed(documentDbModel);
+
             if (formModel.Image is not null)
             {
                 DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Documents.FullName, documentDbModel.Guid));
@@ -1001,6 +1026,12 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
+            if (formModel.Guid == "DefaultLibrary")
+            {
+                ModelState.AddModelError("DefaultLibrary", "Default library cannot be edited.");
+                return BadRequest(ModelState);
+            }
+
             Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
             .FirstOrDefaultAsync(lib => lib.Guid == formModel.Guid);
             if (libraryDbModel is null)
@@ -1022,6 +1053,9 @@ public class LibraryController : ControllerBase
             libraryDbModel.Title = formModel.Title;
             libraryDbModel.Description = string.IsNullOrWhiteSpace(formModel.Description) ? null : formModel.Description;
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            //_ = libraryProcess.Update_LibrarySeed(libraryDbModel);
 
             if (formModel.Image is not null)
             {
@@ -1067,6 +1101,12 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
+            if (formModel.Guid == "DefaultShelf")
+            {
+                ModelState.AddModelError("DefaultShelf", "Default shelf cannot be edited.");
+                return BadRequest(ModelState);
+            }
+
             Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
             .FirstOrDefaultAsync(shelf => shelf.Guid == formModel.Guid);
             if (shelfDbModel is null)
@@ -1088,6 +1128,9 @@ public class LibraryController : ControllerBase
             shelfDbModel.Title = formModel.Title;
             shelfDbModel.Description = string.IsNullOrWhiteSpace(formModel.Description) ? null : formModel.Description;
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            //_ = libraryProcess.Update_ShelfSeed(shelfDbModel);
 
             if (formModel.Image is not null)
             {
@@ -1296,6 +1339,9 @@ public class LibraryController : ControllerBase
 
             await libraryDb.SaveChangesAsync();
 
+            //seed
+            //_ = libraryProcess.Update_DocumentSeed(documentDbModel);
+
             return Ok(new { success = true });
         }
 
@@ -1310,6 +1356,12 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
+            if (formModel.ShelfGuid == "DefaultShelf")
+            {
+                ModelState.AddModelError("DefaultShelf", "Default shelf's parent library cannot be edited.");
+                return BadRequest(ModelState);
+            }
+
             Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
             .FirstOrDefaultAsync(doc => doc.Guid == formModel.ShelfGuid);
             if (shelfDbModel is null)

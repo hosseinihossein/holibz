@@ -7,7 +7,7 @@
         @if(isMyDocument()){
         <button matButton="elevated" matTooltip="Edit Parent Shelves" class="noPaddingBtn"
             (click)="editParentShelves()">
-            <mat-icon>edit</mat-icon>
+            <mat-icon>account_tree</mat-icon>
         </button>
         }
 
@@ -176,7 +176,7 @@
             @if(isMyDocument() && documentPageService.editMode()){
             <button matButton="elevated" matTooltip="Edit introduction" class="noPaddingBtn"
                 (click)="editIntroduction()">
-                <mat-icon>edit</mat-icon>
+                <mat-icon>edit_note</mat-icon>
             </button>
             }
 

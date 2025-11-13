@@ -32,13 +32,15 @@
         </mat-card-content>
         <mat-card-actions align="end">
             @if(isMyShelf()){
+            @if(shelfModel()?.guid !== "DefaultShelf"){
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Parent Libraries"
                 (click)="editParentLibraries()">
-                <mat-icon>edit</mat-icon>
+                <mat-icon>account_tree</mat-icon>
             </button>
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
-                <mat-icon>edit</mat-icon>
+                <mat-icon>edit_note</mat-icon>
             </button>
+            }
             <a matButton="elevated" [routerLink]="['/document','new',shelfModel()?.guid]">
                 <mat-icon>newsstand</mat-icon>
                 Add a new Document

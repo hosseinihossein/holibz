@@ -16,9 +16,11 @@
         </mat-card-content>
         <mat-card-actions align="end">
             @if(isMyLibrary()){
+            @if(libraryModel()?.guid !== "DefaultLibrary"){
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
-                <mat-icon>edit</mat-icon>
+                <mat-icon>edit_note</mat-icon>
             </button>
+            }
             <a matButton="elevated" [routerLink]="['/shelf','new', libraryGuid()]">
                 <mat-icon>shelves</mat-icon>
                 Add a new Shelf

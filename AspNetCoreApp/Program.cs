@@ -225,8 +225,8 @@ public class Program
 
 
         //**************************** Custom Services **************************
-        builder.Services.AddScoped<TurnstileService>();
-        builder.Services.AddScoped<Identity_Process>();//convert it to singleton
+        builder.Services.AddSingleton<TurnstileService>();
+        builder.Services.AddSingleton<Identity_Process>();
         builder.Services.AddSingleton<IEmailSender, EmailSender>();
         builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
         builder.Services.AddSingleton<Library_Process>();

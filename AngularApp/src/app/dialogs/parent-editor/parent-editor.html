@@ -2,8 +2,14 @@
 
     <form (ngSubmit)="onSubmit()" id="parent-form">
         <h2>
-            <mat-icon>newsstand</mat-icon>
-            Edit Parent {{data.parentOf === "document" ? 'Shelves' : 'Libraries'}}
+            @if(data.parentOf === "document"){
+            <mat-icon>shelves</mat-icon>
+            Parent Shelves
+            }
+            @if(data.parentOf === "shelf") {
+            <mat-icon>account_balance</mat-icon>
+            Parent Libraries
+            }
         </h2>
 
         <mat-button-toggle-group multiple [formControl]="libraryGuids" (change)="changeDisplayedLibraries($event)"

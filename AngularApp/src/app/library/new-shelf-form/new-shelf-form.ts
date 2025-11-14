@@ -56,15 +56,15 @@ export class NewShelfForm {
     }
 
     effect(() => {
-      this.libraryService.requestLibraryList(this.identityService.userModel()?.guid)?.subscribe({
-        next: res => {
-          if(res){
-            this.libraryList.set(res);
-          }
-        },
-      });
-
       if(this.identityService.userModel()){
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
+          next: res => {
+            if(res){
+              this.libraryList.set(res);
+            }
+          },
+        });
+        
         this.identityService.getCsrf().subscribe({
           next: () => {
             console.log("Csrf received successfully.");

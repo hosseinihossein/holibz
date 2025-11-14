@@ -22,17 +22,8 @@ export class LibraryService {
   //editedElements = signal<Map<string, EditElementFormModel>>(new Map());
 
 
-  requestLibraryList(userGuid: string|null = null){
-    let quryParams:HttpParams;
-    if(userGuid){
-      quryParams = new HttpParams().set("userGuid", userGuid);
-    }
-    else if(this.identityService.isAuthenticated()){
-      quryParams = new HttpParams().set("userGuid", this.identityService.userModel()!.guid!);
-    }
-    else{
-      return null;
-    }
+  requestLibraryList(userGuid: string){
+    let quryParams = new HttpParams().set("userGuid", userGuid);
     return this.httpClient.get<LibraryCardModel[]>("/api/Library/List", { params: quryParams});
   }
   requestShelfList(libraryGuid: string){
@@ -48,34 +39,16 @@ export class LibraryService {
     return this.httpClient.get<DocumentCardModel[]>("/api/Library/DocumentCardList", { params: quryParams});
   }
 
-  /*requestTotalNumberOfShelves(userGuid: string|null = null){
-    let quryParams:HttpParams;
-    if(userGuid){
-      quryParams = new HttpParams().set("userGuid", userGuid);
-    }
-    else if(this.identityService.isAuthenticated()){
-      quryParams = new HttpParams().set("userGuid", this.identityService.userModel()!.guid!);
-    }
-    else{
-      return null;
-    }
-    return this.httpClient.get<{totalNumberOfUserShelves: number}>(
-      "/api/Library/TotalNumberOfShelves", { params: quryParams}
-    );
-  }*/
-  requestTotalNumberOfDocuments(userGuid: string|null = null){
-    let quryParams:HttpParams;
-    if(userGuid){
-      quryParams = new HttpParams().set("userGuid", userGuid);
-    }
-    else if(this.identityService.isAuthenticated()){
-      quryParams = new HttpParams().set("userGuid", this.identityService.userModel()!.guid!);
-    }
-    else{
-      return null;
-    }
+  requestTotalNumberOfDocuments(userGuid: string){
+    let quryParams = new HttpParams().set("userGuid", userGuid);
     return this.httpClient.get<{totalNumberOfUserDocuments: number}>(
       "/api/Library/TotalNumberOfDocuments", { params: quryParams}
+    );
+  }
+  requestTotalNumberOfShelves(userGuid: string){
+    let quryParams = new HttpParams().set("userGuid", userGuid);
+    return this.httpClient.get<{totalNumberOfUserShelves: number}>(
+      "/api/Library/TotalNumberOfShelves", { params: quryParams}
     );
   }
 

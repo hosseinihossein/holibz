@@ -243,8 +243,8 @@ public class Library_Process //singleton service
         /*if (!await libraryDb.Shelves.Include(shelf=>shelf.Libraries).AnyAsync(shelf =>
             shelf.OwnerGuid == ownerGuid && shelf.Libraries.sele && shelf.Title == formModel.Title))
         {*/
-        Console.Write("\n***** ");
-        Console.WriteLine("formModel.LibraryGuids: " + JsonSerializer.Serialize(formModel.LibraryGuids));
+        //Console.Write("\n***** ");
+        //Console.WriteLine("formModel.LibraryGuids: " + JsonSerializer.Serialize(formModel.LibraryGuids));
 
         List<Library_LibraryDbModel> parentLibraries = await libraryDb.Libraries
         .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
@@ -284,8 +284,8 @@ public class Library_Process //singleton service
 
         await libraryDb.Shelves.AddAsync(shelfDbModel);
         await libraryDb.SaveChangesAsync();
-        Console.Write("\n***** ");
-        Console.WriteLine("lib.Titles: " + JsonSerializer.Serialize(shelfDbModel.Libraries.Select(lib => lib.Title)));
+        //Console.Write("\n***** ");
+        //Console.WriteLine("lib.Titles: " + JsonSerializer.Serialize(shelfDbModel.Libraries.Select(lib => lib.Title)));
 
         if (formModel.Image is not null)
         {

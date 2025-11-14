@@ -51,29 +51,39 @@ export class LibrariesList {
     }
     
     effect(()=>{
-      this.libraryService.requestLibraryList(this.userGuid())?.subscribe({
-        next: res => {
-          if(res){
-            this.libraryModels.set(res);
-            this.totalNumberOfUserShelves.set(this.libraryModels().flatMap(lib=>lib.shelvesTitles).length);
-          }
-        },
-      });
+      if(this.userGuid()){
+        this.identityService.requestUserModel(this.userGuid()!).subscribe({
+          next: res => {
+            this.userModel.set(res);
+            this.libraryService.currentOwnerUserModel.set(res);
+          },
+        });
 
-      this.libraryService.requestTotalNumberOfDocuments(this.userGuid())?.subscribe({
-        next: res => {
-          if(res){
-            this.totalNumberOfUserDocuments.set(res.totalNumberOfUserDocuments);
-          }
-        },
-      });
+        this.libraryService.requestLibraryList(this.userGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.libraryModels.set(res);
+              //this.totalNumberOfUserShelves.set(this.libraryModels().flatMap(lib=>lib.shelvesTitles).length);
+            }
+          },
+        });
+  
+        this.libraryService.requestTotalNumberOfDocuments(this.userGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.totalNumberOfUserDocuments.set(res.totalNumberOfUserDocuments);
+            }
+          },
+        });
+        this.libraryService.requestTotalNumberOfShelves(this.userGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.totalNumberOfUserShelves.set(res.totalNumberOfUserShelves);
+            }
+          },
+        });
 
-      this.identityService.requestUserModel(this.userGuid()!).subscribe({
-        next: res => {
-          this.userModel.set(res);
-          this.libraryService.currentOwnerUserModel.set(res);
-        },
-      });
+      }
     });
   }
 

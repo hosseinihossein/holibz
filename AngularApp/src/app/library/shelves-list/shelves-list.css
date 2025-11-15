@@ -13,6 +13,7 @@ mat-sidenav{
 
 mat-sidenav-content{
     padding: 8px;
+    position: relative;
 }
 mat-sidenav-content app-shelf-card{
     margin: 0px 0px;

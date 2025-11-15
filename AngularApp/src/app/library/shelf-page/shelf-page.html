@@ -30,9 +30,13 @@
                 {{shelfModel()?.description}}
             </p>
         </mat-card-content>
+
         <mat-card-actions align="end">
             @if(isMyShelf()){
             @if(shelfGuid() !== "DefaultShelf"){
+            <button matIconButton class="noPaddingBtn" matTooltip="Delete Shelf" (click)="deleteShelf()">
+                <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
+            </button>
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Parent Libraries"
                 (click)="editParentLibraries()">
                 <mat-icon>account_tree</mat-icon>
@@ -48,4 +52,9 @@
             }
         </mat-card-actions>
     </mat-card>
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
 </app-documents-list>

@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ShelvesList } from "../shelves-list/shelves-list";
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle, MatCardActions } from "@angular/material/card";
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
 import { LibraryCardModel } from '../library-card/library-card';
 import { NgOptimizedImage } from '@angular/common';
@@ -11,12 +11,15 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 import { MatTooltip } from '@angular/material/tooltip';
+import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { Result } from '../../dialogs/result/result';
 
 @Component({
   selector: 'app-library-page',
   imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
     MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton, MatIconButton,
-    MatTooltip],
+    MatTooltip,MatProgressSpinner],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })
@@ -27,11 +30,14 @@ export class LibraryPage {
   librarySerice = inject(LibraryService);
   identityService = inject(IdentityService);
   dialog = inject(MatDialog);
+  router = inject(Router);
 
   libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
   this.libraryModel()?.ownerGuid === this.identityService.userModel()?.guid);
   userModel = signal<UserProfileModel|null>(null);
+  
+  displaySubmitSpinner = signal(false);
 
   introductionImageVersion = signal(0);
   introductionImage = computed(()=>`/api/Library/LibraryImage?libraryGuid=${this.libraryModel()!.guid}&v=${this.introductionImageVersion()}`);
@@ -103,6 +109,39 @@ export class LibraryPage {
               this.introductionImageVersion.update(v=>{return ++v;});
             }
           }
+        }
+      });
+    }
+  }
+
+  deleteLibrary(){
+    if(this.isMyLibrary()){
+      this.dialog.open(ConfirmDelete,
+        {data:{type:"Library",title:this.libraryModel()!.title}}
+      ).afterClosed().subscribe(result=>{
+        if(result === true){
+          this.displaySubmitSpinner.set(true);
+          this.librarySerice.requestDeleteLibrary(this.libraryGuid()!).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.displaySubmitSpinner.set(false);
+                this.router.navigate(['libraries', this.identityService.userModel()!.guid]);
+              }
+            },
+            error: err => {
+              this.dialog.open(Result,{
+                //panelClass: "success-ResultStatus", 
+                data:{
+                  status: "warning",
+                  title: "Error in library deletion",
+                  description: ["Something went wrong during deleting the library!",
+                    JSON.stringify(err)
+                  ],
+                }
+              }).afterClosed().subscribe(()=>this.displaySubmitSpinner.set(false));
+              throw(err);
+            },
+          });
         }
       });
     }

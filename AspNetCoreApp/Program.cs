@@ -313,7 +313,7 @@ public class Program
 
         foreach (string userGuid in AllConfirmedUsersGuidsExceptAdmin)
         {
-            await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, userGuid);
+            await libraryProcess.CreateDefaultShelf(libraryDb, userGuid);
         }
 
         //***** Seed Library *****

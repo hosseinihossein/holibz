@@ -9,19 +9,22 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LibraryService } from '../../services/library-service';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
+import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
+import { Result } from '../../dialogs/result/result';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-shelf-page',
   imports: [DocumentsList, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
     MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton, MatCardActions, RouterLink,
-    NgOptimizedImage],
+    NgOptimizedImage,MatProgressSpinner],
   templateUrl: './shelf-page.html',
   styleUrl: './shelf-page.css'
 })
@@ -33,12 +36,15 @@ export class ShelfPage {
   activatedRoute = inject(ActivatedRoute);
   librarySerice = inject(LibraryService);
   identityService = inject(IdentityService);
+  router = inject(Router);
   
   shelfModel = signal<ShelfCardModel|null>(null);
 
   userModel = signal<UserProfileModel|null>(null);
   isMyShelf = computed(() => this.identityService.isAuthenticated() && 
   this.shelfModel()?.ownerGuid === this.identityService.userModel()?.guid);
+
+  displaySubmitSpinner = signal(false);
 
   introductionImageVersion = signal(0);
   introductionImage = computed(()=>`/api/Library/ShelfImage?shelfGuid=${this.shelfModel()!.guid}&v=${this.introductionImageVersion()}`);
@@ -127,6 +133,40 @@ export class ShelfPage {
           this.shelfModel.update(shelf=>{
             shelf!.libraries = result;
             return shelf;
+          });
+        }
+      });
+    }
+  }
+
+  deleteShelf(){
+    if(this.isMyShelf()){
+      this.dialog.open(ConfirmDelete,{
+        data:{
+          title: this.shelfModel()?.title,
+          type: "Shelf",
+        }
+      }).afterClosed().subscribe(result=>{
+        if(result === true){
+          this.librarySerice.requestDeleteShelf(this.shelfGuid()!).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.router.navigate(['libraries', this.identityService.userModel()!.guid]);
+              }
+            },
+            error: err => {
+              this.dialog.open(Result,{
+                //panelClass: "success-ResultStatus", 
+                data:{
+                  status: "warning",
+                  title: "Error in shelf deletion",
+                  description: ["Something went wrong during deleting the shelf!",
+                    JSON.stringify(err)
+                  ],
+                }
+              }).afterClosed().subscribe(()=>this.displaySubmitSpinner.set(false));
+              throw(err);
+            },
           });
         }
       });

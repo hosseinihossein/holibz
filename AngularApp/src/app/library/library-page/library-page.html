@@ -14,9 +14,13 @@
         <mat-card-content>
             <p>{{libraryModel()?.description}}</p>
         </mat-card-content>
+
         <mat-card-actions align="end">
             @if(isMyLibrary()){
             @if(libraryGuid() !== "DefaultLibrary"){
+            <button matIconButton class="noPaddingBtn warning" matTooltip="Delete Library" (click)="deleteLibrary()">
+                <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
+            </button>
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
                 <mat-icon>edit_note</mat-icon>
             </button>
@@ -28,4 +32,9 @@
             }
         </mat-card-actions>
     </mat-card>
+    @if(displaySubmitSpinner()){
+    <div id="submit-spinner-layout">
+        <mat-spinner id="submit-spinner"></mat-spinner>
+    </div>
+    }
 </app-shelves-list>

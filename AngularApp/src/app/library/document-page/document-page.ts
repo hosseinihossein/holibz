@@ -163,31 +163,40 @@ export class DocumentPage implements AfterViewInit {
   }
 
   confirmDelete(){
-    const dialogRef = this.dialog.open(ConfirmDelete);
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result === true){
-        this.displaySubmitSpinner.set(true);
-        this.libraryService.requestDeleteDocument(this.documentPageService.documentPageModel()?.guid!).subscribe({
-          next: res => {
-            if(res && res.success){
-              this.router.navigate(['/profile']);
-            }
-          },
-          error: err => {
-            this.dialog.open(Result,{
-              //panelClass: "success-ResultStatus", 
-              data:{
-                status: "warning",
-                title: "Error in document deletion",
-                description: ["Something went wrong in document deletion",
-                  JSON.stringify(err)
-                ],
+    if(this.isMyDocument()){
+      const dialogRef = this.dialog.open(ConfirmDelete,{
+        data:{
+          title: this.documentPageService.documentPageModel()?.title,
+          type: "Documents",
+        }
+      });
+      dialogRef.afterClosed().subscribe(result=>{
+        if(result === true){
+          this.displaySubmitSpinner.set(true);
+          this.libraryService.requestDeleteDocument(this.documentPageService.documentPageModel()?.guid!).subscribe({
+            next: res => {
+              if(res && res.success){
+                this.displaySubmitSpinner.set(false);
+                this.router.navigate(['/profile']);
               }
-            });
-          },
-        });
-      }
-    });
+            },
+            error: err => {
+              this.dialog.open(Result,{
+                //panelClass: "success-ResultStatus", 
+                data:{
+                  status: "warning",
+                  title: "Error in document deletion",
+                  description: ["Something went wrong during deleting the document",
+                    JSON.stringify(err)
+                  ],
+                }
+              }).afterClosed().subscribe(()=>this.displaySubmitSpinner.set(false));
+              throw(err);
+            },
+          });
+        }
+      });
+    }
   }
 
   editTags(){

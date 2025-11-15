@@ -10,5 +10,5 @@ import { MatIcon } from '@angular/material/icon';
   styleUrl: './confirm-delete.css'
 })
 export class ConfirmDelete {
-  readonly data = inject<{label:string, type:string}>(MAT_DIALOG_DATA);
+  readonly data = inject<{title:string, type:string}>(MAT_DIALOG_DATA);
 }

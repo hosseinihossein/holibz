@@ -153,9 +153,76 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteLibrary()
+    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
+        if (libraryGuid == "DefaultLibrary")
+        {
+            ModelState.AddModelError("DefaultLibrary", "Default library cannot be deleted!");
+            return BadRequest(ModelState);
+        }
 
+        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
+        .Include(lib => lib.Shelves)
+        .ThenInclude(shelf => shelf.Libraries)
+        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
+        if (libraryDbModel is null)
+        {
+            ModelState.AddModelError("Guid", "Couldn't find the specified library!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstOrDefaultAsync())!;
+        if (userGuid != libraryDbModel.OwnerGuid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner can delete the library!");
+            return BadRequest(ModelState);
+        }
+
+        //default library
+        var defaultLibrary = await libraryDb.Libraries
+            .FirstOrDefaultAsync(lib => lib.OwnerGuid == userGuid && lib.Guid == "DefaultLibrary");
+        if (defaultLibrary is null)
+        {
+            // creating Default library
+            var createDefaultLibraryResult = await libraryProcess.CreateDefaultLibrary(libraryDb, userGuid);
+
+            if (createDefaultLibraryResult.Success &&
+            createDefaultLibraryResult.ResultObject is not null)
+            {
+                defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
+            }
+            else
+            {
+                //log
+                Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{userGuid}'!");
+                ModelState.AddModelError(createDefaultLibraryResult.ErrorTitle ?? "defaultLibrary",
+                createDefaultLibraryResult.ErrorDescription ?? $"Cloudnt find and create default library for the user with guid '{userGuid}'!");
+                return BadRequest(ModelState);
+            }
+        }
+
+        libraryDb.Libraries.Remove(libraryDbModel);
+
+        foreach (var shelf in libraryDbModel.Shelves)
+        {
+            if (shelf.Libraries.Count == 0)
+            {
+                shelf.Libraries = [defaultLibrary];
+            }
+        }
+
+        await libraryDb.SaveChangesAsync();
+
+        DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
+        if (libraryDirectoryInfo.Exists)
+        {
+            libraryDirectoryInfo.Delete(true);
+        }
+
+        return Ok(new { success = true });
     }
 
 
@@ -377,9 +444,76 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteShelf()
+    public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
+        if (shelfGuid == "DefaultShelf")
+        {
+            ModelState.AddModelError("DefaultShelf", "Default shelf cannot be deleted!");
+            return BadRequest(ModelState);
+        }
 
+        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
+        .Include(shelf => shelf.Documents)
+        .ThenInclude(doc => doc.Shelves)
+        .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
+        if (shelfDbModel is null)
+        {
+            ModelState.AddModelError("Guid", "Couldn't find the specified shelf!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstOrDefaultAsync())!;
+        if (userGuid != shelfDbModel.OwnerGuid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner can delete the shelf!");
+            return BadRequest(ModelState);
+        }
+
+        //default shelf
+        var defaultShelf = await libraryDb.Shelves
+            .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == userGuid && shelf.Guid == "DefaultShelf");
+        if (defaultShelf is null)
+        {
+            // creating Default Shelf
+            var createDefaultShelfResult = await libraryProcess.CreateDefaultShelf(libraryDb, userGuid);
+
+            if (createDefaultShelfResult.Success &&
+            createDefaultShelfResult.ResultObject is not null)
+            {
+                defaultShelf = (Library_ShelfDbModel)createDefaultShelfResult.ResultObject;
+            }
+            else
+            {
+                //log
+                Console.WriteLine($"\n***** Cloudnt find and create default shelf for the user with guid '{userGuid}'!");
+                ModelState.AddModelError(createDefaultShelfResult.ErrorTitle ?? "defaultShelf",
+                createDefaultShelfResult.ErrorDescription ?? $"Cloudnt find and create default shelf for the user with guid '{userGuid}'!");
+                return BadRequest(ModelState);
+            }
+        }
+
+        libraryDb.Shelves.Remove(shelfDbModel);
+
+        foreach (var doc in shelfDbModel.Documents)
+        {
+            if (doc.Shelves.Count == 0)
+            {
+                doc.Shelves = [defaultShelf];
+            }
+        }
+
+        await libraryDb.SaveChangesAsync();
+
+        DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
+        if (shelfDirectoryInfo.Exists)
+        {
+            shelfDirectoryInfo.Delete(true);
+        }
+
+        return Ok(new { success = true });
     }
 
 

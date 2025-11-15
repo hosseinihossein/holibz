@@ -169,6 +169,18 @@ export class LibraryService {
       "/api/Library/DeleteElement", {params: httpParams}
     );
   }
+  requestDeleteLibrary(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteLibrary", {params: httpParams}
+    );
+  }
+  requestDeleteShelf(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Library/DeleteShelf", {params: httpParams}
+    );
+  }
 
   submitEditedElements(editElementFormModelArray:EditElementFormModel[]){
     return this.httpClient.post<{success:boolean, elements:DocumentElementModel[]}>(

@@ -43,7 +43,7 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 // creating Default library and shelf
-                await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, user.UserGuid);
+                await libraryProcess.CreateDefaultShelf(libraryDb, user.UserGuid);
 
                 //await identityProcess.UpdateUserSeed(user, userManager);
 
@@ -92,7 +92,7 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 // creating Default library and shelf
-                await libraryProcess.CreateDefaultLibraryAndShelf(libraryDb, user.UserGuid);
+                await libraryProcess.CreateDefaultShelf(libraryDb, user.UserGuid);
 
                 //await identityProcess.UpdateUserSeed(user, userManager);
 

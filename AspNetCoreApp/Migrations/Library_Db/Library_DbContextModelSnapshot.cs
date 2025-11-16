@@ -43,7 +43,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<int?>("RelatedVersionsId")
                         .HasColumnType("int");
@@ -60,6 +60,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("OwnerGuid");
 
                     b.HasIndex("RelatedVersionsId");
 
@@ -134,7 +136,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -144,6 +146,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("OwnerGuid");
 
                     b.ToTable("Libraries");
                 });
@@ -188,7 +192,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -198,6 +202,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("OwnerGuid");
 
                     b.ToTable("Shelves");
                 });

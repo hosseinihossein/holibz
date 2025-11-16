@@ -14,12 +14,13 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Result } from '../../dialogs/result/result';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-library-page',
   imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
     MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton, MatIconButton,
-    MatTooltip,MatProgressSpinner],
+    MatProgressSpinner,MatMenuModule],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })

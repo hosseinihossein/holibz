@@ -1,6 +1,6 @@
 mat-card{
     margin: 24px;
-    /*position: relative;*/
+    position: relative;
     width: 100%;
 }
 
@@ -9,11 +9,11 @@ mat-card-header img{
     overflow: hidden;
 }
 
-/*#edit-mode-btn{
+#setting-btn{
     position: absolute;
     top: 0;
     right: 0;
-}*/
+}
 
 mat-icon#shelf-logo{
     font-size: 32px;

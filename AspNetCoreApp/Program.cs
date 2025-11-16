@@ -316,8 +316,6 @@ public class Program
             await libraryProcess.CreateDefaultShelf(libraryDb, userGuid);
         }
 
-        //***** Seed Library *****
-
 
 
 

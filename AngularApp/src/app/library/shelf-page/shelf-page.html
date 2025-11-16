@@ -34,7 +34,8 @@
         <mat-card-actions align="end">
             @if(isMyShelf()){
             @if(shelfGuid() !== "DefaultShelf"){
-            <button matIconButton class="noPaddingBtn" matTooltip="Delete Shelf" (click)="deleteShelf()">
+            <button matIconButton class="noPaddingBtn" style="float: inline-start;" matTooltip="Delete Shelf"
+                (click)="deleteShelf()">
                 <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
             </button>
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Parent Libraries"
@@ -51,6 +52,25 @@
             </a>
             }
         </mat-card-actions>
+        @if(isMyShelf() && shelfGuid() !== "DefaultShelf"){
+        <button matIconButton [matMenuTriggerFor]="settingMenu" aria-label="library setting menu" id="setting-btn">
+            <mat-icon>settings</mat-icon>
+        </button>
+        <mat-menu #settingMenu="matMenu">
+            <button mat-menu-item (click)="editIntroduction()">
+                <mat-icon>edit</mat-icon>
+                Edit Introduction
+            </button>
+            <button mat-menu-item (click)="editParentLibraries()">
+                <mat-icon>account_tree</mat-icon>
+                Change Parent Libraries
+            </button>
+            <button mat-menu-item (click)="deleteShelf()">
+                <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
+                Delete Shelf
+            </button>
+        </mat-menu>
+        }
     </mat-card>
     @if(displaySubmitSpinner()){
     <div id="submit-spinner-layout">

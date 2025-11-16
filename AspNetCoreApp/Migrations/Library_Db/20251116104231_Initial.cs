@@ -23,7 +23,7 @@ namespace AspNetCore.Migrations.Library_Db
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "longtext", nullable: false)
+                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Title = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -60,7 +60,7 @@ namespace AspNetCore.Migrations.Library_Db
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "longtext", nullable: false)
+                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Title = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -97,7 +97,7 @@ namespace AspNetCore.Migrations.Library_Db
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "longtext", nullable: false)
+                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Title = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -235,6 +235,11 @@ namespace AspNetCore.Migrations.Library_Db
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Documents_OwnerGuid",
+                table: "Documents",
+                column: "OwnerGuid");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Documents_RelatedVersionsId",
                 table: "Documents",
                 column: "RelatedVersionsId");
@@ -255,6 +260,11 @@ namespace AspNetCore.Migrations.Library_Db
                 table: "Libraries",
                 column: "Guid",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Libraries_OwnerGuid",
+                table: "Libraries",
+                column: "OwnerGuid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Library_DocumentDbModelLibrary_ShelfDbModel_ShelvesId",
@@ -282,6 +292,11 @@ namespace AspNetCore.Migrations.Library_Db
                 table: "Shelves",
                 column: "Guid",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Shelves_OwnerGuid",
+                table: "Shelves",
+                column: "OwnerGuid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tags_Name",

@@ -18,12 +18,7 @@
         <mat-card-actions align="end">
             @if(isMyLibrary()){
             @if(libraryGuid() !== "DefaultLibrary"){
-            <button matIconButton class="noPaddingBtn warning" matTooltip="Delete Library" (click)="deleteLibrary()">
-                <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
-            </button>
-            <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
-                <mat-icon>edit_note</mat-icon>
-            </button>
+
             }
             <a matButton="elevated" [routerLink]="['/shelf','new', libraryGuid()]">
                 <mat-icon>shelves</mat-icon>
@@ -31,6 +26,21 @@
             </a>
             }
         </mat-card-actions>
+        @if(isMyLibrary() && libraryGuid() !== "DefaultLibrary"){
+        <button matIconButton [matMenuTriggerFor]="settingMenu" aria-label="library setting menu" id="setting-btn">
+            <mat-icon>settings</mat-icon>
+        </button>
+        <mat-menu #settingMenu="matMenu">
+            <button mat-menu-item (click)="editIntroduction()">
+                <mat-icon>edit</mat-icon>
+                Edit Introduction
+            </button>
+            <button mat-menu-item (click)="deleteLibrary()">
+                <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
+                Delete Library
+            </button>
+        </mat-menu>
+        }
     </mat-card>
     @if(displaySubmitSpinner()){
     <div id="submit-spinner-layout">

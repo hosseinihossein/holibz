@@ -1,10 +1,17 @@
 mat-card{
     margin: 24px;
+    position: relative;
 }
 
 mat-card-header img{
     border-radius: 50%;
     overflow: hidden;
+}
+
+#setting-btn{
+    position: absolute;
+    top: 0;
+    right: 0;
 }
 
 #submit-spinner-layout{

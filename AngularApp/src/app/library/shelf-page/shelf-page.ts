@@ -19,12 +19,13 @@ import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
 import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { Result } from '../../dialogs/result/result';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-shelf-page',
   imports: [DocumentsList, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
     MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton, MatCardActions, RouterLink,
-    NgOptimizedImage,MatProgressSpinner],
+    NgOptimizedImage,MatProgressSpinner,MatMenuModule],
   templateUrl: './shelf-page.html',
   styleUrl: './shelf-page.css'
 })

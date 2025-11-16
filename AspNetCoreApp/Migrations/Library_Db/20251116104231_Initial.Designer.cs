@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Library_Db
 {
     [DbContext(typeof(Library_DbContext))]
-    [Migration("20251113084048_Initial")]
+    [Migration("20251116104231_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -46,7 +46,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<int?>("RelatedVersionsId")
                         .HasColumnType("int");
@@ -63,6 +63,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("OwnerGuid");
 
                     b.HasIndex("RelatedVersionsId");
 
@@ -137,7 +139,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -147,6 +149,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("OwnerGuid");
 
                     b.ToTable("Libraries");
                 });
@@ -191,7 +195,7 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -201,6 +205,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("Guid")
                         .IsUnique();
+
+                    b.HasIndex("OwnerGuid");
 
                     b.ToTable("Shelves");
                 });

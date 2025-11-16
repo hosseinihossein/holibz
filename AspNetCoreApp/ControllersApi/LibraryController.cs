@@ -230,9 +230,10 @@ public class LibraryController : ControllerBase
 
 
     [HttpGet]
-    public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid)
+    public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid,
+    [FromQuery][StringLength(32)] string? ownerGuid)
     {
-        Library_ShelfCardModel[]? shelfCardModels = await libraryDb.Libraries
+        Library_ShelfCardModel[]? shelfCardModels;/* = await libraryDb.Libraries
         .Include(lib => lib.Shelves)
         .ThenInclude(shelf => shelf.Documents)
         .ThenInclude(doc => doc.Elements)
@@ -265,48 +266,96 @@ public class LibraryController : ControllerBase
         .AsSplitQuery()
         .FirstOrDefaultAsync();
 
-        if (shelfCardModels is null || shelfCardModels.Length == 0)
+        if (shelfCardModels is null)
         {
             ModelState.AddModelError("libraryGuid", "Couldn't find any library with the specified guid!");
             return BadRequest(ModelState);
-        }
+        }*/
 
-        string ownerGuid = shelfCardModels[0].OwnerGuid;
-
-        Library_ShelfCardModel[] nonParentShelfCardModels = await libraryDb.Shelves
-        .Include(shelf => shelf.Libraries)
-        .Include(shelf => shelf.Documents)
-        .ThenInclude(doc => doc.Elements)
-        .Where(shelf => shelf.OwnerGuid == ownerGuid && shelf.Libraries.Count == 0)
-        .Select(shelf => new Library_ShelfCardModel()
+        if (libraryGuid == "DefaultLibrary")
         {
-            CreatedAt = shelf.CreatedAt,
-            Description = shelf.Description,
-            DocumentCardModels = shelf.Documents
-            .OrderByDescending(doc => doc.CreatedAt)
-            .Take(10)
-            .Select(doc => new Library_DocumentCardModel()
+            if (ownerGuid is null)
             {
-                Description = doc.Description,
-                Guid = doc.Guid,
-                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
-                OwnerGuid = doc.OwnerGuid,
-                Title = doc.Title,
-            }).ToArray(),
-            Guid = shelf.Guid,
-            Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
-            {
-                Guid = shelfLib.Guid,
-                Title = shelfLib.Title,
-            }).ToArray(),
-            Title = shelf.Title,
-            OwnerGuid = shelf.OwnerGuid,
-            TotalNumberOfShelfDocuments = shelf.Documents.Count,
-        })
-        .AsSplitQuery()
-        .ToArrayAsync();
+                ModelState.AddModelError("ownerGuid", "ownerGuid cannot be null for the Default Library!");
+                return BadRequest(ModelState);
+            }
 
-        shelfCardModels = [.. shelfCardModels, .. nonParentShelfCardModels];
+            Library_ShelfCardModel[] nonParentShelfCardModels = await libraryDb.Shelves
+            .Include(shelf => shelf.Libraries)
+            .Include(shelf => shelf.Documents)
+            .ThenInclude(doc => doc.Elements)
+            .Where(shelf => shelf.OwnerGuid == ownerGuid && shelf.Libraries.Count == 0)
+            .Select(shelf => new Library_ShelfCardModel()
+            {
+                CreatedAt = shelf.CreatedAt,
+                Description = shelf.Description,
+                DocumentCardModels = shelf.Documents
+                .OrderByDescending(doc => doc.CreatedAt)
+                .Take(10)
+                .Select(doc => new Library_DocumentCardModel()
+                {
+                    Description = doc.Description,
+                    Guid = doc.Guid,
+                    Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+                    OwnerGuid = doc.OwnerGuid,
+                    Title = doc.Title,
+                }).ToArray(),
+                Guid = shelf.Guid,
+                Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
+                {
+                    Guid = shelfLib.Guid,
+                    Title = shelfLib.Title,
+                }).ToArray(),
+                Title = shelf.Title,
+                OwnerGuid = shelf.OwnerGuid,
+                TotalNumberOfShelfDocuments = shelf.Documents.Count,
+            })
+            .AsSplitQuery()
+            .ToArrayAsync();
+
+            shelfCardModels = nonParentShelfCardModels;
+        }
+        else//libraryGuid != "DefaultLibrary"
+        {
+            shelfCardModels = await libraryDb.Libraries
+            .Include(lib => lib.Shelves)
+            .ThenInclude(shelf => shelf.Documents)
+            .ThenInclude(doc => doc.Elements)
+            .Where(lib => lib.Guid == libraryGuid)
+            .Select(lib => lib.Shelves.Select(shelf => new Library_ShelfCardModel()
+            {
+                CreatedAt = shelf.CreatedAt,
+                Description = shelf.Description,
+                DocumentCardModels = shelf.Documents
+                .OrderByDescending(doc => doc.CreatedAt)
+                .Take(10)
+                .Select(doc => new Library_DocumentCardModel()
+                {
+                    Description = doc.Description,
+                    Guid = doc.Guid,
+                    Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+                    OwnerGuid = doc.OwnerGuid,
+                    Title = doc.Title,
+                }).ToArray(),
+                Guid = shelf.Guid,
+                Libraries = shelf.Libraries.Select(shelfLib => new Library_LibraryBrief()
+                {
+                    Guid = shelfLib.Guid,
+                    Title = shelfLib.Title,
+                }).ToArray(),
+                Title = shelf.Title,
+                OwnerGuid = shelf.OwnerGuid,
+                TotalNumberOfShelfDocuments = shelf.Documents.Count,
+            }).ToArray())
+            .AsSplitQuery()
+            .FirstOrDefaultAsync();
+
+            if (shelfCardModels is null)/* || shelfCardModels.Length == 0)*///shelfCardModels.Length can be 0
+            {
+                ModelState.AddModelError("libraryGuid", "Couldn't find any library with the specified guid!");
+                return BadRequest(ModelState);
+            }
+        }
 
         foreach (var shelfCardModel in shelfCardModels)
         {
@@ -521,9 +570,10 @@ public class LibraryController : ControllerBase
 
 
     [HttpGet]
-    public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
+    public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid,
+    [FromQuery][StringLength(32)] string? ownerGuid)
     {
-        Library_DocumentCardModel[] documentCardModels = await libraryDb.Shelves
+        Library_DocumentCardModel[] documentCardModels = [];/* = await libraryDb.Shelves
         .Include(shelf => shelf.Documents)
         .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Guid == shelfGuid)
@@ -536,8 +586,50 @@ public class LibraryController : ControllerBase
             OwnerGuid = doc.OwnerGuid,
             Title = doc.Title,
         })
-        //.AsSplitQuery()//we dont need assplitquery because include and theninclide are not in the same level
-        .ToArrayAsync();
+        .ToArrayAsync();*/
+
+        if (shelfGuid == "DefaultShelf")
+        {
+            if (ownerGuid is null)
+            {
+                ModelState.AddModelError("ownerGuid", "ownerGuid cannot be null for the Default Shelf!");
+                return BadRequest(ModelState);
+            }
+
+            Library_DocumentCardModel[] nonParentDocuments = await libraryDb.Documents
+            .Include(doc => doc.Shelves)
+            .Include(doc => doc.Elements)
+            .Where(doc => doc.OwnerGuid == ownerGuid && doc.Shelves.Count == 0)
+            .Select(doc => new Library_DocumentCardModel()
+            {
+                Description = doc.Description,
+                Guid = doc.Guid,
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+                OwnerGuid = doc.OwnerGuid,
+                Title = doc.Title,
+            })
+            .AsSplitQuery()
+            .ToArrayAsync();
+
+            documentCardModels = [.. documentCardModels, .. nonParentDocuments];
+        }
+        else
+        {
+            documentCardModels = await libraryDb.Shelves
+            .Include(shelf => shelf.Documents)
+            .ThenInclude(doc => doc.Elements)
+            .Where(shelf => shelf.Guid == shelfGuid)
+            .SelectMany(shelf => shelf.Documents)
+            .Select(doc => new Library_DocumentCardModel()
+            {
+                Description = doc.Description,
+                Guid = doc.Guid,
+                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+                OwnerGuid = doc.OwnerGuid,
+                Title = doc.Title,
+            })
+            .ToArrayAsync();
+        }
 
         foreach (var documentCardModel in documentCardModels)
         {

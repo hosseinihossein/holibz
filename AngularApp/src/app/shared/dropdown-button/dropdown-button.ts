@@ -12,7 +12,7 @@ import { MatMenuTrigger, MatMenu } from '@angular/material/menu';
 export class DropdownButton /*implements OnInit*/ {
   menu = input.required<MatMenu>();
   btn = viewChild.required(MatButton);
-  icon = viewChild.required(MatIcon);
+  //icon = viewChild.required(MatIcon);
 
   /*ngOnInit(){
     this.icon()._elementRef.nativeElement.style.transition = "all 100ms";

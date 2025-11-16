@@ -117,14 +117,20 @@ public class Library_DbContext : DbContext
         modelBuilder.Entity<Library_LibraryDbModel>()
         .HasIndex(lib => lib.Guid)
         .IsUnique(true);
+        modelBuilder.Entity<Library_LibraryDbModel>()
+        .HasIndex(lib => lib.OwnerGuid);
 
         modelBuilder.Entity<Library_ShelfDbModel>()
         .HasIndex(shelf => shelf.Guid)
         .IsUnique(true);
+        modelBuilder.Entity<Library_ShelfDbModel>()
+        .HasIndex(shelf => shelf.OwnerGuid);
 
         modelBuilder.Entity<Library_DocumentDbModel>()
         .HasIndex(doc => doc.Guid)
         .IsUnique(true);
+        modelBuilder.Entity<Library_DocumentDbModel>()
+        .HasIndex(doc => doc.OwnerGuid);
 
         modelBuilder.Entity<Library_RelatedVersionsDbModel>()
         .HasIndex(rv => rv.Guid)
@@ -260,7 +266,14 @@ public class Library_Process //singleton service
                 // creating Default library
                 var createDefaultLibraryResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
 
-                if (createDefaultLibraryResult.Success &&
+                if (!createDefaultLibraryResult.Success)
+                {
+                    //log
+                    Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
+                    return createDefaultLibraryResult;
+                }
+
+                /*if (createDefaultLibraryResult.Success &&
                 createDefaultLibraryResult.ResultObject is not null)
                 {
                     defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
@@ -270,7 +283,7 @@ public class Library_Process //singleton service
                     //log
                     Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
                     return createDefaultLibraryResult;
-                }
+                }*/
             }
 
             shelfDbModel = new()
@@ -279,16 +292,20 @@ public class Library_Process //singleton service
                 OwnerGuid = ownerGuid,
                 Description = formModel.Description,
                 Guid = "DefaultShelf",
-                Libraries = [defaultLibrary],
+                //Libraries = [defaultLibrary],
             };
         }
         else
         {
-            List<Library_LibraryDbModel> parentLibraries = await libraryDb.Libraries
-            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
-            .ToListAsync();
+            List<Library_LibraryDbModel> parentLibraries = [];
+            if (formModel.LibraryGuids.Length > 0)
+            {
+                parentLibraries = await libraryDb.Libraries
+                .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
+                .ToListAsync();
+            }
 
-            if (parentLibraries is null || parentLibraries.Count == 0)
+            /*if (parentLibraries is null || parentLibraries.Count == 0)
             {
                 var defaultLibrary = await libraryDb.Libraries
                 .FirstOrDefaultAsync(lib => lib.OwnerGuid == ownerGuid && lib.Guid == "DefaultLibrary");
@@ -310,7 +327,7 @@ public class Library_Process //singleton service
                     }
                 }
                 parentLibraries = [defaultLibrary];
-            }
+            }*/
 
             shelfDbModel = new()
             {

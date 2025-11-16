@@ -85,11 +85,11 @@ app-nav-bar {
   ));
 }
 
-.document-card {
+/*.document-card {
   @include mat.card-overrides((
-    /*title-text-size: var(--mat-sys-title-large),*/
+    title-text-size: var(--mat-sys-title-large),
   ));
-}
+}*/
 
 :root {
   @include mat.expansion-overrides((

@@ -22,7 +22,7 @@ import { SingletonModes } from '../../services/singleton-modes';
 @Component({
   selector: 'app-new-document-form',
   imports: [MatFormField, MatLabel, MatInput, MatButton, MatIconButton, MatIcon, MatTooltip, MatSelect,
-    MatOption, /*MatOptgroup,*/ReactiveFormsModule,MatError,MatProgressSpinner,
+    MatOption, MatOptgroup,ReactiveFormsModule,MatError,MatProgressSpinner,
     MatButtonToggleModule],
   templateUrl: './new-document-form.html',
   styleUrl: './new-document-form.css'
@@ -52,7 +52,7 @@ export class NewDocumentForm {
   previewImgSrc = signal<string|null>(null);
   
   displaySubmitSpinner = signal(false);
-  allLibraryList = signal</*LibraryCardModel*/{guid:string,title:string}[]>([]);
+  allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ShelfCardModel[]>([]);
   //shelfGuidToParentLibrariesTitlesMap = signal<Map<string,string>>(new Map<string,string>());
@@ -78,35 +78,20 @@ export class NewDocumentForm {
 
     effect(() => {
       if(this.identityService.userModel()?.guid){
-        /*this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!)?.subscribe({
+
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
-              this.allLibraryList.set(res);
-              this.displayedLibraries.set(res.map(l=>l.title));
+              this.allLibraryList.set(res.map(lib=>({guid:lib.guid,title:lib.title})));
+              this.displayedLibraries.set(res.map(lib=>lib.title));
             }
           },
-        });*/
+        });
 
         this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
               this.allShelfList.set(res);
-
-              let allParentLibraries = res.flatMap(shelf=>shelf.libraries);
-              let uniqueParentLibraries:{guid:string,title:string}[] = [];
-              allParentLibraries.forEach(pl=>{
-                if(!uniqueParentLibraries.map(upl=>upl.guid).includes(pl.guid)){
-                  uniqueParentLibraries.push(pl);
-                }
-              });
-              this.allLibraryList.set(uniqueParentLibraries);
-
-              /*this.shelfGuidToParentLibrariesTitlesMap.update(map=>{
-                res.forEach(shelf=>
-                  map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
-                );
-                return map;
-              });*/
             }
           },
         });

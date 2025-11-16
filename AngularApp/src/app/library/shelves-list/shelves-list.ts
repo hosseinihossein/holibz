@@ -32,7 +32,7 @@ export class ShelvesList {
     this.userModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(() => {
-      this.libraryService.requestShelfList(this.libraryGuid()).subscribe({
+      this.libraryService.requestShelfList(this.libraryGuid(), this.userModel()?.guid).subscribe({
         next: res => {
           if(res){
             this.shelfModels.set(res);

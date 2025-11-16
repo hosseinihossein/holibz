@@ -118,7 +118,10 @@ export class LibraryPage {
   deleteLibrary(){
     if(this.isMyLibrary()){
       this.dialog.open(ConfirmDelete,
-        {data:{type:"Library",title:this.libraryModel()!.title}}
+        {data:{
+          type:"Library",
+          title:`if you click on 'Yes', library '${this.libraryModel()!.title}' will be deleted but its shelves will remain available through other libraries!`}
+        }
       ).afterClosed().subscribe(result=>{
         if(result === true){
           this.displaySubmitSpinner.set(true);

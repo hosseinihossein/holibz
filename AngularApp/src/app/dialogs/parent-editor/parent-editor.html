@@ -18,8 +18,8 @@
             <mat-button-toggle [value]="libraryModel.guid">{{libraryModel.title}}</mat-button-toggle>
             }
         </mat-button-toggle-group>
-        @if(libraryGuids.invalid && libraryGuids.hasError("required")){
-        <mat-error>
+        @if(data.parentOf === "shelf" && libraryGuids.invalid && libraryGuids.hasError("required")){
+        <mat-error style="color: var(--mat-sys-error);font-size: 14px;">
             Library is required!
         </mat-error>
         }
@@ -28,19 +28,18 @@
         <mat-form-field>
             <mat-label>Shelf</mat-label>
             <mat-select required [formControl]="shelfGuids" multiple>
-                <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
-                <!--mat-optgroup [label]="libraryTitle"-->
-                @for(shelfModel of allShelfList(); track shelfModel.guid){
-                <!--@if(shelfModel.libraries.title === libraryTitle){-->
-                <mat-option [value]="shelfModel.guid"
-                    [matTooltip]="shelfGuidToParentLibrariesTitlesMap().get(shelfModel.guid)">
-                    {{shelfModel.title}}
-                    <!--span id="libraryName-span">({{libraryTitle}})</span-->
-                </mat-option>
-                <!--}-->
+                @for(libraryTitle of displayedLibraries(); track libraryTitle){
+                <mat-optgroup [label]="libraryTitle">
+                    @for(shelfModel of allShelfList(); track shelfModel.guid){
+                    @if(shelfGuidToParentLibrariesTitlesMap().get(shelfModel.guid) === libraryTitle){
+                    <mat-option [value]="shelfModel.guid">
+                        {{shelfModel.title}}
+                        <span id="libraryName-span">({{libraryTitle}})</span>
+                    </mat-option>
+                    }
+                    }
+                </mat-optgroup>
                 }
-                <!--/mat-optgroup-->
-                <!--}-->
             </mat-select>
             @if(shelfGuids.invalid && (shelfGuids.dirty || shelfGuids.touched) &&
             shelfGuids.hasError("required")){
@@ -52,7 +51,7 @@
         }
 
         @if(submitErrors()){
-        <mat-error>
+        <mat-error style="color: var(--mat-sys-error);font-size: 14px;">
             {{submitErrors()}}
         </mat-error>
         }
@@ -62,7 +61,8 @@
     @if(data.parentOf === 'document'){
     <mat-dialog-actions align="end" style="float: inline-end;">
         <button matButton mat-dialog-close="">Cancel</button>
-        <button type="button" matButton="elevated" [disabled]="libraryGuids.invalid || shelfGuids.invalid"
+        <button type="button" matButton="elevated"
+            [disabled]="shelfGuids.invalid || arraysEqualUnordered(shelfGuids.value, data.parentShelfGuids)"
             (click)="onSubmit()">
             Submit
         </button>
@@ -71,7 +71,9 @@
     @if(data.parentOf === 'shelf'){
     <mat-dialog-actions align="end" style="float: inline-end;">
         <button matButton mat-dialog-close="">Cancel</button>
-        <button type="button" matButton="elevated" [disabled]="libraryGuids.invalid" (click)="onSubmit()">
+        <button type="button" matButton="elevated"
+            [disabled]="libraryGuids.invalid || arraysEqualUnordered(libraryGuids.value, data.parentLibraryGuids)"
+            (click)="onSubmit()">
             Submit
         </button>
     </mat-dialog-actions>

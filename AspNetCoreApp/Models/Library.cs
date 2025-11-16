@@ -266,14 +266,7 @@ public class Library_Process //singleton service
                 // creating Default library
                 var createDefaultLibraryResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
 
-                if (!createDefaultLibraryResult.Success)
-                {
-                    //log
-                    Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
-                    return createDefaultLibraryResult;
-                }
-
-                /*if (createDefaultLibraryResult.Success &&
+                if (createDefaultLibraryResult.Success &&
                 createDefaultLibraryResult.ResultObject is not null)
                 {
                     defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
@@ -283,7 +276,7 @@ public class Library_Process //singleton service
                     //log
                     Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
                     return createDefaultLibraryResult;
-                }*/
+                }
             }
 
             shelfDbModel = new()
@@ -292,7 +285,7 @@ public class Library_Process //singleton service
                 OwnerGuid = ownerGuid,
                 Description = formModel.Description,
                 Guid = "DefaultShelf",
-                //Libraries = [defaultLibrary],
+                Libraries = [defaultLibrary],
             };
         }
         else

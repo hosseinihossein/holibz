@@ -24,7 +24,7 @@ import { MatMenuModule } from '@angular/material/menu';
 @Component({
   selector: 'app-shelf-page',
   imports: [DocumentsList, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
-    MatCardAvatar, MatBadge, MatIconButton, MatTooltip, MatButton, MatCardActions, RouterLink,
+    MatCardAvatar, MatBadge, MatIconButton, MatButton, MatCardActions, RouterLink,
     NgOptimizedImage,MatProgressSpinner,MatMenuModule],
   templateUrl: './shelf-page.html',
   styleUrl: './shelf-page.css'
@@ -144,7 +144,7 @@ export class ShelfPage {
     if(this.isMyShelf()){
       this.dialog.open(ConfirmDelete,{
         data:{
-          title: this.shelfModel()?.title,
+          title: `if you click on 'Yes', shelf '${this.shelfModel()?.title}' will be deleted but its documents will remain available through other shelves!`,
           type: "Shelf",
         }
       }).afterClosed().subscribe(result=>{

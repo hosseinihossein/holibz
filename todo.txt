@@ -1,11 +1,13 @@
 - after adding new element to a document, navigate to its fragment
 - add reference element to other elements
+- create libraryPage and shelfPage scoped services and move current states from library service to them
+- delete identityService instance from libraryService if it's not necessary
 - 
 
 
 - do changedetection onpush and some other performance updates like ssr
 - break the angular app to several sub apps for each service.
 - add the ability for users to follow eachother
-- add the ability for users to send review request to to some other users they wish to read 
-and react to their document.
-- set Guid columns as index columns in the database models of asp app to increase the read performance
+- add the ability for users to send review request to eachother for reading 
+and reacting to their document.
+- 

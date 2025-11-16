@@ -20,8 +20,7 @@
             @for(shelf of documentPageService.documentPageModel()?.shelves; track shelf.guid){
             <mat-expansion-panel expanded>
                 <mat-expansion-panel-header>
-                    <mat-panel-title
-                        [matTooltip]="`Library: ${shelfGuidToParentLibrariesTitlesMap().get(shelf.guid)}, By: '${documentPageService.documentPageModel()?.owner?.userName}'`"
+                    <mat-panel-title [matTooltip]="`Library: ${shelfGuidToParentLibrariesTitlesMap().get(shelf.guid)}`"
                         matTooltipPosition="after">
                         {{shelf.title}}
                     </mat-panel-title>

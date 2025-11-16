@@ -26,16 +26,22 @@ export class LibraryService {
     let quryParams = new HttpParams().set("userGuid", userGuid);
     return this.httpClient.get<LibraryCardModel[]>("/api/Library/List", { params: quryParams});
   }
-  requestShelfList(libraryGuid: string){
+  requestShelfList(libraryGuid: string, ownerGuid?: string){
     let quryParams = new HttpParams().set("libraryGuid", libraryGuid);
+    if(ownerGuid){
+      quryParams = quryParams.set("ownerGuid", ownerGuid)
+    }
     return this.httpClient.get<ShelfCardModel[]>("/api/Library/ShelfList", { params: quryParams});
   }
   requestUserShelfList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
     return this.httpClient.get<ShelfCardModel[]>("/api/Library/UserShelfList", { params: quryParams});
   }
-  requestDocumentCardList(shelfGuid: string){
+  requestDocumentCardList(shelfGuid: string, ownerGuid?: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
+    if(ownerGuid){
+      quryParams = quryParams.set("ownerGuid", ownerGuid)
+    }
     return this.httpClient.get<DocumentCardModel[]>("/api/Library/DocumentCardList", { params: quryParams});
   }
 

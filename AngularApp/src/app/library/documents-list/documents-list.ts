@@ -31,7 +31,7 @@ export class DocumentsList {
     //this.totalNumberOfShelfDocuments.set(this.libraryService.currentShelfModel()?.totalNumberOfShelfDocuments!);
 
     effect(() => {
-      this.libraryService.requestDocumentCardList(this.shelfGuid())?.subscribe({
+      this.libraryService.requestDocumentCardList(this.shelfGuid(), this.userModel()?.guid)?.subscribe({
         next: res => {
           if(res){
             this.documentCardModels.set(res);

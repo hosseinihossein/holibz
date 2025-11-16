@@ -33,8 +33,7 @@
 
         <mat-card-actions align="end">
             @if(isMyShelf()){
-            @if(shelfGuid() !== "DefaultShelf"){
-            <button matIconButton class="noPaddingBtn" style="float: inline-start;" matTooltip="Delete Shelf"
+            <!--button matIconButton class="noPaddingBtn" style="float: inline-start;" matTooltip="Delete Shelf"
                 (click)="deleteShelf()">
                 <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
             </button>
@@ -44,8 +43,8 @@
             </button>
             <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
                 <mat-icon>edit_note</mat-icon>
-            </button>
-            }
+            </button-->
+
             <a matButton="elevated" [routerLink]="['/document','new',shelfGuid()]">
                 <mat-icon>newsstand</mat-icon>
                 Add a new Document

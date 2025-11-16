@@ -166,8 +166,8 @@ export class DocumentPage implements AfterViewInit {
     if(this.isMyDocument()){
       const dialogRef = this.dialog.open(ConfirmDelete,{
         data:{
-          title: this.documentPageService.documentPageModel()?.title,
-          type: "Documents",
+          title: `if you click on 'Yes', document '${this.documentPageService.documentPageModel()?.title}' and its contents will be permanently deleted!`,
+          type: "Document",
         }
       });
       dialogRef.afterClosed().subscribe(result=>{

@@ -17,8 +17,8 @@ import { MatButton } from '@angular/material/button';
 @Component({
   selector: 'app-parent-editor',
   imports: [MatDialogContent, MatDialogActions, MatDialogClose, ReactiveFormsModule, MatIcon,
-    MatButtonToggleModule, MatFormField, MatError, MatLabel, MatSelect, /*MatOptgroup,*/ MatOption,
-    MatProgressSpinner, MatTooltip, MatButton],
+    MatButtonToggleModule, MatFormField, MatError, MatLabel, MatSelect, MatOptgroup, MatOption,
+    MatProgressSpinner, MatButton],
   templateUrl: './parent-editor.html',
   styleUrl: './parent-editor.css'
 })
@@ -33,15 +33,15 @@ export class ParentEditor {
   libraryService = inject(LibraryService);
 
   //parentForm = new FormGroup({
-  libraryGuids= new FormControl<string[]>([...this.data.parentLibraryGuids ?? []], {nonNullable:true, validators:[Validators.required]});
-  shelfGuids= new FormControl<string[]>([...this.data.parentShelfGuids ?? []], {nonNullable:true, validators: [Validators.required]});
+  libraryGuids= new FormControl<string[]>(this.data.parentLibraryGuids ?? [], {nonNullable:true, validators:[Validators.required]});
+  shelfGuids= new FormControl<string[]>(this.data.parentShelfGuids ?? [], {nonNullable:true, validators: [Validators.required]});
   //});
   //libraryGuids = this.parentForm.get("libraryGuids");
   //shelfGuids = this.parentForm.get("shelfGuids");
   submitErrors = signal<string|null>(null);
   
   displaySubmitSpinner = signal(false);
-  allLibraryList = signal</*LibraryCardModel*/{guid:string,title:string}[]>([]);
+  allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ShelfCardModel[]>([]);
   //shelfGuidToParentLibrariesTitlesMap = signal<Map<string,string>>(new Map<string,string>());
@@ -56,39 +56,26 @@ export class ParentEditor {
   constructor(){
     effect(() => {
       if(this.identityService.userModel()?.guid){
-        /*this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!)?.subscribe({
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
-              this.allLibraryList.set(res);
-              this.displayedLibraries.set(res.map(l=>l.title));
-              //this.allShelfList.set(res.flatMap(lib=>lib.))
-            }
-          },
-        });*/
-
-        this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
-          next: res => {
-            if(res){
-              this.allShelfList.set(res);
-
-              let allParentLibraries = res.flatMap(shelf=>shelf.libraries);
-              let uniqueParentLibraries:{guid:string,title:string}[] = [];
-              allParentLibraries.forEach(pl=>{
-                if(!uniqueParentLibraries.map(upl=>upl.guid).includes(pl.guid)){
-                  uniqueParentLibraries.push(pl);
-                }
-              });
-              this.allLibraryList.set(uniqueParentLibraries);
-
-              /*this.shelfGuidToParentLibrariesTitlesMap.update(map=>{
-                res.forEach(shelf=>
-                  map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
-                );
-                return map;
-              });*/
+              this.allLibraryList.set(res.map(lib=> ({guid:lib.guid, title:lib.title})));
+              this.displayedLibraries.set(
+                this.allLibraryList().filter(lib=>(this.data.parentLibraryGuids ?? []).includes(lib.guid)).map(lib=>lib.title)
+              );
             }
           },
         });
+
+        if(this.data.parentOf === "document"){
+          this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
+            next: res => {
+              if(res){
+                this.allShelfList.set(res);
+              }
+            },
+          });
+        }
 
         this.identityService.getCsrf().subscribe({
           next: () => {
@@ -101,18 +88,6 @@ export class ParentEditor {
         });
       }
     });
-
-    /*effect(() => {
-      for(let libraryModel of this.allLibraryList()){
-        this.libraryService.requestShelfList(libraryModel.guid).subscribe({
-          next: res => {
-            if(res){
-              this.allShelfList.update(shelfList=>[...shelfList, ...res]);
-            }
-          },
-        });
-      }
-    });*/
   }
 
   changeDisplayedLibraries(e:MatButtonToggleChange){
@@ -163,7 +138,7 @@ export class ParentEditor {
         },
       };
       
-      if(this.data.parentOf === "document" && this.libraryGuids.valid && this.shelfGuids.valid){
+      if(this.data.parentOf === "document" && this.shelfGuids.valid){
         this.libraryService.editDocumentParentShelves(
           this.data.childGuid, this.shelfGuids!.value
         ).subscribe(calbacks);
@@ -175,4 +150,25 @@ export class ParentEditor {
       }
     //}
   }
+
+  /**
+ * Compare two string arrays for equality (order doesn't matter)
+ * @param {string[]} arr1 
+ * @param {string[]} arr2 
+ * @returns {boolean}
+ */
+  arraysEqualUnordered(arr1?:string[], arr2?:string[]): boolean {
+    if (!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
+    if (arr1.length !== arr2.length) return false;
+
+    // Sort copies to avoid mutating original arrays
+    const sorted1 = [...arr1].sort();
+    const sorted2 = [...arr2].sort();
+
+    for (let i = 0; i < sorted1.length; i++) {
+        if (sorted1[i] !== sorted2[i]) return false;
+    }
+    return true;
+  }
+
 }

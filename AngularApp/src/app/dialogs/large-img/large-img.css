@@ -14,6 +14,10 @@ img{
     margin: auto;
     object-fit: contain;
 }
+img.zoomedIn{
+    min-width: calc(90vw - 48px);
+}
+
 div.buttons-box{
     float: right;
     position: sticky;
@@ -21,5 +25,13 @@ div.buttons-box{
     right: 0;
     left: calc(100% - 40px);
     width: 40px;
-    /*overflow: hidden;*/
+}
+div.buttons-box div.background{
+    background-color: var(--mat-sys-background);
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    opacity: 0.5;
 }

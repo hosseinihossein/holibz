@@ -8,7 +8,9 @@
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled" [mat-dialog-close]="myText.value"
-            [disabled]="data.value === myText.value">Save</button>
+            [disabled]="data.value === myText.value || myText.invalid">
+            Submit
+        </button>
     </mat-dialog-actions>
     @if(data.enableDelete){
     <mat-dialog-actions align="start">

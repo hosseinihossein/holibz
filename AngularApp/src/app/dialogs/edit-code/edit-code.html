@@ -18,7 +18,10 @@
     </mat-form-field>
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="inputControl.value">Save</button>
+        <button matButton="filled" [mat-dialog-close]="inputControl.value"
+            [disabled]="data.value === inputControl.value || inputControl.invalid">
+            Submit
+        </button>
     </mat-dialog-actions>
     @if(data.enableEdit){
     <mat-dialog-actions align="start">

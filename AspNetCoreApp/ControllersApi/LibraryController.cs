@@ -311,6 +311,43 @@ public class LibraryController : ControllerBase
             .ToArrayAsync();
 
             shelfCardModels = [.. shelfCardModels, .. nonParentShelfCardModels];
+
+            var defaultShelfCardModel = shelfCardModels.FirstOrDefault(shelf => shelf.Guid == "DefaultShelf");
+            if (defaultShelfCardModel is null)
+            {
+                Console.WriteLine($"\n***** couldn't find default shelf for ownerGuid {ownerGuid}");
+            }
+            else
+            {
+                if (defaultShelfCardModel.DocumentCardModels.Length < 10)
+                {
+                    int numberOfNeededDocs = 10 - defaultShelfCardModel.DocumentCardModels.Length;
+
+                    List<Library_DocumentCardModel> nonParentDocumentCardModels = await libraryDb.Documents
+                    .Include(doc => doc.Shelves)
+                    .Include(doc => doc.Elements)
+                    .Where(doc => doc.OwnerGuid == ownerGuid && doc.Shelves.Count == 0)
+                    /*.OrderByDescending(doc => doc.CreatedAt)
+                    .Take(numberOfNeededDocs)*/
+                    .Select(doc => new Library_DocumentCardModel()
+                    {
+                        Description = doc.Description,
+                        Guid = doc.Guid,
+                        Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+                        OwnerGuid = doc.OwnerGuid,
+                        Title = doc.Title,
+                    })
+                    .AsSplitQuery()
+                    .ToListAsync();
+
+                    defaultShelfCardModel.DocumentCardModels = [
+                        .. defaultShelfCardModel.DocumentCardModels,
+                        .. nonParentDocumentCardModels.Take(numberOfNeededDocs)
+                    ];
+                    defaultShelfCardModel.TotalNumberOfShelfDocuments += nonParentDocumentCardModels.Count;
+                }
+            }
+
         }
         else//libraryGuid != "DefaultLibrary"
         {

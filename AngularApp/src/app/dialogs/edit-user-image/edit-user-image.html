@@ -15,7 +15,9 @@
 
     <mat-dialog-actions align="end" style="float: right;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [disabled]="!selectedFile()" (click)="onSubmit()">Submit</button>
+        <button matButton="filled" [disabled]="!selectedFile()" (click)="onSubmit()">
+            Submit
+        </button>
     </mat-dialog-actions>
     <mat-dialog-actions align="start">
         <button matButton="filled" class="warning" (click)="onDelete()">Delete</button>

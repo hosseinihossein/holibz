@@ -84,4 +84,6 @@
 
 </form>
 <!--div>{{loginForm().value| json}}</div-->
+@if(errorResponse()){
 <div>error response: {{errorResponse() | json}}</div>
+}

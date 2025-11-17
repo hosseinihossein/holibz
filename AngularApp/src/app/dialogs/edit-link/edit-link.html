@@ -24,6 +24,7 @@
     <mat-form-field>
         <mat-label>Link Address</mat-label>
         <input matInput type="text" [formControl]="valueControl">
+        <mat-hint>https://holibz.com</mat-hint>
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("required")){
         <mat-error>
@@ -46,7 +47,10 @@
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
         <button matButton="filled"
-            [mat-dialog-close]="{title:titleControl.value, value:valueControl.value}">Save</button>
+            [disabled]="(data.title === titleControl.value && data.value === valueControl.value) || titleControl.invalid || valueControl.invalid"
+            [mat-dialog-close]="{title:titleControl.value, value:valueControl.value}">
+            Submit
+        </button>
     </mat-dialog-actions>
     @if(data.enableEdit){
     <mat-dialog-actions align="start">

@@ -17,7 +17,7 @@ import { MatButton } from '@angular/material/button';
 @Component({
   selector: 'app-parent-editor',
   imports: [MatDialogContent, MatDialogActions, MatDialogClose, ReactiveFormsModule, MatIcon,
-    MatButtonToggleModule, MatFormField, MatError, MatLabel, MatSelect, MatOptgroup, MatOption,
+    MatButtonToggleModule, MatFormField, MatError, MatLabel, MatSelect, /*MatOptgroup,*/ MatOption,
     MatProgressSpinner, MatButton],
   templateUrl: './parent-editor.html',
   styleUrl: './parent-editor.css'
@@ -48,7 +48,7 @@ export class ParentEditor {
   shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
     let map = new Map<string,string>();
     this.allShelfList().forEach(shelf=>
-      map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
+      map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(', '))
     );
     return map;
   });
@@ -169,6 +169,15 @@ export class ParentEditor {
         if (sorted1[i] !== sorted2[i]) return false;
     }
     return true;
+  }
+
+  shelfParentsIncludeAnyOfLibraries(shelf:ShelfCardModel, librariesTitles:string[]){
+    for(let lib of shelf.libraries){
+      if(librariesTitles.includes(lib.title)){
+        return true;
+      }
+    }
+    return false;
   }
 
 }

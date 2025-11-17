@@ -1,10 +1,12 @@
 <mat-dialog-content>
 
     <div id="img-box" class="clearfix">
+        @if(previewImgSrc()){
         <img [src]="previewImgSrc()" [alt]="data.title" #previewImg>
+        }
         @if(!data.enableEdit){
         <button matButton="elevated" id="selectButton" (click)="fileInput.click()">Select New Image</button>
-        <input type="file" #fileInput (change)="onSelectImage($event)">
+        <input type="file" hidden #fileInput (change)="onSelectImage($event)">
         }
     </div>
 
@@ -39,7 +41,8 @@
     @if(data.enableEdit){
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="titleControl.value">Save</button>
+        <button matButton="filled" [disabled]="data.title === titleControl.value || titleControl.invalid"
+            [mat-dialog-close]="titleControl.value">Submit</button>
     </mat-dialog-actions>
     <mat-dialog-actions align="start">
         <button matButton="filled" class="warning" mat-dialog-close="Delete">Delete</button>
@@ -48,7 +51,10 @@
     @else {
     <mat-dialog-actions align="end" style="float:inline-end;">
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleControl.value}">Save</button>
+        <button matButton="filled" [mat-dialog-close]="{file:selectedFile(),title:titleControl.value}"
+            [disabled]="!selectedFile() || titleControl.invalid">
+            Save
+        </button>
     </mat-dialog-actions>
     }
 

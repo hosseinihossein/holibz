@@ -44,10 +44,15 @@ export class LibraryPage {
   introductionImage = computed(()=>`/api/Library/LibraryImage?libraryGuid=${this.libraryModel()!.guid}&v=${this.introductionImageVersion()}`);
 
   constructor(){
-    let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("libraryGuid");
+    /*let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("libraryGuid");
     if(libraryGuidRouteParam){
       this.libraryGuid.set(libraryGuidRouteParam);
-    }
+    }*/
+    this.activatedRoute.paramMap.subscribe(params=>{
+      if(params.has("libraryGuid")){
+        this.libraryGuid.set(params.get("libraryGuid"));
+      }
+    });
     if(this.librarySerice.currentLibraryModel()?.guid === this.libraryGuid()){
         this.libraryModel.set(this.librarySerice.currentLibraryModel());
         this.userModel.set(this.librarySerice.currentOwnerUserModel());
@@ -59,9 +64,6 @@ export class LibraryPage {
             next: res => {
               if(res){
                 this.libraryModel.set(res);
-                /*if(res.guid){
-                  this.libraryGuid.set(res.guid);//not necessary
-                }*/
               }
             },
           });

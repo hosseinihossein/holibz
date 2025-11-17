@@ -47,8 +47,10 @@ mat-sidenav#startSideNav mat-panel-title{
 
 mat-sidenav#startSideNav a.siblingDocs{
     display: block;
-    padding-top: 8px;
+    padding: 0 16px;
     overflow: hidden;
+    font-size: 12px;
+    height: fit-content;
 }
 
 mat-sidenav-content{

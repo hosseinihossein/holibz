@@ -4,16 +4,14 @@
     <mat-sidenav id="startSideNav" mode="side" opened position="start" fixedInViewport fixedTopGap="56"
         fixedBottomGap="16">
 
-        @if(isMyDocument()){
-        <button matButton="elevated" matTooltip="Edit Parent Shelves" class="noPaddingBtn"
-            (click)="editParentShelves()">
-            <mat-icon>account_tree</mat-icon>
-        </button>
-        }
-
-        <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;"
-            matTooltip="This document is included in these shelves" matTooltipShowDelay="500">
-            Shelves:
+        <p style="font-weight: 500;color: var(--mat-sys-on-surface);padding-left: 16px;">
+            <span matTooltip="This document is included in these shelves" matTooltipShowDelay="500">Shelves:</span>
+            @if(isMyDocument() && documentPageService.editMode()){
+            <button matButton="elevated" matTooltip="Edit Parent Shelves" class="noPaddingBtn"
+                (click)="editParentShelves()">
+                <mat-icon>account_tree</mat-icon>
+            </button>
+            }
         </p>
 
         <mat-accordion>
@@ -32,8 +30,8 @@
                 </a>
                 }
                 <a matButton="outlined" [routerLink]="['/shelf',shelf.guid]" class="siblingDocs"
-                    style="font-size: 12px;width: fit-content;margin: auto;color: var(--mat-sys-on-surface);">
-                    Open {{shelf.title}} Shelf
+                    style="float: inline-end; margin: 8px 0; color: var(--mat-sys-on-surface);">
+                    Open Shelf
                 </a>
             </mat-expansion-panel>
             }
@@ -67,16 +65,19 @@
                 }
                 <span id="username">{{ownerModel()?.username}}</span>
             </a>
-            <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version of the document">
-                <mat-icon>arrow_drop_down</mat-icon>
+            <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version of the document"
+                style="padding-bottom: 6px;">
                 {{documentPageService.documentPageModel()?.version}}
+                <span style="position: relative;top: 6px;">
+                    <mat-icon>arrow_drop_down</mat-icon>
+                </span>
             </button>
             @if(isMyDocument()){
             @if(documentPageService.editMode()){
             <button matButton="elevated" [matMenuTriggerFor]="elementMenu"
                 matTooltip="Add a new section to the document" class="noPaddingBtn">
+                <mat-icon>dashboard_customize</mat-icon>
                 <mat-icon>arrow_drop_down</mat-icon>
-                <mat-icon>add</mat-icon>
             </button>
             <button matButton="elevated" matTooltip="Save changes" class="noPaddingBtn"
                 [matBadge]="documentPageService.editedElementFormModels().size"
@@ -171,11 +172,11 @@
 
         <!------------------------- Introduction ---------------------->
         <div id="introduction-box">
-            <div style="position: absolute; top: -64px; width: 100%;" id="Introduction"></div>
+            <div style="position: absolute; top: 48px; width: 100%;" id="Introduction"></div>
             @if(isMyDocument() && documentPageService.editMode()){
             <button matButton="elevated" matTooltip="Edit introduction" class="noPaddingBtn"
                 (click)="editIntroduction()">
-                <mat-icon>edit_note</mat-icon>
+                <mat-icon>edit</mat-icon>
             </button>
             }
 

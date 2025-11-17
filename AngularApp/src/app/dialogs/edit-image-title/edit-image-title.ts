@@ -26,7 +26,7 @@ export class EditImageTitle {
   previewImgSrc = signal(this.data.value);
   imageSizeError = signal<string|null>(null);
 
-  previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
+  //previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
 
   titleControl = new FormControl(this.data.title,{nonNullable:true,validators:[Validators.required,
     Validators.maxLength(this.singletonModes.elementTitleMaxLength()), 
@@ -48,10 +48,10 @@ export class EditImageTitle {
 
         // Load the image as a Data URL
         reader.onload = (e)=> {
-          if(this.previewImg()){
+          /*if(this.previewImg()){
             //this.previewImg()!.nativeElement.src = e.target!.result as string ?? this.data.value; // Set the image source
-            this.previewImgSrc.set(e.target!.result as string ?? this.data.value);
-          }
+          }*/
+          this.previewImgSrc.set(e.target!.result as string ?? this.data.value);
         };
 
         reader.readAsDataURL(this.selectedFile()!); // Read the file as a Data URL

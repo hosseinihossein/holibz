@@ -97,10 +97,15 @@ export class DocumentPage implements AfterViewInit {
   });
   
   constructor(){
-    let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
+    /*let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
     if(documentGuidRouteParam){
       this.documentGuid.set(documentGuidRouteParam);
-    }
+    }*/
+    this.activatedRoute.paramMap.subscribe(params=>{
+      if(params.has("documentGuid")){
+        this.documentGuid.set(params.get("documentGuid"));
+      }
+    });
 
     effect(() => {
       if(this.documentGuid()){
@@ -540,12 +545,19 @@ export class DocumentPage implements AfterViewInit {
         childGuid: this.documentPageService.documentPageModel()?.guid,
       }}).afterClosed().subscribe(result=>{
         if(result){
+          //console.log(JSON.stringify(result));
+          let resultShelves = (result as ShelfCardModel[]).map(shelf=>({
+            guid:shelf.guid, 
+            title:shelf.title, 
+            libraries: shelf.libraries.map(lib=>({guid:lib.guid, title:lib.title})), 
+            documents: shelf.documentCardModels.map(doc=>({guid:doc.guid, title:doc.title})),
+          }));
           this.documentPageService.documentPageModel.update(dpm=>{
-            dpm!.shelves = result;
+            dpm!.shelves = resultShelves;
             return dpm;
           });
           this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
-            dpm!.shelves = result;
+            dpm!.shelves = resultShelves;
             return dpm;
           });
         }
@@ -578,7 +590,6 @@ export class DocumentPageModel {
   version:string = null!;
   relatedVersions:{versionName:string, documentGuid:string}[] = [];
   shelves:{guid:string, title:string, libraries:{guid:string, title:string}[], 
-    //owner:{userGuid:string, userName:string},
     documents:{guid:string, title:string}[]}[] = [];
   elements:DocumentElementModel[] = [];
   tags:string[] = [];

@@ -1,16 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogContent, MatDialogClose, MatDialogActions } from '@angular/material/dialog';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatError, MatFormField, MatLabel, MatHint } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { SingletonModes } from '../../services/singleton-modes';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-edit-link',
-  imports: [MatDialogContent,MatButton,MatLabel,MatInput,MatDialogClose,MatDialogActions, MatFormField,
-    ReactiveFormsModule, MatError,
-  ],
+  imports: [MatDialogContent, MatButton, MatLabel, MatInput, MatDialogClose, MatDialogActions, MatFormField,
+    ReactiveFormsModule, MatError, MatHint],
   templateUrl: './edit-link.html',
   styleUrl: './edit-link.css'
 })

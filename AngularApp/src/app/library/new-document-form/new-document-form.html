@@ -14,18 +14,18 @@
     <mat-form-field>
         <mat-label>Shelf</mat-label>
         <mat-select required formControlName="shelfGuids" multiple>
-            @for(libraryTitle of displayedLibraries(); track libraryTitle){
-            <mat-optgroup [label]="libraryTitle">
-                @for(shelfModel of allShelfList(); track shelfModel.guid){
-                @if(shelfGuidToParentLibrariesTitlesMap().get(shelfModel.guid) === libraryTitle){
-                <mat-option [value]="shelfModel.guid">
-                    {{shelfModel.title}}
-                    <span id="libraryName-span">({{libraryTitle}})</span>
-                </mat-option>
-                }
-                }
-            </mat-optgroup>
+            <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
+            <!--mat-optgroup [label]="libraryTitle"-->
+            @for(shelfModel of allShelfList(); track shelfModel.guid){
+            @if(shelfParentsIncludeAnyOfLibraries(shelfModel, displayedLibraries())){
+            <mat-option [value]="shelfModel.guid">
+                {{shelfModel.title}}
+                <span id="libraryName-span">({{shelfGuidToParentLibrariesTitlesMap().get(shelfModel.guid)}})</span>
+            </mat-option>
             }
+            }
+            <!--/mat-optgroup-->
+            <!--}-->
         </mat-select>
         @if(shelfGuids?.invalid && (shelfGuids?.dirty || shelfGuids?.touched) &&
         shelfGuids?.hasError("required")){

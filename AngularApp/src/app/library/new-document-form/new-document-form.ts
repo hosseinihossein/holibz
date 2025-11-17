@@ -22,7 +22,7 @@ import { SingletonModes } from '../../services/singleton-modes';
 @Component({
   selector: 'app-new-document-form',
   imports: [MatFormField, MatLabel, MatInput, MatButton, MatIconButton, MatIcon, MatTooltip, MatSelect,
-    MatOption, MatOptgroup,ReactiveFormsModule,MatError,MatProgressSpinner,
+    MatOption, /*MatOptgroup,*/ReactiveFormsModule,MatError,MatProgressSpinner,
     MatButtonToggleModule],
   templateUrl: './new-document-form.html',
   styleUrl: './new-document-form.css'
@@ -55,13 +55,14 @@ export class NewDocumentForm {
   allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ShelfCardModel[]>([]);
-  //shelfGuidToParentLibrariesTitlesMap = signal<Map<string,string>>(new Map<string,string>());
+  
   shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
-    let map = new Map<string,string>();
+    let myMap = new Map<string,string>();
+    //let filteredShelves = this.allShelfList().filter(shelf=>shelf.libraries.length > 1);
     this.allShelfList().forEach(shelf=>
-      map.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(','))
+      myMap.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(', '))
     );
-    return map;
+    return myMap;
   });
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
@@ -198,6 +199,15 @@ export class NewDocumentForm {
         },
       });
     }
+  }
+
+  shelfParentsIncludeAnyOfLibraries(shelf:ShelfCardModel, librariesTitles:string[]){
+    for(let lib of shelf.libraries){
+      if(librariesTitles.includes(lib.title)){
+        return true;
+      }
+    }
+    return false;
   }
 
 }

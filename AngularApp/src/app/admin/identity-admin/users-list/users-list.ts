@@ -168,13 +168,12 @@ export class UsersList implements AfterViewInit, OnDestroy {
   }
 }
 export class UsersListModel {
-  ImageAddress:string|null = null;
+  HasImage:boolean = false;
+  IntegrityVersion:number = 0;
   UserName:string = "";
   Email:string = "";
   EmailConfirmed:boolean = false;
   UserGuid:string = "";
-  //Description:string|null = null;
   DisplayEmailPublicly:boolean = false;
   CreatedAt: Date|null = null;
-  //Roles:string[] = [];
 }

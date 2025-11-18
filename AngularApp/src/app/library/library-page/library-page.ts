@@ -35,8 +35,8 @@ export class LibraryPage {
 
   libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
-  this.libraryModel()?.ownerGuid === this.identityService.userModel()?.guid);
-  userModel = signal<UserProfileModel|null>(null);
+  this.libraryModel()?.ownerGuid === this.identityService.userModel()?.userGuid);
+  ownerModel = signal<UserProfileModel|null>(null);
   
   displaySubmitSpinner = signal(false);
 
@@ -55,7 +55,7 @@ export class LibraryPage {
     });
     if(this.librarySerice.currentLibraryModel()?.guid === this.libraryGuid()){
         this.libraryModel.set(this.librarySerice.currentLibraryModel());
-        this.userModel.set(this.librarySerice.currentOwnerUserModel());
+        this.ownerModel.set(this.librarySerice.currentOwnerUserModel());
     }
     else{
       effect(() => {
@@ -72,11 +72,11 @@ export class LibraryPage {
     }
 
     effect(() => {
-      if(!this.userModel() && this.libraryModel()){
+      if(!this.ownerModel() && this.libraryModel()){
         this.identityService.requestUserModel(this.libraryModel()?.ownerGuid!).subscribe({
           next: res => {
             if(res){
-              this.userModel.set(res);
+              this.ownerModel.set(res);
             }
           },
         });
@@ -131,7 +131,7 @@ export class LibraryPage {
             next: res => {
               if(res && res.success){
                 this.displaySubmitSpinner.set(false);
-                this.router.navigate(['libraries', this.identityService.userModel()!.guid]);
+                this.router.navigate(['libraries', this.identityService.userModel()!.userGuid]);
               }
             },
             error: err => {

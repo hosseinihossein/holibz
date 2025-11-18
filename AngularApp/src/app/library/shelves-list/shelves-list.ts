@@ -26,13 +26,13 @@ export class ShelvesList {
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
   isMyShelfList = computed(() => this.identityService.isAuthenticated() && 
-  this.identityService.userModel()?.guid === this.userModel()?.guid);//signal(false);
+  this.identityService.userModel()?.userGuid === this.userModel()?.userGuid);//signal(false);
 
   constructor(){
     this.userModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(() => {
-      this.libraryService.requestShelfList(this.libraryGuid(), this.userModel()?.guid).subscribe({
+      this.libraryService.requestShelfList(this.libraryGuid(), this.userModel()?.userGuid).subscribe({
         next: res => {
           if(res){
             this.shelfModels.set(res);

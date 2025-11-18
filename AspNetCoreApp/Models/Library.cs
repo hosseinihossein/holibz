@@ -19,6 +19,14 @@ public class Library_LibraryDbModel
     public string? Description { get; set; } = null;
     public List<Library_ShelfDbModel> Shelves { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public byte _integrityVersion { get; set; } = 0;
+    [NotMapped]
+    public int IntegrityVersion
+    {
+        get => _integrityVersion;
+        set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
+    }
+    public bool HasImage { get; set; } = false;
 }
 public class Library_ShelfDbModel
 {
@@ -30,6 +38,14 @@ public class Library_ShelfDbModel
     public List<Library_LibraryDbModel> Libraries { get; set; } = [];
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public byte _integrityVersion { get; set; } = 0;
+    [NotMapped]
+    public int IntegrityVersion
+    {
+        get => _integrityVersion;
+        set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
+    }
+    public bool HasImage { get; set; } = false;
 }
 public class Library_DocumentDbModel
 {
@@ -44,6 +60,14 @@ public class Library_DocumentDbModel
     public List<Library_ElementDbModel> Elements { get; set; } = [];
     public List<Library_TagDbModel> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public byte _integrityVersion { get; set; } = 0;
+    [NotMapped]
+    public int IntegrityVersion
+    {
+        get => _integrityVersion;
+        set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
+    }
+    public bool HasImage { get; set; } = false;
 }
 public class Library_RelatedVersionsDbModel
 {
@@ -155,8 +179,8 @@ public class Library_Process //singleton service
     public readonly DirectoryInfo Storage_Shelves;
     public readonly DirectoryInfo Storage_Documents;
     public readonly DirectoryInfo Storage_Elements;
-    readonly DirectoryInfo Storage_Tags;
-    readonly DirectoryInfo Storage_RelatedVersions;
+    //readonly DirectoryInfo Storage_Tags;
+    //readonly DirectoryInfo Storage_RelatedVersions;
     readonly FileNameValidator fileNameValidator;
 
     public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator)
@@ -165,8 +189,8 @@ public class Library_Process //singleton service
         Storage_Shelves = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
         Storage_Documents = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Documents"));
         Storage_Elements = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Elements"));
-        Storage_Tags = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Tags"));
-        Storage_RelatedVersions = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "RelatedVersions"));
+        //Storage_Tags = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Tags"));
+        //Storage_RelatedVersions = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "RelatedVersions"));
         fileNameValidator = _fileNameValidator;
     }
     public string? BuildTagName(string value)
@@ -219,8 +243,8 @@ public class Library_Process //singleton service
                 };
             }
 
-            await libraryDb.Libraries.AddAsync(libraryDbModel);
-            await libraryDb.SaveChangesAsync();
+            //await libraryDb.Libraries.AddAsync(libraryDbModel);
+            //await libraryDb.SaveChangesAsync();
 
             if (formModel.Image is not null)
             {
@@ -230,10 +254,11 @@ public class Library_Process //singleton service
                 {
                     await formModel.Image.CopyToAsync(fs);
                 }
+                libraryDbModel.HasImage = true;
             }
 
-            // seed
-            //_ = Update_LibrarySeed(libraryDbModel);
+            await libraryDb.Libraries.AddAsync(libraryDbModel);
+            await libraryDb.SaveChangesAsync();
 
             return new Library_ProcessResult() { Success = true, ResultObject = libraryDbModel };
         }
@@ -246,93 +271,39 @@ public class Library_Process //singleton service
     public async Task<Library_ProcessResult> CreateNewShelf(Library_DbContext libraryDb, string ownerGuid,
     Library_NewShelfFormModel formModel)
     {
-        Library_ShelfDbModel shelfDbModel;
-        if (formModel.Title == "Default Shelf")
+        List<Library_LibraryDbModel> parentLibraries = [];
+        if (formModel.LibraryGuids.Length > 0)
         {
-            if (await libraryDb.Shelves.Include(shelf => shelf.Libraries).AnyAsync(shelf =>
-            shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf"))
-            {
-                return new Library_ProcessResult()
-                {
-                    ErrorTitle = "Default Shelf",
-                    ErrorDescription = $"There's already been a default shelf!"
-                };
-            }
-
-            var defaultLibrary = await libraryDb.Libraries
-            .FirstOrDefaultAsync(lib => lib.OwnerGuid == ownerGuid && lib.Guid == "DefaultLibrary");
-            if (defaultLibrary is null)
-            {
-                // creating Default library
-                var createDefaultLibraryResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
-
-                if (createDefaultLibraryResult.Success &&
-                createDefaultLibraryResult.ResultObject is not null)
-                {
-                    defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
-                }
-                else
-                {
-                    //log
-                    Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
-                    return createDefaultLibraryResult;
-                }
-            }
-
-            shelfDbModel = new()
-            {
-                Title = formModel.Title,
-                OwnerGuid = ownerGuid,
-                Description = formModel.Description,
-                Guid = "DefaultShelf",
-                Libraries = [defaultLibrary],
-            };
-        }
-        else
-        {
-            List<Library_LibraryDbModel> parentLibraries = [];
-            if (formModel.LibraryGuids.Length > 0)
-            {
-                parentLibraries = await libraryDb.Libraries
-                .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
-                .ToListAsync();
-            }
-
-            /*if (parentLibraries is null || parentLibraries.Count == 0)
-            {
-                var defaultLibrary = await libraryDb.Libraries
-                .FirstOrDefaultAsync(lib => lib.OwnerGuid == ownerGuid && lib.Guid == "DefaultLibrary");
-                if (defaultLibrary is null)
-                {
-                    // creating Default library
-                    var createDefaultLibraryResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
-
-                    if (createDefaultLibraryResult.Success &&
-                    createDefaultLibraryResult.ResultObject is not null)
-                    {
-                        defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
-                    }
-                    else
-                    {
-                        //log
-                        Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
-                        return createDefaultLibraryResult;
-                    }
-                }
-                parentLibraries = [defaultLibrary];
-            }*/
-
-            shelfDbModel = new()
-            {
-                Title = formModel.Title,
-                OwnerGuid = ownerGuid,
-                Description = formModel.Description,
-                Libraries = parentLibraries,
-            };
+            parentLibraries = await libraryDb.Libraries
+            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
+            .ToListAsync();
         }
 
-        await libraryDb.Shelves.AddAsync(shelfDbModel);
-        await libraryDb.SaveChangesAsync();
+        if (parentLibraries.Count == 0)
+        {
+            Library_LibraryDbModel? defaultLibraryDbModel = await libraryDb.Libraries
+            .FirstOrDefaultAsync(lib => lib.Guid == "DefaultLibrary");
+            if (defaultLibraryDbModel is null)
+            {
+                var defaultLibraryCreationResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
+                if (defaultLibraryCreationResult.Success && defaultLibraryCreationResult.ResultObject is not null)
+                {
+                    defaultLibraryDbModel = defaultLibraryCreationResult.ResultObject as Library_LibraryDbModel;
+                }
+            }
+            if (defaultLibraryDbModel is not null)
+            {
+                parentLibraries.Add(defaultLibraryDbModel);
+            }
+        }
+
+        Library_ShelfDbModel shelfDbModel = new()
+        {
+            Title = formModel.Title,
+            OwnerGuid = ownerGuid,
+            Description = formModel.Description,
+            Libraries = parentLibraries,
+        };
 
         if (formModel.Image is not null)
         {
@@ -342,39 +313,39 @@ public class Library_Process //singleton service
             {
                 await formModel.Image.CopyToAsync(fs);
             }
+            shelfDbModel.HasImage = true;
         }
+
+        await libraryDb.Shelves.AddAsync(shelfDbModel);
+        await libraryDb.SaveChangesAsync();
 
         return new Library_ProcessResult() { Success = true, ResultObject = shelfDbModel };
     }
     public async Task<Library_ProcessResult> CreateNewDocument(Library_DbContext libraryDb, string ownerGuid,
     Library_NewDocumentFormModel formModel)
     {
-        List<Library_ShelfDbModel> shelfDbModels = [];
+        List<Library_ShelfDbModel> parentShelfDbModels = [];
         if (formModel.ShelfGuids is null || formModel.ShelfGuids.Length == 0)
         {
-            bool isThereDefaultShelf = await libraryDb.Shelves
-            .AnyAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf");
-            if (!isThereDefaultShelf)
-            {
-                await CreateDefaultShelf(libraryDb, ownerGuid);
-            }
-
             Library_ShelfDbModel? defaultShelfDbModel = await libraryDb.Shelves
             .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf");
             if (defaultShelfDbModel is null)
             {
-                return new Library_ProcessResult()
+                var defaultShelfCreateionResult = await CreateDefaultShelf(libraryDb, ownerGuid);
+                if (defaultShelfCreateionResult.Success && defaultShelfCreateionResult.ResultObject is not null)
                 {
-                    Success = false,
-                    ErrorTitle = "No Shelf",
-                    ErrorDescription = "There's No shelf to contain the new document!",
-                };
+                    defaultShelfDbModel = defaultShelfCreateionResult.ResultObject as Library_ShelfDbModel;
+                }
             }
-            shelfDbModels.Add(defaultShelfDbModel);
+
+            if (defaultShelfDbModel is not null)
+            {
+                parentShelfDbModels.Add(defaultShelfDbModel);
+            }
         }
         else
         {
-            shelfDbModels = await libraryDb.Shelves
+            parentShelfDbModels = await libraryDb.Shelves
             .Where(shelf => shelf.OwnerGuid == ownerGuid && formModel.ShelfGuids.Contains(shelf.Guid))
             .ToListAsync();
         }
@@ -383,12 +354,12 @@ public class Library_Process //singleton service
         {
             Description = formModel.Description,
             OwnerGuid = ownerGuid,
-            Shelves = shelfDbModels,
+            Shelves = parentShelfDbModels,
             Title = formModel.Title,
         };
 
-        await libraryDb.Documents.AddAsync(documentDbModel);
-        await libraryDb.SaveChangesAsync();
+        //await libraryDb.Documents.AddAsync(documentDbModel);
+        //await libraryDb.SaveChangesAsync();
 
         if (formModel.Image is not null)
         {
@@ -398,10 +369,11 @@ public class Library_Process //singleton service
             {
                 await formModel.Image.CopyToAsync(fs);
             }
+            documentDbModel.HasImage = true;
         }
 
-        // seed
-        //_ = Update_DocumentSeed(documentDbModel);
+        await libraryDb.Documents.AddAsync(documentDbModel);
+        await libraryDb.SaveChangesAsync();
 
         return new Library_ProcessResult()
         {
@@ -506,13 +478,54 @@ public class Library_Process //singleton service
     }
     public async Task<Library_ProcessResult> CreateDefaultShelf(Library_DbContext libraryDb, string ownerGuid)
     {
-        // creating Default shelf in Default library
-        Library_NewShelfFormModel defaultShelfFormModel = new()
+        var alreadyDefaultShelf = await libraryDb.Shelves
+        .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf");
+        if (alreadyDefaultShelf is not null)
+        {
+            return new Library_ProcessResult()
+            {
+                Success = true,
+                ResultObject = alreadyDefaultShelf,
+            };
+        }
+
+        var defaultLibrary = await libraryDb.Libraries
+        .FirstOrDefaultAsync(lib => lib.OwnerGuid == ownerGuid && lib.Guid == "DefaultLibrary");
+        if (defaultLibrary is null)
+        {
+            // creating Default library
+            var createDefaultLibraryResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
+
+            if (createDefaultLibraryResult.Success &&
+            createDefaultLibraryResult.ResultObject is not null)
+            {
+                defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
+            }
+            else
+            {
+                //log
+                Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
+                return createDefaultLibraryResult;
+            }
+        }
+
+        Library_ShelfDbModel defaultShelfDbModel = new()
         {
             Title = "Default Shelf",
+            OwnerGuid = ownerGuid,
             Description = "Containing all documents that doesn't belong to anyother shelves.",
+            Guid = "DefaultShelf",
+            Libraries = [defaultLibrary],
         };
-        return await CreateNewShelf(libraryDb, ownerGuid, defaultShelfFormModel);
+
+        await libraryDb.Shelves.AddAsync(defaultShelfDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        return new Library_ProcessResult()
+        {
+            Success = true,
+            ResultObject = defaultShelfDbModel,
+        };
     }
 
     //************************************ seed Library data **********************************
@@ -851,6 +864,7 @@ public class Library_ProcessResult
 }
 
 //************************************ Seed Data Models ********************************
+/*
 public class Library_LibrarySeedModel
 {
     public string Guid { get; set; } = null!;
@@ -1110,7 +1124,7 @@ public class Library_TagSeedModel
     }
 }
 
-
+*/
 
 
 //********************************************************************************
@@ -1122,9 +1136,11 @@ public class Library_LibraryCardModel
     public string? Description { get; set; }
     public string[] ShelvesTitles { get; set; } = [];
     public bool HasImage { get; set; } = false;
+    public int IntegrityVersion { get; set; }
     //public string OwnerUsername { get; set; } = null!;
     public string OwnerGuid { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
+
 }
 public class Library_ShelfCardModel
 {
@@ -1137,6 +1153,7 @@ public class Library_ShelfCardModel
     public DateTime CreatedAt { get; set; }
     public int TotalNumberOfShelfDocuments { get; set; }
     public bool HasImage { get; set; }
+    public int IntegrityVersion { get; set; }
 }
 public class Library_DocumentCardModel
 {
@@ -1145,6 +1162,7 @@ public class Library_DocumentCardModel
     public string Description { get; set; } = null!;
     public string[] Headers { get; set; } = [];
     public bool HasImage { get; set; }
+    public int IntegrityVersion { get; set; }
     public string OwnerGuid { get; set; } = null!;
 }
 public class Library_DocumentPageModel
@@ -1154,6 +1172,7 @@ public class Library_DocumentPageModel
     //public Library_LibraryBrief Library { get; set; } = null!;//could be 
     public string Title { get; set; } = null!;
     public bool HasImage { get; set; }
+    public int IntegrityVersion { get; set; }
     public string Description { get; set; } = null!;
     public string Version { get; set; } = null!;
     public Library_VersionBrief[] RelatedVersions { get; set; } = [];

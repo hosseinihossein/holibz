@@ -57,7 +57,7 @@ export class NewShelfForm {
 
     effect(() => {
       if(this.identityService.userModel()){
-        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.userGuid!).subscribe({
           next: res => {
             if(res){
               this.libraryList.set(res);

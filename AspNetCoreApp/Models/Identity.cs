@@ -32,18 +32,19 @@ public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identi
 
 public class Identity_UserDbModel : IdentityUser<int>
 {
-    public string UserGuid { get; set; } = string.Empty;
+    public string UserGuid { get; set; } = Guid.NewGuid().ToString().Replace("-", "");
     public string? Description { get; set; }
     public bool DisplayEmailPublicly { get; set; } = false;
-    public byte _version { get; set; } = 0;
+    public byte _integrityVersion { get; set; } = 0;
     [NotMapped]
-    public int Version
+    public int IntegrityVersion
     {
-        get => _version;
-        set => _version = value > 255 | value < 0 ? (byte)0 : (byte)value;
+        get => _integrityVersion;
+        set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     //public bool AllowToLogin { get; set; } = true; // add to admin db
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool HasImage { get; set; } = false;
 }
 
 public class Identity_RoleDbModel : IdentityRole<int>
@@ -54,6 +55,18 @@ public class Identity_RoleDbModel : IdentityRole<int>
 }
 
 //*********************************** data models ************************************
+public class Identity_UserProfileModel
+{
+    public string UserGuid { get; set; } = null!;
+    public string Username { get; set; } = null!;
+    public string? Description { get; set; }
+    public bool HasImage { get; set; }
+    public int IntegrityVersion { get; set; }
+    public string? Email { get; set; }
+    public bool? DisplayEmailPublicly { get; set; }
+    public string[]? Roles { get; set; } = [];
+}
+
 public class Identity_LoginFormModel
 {
     public string? ReturnUrl { get; set; } = string.Empty;
@@ -154,8 +167,9 @@ public class UsersListFilterModel
 
 public class UsersListModel
 {
-    public string? ImageAddress { get; set; } = null;
-    public int Version { get; set; } = 0;
+    //public string? ImageAddress { get; set; } = null;
+    public bool HasImage { get; set; }
+    public int IntegrityVersion { get; set; }
     public string UserName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public bool EmailConfirmed { get; set; }
@@ -365,7 +379,7 @@ public class Identity_Process
         }
     */
 }
-public class Identity_UserSeedModel
+/*public class Identity_UserSeedModel
 {
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -376,7 +390,7 @@ public class Identity_UserSeedModel
     public bool DisplayEmailPublicly { get; set; } = false;
     public DateTime CreatedAt { get; set; }
     public string[] Roles { get; set; } = [];
-}
+}*/
 
 
 

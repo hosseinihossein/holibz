@@ -7,6 +7,7 @@ import { DocumentCardModel } from '../library/document-card/document-card';
 import { DocumentPageModel } from '../library/document-page/document-page';
 import { DocumentElementModel } from '../library/document-page/document-elements/document-element/document-element';
 import { Observable, throwError } from 'rxjs';
+import { userShelfList } from '../library/new-document-form/new-document-form';
 
 @Injectable({
   providedIn: 'root'
@@ -35,7 +36,7 @@ export class LibraryService {
   }
   requestUserShelfList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
-    return this.httpClient.get<ShelfCardModel[]>("/api/Library/UserShelfList", { params: quryParams});
+    return this.httpClient.get<userShelfList[]>("/api/Library/UserShelfList", { params: quryParams});
   }
   requestDocumentCardList(shelfGuid: string, ownerGuid?: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
@@ -45,14 +46,14 @@ export class LibraryService {
     return this.httpClient.get<DocumentCardModel[]>("/api/Library/DocumentCardList", { params: quryParams});
   }
 
-  requestTotalNumberOfDocuments(userGuid: string){
-    let quryParams = new HttpParams().set("userGuid", userGuid);
+  requestTotalNumberOfDocuments(ownerGuid: string){
+    let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
     return this.httpClient.get<{totalNumberOfUserDocuments: number}>(
       "/api/Library/TotalNumberOfDocuments", { params: quryParams}
     );
   }
-  requestTotalNumberOfShelves(userGuid: string){
-    let quryParams = new HttpParams().set("userGuid", userGuid);
+  requestTotalNumberOfShelves(ownerGuid: string){
+    let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
     return this.httpClient.get<{totalNumberOfUserShelves: number}>(
       "/api/Library/TotalNumberOfShelves", { params: quryParams}
     );
@@ -203,7 +204,7 @@ export class LibraryService {
       formData.append("Image", image);
     }
 
-    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}>(
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description:string,hasImage:boolean,integrityVersion:number}}>(
       "/api/Library/EditDocumentIntroduction", formData
     );
   }
@@ -216,7 +217,7 @@ export class LibraryService {
       formData.append("Image", image);
     }
 
-    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}>(
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description:string,hasImage:boolean,integrityVersion:number}}>(
       "/api/Library/EditLibraryIntroduction", formData
     );
   }
@@ -229,7 +230,7 @@ export class LibraryService {
       formData.append("Image", image);
     }
 
-    return this.httpClient.post<{success:boolean, introduction:{title:string,description?:string,imageChanged?:boolean}}>(
+    return this.httpClient.post<{success:boolean, introduction:{title:string,description:string,hasImage:boolean,integrityVersion:number}}>(
       "/api/Library/EditShelfIntroduction", formData
     );
   }
@@ -299,4 +300,10 @@ export class EditElementFormModel{
   Title?:string;
   Order?:string;
   Delete?:boolean;
+}
+
+export class OwnerModel{
+  guid:string = null!;
+  username:string = null!;
+  imageAddress?:string|null
 }

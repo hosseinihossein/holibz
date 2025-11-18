@@ -23,7 +23,7 @@ export class DocumentsList {
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
   isMyDocumentList = computed(() => this.identityService.isAuthenticated() && 
-  this.identityService.userModel()?.guid === this.userModel()?.guid);
+  this.identityService.userModel()?.userGuid === this.userModel()?.userGuid);
   //totalNumberOfShelfDocuments = signal(0);
 
   constructor(){
@@ -31,7 +31,7 @@ export class DocumentsList {
     //this.totalNumberOfShelfDocuments.set(this.libraryService.currentShelfModel()?.totalNumberOfShelfDocuments!);
 
     effect(() => {
-      this.libraryService.requestDocumentCardList(this.shelfGuid(), this.userModel()?.guid)?.subscribe({
+      this.libraryService.requestDocumentCardList(this.shelfGuid(), this.userModel()?.userGuid)?.subscribe({
         next: res => {
           if(res){
             this.documentCardModels.set(res);

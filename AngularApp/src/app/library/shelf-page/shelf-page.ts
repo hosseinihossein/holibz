@@ -43,7 +43,7 @@ export class ShelfPage {
 
   userModel = signal<UserProfileModel|null>(null);
   isMyShelf = computed(() => this.identityService.isAuthenticated() && 
-  this.shelfModel()?.ownerGuid === this.identityService.userModel()?.guid);
+  this.shelfModel()?.ownerGuid === this.identityService.userModel()?.userGuid);
 
   displaySubmitSpinner = signal(false);
 
@@ -152,7 +152,7 @@ export class ShelfPage {
           this.librarySerice.requestDeleteShelf(this.shelfGuid()!).subscribe({
             next: res => {
               if(res && res.success){
-                this.router.navigate(['libraries', this.identityService.userModel()!.guid]);
+                this.router.navigate(['libraries', this.identityService.userModel()!.userGuid]);
               }
             },
             error: err => {

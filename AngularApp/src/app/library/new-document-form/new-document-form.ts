@@ -54,11 +54,10 @@ export class NewDocumentForm {
   displaySubmitSpinner = signal(false);
   allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
-  allShelfList = signal<ShelfCardModel[]>([]);
+  allShelfList = signal<userShelfList[]>([]);
   
   shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
     let myMap = new Map<string,string>();
-    //let filteredShelves = this.allShelfList().filter(shelf=>shelf.libraries.length > 1);
     this.allShelfList().forEach(shelf=>
       myMap.set(shelf.guid, shelf.libraries.map(l=>l.title).slice(0,3).join(', '))
     );
@@ -78,9 +77,9 @@ export class NewDocumentForm {
     //this.editing.set(editingQueryParam === "true");
 
     effect(() => {
-      if(this.identityService.userModel()?.guid){
+      if(this.identityService.userModel()?.userGuid){
 
-        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.userGuid!).subscribe({
           next: res => {
             if(res){
               this.allLibraryList.set(res.map(lib=>({guid:lib.guid,title:lib.title})));
@@ -89,7 +88,7 @@ export class NewDocumentForm {
           },
         });
 
-        this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
+        this.libraryService.requestUserShelfList(this.identityService.userModel()!.userGuid!).subscribe({
           next: res => {
             if(res){
               this.allShelfList.set(res);
@@ -201,7 +200,7 @@ export class NewDocumentForm {
     }
   }
 
-  shelfParentsIncludeAnyOfLibraries(shelf:ShelfCardModel, librariesTitles:string[]){
+  shelfParentsIncludeAnyOfLibraries(shelf:userShelfList, librariesTitles:string[]){
     for(let lib of shelf.libraries){
       if(librariesTitles.includes(lib.title)){
         return true;
@@ -210,4 +209,10 @@ export class NewDocumentForm {
     return false;
   }
 
+}
+
+export class userShelfList{
+  guid:string = null!;
+  title:string = null!;
+  libraries:{guid:string, title:string}[] = [];
 }

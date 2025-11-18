@@ -28,7 +28,7 @@ import { LibrariesList } from "../../library/libraries-list/libraries-list";
 })
 export class Profile {
   userGuid = signal<string|null>(null);
-  isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid);
+  isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.userGuid);
 
   //singletonModes = inject(SingletonModes);
   //dialog = inject(MatDialog);

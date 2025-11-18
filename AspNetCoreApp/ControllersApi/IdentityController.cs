@@ -59,10 +59,6 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> Login([FromBody] Identity_LoginFormModel loginModel,
     [FromServices] IConfiguration configuration, [FromServices] TurnstileService turnstileService)
     {
-        /*foreach (var header in Request.Headers)
-        {
-            Console.WriteLine($"\n***** {header.Key} = {header.Value}");
-        }*/
         if (ModelState.IsValid)
         {
             var remoteip = HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault() ??
@@ -96,11 +92,6 @@ public class IdentityController : ControllerBase
 
                 if (user is not null)
                 {
-                    /*if (!user.AllowToLogin)
-                    {
-                        ModelState.AddModelError("AllowToLogin", "Your are NOT allowed to login to your account! Contact to admin.");
-                    }
-                    else*/
                     if (!user.EmailConfirmed)
                     {
                         ModelState.AddModelError("EmailValidation", "Email Not confirmed! Please click the validation link in your email first.");
@@ -119,15 +110,16 @@ public class IdentityController : ControllerBase
                             {
                                 token,
                                 expiresInHours = jwtSettings["DurationInHours"] ?? "10",
-                                user = new
+                                user = new Identity_UserProfileModel()
                                 {
-                                    guid = user.UserGuid,
-                                    username = user.UserName,
-                                    description = user.Description,
-                                    imageAddress = await GetUserImageAddress(user.UserGuid),
-                                    email = user.Email,
-                                    displayEmailPublicly = user.DisplayEmailPublicly,
-                                    roles = (await userManager.GetRolesAsync(user)).ToArray(),
+                                    UserGuid = user.UserGuid,
+                                    Username = user.UserName!,
+                                    Description = user.Description,
+                                    Email = user.Email!,
+                                    DisplayEmailPublicly = user.DisplayEmailPublicly,
+                                    Roles = (await userManager.GetRolesAsync(user)).ToArray(),
+                                    HasImage = user.HasImage,
+                                    IntegrityVersion = user.IntegrityVersion,
                                 },
                             });
                         }
@@ -161,23 +153,25 @@ public class IdentityController : ControllerBase
             }
             if (user.DisplayEmailPublicly)
             {
-                return Ok(new
+                return Ok(new Identity_UserProfileModel()
                 {
-                    guid = user.UserGuid,
-                    username = user.UserName,
-                    description = user.Description,
-                    imageAddress = await GetUserImageAddress(user.UserGuid),
-                    email = user.Email,
+                    UserGuid = user.UserGuid,
+                    Username = user.UserName!,
+                    Description = user.Description,
+                    Email = user.Email!,
+                    HasImage = user.HasImage,
+                    IntegrityVersion = user.IntegrityVersion,
                 });
             }
             else
             {
-                return Ok(new
+                return Ok(new Identity_UserProfileModel()
                 {
-                    guid = user.UserGuid,
-                    username = user.UserName,
-                    description = user.Description,
-                    imageAddress = await GetUserImageAddress(user.UserGuid),
+                    UserGuid = user.UserGuid,
+                    Username = user.UserName!,
+                    Description = user.Description,
+                    HasImage = user.HasImage,
+                    IntegrityVersion = user.IntegrityVersion,
                 });
             }
         }
@@ -190,8 +184,7 @@ public class IdentityController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> Signup([FromBody] Identity_SignupFormModel signupModel,
-    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService,
-    [FromServices] Identity_Process identityProcess)
+    [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
     {
         if (ModelState.IsValid)
         {
@@ -219,13 +212,10 @@ public class IdentityController : ControllerBase
                     UserName = signupModel.Username,
                     Email = signupModel.Email,
                     EmailConfirmed = false,
-                    UserGuid = Guid.NewGuid().ToString().Replace("-", "")
                 };
                 IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
                 if (result.Succeeded)
                 {
-                    //await identityProcess.UpdateUserSeed(user, userManager);
-
                     _ = SendEmailValidationLink(user, emailSender);// commented out for development 
 
                     return Ok(new { success = true });
@@ -242,13 +232,6 @@ public class IdentityController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> CheckUsername([FromQuery][StringLength(60)] string username)
     {
-        /*Identity_UserDbModel? user = await userManager.FindByNameAsync(username);
-        if (user is null)
-        {
-            return Ok(new { isTaken = false });
-        }
-        return Ok(new { isTaken = false });*/
-
         bool userExist = await userManager.Users.AnyAsync(u => u.NormalizedUserName == userManager.NormalizeName(username));
         return Ok(new { isTaken = userExist });
     }
@@ -314,8 +297,7 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitUsername(
         //[FromBody] string username,//BadRequest status 400, username is required, The JSON value could not be converted to System.String. it didn't work even by newtonsoft json.
-        [FromBody] UsernameModel model,
-        [FromServices] Identity_Process identityProcess)
+        [FromBody] UsernameModel model)
     {
         if (ModelState.IsValid)
         {
@@ -407,51 +389,39 @@ public class IdentityController : ControllerBase
 
 
 
-
-    private async Task<string?> GetUserImageAddress(string userGuid)
-    {
-        Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
-        if (user is null)
+    /*
+        private async Task<string?> GetUserImageAddress(string userGuid)
         {
+            Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+            if (user is null)
+            {
+                return null;
+            }
+
+            string userImagePath =
+            Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
+            if (System.IO.File.Exists(userImagePath))
+            {
+                return $"/api/Identity/UserImage?userGuid={user.UserGuid}&v={user.IntegrityVersion}";
+            }
+
             return null;
         }
-
-        string userImagePath =
-        Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
-        if (System.IO.File.Exists(userImagePath))
+        private string? GetUserImageAddressWithVersion(string userGuid, int version)
         {
-            return $"/api/Identity/UserImage?userGuid={user.UserGuid}&v={user.Version}";
-        }
+            string userImagePath =
+            Path.Combine(Storage_Users.FullName, userGuid, "image");
+            if (System.IO.File.Exists(userImagePath))
+            {
+                return $"/api/Identity/UserImage?userGuid={userGuid}&v={version}";
+            }
 
-        return null;
-    }
-    private string? GetUserImageAddressWithVersion(string userGuid, int version)
-    {
-        /*Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
-        if (user is null)
-        {
             return null;
-        }*/
-
-        string userImagePath =
-        Path.Combine(Storage_Users.FullName, userGuid, "image");
-        if (System.IO.File.Exists(userImagePath))
-        {
-            return $"/api/Identity/UserImage?userGuid={userGuid}&v={version}";
         }
-
-        return null;
-    }
-
+    */
     [HttpGet]
     public IActionResult UserImage([FromQuery][StringLength(32)] string userGuid)
     {
-        /*Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
-        if (user is null)
-        {
-            return NotFound("User Not Found!");
-        }*/
-
         string userImagePath =
         Path.Combine(Storage_Users.FullName, userGuid, "image");
         if (System.IO.File.Exists(userImagePath))
@@ -473,27 +443,15 @@ public class IdentityController : ControllerBase
             Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
             string userImagePath =
             Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
-            /*if (model.UserImageFile is null)
-            {
-                if (System.IO.File.Exists(userImagePath))
-                {
-                    System.IO.File.Delete(userImagePath);
-                    user.Version++;
-                    await userManager.UpdateAsync(user);
-                }
-            }
-            else
-            {*/
             using (FileStream fs = System.IO.File.Create(userImagePath))
             {
                 await model.UserImageFile.CopyToAsync(fs);
             }
-            user.Version++;
+            user.HasImage = true;
+            user.IntegrityVersion++;
             await userManager.UpdateAsync(user);
-            //}
 
-            string userImageAddress = (await GetUserImageAddress(user.UserGuid))!;
-            return Ok(new { success = true, userImageAddress });
+            return Ok(new { success = true, user.HasImage, user.IntegrityVersion });
         }
         return BadRequest(ModelState);
     }
@@ -514,7 +472,8 @@ public class IdentityController : ControllerBase
         if (System.IO.File.Exists(userImagePath))
         {
             System.IO.File.Delete(userImagePath);
-            user.Version++;
+            user.HasImage = false;
+            user.IntegrityVersion = 0;
             await userManager.UpdateAsync(user);
         }
 
@@ -528,8 +487,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitDescription([FromBody] DescriptionModel model,
-    [FromServices] Identity_Process identityProcess)
+    public async Task<IActionResult> SubmitDescription([FromBody] DescriptionModel model)
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
         user.Description = model.Description;
@@ -559,8 +517,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordFormModel formModel,
-    [FromServices] Identity_Process identityProcess)
+    public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordFormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -637,8 +594,7 @@ public class IdentityController : ControllerBase
     [HttpPost]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitDisplayEmailPublicly([FromBody] DisplayEmailPubliclyModel model,
-    [FromServices] Identity_Process identityProcess)
+    public async Task<IActionResult> SubmitDisplayEmailPublicly([FromBody] DisplayEmailPubliclyModel model)
     {
         Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
         user.DisplayEmailPublicly = model.DisplayEmailPublicly;
@@ -724,7 +680,8 @@ public class IdentityController : ControllerBase
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
                     //ImageAddress = await GetUserImageAddress(user.UserGuid),
-                    Version = user.Version,
+                    IntegrityVersion = user.IntegrityVersion,
+                    HasImage = user.HasImage,
                 })
                 .ToListAsync();
             }
@@ -755,7 +712,8 @@ public class IdentityController : ControllerBase
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
                     //ImageAddress = $"/api/Identity/UserImage?userGuid=${user.UserGuid}&v=${user.Version}",
-                    Version = user.Version,
+                    IntegrityVersion = user.IntegrityVersion,
+                    HasImage = user.HasImage,
                 })
                 .ToListAsync();
             }
@@ -782,7 +740,8 @@ public class IdentityController : ControllerBase
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
                     //ImageAddress = $"/api/Identity/UserImage?userGuid=${user.UserGuid}&v=${user.Version}",
-                    Version = user.Version,
+                    IntegrityVersion = user.IntegrityVersion,
+                    HasImage = user.HasImage,
                 })
                 .ToListAsync();
             }
@@ -801,11 +760,6 @@ public class IdentityController : ControllerBase
                 (filter.EmailConfirmed == null || filter.EmailConfirmed == user.EmailConfirmed)
             )
             .CountAsync();
-        }
-
-        foreach (UsersListModel userListModel in allFilteredUsers)
-        {
-            userListModel.ImageAddress = GetUserImageAddressWithVersion(userListModel.UserGuid, userListModel.Version);
         }
 
         return Ok(new { usersList = allFilteredUsers.ToArray(), totalResultsLength = allFilteredUsersLength });

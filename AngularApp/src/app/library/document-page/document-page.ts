@@ -71,7 +71,7 @@ export class DocumentPage implements AfterViewInit {
 
   ownerModel = signal<UserProfileModel|null>(null);
   ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
-  isMyDocument = computed(()=>this.ownerModel()?.guid === this.identityService.userModel()?.guid);
+  isMyDocument = computed(()=>this.ownerModel()?.userGuid === this.identityService.userModel()?.userGuid);
 
   displaySubmitSpinner = signal(false);
 

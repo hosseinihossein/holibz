@@ -55,8 +55,8 @@
 
         <!--------------------- top action box -------------------->
         <div class="actionDiv clearfix">
-            <a matButton="elevated" [routerLink]="['/profile',ownerModel()?.guid]" id="userProfile" class="noPaddingBtn"
-                matTooltip="Owner">
+            <a matButton="elevated" [routerLink]="['/profile',ownerModel()?.userGuid]" id="userProfile"
+                class="noPaddingBtn" matTooltip="Owner">
                 @if(ownerImgSrc()){
                 <img [ngSrc]="ownerImgSrc()!" priority width="40" height="40" alt="user image">
                 }

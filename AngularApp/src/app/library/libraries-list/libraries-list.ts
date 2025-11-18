@@ -33,7 +33,7 @@ export class LibrariesList {
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.userModel()?.imageAddress);
   isMyLibraries = computed(()=>this.identityService.isAuthenticated() && 
-  this.userModel()?.guid === this.identityService.userModel()?.guid);
+  this.userModel()?.userGuid === this.identityService.userModel()?.userGuid);
 
   constructor(){
     let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
@@ -43,7 +43,7 @@ export class LibrariesList {
 
     if(!this.userGuid()){
       if(this.identityService.isAuthenticated()){
-        this.userGuid.set(this.identityService.userModel()?.guid!);
+        this.userGuid.set(this.identityService.userModel()?.userGuid!);
       }
       else{
         this.router.navigateByUrl("/login");

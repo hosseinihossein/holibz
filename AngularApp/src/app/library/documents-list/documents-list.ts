@@ -31,7 +31,7 @@ export class DocumentsList {
     this.ownerModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(() => {
-      this.libraryService.requestDocumentCardList(this.shelfGuid(), this.ownerModel()?.userGuid)?.subscribe({
+      this.libraryService.requestDocumentCardList(this.shelfGuid(), this.ownerModel()?.guid)?.subscribe({
         next: res => {
           if(res){
             this.documentCardModels.set(res);

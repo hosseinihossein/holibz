@@ -35,7 +35,7 @@ export class LibraryPage {
 
   libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
-  this.libraryModel()?.ownerGuid === this.identityService.userModel()?.userGuid);
+  this.libraryModel()?.ownerGuid === this.identityService.userModel()?.guid);
   ownerModel = signal<OwnerModel|null>(null);
   
   displaySubmitSpinner = signal(false);
@@ -127,7 +127,7 @@ export class LibraryPage {
             next: res => {
               if(res && res.success){
                 this.displaySubmitSpinner.set(false);
-                this.router.navigate(['libraries', this.identityService.userModel()!.userGuid]);
+                this.router.navigate(['libraries', this.identityService.userModel()!.guid]);
               }
             },
             error: err => {

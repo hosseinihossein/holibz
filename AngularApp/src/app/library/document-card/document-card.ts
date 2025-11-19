@@ -38,7 +38,7 @@ export class DocumentCard {
     this.ownerModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(()=>{
-      if(this.documentCardModel() && this.ownerModel()?.userGuid !== this.documentCardModel().ownerGuid){
+      if(this.documentCardModel() && this.ownerModel()?.guid !== this.documentCardModel().ownerGuid){
         this.libraryService.requestOwnerModel(this.documentCardModel().ownerGuid).subscribe({
           next: res => {
             if(res){

@@ -1326,7 +1326,7 @@ public class Library_ShelfParentLibrariesFormModel
 
 public class Library_OwnerModel
 {
-    public string UserGuid { get; set; } = null!;
+    public string Guid { get; set; } = null!;
     public string Username { get; set; } = null!;
     public int IntegrityVersion { get; set; } = 0;
     public bool HasImage { get; set; } = false;

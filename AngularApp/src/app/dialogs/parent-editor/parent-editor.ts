@@ -56,8 +56,8 @@ export class ParentEditor {
 
   constructor(){
     effect(() => {
-      if(this.identityService.userModel()?.userGuid){
-        this.libraryService.requestLibraryList(this.identityService.userModel()!.userGuid!).subscribe({
+      if(this.identityService.userModel()?.guid){
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
               this.allLibraryList.set(res.map(lib=> ({guid:lib.guid, title:lib.title})));
@@ -69,7 +69,7 @@ export class ParentEditor {
         });
 
         if(this.data.parentOf === "document"){
-          this.libraryService.requestUserShelfList(this.identityService.userModel()!.userGuid!).subscribe({
+          this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
             next: res => {
               if(res){
                 this.allShelfList.set(res);

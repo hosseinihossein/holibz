@@ -34,7 +34,7 @@ export class LibrariesList {
   ownerModel = signal<OwnerModel|null>(null);
   //ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
   isMyLibraries = computed(()=>this.identityService.isAuthenticated() && 
-  this.ownerModel()?.userGuid === this.identityService.userModel()?.userGuid);
+  this.ownerModel()?.guid === this.identityService.userModel()?.guid);
 
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
@@ -45,7 +45,7 @@ export class LibrariesList {
 
     if(!this.ownerGuid()){
       if(this.identityService.isAuthenticated()){
-        this.ownerGuid.set(this.identityService.userModel()?.userGuid!);
+        this.ownerGuid.set(this.identityService.userModel()?.guid!);
       }
       else{
         this.router.navigateByUrl("/login");

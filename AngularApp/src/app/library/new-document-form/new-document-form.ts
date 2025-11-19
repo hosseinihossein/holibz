@@ -77,9 +77,9 @@ export class NewDocumentForm {
     //this.editing.set(editingQueryParam === "true");
 
     effect(() => {
-      if(this.identityService.userModel()?.userGuid){
+      if(this.identityService.userModel()?.guid){
 
-        this.libraryService.requestLibraryList(this.identityService.userModel()!.userGuid!).subscribe({
+        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
               this.allLibraryList.set(res.map(lib=>({guid:lib.guid,title:lib.title})));
@@ -88,7 +88,7 @@ export class NewDocumentForm {
           },
         });
 
-        this.libraryService.requestUserShelfList(this.identityService.userModel()!.userGuid!).subscribe({
+        this.libraryService.requestUserShelfList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
               this.allShelfList.set(res);

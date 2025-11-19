@@ -326,7 +326,7 @@ export class EditElementFormModel{
 }
 
 export class OwnerModel{
-  userGuid:string = null!;
+  guid:string = null!;
   username:string = null!;
   hasImage:boolean = false;
   integrityVersion:number = 0;

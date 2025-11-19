@@ -40,7 +40,7 @@ export class LibraryCard implements OnInit {
     });
   }
   ngOnInit(): void {
-    if(this.libraryModel().ownerGuid == this.libraryService.currentOwnerUserModel()?.userGuid){
+    if(this.libraryModel().ownerGuid == this.libraryService.currentOwnerUserModel()?.guid){
       this.ownerModel.set(this.libraryService.currentOwnerUserModel());
     }
   }

@@ -6,7 +6,7 @@
     </button>
     }
     <mat-card-header style="padding: 4px;">
-        <a [routerLink]="['/profile', ownerModel()?.userGuid]" mat-card-avatar>
+        <a [routerLink]="['/profile', ownerModel()?.guid]" mat-card-avatar>
             @if(userAvatarSrc()){
             <img [ngSrc]="userAvatarSrc()!" priority width="50" height="50" alt="user image" class="owner-avatar">
             }
@@ -16,7 +16,7 @@
         </a>
         <mat-card-title>{{documentCardModel().title}}</mat-card-title>
         <mat-card-subtitle>
-            <a [routerLink]="['/profile', ownerModel()?.userGuid]">
+            <a [routerLink]="['/profile', ownerModel()?.guid]">
                 {{ownerModel()?.username}}
             </a>
         </mat-card-subtitle>

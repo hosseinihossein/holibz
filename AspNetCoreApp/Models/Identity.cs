@@ -57,7 +57,7 @@ public class Identity_RoleDbModel : IdentityRole<int>
 //*********************************** data models ************************************
 public class Identity_UserProfileModel
 {
-    public string UserGuid { get; set; } = null!;
+    public string Guid { get; set; } = null!;
     public string Username { get; set; } = null!;
     public string? Description { get; set; }
     public bool HasImage { get; set; }

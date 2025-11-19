@@ -112,7 +112,7 @@ public class IdentityController : ControllerBase
                                 expiresInHours = jwtSettings["DurationInHours"] ?? "10",
                                 user = new Identity_UserProfileModel()
                                 {
-                                    UserGuid = user.UserGuid,
+                                    Guid = user.UserGuid,
                                     Username = user.UserName!,
                                     Description = user.Description,
                                     Email = user.Email!,
@@ -155,7 +155,7 @@ public class IdentityController : ControllerBase
             {
                 return Ok(new Identity_UserProfileModel()
                 {
-                    UserGuid = user.UserGuid,
+                    Guid = user.UserGuid,
                     Username = user.UserName!,
                     Description = user.Description,
                     Email = user.Email!,
@@ -167,7 +167,7 @@ public class IdentityController : ControllerBase
             {
                 return Ok(new Identity_UserProfileModel()
                 {
-                    UserGuid = user.UserGuid,
+                    Guid = user.UserGuid,
                     Username = user.UserName!,
                     Description = user.Description,
                     HasImage = user.HasImage,

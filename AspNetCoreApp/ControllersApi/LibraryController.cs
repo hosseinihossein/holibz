@@ -1519,7 +1519,7 @@ public class LibraryController : ControllerBase
         {
             HasImage = user.HasImage,
             IntegrityVersion = user.IntegrityVersion,
-            UserGuid = user.UserGuid,
+            Guid = user.UserGuid,
             Username = user.UserName!,
         })
         .FirstOrDefaultAsync();

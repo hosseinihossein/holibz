@@ -6,7 +6,7 @@
     </button>
     }
     <mat-card-header style="padding: 4px;">
-        <a [routerLink]="['/profile', userModel()?.userGuid]" mat-card-avatar>
+        <a [routerLink]="['/profile', ownerModel()?.userGuid]" mat-card-avatar>
             @if(userAvatarSrc()){
             <img [ngSrc]="userAvatarSrc()!" priority width="50" height="50" alt="user image" class="owner-avatar">
             }
@@ -16,23 +16,21 @@
         </a>
         <mat-card-title>{{documentCardModel().title}}</mat-card-title>
         <mat-card-subtitle>
-            <a [routerLink]="['/profile', userModel()?.userGuid]">
-                {{userModel()?.username}}
+            <a [routerLink]="['/profile', ownerModel()?.userGuid]">
+                {{ownerModel()?.username}}
             </a>
         </mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-        @if(documentCardModel().hasImage){
+        @if(documentImageAddress()){
         <!--div style="width: 100%;"-->
         @if(mini()){
-        <img mat-card-image id="main-img" #mainImg
-            [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentCardModel().guid}`" width="150" height="100"
+        <img mat-card-image id="main-img" #mainImg [ngSrc]="documentImageAddress()!" width="150" height="100"
             alt="document image">
         }
         @else {
-        <img mat-card-image id="main-img" #mainImg
-            [ngSrc]="`/api/Library/DocumentImage?documentGuid=${documentCardModel().guid}`" width="300" height="200"
+        <img mat-card-image id="main-img" #mainImg [ngSrc]="documentImageAddress()!" width="300" height="200"
             alt="document image">
         }
         <!--/div-->

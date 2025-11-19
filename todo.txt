@@ -2,7 +2,9 @@
 - add reference element to other elements
 - create libraryPage and shelfPage scoped services and move current states from library service to them
 - delete identityService instance from libraryService if it's not necessary
-- set library, shelf, document, user and userslist models changes to angular app
+- set library, shelf, document, user and userslist models changes to angular app 
+(there's no imageAddress anymore, so edit the imageSrcs for user, library,document and shelf)
+- define a shared singleton map for storing libraries, shelves, users and documents data
 - 
 
 

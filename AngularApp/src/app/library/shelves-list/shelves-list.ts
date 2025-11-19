@@ -2,10 +2,11 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { MatSidenav, MatSidenavContainer, MatSidenavContent } from '@angular/material/sidenav';
 import { ShelfCard, ShelfCardModel } from "../shelf-card/shelf-card";
 import { MatAccordion } from '@angular/material/expansion';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { MatIcon } from '@angular/material/icon';
+import { SingletonModes } from '../../services/singleton-modes';
 
 @Component({
   selector: 'app-shelves-list',
@@ -20,53 +21,35 @@ export class ShelvesList {
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
   identityService = inject(IdentityService);
+  singleton = inject(SingletonModes);
 
   shelfModels = signal<ShelfCardModel[]>([]);
-  //totalNumberOfUserDocuments = signal(0);
-  userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.userModel()?.imageAddress);
-  isMyShelfList = computed(() => this.identityService.isAuthenticated() && 
-  this.identityService.userModel()?.userGuid === this.userModel()?.userGuid);//signal(false);
+  ownerModel = signal<OwnerModel|null>(null);
+  //ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
+  /*isMyShelfList = computed(() => this.identityService.isAuthenticated() && 
+  this.identityService.userModel()?.userGuid === this.ownerModel()?.userGuid);*/
 
   constructor(){
-    this.userModel.set(this.libraryService.currentOwnerUserModel());
+    this.ownerModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(() => {
-      this.libraryService.requestShelfList(this.libraryGuid(), this.userModel()?.userGuid).subscribe({
+      this.libraryService.requestShelfList(this.libraryGuid(), this.ownerModel()?.userGuid).subscribe({
         next: res => {
           if(res){
             this.shelfModels.set(res);
-            //this.totalNumberOfUserDocuments.set(res.flatMap(shelf=>shelf.documentsGuids).length);
-            /*if(res[0].ownerGuid){
-              this.userGuid.set(res[0].ownerGuid);
-            }*/
           }
         },
       });
     });
     
     effect(() => {
-      if(!this.userModel() && this.shelfModels() && this.shelfModels().length > 0){
-        this.identityService.requestUserModel(this.shelfModels()[0].ownerGuid!).subscribe({
+      if(!this.ownerModel() && this.shelfModels() && this.shelfModels().length > 0){
+        this.libraryService.requestOwnerModel(this.shelfModels()[0].ownerGuid!).subscribe({
           next: res => {
-            this.userModel.set(res);
+            this.ownerModel.set(res);
           },
         });
       }
     });
-
-    /*effect(() => {
-      if(this.isMyShelfList()){
-        this.identityService.getCsrf().subscribe({
-          next: () => {
-            console.log("Csrf received successfully.");
-          },
-          error: err => {
-            console.error("Couldn't get Csrf!");
-            throw(err);
-          },
-        });
-      }
-    });*/
   }
 }

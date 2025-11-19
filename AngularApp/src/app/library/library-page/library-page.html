@@ -1,8 +1,8 @@
 <app-shelves-list [libraryGuid]="libraryGuid()!">
     <mat-card appearance="raised">
         <mat-card-header>
-            @if(libraryModel()?.hasImage){
-            <img [ngSrc]="introductionImage()" width="40" height="40" alt="library logo" matCardAvatar>
+            @if(introductionImage()){
+            <img [ngSrc]="introductionImage()!" width="40" height="40" alt="library logo" matCardAvatar>
             }
             @else {
             <mat-icon matCardAvatar

@@ -1,9 +1,9 @@
-import { Component, effect, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, signal } from '@angular/core';
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { NgOptimizedImage } from "@angular/common";
 import { Router } from '@angular/router';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 
 @Component({
@@ -23,15 +23,16 @@ export class LibraryCard implements OnInit {
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
 
-  userModel = signal<UserProfileModel|null>(null);
+  ownerModel = signal<OwnerModel|null>(null);
+  libraryImageAddress = computed(()=>this.libraryService.getLibraryImageAddress(this.libraryModel()));
 
   constructor(){
     effect(()=>{
-      if(this.libraryModel() && !this.userModel()){
-        this.identityService.requestUserModel(this.libraryModel().ownerGuid).subscribe({
+      if(this.libraryModel() && !this.ownerModel()){
+        this.libraryService.requestOwnerModel(this.libraryModel().ownerGuid).subscribe({
           next: res => {
             if(res){
-              this.userModel.set(res);
+              this.ownerModel.set(res);
             }
           },
         });
@@ -40,7 +41,7 @@ export class LibraryCard implements OnInit {
   }
   ngOnInit(): void {
     if(this.libraryModel().ownerGuid == this.libraryService.currentOwnerUserModel()?.userGuid){
-      this.userModel.set(this.libraryService.currentOwnerUserModel());
+      this.ownerModel.set(this.libraryService.currentOwnerUserModel());
     }
   }
 
@@ -56,7 +57,7 @@ export class LibraryCardModel {
   description?: string; 
   shelvesTitles: string[] = [];
   hasImage:boolean = false;
-  //ownerUsername?: string;
+  integrityVersion:number = 0;
   ownerGuid: string = null!;
   createdAt:Date = null!;
 }

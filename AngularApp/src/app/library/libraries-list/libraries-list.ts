@@ -5,7 +5,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatBadge } from '@angular/material/badge';
 import { MatTooltip } from '@angular/material/tooltip';
 import { SingletonModes } from '../../services/singleton-modes';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { JsonPipe, NgOptimizedImage } from '@angular/common';
@@ -20,30 +20,32 @@ import { MatSidenavModule } from '@angular/material/sidenav';
   styleUrl: './libraries-list.css'
 })
 export class LibrariesList {
-  userGuid = signal<string|null>(null);
+  ownerGuid = signal<string|null>(null);
 
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
   router = inject(Router);
   identityService = inject(IdentityService);
+  singleton = inject(SingletonModes);
 
   libraryModels = signal<LibraryCardModel[]>([]);
   totalNumberOfUserDocuments = signal(0);
   totalNumberOfUserShelves = signal(0);
-  userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.userModel()?.imageAddress);
+  ownerModel = signal<OwnerModel|null>(null);
+  //ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
   isMyLibraries = computed(()=>this.identityService.isAuthenticated() && 
-  this.userModel()?.userGuid === this.identityService.userModel()?.userGuid);
+  this.ownerModel()?.userGuid === this.identityService.userModel()?.userGuid);
 
   constructor(){
-    let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
-    if(userGuidRouteParam){
-      this.userGuid.set(userGuidRouteParam);
-    }
+    this.activatedRoute.paramMap.subscribe(params=>{
+      if(params.has("userGuid")){
+        this.ownerGuid.set(params.get("userGuid"));
+      }
+    });
 
-    if(!this.userGuid()){
+    if(!this.ownerGuid()){
       if(this.identityService.isAuthenticated()){
-        this.userGuid.set(this.identityService.userModel()?.userGuid!);
+        this.ownerGuid.set(this.identityService.userModel()?.userGuid!);
       }
       else{
         this.router.navigateByUrl("/login");
@@ -51,31 +53,30 @@ export class LibrariesList {
     }
     
     effect(()=>{
-      if(this.userGuid()){
-        this.identityService.requestUserModel(this.userGuid()!).subscribe({
+      if(this.ownerGuid()){
+        this.libraryService.requestOwnerModel(this.ownerGuid()!).subscribe({
           next: res => {
-            this.userModel.set(res);
+            this.ownerModel.set(res);
             this.libraryService.currentOwnerUserModel.set(res);
           },
         });
 
-        this.libraryService.requestLibraryList(this.userGuid()!).subscribe({
+        this.libraryService.requestLibraryList(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){
               this.libraryModels.set(res);
-              //this.totalNumberOfUserShelves.set(this.libraryModels().flatMap(lib=>lib.shelvesTitles).length);
             }
           },
         });
   
-        this.libraryService.requestTotalNumberOfDocuments(this.userGuid()!).subscribe({
+        this.libraryService.requestTotalNumberOfDocuments(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){
               this.totalNumberOfUserDocuments.set(res.totalNumberOfUserDocuments);
             }
           },
         });
-        this.libraryService.requestTotalNumberOfShelves(this.userGuid()!).subscribe({
+        this.libraryService.requestTotalNumberOfShelves(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){
               this.totalNumberOfUserShelves.set(res.totalNumberOfUserShelves);

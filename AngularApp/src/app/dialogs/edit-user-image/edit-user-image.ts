@@ -62,9 +62,10 @@ export class EditUserImage {
         next: res => {
           if(res.success){
             let newUserModel = new UserProfileModel(this.identityService.userModel());
-            newUserModel.imageAddress = res.userImageAddress;
+            newUserModel.hasImage = res.hasImage;
+            newUserModel.integrityVersion = res.integrityVersion;
             this.identityService.updateUserModel(newUserModel);
-            this.displaySubmitSpinner.set(true);
+            this.displaySubmitSpinner.set(false);
             this.editImageDialogRef.close();
           }
         },
@@ -96,9 +97,9 @@ export class EditUserImage {
       next: res => {
         if(res.success){
           let newUserModel = new UserProfileModel(this.identityService.userModel());
-          newUserModel.imageAddress = null;
+          newUserModel.hasImage = false;
           this.identityService.updateUserModel(newUserModel);
-          this.displaySubmitSpinner.set(true);
+          this.displaySubmitSpinner.set(false);
           this.editImageDialogRef.close();
         }
       },

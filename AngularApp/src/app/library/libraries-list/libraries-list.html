@@ -6,7 +6,6 @@
     <mat-sidenav-content>
         <ng-content />
 
-        @if(isMyLibraries()){
         <div class="top-box clearfix">
             <!-- [matBadge]="userModel()?.username" matBadgePosition="below" -->
             <!--div class="icon-box" [matTooltip]="userModel()?.username">
@@ -28,12 +27,13 @@
             </div>
 
 
+            @if(isMyLibraries()){
             <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
                 <mat-icon>account_balance</mat-icon>
                 Add a new Library
             </a>
+            }
         </div>
-        }
 
         <div class="list">
             @for(libModel of libraryModels(); track libModel.guid){

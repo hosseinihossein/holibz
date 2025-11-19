@@ -2,8 +2,8 @@
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
-                @if(shelfModel()?.hasImage){
-                <img [ngSrc]="introductionImage()" width="40" height="40" alt="shelf image">
+                @if(introductionImage()){
+                <img [ngSrc]="introductionImage()!" width="40" height="40" alt="shelf image">
                 }
                 @else{
                 <mat-icon id="shelf-logo">shelves</mat-icon>
@@ -20,8 +20,8 @@
                 </span-->
             </mat-card-title>
             <mat-card-subtitle>
-                <a [routerLink]="['/profile',userModel()?.userGuid]">
-                    {{userModel()?.username}}
+                <a [routerLink]="['/profile',ownerModel()?.userGuid]">
+                    {{ownerModel()?.username}}
                 </a>
             </mat-card-subtitle>
         </mat-card-header>
@@ -33,18 +33,6 @@
 
         <mat-card-actions align="end">
             @if(isMyShelf()){
-            <!--button matIconButton class="noPaddingBtn" style="float: inline-start;" matTooltip="Delete Shelf"
-                (click)="deleteShelf()">
-                <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
-            </button>
-            <button matIconButton class="noPaddingBtn" matTooltip="Edit Parent Libraries"
-                (click)="editParentLibraries()">
-                <mat-icon>account_tree</mat-icon>
-            </button>
-            <button matIconButton class="noPaddingBtn" matTooltip="Edit Introduction" (click)="editIntroduction()">
-                <mat-icon>edit_note</mat-icon>
-            </button-->
-
             <a matButton="elevated" [routerLink]="['/document','new',shelfGuid()]">
                 <mat-icon>newsstand</mat-icon>
                 Add a new Document

@@ -1,5 +1,9 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { WindowService } from './window-service';
+import { LibraryCardModel } from '../library/library-card/library-card';
+import { ShelfCardModel } from '../library/shelf-card/shelf-card';
+import { DocumentCardModel } from '../library/document-card/document-card';
+import { DocumentPageModel } from '../library/document-page/document-page';
 
 @Injectable({
   providedIn: 'root'
@@ -18,9 +22,12 @@ export class SingletonModes {
   }
 
   windowService = inject(WindowService);
+
   readonly turnstileSiteKey = "0x4AAAAAAAkeZ2wTzJxqgC_K";
+
   editMode = signal(false);
   darkMode = signal(false);
+
   elementValueMaxLength = signal(1000);// 1000 chars
   elementTitleMaxLength = signal(60);// 60 chars
   elementTitleMinLength = signal(3);//  3 chars
@@ -30,6 +37,12 @@ export class SingletonModes {
   introductionDescriptionMaxLength = signal(500);// 500 chars
   documentIntroductionImageMaxSize = signal(500);// 500 KB
   libraryShelfIntroductionImageMaxSize = signal(120);// 120 KB
+
+  libraryCard_Storage = signal<Map<string,LibraryCardModel>>(new Map<string,LibraryCardModel>());
+  shelfCard_Storage = signal<Map<string,ShelfCardModel>>(new Map<string,ShelfCardModel>());
+  documentCard_Storage = signal<Map<string,DocumentCardModel>>(new Map<string,DocumentCardModel>());
+  documentPage_Storage = signal<Map<string,DocumentPageModel>>(new Map<string,DocumentPageModel>());
+
 
   toggleEditMode(){
     this.editMode.update(mode=>!mode);
@@ -45,4 +58,12 @@ export class SingletonModes {
       localStorage.removeItem("theme");
     }
   }
+
+  getUserImageAddress(userModel:{userGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(userModel?.hasImage && userModel.userGuid){
+      return `/api/Identity/UserImage?userGuid=${userModel.userGuid}&v=${userModel.integrityVersion}`;
+    }
+    return null;
+  }
+
 }

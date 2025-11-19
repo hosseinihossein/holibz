@@ -7,7 +7,7 @@ import { DocumentCardModel } from '../library/document-card/document-card';
 import { DocumentPageModel } from '../library/document-page/document-page';
 import { DocumentElementModel } from '../library/document-page/document-elements/document-element/document-element';
 import { Observable, throwError } from 'rxjs';
-import { userShelfList } from '../library/new-document-form/new-document-form';
+import { ParentEditorShelfModel } from '../library/new-document-form/new-document-form';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +18,7 @@ export class LibraryService {
 
   currentLibraryModel = signal<LibraryCardModel|null>(null);
   currentShelfModel = signal<ShelfCardModel|null>(null);
-  currentOwnerUserModel = signal<UserProfileModel|null>(null);
+  currentOwnerUserModel = signal<OwnerModel|null>(null);
 
   //editedElements = signal<Map<string, EditElementFormModel>>(new Map());
 
@@ -36,7 +36,7 @@ export class LibraryService {
   }
   requestUserShelfList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
-    return this.httpClient.get<userShelfList[]>("/api/Library/UserShelfList", { params: quryParams});
+    return this.httpClient.get<ParentEditorShelfModel[]>("/api/Library/UserShelfList", { params: quryParams});
   }
   requestDocumentCardList(shelfGuid: string, ownerGuid?: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
@@ -267,6 +267,29 @@ export class LibraryService {
     );
   }
 
+  requestOwnerModel(ownerGuid:string){
+    return this.httpClient.get<OwnerModel>(`/api/Library/GetOwnerModel?ownerGuid=${ownerGuid}`);
+  }
+
+  getLibraryImageAddress(libraryModel:{libraryGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(libraryModel?.hasImage && libraryModel.libraryGuid){
+      return `/api/Library/LibraryImage?libraryGuid=${libraryModel.libraryGuid}&v=${libraryModel.integrityVersion}`;
+    }
+    return null;
+  }
+  getShelfImageAddress(shelfModel:{shelfGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(shelfModel?.hasImage && shelfModel.shelfGuid){
+      return `/api/Library/ShelfImage?shelfGuid=${shelfModel.shelfGuid}&v=${shelfModel.integrityVersion}`;
+    }
+    return null;
+  }
+  getDocumentImageAddress(documentModel:{documentGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(documentModel?.hasImage && documentModel.documentGuid){
+      return `/api/Library/DocumentImage?documentGuid=${documentModel.documentGuid}&v=${documentModel.integrityVersion}`;
+    }
+    return null;
+  }
+
 }
 
 class NewLibraryFormModel{
@@ -303,7 +326,8 @@ export class EditElementFormModel{
 }
 
 export class OwnerModel{
-  guid:string = null!;
+  userGuid:string = null!;
   username:string = null!;
-  imageAddress?:string|null
+  hasImage:boolean = false;
+  integrityVersion:number = 0;
 }

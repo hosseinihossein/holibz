@@ -13,6 +13,7 @@ import { ShelfCardModel } from '../../library/shelf-card/shelf-card';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { MatTooltip } from "@angular/material/tooltip";
 import { MatButton } from '@angular/material/button';
+import { ParentEditorShelfModel } from '../../library/new-document-form/new-document-form';
 
 @Component({
   selector: 'app-parent-editor',
@@ -43,7 +44,7 @@ export class ParentEditor {
   displaySubmitSpinner = signal(false);
   allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
-  allShelfList = signal<ShelfCardModel[]>([]);
+  allShelfList = signal<ParentEditorShelfModel[]>([]);
   //shelfGuidToParentLibrariesTitlesMap = signal<Map<string,string>>(new Map<string,string>());
   shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
     let map = new Map<string,string>();
@@ -171,7 +172,7 @@ export class ParentEditor {
     return true;
   }
 
-  shelfParentsIncludeAnyOfLibraries(shelf:ShelfCardModel, librariesTitles:string[]){
+  shelfParentsIncludeAnyOfLibraries(shelf:ParentEditorShelfModel, librariesTitles:string[]){
     for(let lib of shelf.libraries){
       if(librariesTitles.includes(lib.title)){
         return true;

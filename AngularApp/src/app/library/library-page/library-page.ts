@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ShelvesList } from "../shelves-list/shelves-list";
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle, MatCardActions } from "@angular/material/card";
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { LibraryCardModel } from '../library-card/library-card';
 import { NgOptimizedImage } from '@angular/common';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
@@ -36,18 +36,14 @@ export class LibraryPage {
   libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
   this.libraryModel()?.ownerGuid === this.identityService.userModel()?.userGuid);
-  ownerModel = signal<UserProfileModel|null>(null);
+  ownerModel = signal<OwnerModel|null>(null);
   
   displaySubmitSpinner = signal(false);
 
   introductionImageVersion = signal(0);
-  introductionImage = computed(()=>`/api/Library/LibraryImage?libraryGuid=${this.libraryModel()!.guid}&v=${this.introductionImageVersion()}`);
+  introductionImage = computed(()=>this.librarySerice.getLibraryImageAddress(this.libraryModel()));
 
   constructor(){
-    /*let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("libraryGuid");
-    if(libraryGuidRouteParam){
-      this.libraryGuid.set(libraryGuidRouteParam);
-    }*/
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("libraryGuid")){
         this.libraryGuid.set(params.get("libraryGuid"));
@@ -73,7 +69,7 @@ export class LibraryPage {
 
     effect(() => {
       if(!this.ownerModel() && this.libraryModel()){
-        this.identityService.requestUserModel(this.libraryModel()?.ownerGuid!).subscribe({
+        this.librarySerice.requestOwnerModel(this.libraryModel()?.ownerGuid!).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);

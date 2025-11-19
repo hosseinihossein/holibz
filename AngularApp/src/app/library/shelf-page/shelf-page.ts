@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
@@ -41,23 +41,25 @@ export class ShelfPage {
   
   shelfModel = signal<ShelfCardModel|null>(null);
 
-  userModel = signal<UserProfileModel|null>(null);
+  ownerModel = signal<OwnerModel|null>(null);
   isMyShelf = computed(() => this.identityService.isAuthenticated() && 
   this.shelfModel()?.ownerGuid === this.identityService.userModel()?.userGuid);
 
   displaySubmitSpinner = signal(false);
 
   introductionImageVersion = signal(0);
-  introductionImage = computed(()=>`/api/Library/ShelfImage?shelfGuid=${this.shelfModel()!.guid}&v=${this.introductionImageVersion()}`);
+  introductionImage = computed(()=>this.librarySerice.getShelfImageAddress(this.shelfModel()));
 
   constructor(){
-    let libraryGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("shelfGuid");
-    if(libraryGuidRouteParam){
-      this.shelfGuid.set(libraryGuidRouteParam);
-    }
+    this.activatedRoute.paramMap.subscribe(params=>{
+      if(params.has("shelfGuid")){
+        this.shelfGuid.set(params.get("shelfGuid"));
+      }
+    });
+    
     if(this.librarySerice.currentShelfModel()?.guid === this.shelfGuid()){
         this.shelfModel.set(this.librarySerice.currentShelfModel());
-        this.userModel.set(this.librarySerice.currentOwnerUserModel());
+        this.ownerModel.set(this.librarySerice.currentOwnerUserModel());
     }
     else{
       effect(() => {
@@ -66,9 +68,6 @@ export class ShelfPage {
             next: res => {
               if(res){
                 this.shelfModel.set(res);
-                /*if(res.guid){
-                  this.shelfGuid.set(res.guid);//not necessary
-                }*/
               }
             },
           });
@@ -77,11 +76,11 @@ export class ShelfPage {
     }
 
     effect(() => {
-      if(!this.userModel() && this.shelfModel()){
-        this.identityService.requestUserModel(this.shelfModel()?.ownerGuid!).subscribe({
+      if(!this.ownerModel() && this.shelfModel()){
+        this.librarySerice.requestOwnerModel(this.shelfModel()?.ownerGuid!).subscribe({
           next: res => {
             if(res){
-              this.userModel.set(res);
+              this.ownerModel.set(res);
             }
           },
         });

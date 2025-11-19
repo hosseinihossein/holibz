@@ -185,8 +185,8 @@
                 {{documentPageService.documentPageModel()?.title}}
             </h1>
 
-            @if(documentPageService.documentPageModel()?.hasImage){
-            <img [ngSrc]="introductionImage()" width="100" height="100"
+            @if(introductionImage()){
+            <img [ngSrc]="introductionImage()!" width="100" height="100"
                 [alt]="documentPageService.documentPageModel()?.title" (click)="openLargeImage()">
             }
 

@@ -15,7 +15,7 @@ import { DocumentElement, DocumentElementModel } from './document-elements/docum
 import { MatChip, MatChipSet } from "@angular/material/chips";
 import { EditTags } from '../../dialogs/edit-tags/edit-tags';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { EditElementFormModel, LibraryService, NewElementFormModel } from '../../services/library-service';
+import { EditElementFormModel, LibraryService, NewElementFormModel, OwnerModel } from '../../services/library-service';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { DocumentCardModel } from '../document-card/document-card';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
@@ -51,7 +51,7 @@ export class DocumentPage implements AfterViewInit {
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
-  //singletonModes = inject(SingletonModes);
+  singleton = inject(SingletonModes);
   activatedRoute = inject(ActivatedRoute);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
@@ -66,11 +66,11 @@ export class DocumentPage implements AfterViewInit {
     })
   );
 
-  introductionImageVersion = signal(0);
-  introductionImage = computed(()=>`/api/Library/DocumentImage?documentGuid=${this.documentPageService.documentPageModel()?.guid}&v=${this.introductionImageVersion()}`);
+  //introductionImageVersion = signal(0);
+  introductionImage = computed(()=>this.libraryService.getDocumentImageAddress(this.documentPageService.documentPageModel()));
 
-  ownerModel = signal<UserProfileModel|null>(null);
-  ownerImgSrc = computed(() => this.ownerModel()?.imageAddress);
+  ownerModel = signal<OwnerModel|null>(null);
+  ownerImgSrc = computed(() => this.singleton.getUserImageAddress(this.ownerModel()));
   isMyDocument = computed(()=>this.ownerModel()?.userGuid === this.identityService.userModel()?.userGuid);
 
   displaySubmitSpinner = signal(false);
@@ -97,10 +97,6 @@ export class DocumentPage implements AfterViewInit {
   });
   
   constructor(){
-    /*let documentGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("documentGuid");
-    if(documentGuidRouteParam){
-      this.documentGuid.set(documentGuidRouteParam);
-    }*/
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("documentGuid")){
         this.documentGuid.set(params.get("documentGuid"));
@@ -114,9 +110,6 @@ export class DocumentPage implements AfterViewInit {
             if(res){
               this.documentPageService.documentPageModel.set(res);
               this.documentPageService.unchangedDocumentPageModel.set(new DocumentPageModel(res));
-              /*res.elements.forEach(el=>{
-                console.log(el.value + " : " + el.order);
-              });*/
             }
           },
         });
@@ -125,7 +118,7 @@ export class DocumentPage implements AfterViewInit {
 
     effect(() => {
       if(this.documentPageService.documentPageModel()){
-        this.identityService.requestUserModel(this.documentPageService.documentPageModel()!.owner.userGuid).subscribe({
+        this.libraryService.requestOwnerModel(this.documentPageService.documentPageModel()!.owner.userGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);
@@ -518,18 +511,20 @@ export class DocumentPage implements AfterViewInit {
               dpm!.title = result.title;
               dpm!.description = result.description;
               dpm!.hasImage = result.imageChanged ?? dpm!.hasImage;
+              if(result.imageChanged){
+                dpm!.integrityVersion += 1;
+              }
               return dpm;
             });
             this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
               dpm!.title = result.title;
               dpm!.description = result.description;
               dpm!.hasImage = result.imageChanged ?? dpm!.hasImage;
+              if(result.imageChanged){
+                dpm!.integrityVersion += 1;
+              }
               return dpm;
             });
-            
-            if(result.imageChanged){
-              this.introductionImageVersion.update(v=>{return ++v;});
-            }
           }
         }
       });
@@ -573,6 +568,7 @@ export class DocumentPageModel {
     this.owner = documentPageModel.owner;
     this.title = documentPageModel.title;
     this.hasImage = documentPageModel.hasImage;
+    this.integrityVersion = documentPageModel.integrityVersion;
     this.description = documentPageModel.description;
     this.version = documentPageModel.version;
     this.relatedVersions = [...(documentPageModel.relatedVersions.map(a=>Object.create(a)))];
@@ -586,6 +582,7 @@ export class DocumentPageModel {
   owner:{userGuid:string, userName:string} = null!;
   title:string = null!;
   hasImage:boolean = false;
+  integrityVersion:number = 0;
   description:string = null!;
   version:string = null!;
   relatedVersions:{versionName:string, documentGuid:string}[] = [];

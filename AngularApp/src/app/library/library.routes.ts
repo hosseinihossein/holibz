@@ -12,7 +12,7 @@ import { authGuard } from "../guards/auth-guard";
 
 export const libraryRoutes : Routes = [
     {path: "libraries/:userGuid", component: LibrariesList},
-    {path: "libraries", component: LibrariesList},//uses identityService.userModel to get the current user data
+    {path: "libraries", component: LibrariesList, canActivate: [authGuard]},//uses identityService.userModel to get the current user data
     {path: "library/new", component: NewLibraryForm, canActivate: [authGuard]},
     {path: "library/:libraryGuid", component: LibraryPage},
     //{path: "library", component: LibraryPage},//uses libararyService.currentLibraryModel to get the data for the selected libraryCard

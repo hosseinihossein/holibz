@@ -21,12 +21,13 @@ public class LibraryController : ControllerBase
     readonly DirectoryInfo Storage_Documents;
     readonly DirectoryInfo Storage_Elements;
     readonly Library_Process libraryProcess;
+    //readonly Identity_Process identityProcess;
 
 
 
 
     public LibraryController(Library_DbContext _libraryDb, UserManager<Identity_UserDbModel> _userManager,
-    Library_Process _libraryProcess)
+    Library_Process _libraryProcess, Identity_Process _identityProcess)
     {
         libraryDb = _libraryDb;
         userManager = _userManager;
@@ -35,6 +36,7 @@ public class LibraryController : ControllerBase
         Storage_Documents = _libraryProcess.Storage_Documents;
         Storage_Elements = _libraryProcess.Storage_Elements;
         libraryProcess = _libraryProcess;
+        //identityProcess = _identityProcess;
     }
 
 
@@ -1504,5 +1506,31 @@ public class LibraryController : ControllerBase
         return BadRequest(ModelState);
     }
 
+
+
+
+
+    [HttpGet]
+    public async Task<IActionResult> GetOwnerModel([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        Library_OwnerModel? ownerModel = await userManager.Users
+        .Where(u => u.UserGuid == ownerGuid)
+        .Select(user => new Library_OwnerModel()
+        {
+            HasImage = user.HasImage,
+            IntegrityVersion = user.IntegrityVersion,
+            UserGuid = user.UserGuid,
+            Username = user.UserName!,
+        })
+        .FirstOrDefaultAsync();
+
+        if (ownerModel is null)
+        {
+            ModelState.AddModelError("user", "the specified owner Not found!");
+            return BadRequest(ModelState);
+        }
+
+        return Ok(ownerModel);
+    }
 
 }

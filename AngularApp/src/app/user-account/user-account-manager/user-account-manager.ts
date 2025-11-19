@@ -26,16 +26,12 @@ import { ActivatedRoute } from '@angular/router';
   styleUrl: './user-account-manager.css'
 })
 export class UserAccountManager {
-  //userGuid = signal<string|null>(null);
-  //isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid);
-
   singletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
   identityService = inject(IdentityService);
   activatedRoute = inject(ActivatedRoute);
 
-  //userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.identityService.userModel()?.imageAddress);
+  userImgSrc = computed(()=>this.singletonModes.getUserImageAddress(this.identityService.userModel()));
   username = computed(()=>this.identityService.userModel()?.username);
   description = computed(()=>this.identityService.userModel()?.description);
   email = computed(()=>this.identityService.userModel()?.email);
@@ -44,14 +40,6 @@ export class UserAccountManager {
   errorResponse = signal("");
 
   constructor(){
-    /*let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
-    if(userGuidRouteParam){
-      this.userGuid.set(userGuidRouteParam);
-    }*/
-
-    /*if(!this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid){
-      this.isMyProfile.set(true);
-    }*/
 
     effect(() => {
       this.identityService.getCsrf().subscribe({
@@ -60,27 +48,15 @@ export class UserAccountManager {
         },
         error: err => {
           console.error("Couldn't get Csrf!");
-          //throwError(()=>err);//doesn't pass error to the app-error-handler
           throw(err);
         },
       });
     });
-    
-    /*effect(()=>{
-      if(!this.isMyProfile()){
-        this.identityService.requestUserModel(this.userGuid()!).subscribe({
-          next: res=>this.userModel.set(res),
-        });
-      }
-      else{
-        this.userModel.set(this.identityService.userModel());
-      }
-    });*/
   }
 
   openEditImageDialog(){
     this.dialog.open(EditUserImage,
-    {data:{currentImgSrc: this.identityService.userModel()?.imageAddress}});
+    {data:{currentImgSrc: this.userImgSrc()}});
   }
 
   openEditUsernameDialog(){

@@ -6,7 +6,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { Router, RouterLink } from '@angular/router';
 
 @Component({
@@ -20,28 +20,29 @@ export class DocumentCard {
   documentCardModel = input.required<DocumentCardModel>();
   mini = input(false);
   alone = input(false);
-
+  
   singletonModes = inject(SingletonModes);
   identityService = inject(IdentityService);
   libraryService = inject(LibraryService);
   //router = inject(Router);
   renderer = inject(Renderer2);
-
+  
   documentCard = viewChild.required(MatCard,{read: ElementRef});
   
   appearance = signal<"outlined"|"raised"|"filled">("outlined");
-  userModel = signal<UserProfileModel|null>(null);
-  userAvatarSrc = computed(()=>this.userModel()?.imageAddress);
+  ownerModel = signal<OwnerModel|null>(null);
+  userAvatarSrc = computed(()=>this.singletonModes.getUserImageAddress(this.ownerModel()));
+  documentImageAddress = computed(()=>this.libraryService.getDocumentImageAddress(this.documentCardModel()));
 
   constructor(){
-    this.userModel.set(this.libraryService.currentOwnerUserModel());
+    this.ownerModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(()=>{
-      if(this.documentCardModel() && this.userModel()?.userGuid !== this.documentCardModel().ownerGuid){
-        this.identityService.requestUserModel(this.documentCardModel().ownerGuid).subscribe({
+      if(this.documentCardModel() && this.ownerModel()?.userGuid !== this.documentCardModel().ownerGuid){
+        this.libraryService.requestOwnerModel(this.documentCardModel().ownerGuid).subscribe({
           next: res => {
             if(res){
-              this.userModel.set(res);
+              this.ownerModel.set(res);
             }
           },
         });
@@ -65,5 +66,6 @@ export class DocumentCardModel{
   description:string = null!;
   headers:string[] = [];
   hasImage:boolean = false;
+  integrityVersion:number = 0;
   ownerGuid:string = null!;
 }

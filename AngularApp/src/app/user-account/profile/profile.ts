@@ -30,13 +30,13 @@ export class Profile {
   userGuid = signal<string|null>(null);
   isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.userGuid);
 
-  //singletonModes = inject(SingletonModes);
+  singleton = inject(SingletonModes);
   //dialog = inject(MatDialog);
   identityService = inject(IdentityService);
   activatedRoute = inject(ActivatedRoute);
 
   userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.userModel()?.imageAddress);
+  userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.userModel()));
   username = computed(()=>this.userModel()?.username);
   description = computed(()=>this.userModel()?.description);
   email = computed(()=>this.userModel()?.email);

@@ -54,7 +54,7 @@ export class NewDocumentForm {
   displaySubmitSpinner = signal(false);
   allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
-  allShelfList = signal<userShelfList[]>([]);
+  allShelfList = signal<ParentEditorShelfModel[]>([]);
   
   shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
     let myMap = new Map<string,string>();
@@ -200,7 +200,7 @@ export class NewDocumentForm {
     }
   }
 
-  shelfParentsIncludeAnyOfLibraries(shelf:userShelfList, librariesTitles:string[]){
+  shelfParentsIncludeAnyOfLibraries(shelf:ParentEditorShelfModel, librariesTitles:string[]){
     for(let lib of shelf.libraries){
       if(librariesTitles.includes(lib.title)){
         return true;
@@ -211,7 +211,7 @@ export class NewDocumentForm {
 
 }
 
-export class userShelfList{
+export class ParentEditorShelfModel{
   guid:string = null!;
   title:string = null!;
   libraries:{guid:string, title:string}[] = [];

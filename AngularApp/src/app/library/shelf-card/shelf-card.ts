@@ -5,10 +5,11 @@ import { DocumentCard, DocumentCardModel } from "../document-card/document-card"
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatBadge } from '@angular/material/badge';
-import { LibraryService } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { Router } from '@angular/router';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
+import { SingletonModes } from '../../services/singleton-modes';
 
 @Component({
   selector: 'app-shelf-card',
@@ -18,25 +19,29 @@ import { NgOptimizedImage } from '@angular/common';
   templateUrl: './shelf-card.html',
   styleUrl: './shelf-card.css'
 })
-export class ShelfCard implements OnInit {
+export class ShelfCard {
   shelfModel = input.required<ShelfCardModel>();
 
   router = inject(Router);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
+  singleton = inject(SingletonModes);
 
-  userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.userModel()?.imageAddress);
+  ownerModel = signal<OwnerModel|null>(null);
+  ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
+  shelfImageAddress = computed(()=>this.libraryService.getShelfImageAddress(this.shelfModel()));
 
-  constructor(){}
-
-  ngOnInit(): void {
-    this.identityService.requestUserModel(this.shelfModel().ownerGuid!).subscribe({
-      next: res => {
-        if(res){
-          this.userModel.set(res);
-        }
-      },
+  constructor(){
+    effect(()=>{
+      if(this.shelfModel()){
+        this.libraryService.requestOwnerModel(this.shelfModel().ownerGuid!).subscribe({
+          next: res => {
+            if(res){
+              this.ownerModel.set(res);
+            }
+          },
+        });
+      }
     });
   }
 
@@ -56,4 +61,5 @@ export class ShelfCardModel{
   totalNumberOfShelfDocuments:number = 0;
   createdAt:Date = null!;
   hasImage:boolean = false;
+  integrityVVersion:number = 0;
 }

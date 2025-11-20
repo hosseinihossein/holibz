@@ -26,7 +26,7 @@ export class LibraryService {
 
 
   requestLibraryList(userGuid: string){
-    let quryParams = new HttpParams().set("userGuid", userGuid);
+    let quryParams = new HttpParams().set("ownerGuid", userGuid);
     return this.httpClient.get<LibraryCardModel[]>(
       "/api/Library/List", { params: quryParams}
     ).pipe(

@@ -42,8 +42,8 @@ public class IdentityController : Controller
             IdentityResult result = await userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
-                // creating Default library and shelf
-                await libraryProcess.CreateDefaultShelf(libraryDb, user.UserGuid);
+                // creating Library_OwnerDbModel and its default library and shelf
+                await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
 
                 //await identityProcess.UpdateUserSeed(user, userManager);
 
@@ -91,8 +91,8 @@ public class IdentityController : Controller
             IdentityResult result = await userManager.ChangeEmailAsync(user, newEmail, token);
             if (result.Succeeded)
             {
-                // creating Default library and shelf
-                await libraryProcess.CreateDefaultShelf(libraryDb, user.UserGuid);
+                // creating Library_OwnerDbModel and its default library and shelf
+                await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
 
                 //await identityProcess.UpdateUserSeed(user, userManager);
 

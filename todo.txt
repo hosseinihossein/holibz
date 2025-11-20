@@ -5,6 +5,8 @@
 - set library, shelf, document, user and userslist models changes to angular app 
 (there's no imageAddress anymore, so edit the imageSrcs for user, library,document and shelf)
 - define a shared singleton map for storing libraries, shelves, users and documents data
+- change the name of property Shelves in Library_DocumentDbModel to ParentShelves
+- change the name of property Libraries in Library_ShelfDbModel to ParentLibraries
 - 
 
 

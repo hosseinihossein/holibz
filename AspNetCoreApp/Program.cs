@@ -313,7 +313,7 @@ public class Program
 
         foreach (string userGuid in AllConfirmedUsersGuidsExceptAdmin)
         {
-            await libraryProcess.CreateDefaultShelf(libraryDb, userGuid);
+            await libraryProcess.CreateNewOwner(libraryDb, userGuid);
         }
 
 

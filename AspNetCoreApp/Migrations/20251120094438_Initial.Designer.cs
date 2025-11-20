@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations
 {
     [DbContext(typeof(Identity_DbContext))]
-    [Migration("20251113083542_Initial")]
+    [Migration("20251120094438_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -89,6 +89,9 @@ namespace AspNetCore.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("HasImage")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -126,7 +129,7 @@ namespace AspNetCore.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
-                    b.Property<byte>("_version")
+                    b.Property<byte>("_integrityVersion")
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");

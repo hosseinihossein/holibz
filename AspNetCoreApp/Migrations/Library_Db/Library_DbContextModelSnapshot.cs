@@ -41,6 +41,9 @@ namespace AspNetCore.Migrations.Library_Db
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<bool>("HasImage")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
@@ -55,6 +58,9 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Property<string>("Version")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<byte>("_integrityVersion")
+                        .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
 
@@ -134,6 +140,9 @@ namespace AspNetCore.Migrations.Library_Db
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<bool>("HasImage")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
@@ -141,6 +150,9 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<byte>("_integrityVersion")
+                        .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
 
@@ -190,6 +202,9 @@ namespace AspNetCore.Migrations.Library_Db
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<bool>("HasImage")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("OwnerGuid")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
@@ -197,6 +212,9 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<byte>("_integrityVersion")
+                        .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
 

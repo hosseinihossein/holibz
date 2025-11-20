@@ -17,6 +17,7 @@ import { SingletonModes } from '../../services/singleton-modes';
 })
 export class ShelvesList {
   libraryGuid = input.required<string>();
+  ownerGuid = input.required<string>();
 
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
@@ -30,21 +31,22 @@ export class ShelvesList {
   this.identityService.userModel()?.userGuid === this.ownerModel()?.userGuid);*/
 
   constructor(){
-    this.ownerModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(() => {
-      this.libraryService.requestShelfList(this.libraryGuid(), this.ownerModel()?.guid).subscribe({
-        next: res => {
-          if(res){
-            this.shelfModels.set(res);
-          }
-        },
-      });
+      if(this.libraryGuid() && this.ownerGuid()){
+        this.libraryService.requestShelfList(this.libraryGuid(), this.ownerGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.shelfModels.set(res);
+            }
+          },
+        });
+      }
     });
     
     effect(() => {
-      if(!this.ownerModel() && this.shelfModels() && this.shelfModels().length > 0){
-        this.libraryService.requestOwnerModel(this.shelfModels()[0].ownerGuid!).subscribe({
+      if(this.ownerGuid()){
+        this.libraryService.requestOwnerModel(this.ownerGuid()).subscribe({
           next: res => {
             this.ownerModel.set(res);
           },

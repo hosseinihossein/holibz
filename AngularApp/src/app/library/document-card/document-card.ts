@@ -35,10 +35,9 @@ export class DocumentCard {
   documentImageAddress = computed(()=>this.libraryService.getDocumentImageAddress(this.documentCardModel()));
 
   constructor(){
-    this.ownerModel.set(this.libraryService.currentOwnerUserModel());
 
     effect(()=>{
-      if(this.documentCardModel() && this.ownerModel()?.guid !== this.documentCardModel().ownerGuid){
+      if(this.documentCardModel()){
         this.libraryService.requestOwnerModel(this.documentCardModel().ownerGuid).subscribe({
           next: res => {
             if(res){

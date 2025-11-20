@@ -86,6 +86,9 @@ namespace AspNetCore.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("HasImage")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -123,7 +126,7 @@ namespace AspNetCore.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
-                    b.Property<byte>("_version")
+                    b.Property<byte>("_integrityVersion")
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");

@@ -54,10 +54,10 @@ export class LibrariesList {
     
     effect(()=>{
       if(this.ownerGuid()){
+
         this.libraryService.requestOwnerModel(this.ownerGuid()!).subscribe({
           next: res => {
             this.ownerModel.set(res);
-            this.libraryService.currentOwnerUserModel.set(res);
           },
         });
 
@@ -76,6 +76,7 @@ export class LibrariesList {
             }
           },
         });
+        
         this.libraryService.requestTotalNumberOfShelves(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){

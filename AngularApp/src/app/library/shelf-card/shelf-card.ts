@@ -46,8 +46,7 @@ export class ShelfCard {
   }
 
   openShelf(){
-    this.libraryService.currentShelfModel.set(this.shelfModel());
-    this.router.navigate(["/shelf", this.shelfModel().guid]);
+    this.router.navigate(["/shelf", this.shelfModel().guid, this.ownerModel()!.guid]);
   }
 }
 

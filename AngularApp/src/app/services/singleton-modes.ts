@@ -39,11 +39,7 @@ export class SingletonModes {
   documentIntroductionImageMaxSize = signal(500);// 500 KB
   libraryShelfIntroductionImageMaxSize = signal(120);// 120 KB
 
-  libraryCard_Storage = signal<RuCache<LibraryCardModel>>(new RuCache<LibraryCardModel>());
-  shelfCard_Storage = signal<RuCache<ShelfCardModel>>(new RuCache<ShelfCardModel>());
-  documentCard_Storage = signal<RuCache<DocumentCardModel>>(new RuCache<DocumentCardModel>());
-  documentPage_Storage = signal<RuCache<DocumentPageModel>>(new RuCache<DocumentPageModel>());
-  owner_Storage = signal<RuCache<OwnerModel>>(new RuCache<OwnerModel>());
+  
 
 
   toggleEditMode(){
@@ -72,39 +68,7 @@ export class SingletonModes {
 
 }
 
-export class RuCache<T extends {guid:string}>{
-  private capacity:number = 50;
-  private cache:T[] = [];
-
-  getWithGuid(guid:string):T|null{
-    let index = this.cache.findIndex(value=>value.guid === guid);
-    if(index >= 0){
-      let element = this.cache[index];
-      this.cache.splice(index,1);
-      this.cache.unshift(element);
-      return element;
-    }
-    else{
-      return null;
-    }
-  }
-
-  add(...newValues:T[]){
-    newValues.forEach(newValue=>{
-      let index = this.cache.findIndex(value=>value.guid === newValue.guid);
-      if(index >= 0){
-        this.cache.splice(index,1);
-      }
-    });
-
-    if((this.cache.length + newValues.length) > this.capacity){
-      let numberOfExceededElements = this.cache.length + newValues.length - this.capacity;
-      let exceededElementsStartIndex = this.cache.length - numberOfExceededElements;
-      this.cache.splice(exceededElementsStartIndex);
-    }
-    
-    this.cache.unshift(...newValues);
-  }
 
 
-}
+
+

@@ -26,6 +26,7 @@ import { MatMenuModule } from '@angular/material/menu';
 })
 export class LibraryPage {
   libraryGuid = signal<string|null>(null);
+  ownerGuid = signal<string|null>(null);
 
   activatedRoute = inject(ActivatedRoute);
   librarySerice = inject(LibraryService);
@@ -48,28 +49,26 @@ export class LibraryPage {
       if(params.has("libraryGuid")){
         this.libraryGuid.set(params.get("libraryGuid"));
       }
+      if(params.has("ownerGuid")){
+        this.ownerGuid.set(params.get("owneGuid"));
+      }
     });
-    if(this.librarySerice.currentLibraryModel()?.guid === this.libraryGuid()){
-        this.libraryModel.set(this.librarySerice.currentLibraryModel());
-        this.ownerModel.set(this.librarySerice.currentOwnerUserModel());
-    }
-    else{
-      effect(() => {
-        if(this.libraryGuid()){
-          this.librarySerice.requestLibraryModel(this.libraryGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.libraryModel.set(res);
-              }
-            },
-          });
-        }
-      });
-    }
 
     effect(() => {
-      if(!this.ownerModel() && this.libraryModel()){
-        this.librarySerice.requestOwnerModel(this.libraryModel()?.ownerGuid!).subscribe({
+      if(this.libraryGuid()){
+        this.librarySerice.requestLibraryModel(this.libraryGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.libraryModel.set(res);
+            }
+          },
+        });
+      }
+    });
+    
+    effect(() => {
+      if(this.ownerGuid()){
+        this.librarySerice.requestOwnerModel(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);

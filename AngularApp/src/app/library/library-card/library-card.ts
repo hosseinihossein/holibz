@@ -16,7 +16,7 @@ import { IdentityService, UserProfileModel } from '../../services/identity-servi
     "(click)": "openLibrary()",
   }
 })
-export class LibraryCard implements OnInit {
+export class LibraryCard {
   libraryModel = input.required<LibraryCardModel>();
 
   router = inject(Router);
@@ -28,7 +28,7 @@ export class LibraryCard implements OnInit {
 
   constructor(){
     effect(()=>{
-      if(this.libraryModel() && !this.ownerModel()){
+      if(this.libraryModel()){
         this.libraryService.requestOwnerModel(this.libraryModel().ownerGuid).subscribe({
           next: res => {
             if(res){
@@ -39,15 +39,9 @@ export class LibraryCard implements OnInit {
       }
     });
   }
-  ngOnInit(): void {
-    if(this.libraryModel().ownerGuid == this.libraryService.currentOwnerUserModel()?.guid){
-      this.ownerModel.set(this.libraryService.currentOwnerUserModel());
-    }
-  }
 
   openLibrary(){
-    this.libraryService.currentLibraryModel.set(this.libraryModel());
-    this.router.navigate(["/library", this.libraryModel().guid]);
+    this.router.navigate(["/library", this.libraryModel().guid, this.ownerModel()?.guid]);
   }
 }
 

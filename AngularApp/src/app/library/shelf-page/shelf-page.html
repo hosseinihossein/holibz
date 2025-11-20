@@ -1,4 +1,4 @@
-<app-documents-list [shelfGuid]="shelfGuid()!">
+<app-documents-list [shelfGuid]="shelfGuid()!" [ownerGuid]="ownerGuid()!">
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">

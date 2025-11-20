@@ -31,6 +31,7 @@ import { MatMenuModule } from '@angular/material/menu';
 })
 export class ShelfPage {
   shelfGuid = signal<string|null>(null);
+  ownerGuid = signal<string|null>(null);
 
   signletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
@@ -55,29 +56,27 @@ export class ShelfPage {
       if(params.has("shelfGuid")){
         this.shelfGuid.set(params.get("shelfGuid"));
       }
+      if(params.has("ownerGuid")){
+        this.ownerGuid.set(params.get("ownerGuid"));
+      }
     });
     
-    if(this.librarySerice.currentShelfModel()?.guid === this.shelfGuid()){
-        this.shelfModel.set(this.librarySerice.currentShelfModel());
-        this.ownerModel.set(this.librarySerice.currentOwnerUserModel());
-    }
-    else{
-      effect(() => {
-        if(this.shelfGuid()){
-          this.librarySerice.requestShelfModel(this.shelfGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.shelfModel.set(res);
-              }
-            },
-          });
-        }
-      });
-    }
+    effect(() => {
+      if(this.shelfGuid()){
+        this.librarySerice.requestShelfModel(this.shelfGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.shelfModel.set(res);
+            }
+          },
+        });
+      }
+    });
+    
 
     effect(() => {
-      if(!this.ownerModel() && this.shelfModel()){
-        this.librarySerice.requestOwnerModel(this.shelfModel()?.ownerGuid!).subscribe({
+      if(this.ownerGuid()){
+        this.librarySerice.requestOwnerModel(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);

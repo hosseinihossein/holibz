@@ -18,8 +18,8 @@ public class Library_OwnerDbModel
     public List<Library_ShelfDbModel> Shelves { get; set; } = [];
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
     public List<Library_ElementDbModel> Elements { get; set; } = [];
-    public Library_LibraryDbModel DefaultLibrary { get; set; } = null!;
-    public Library_ShelfDbModel DefaultShelf { get; set; } = null!;
+    public string DefaultLibraryGuid { get; set; } = null!;
+    public string DefaultShelfGuid { get; set; } = null!;
 }
 public class Library_LibraryDbModel
 {
@@ -146,16 +146,24 @@ public class Library_DbContext : DbContext
         .IsRequired(true);
 
         //*********** Owner-DefaultLibrary One-To-One *********
-        modelBuilder.Entity<Library_OwnerDbModel>()
+        /*modelBuilder.Entity<Library_OwnerDbModel>()
         .HasOne(o => o.DefaultLibrary)
         .WithOne(l => l.Owner)
-        .IsRequired(true);
+        .IsRequired(true);*/
+        /*
+        Unable to create a 'DbContext' of type 'Library_DbContext'. 
+        The exception 'Cannot create a relationship between 'Library_LibraryDbModel.Owner' and 
+        'Library_OwnerDbModel.
+        DefaultLibrary' because a relationship already exists between 'Library_OwnerDbModel.Libraries' and 
+        'Library_LibraryDbModel.Owner'. 
+        Navigations can only participate in a single relationship.
+        */
 
         //*********** Owner-DefaultShelf One-To-One *********
-        modelBuilder.Entity<Library_OwnerDbModel>()
+        /*modelBuilder.Entity<Library_OwnerDbModel>()
         .HasOne(o => o.DefaultShelf)
         .WithOne(sh => sh.Owner)
-        .IsRequired(true);
+        .IsRequired(true);*/
 
         //*********** Libraries-Shelves Many-To-Many *********
         modelBuilder.Entity<Library_LibraryDbModel>()
@@ -284,8 +292,8 @@ public class Library_Process //singleton service
             ownerDbModel = new()
             {
                 Guid = ownerGuid,
-                DefaultLibrary = defaultLibrary,
-                DefaultShelf = defaultShelf,
+                DefaultLibraryGuid = defaultLibrary.Guid,
+                DefaultShelfGuid = defaultShelf.Guid,
                 Libraries = [defaultLibrary],
                 Shelves = [defaultShelf],
             };
@@ -344,8 +352,6 @@ public class Library_Process //singleton service
     {
         Library_OwnerDbModel? owner = await libraryDb.Owners
         .Include(o => o.Libraries)
-        .Include(o => o.DefaultLibrary)
-        .AsSplitQuery()
         .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
         if (owner is null)
         {
@@ -368,7 +374,8 @@ public class Library_Process //singleton service
 
         if (parentLibraries.Count == 0)
         {
-            parentLibraries.Add(owner.DefaultLibrary);
+            var defaultLibrary = owner.Libraries.FirstOrDefault(lib => lib.Guid == owner.DefaultLibraryGuid)!;
+            parentLibraries.Add(defaultLibrary);
         }
 
         Library_ShelfDbModel shelfDbModel = new()
@@ -400,8 +407,6 @@ public class Library_Process //singleton service
     {
         Library_OwnerDbModel? owner = await libraryDb.Owners
         .Include(o => o.Shelves)
-        .Include(o => o.DefaultShelf)
-        .AsSplitQuery()
         .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
         if (owner is null)
         {
@@ -424,7 +429,8 @@ public class Library_Process //singleton service
 
         if (parentShelfDbModels.Count == 0)
         {
-            parentShelfDbModels.Add(owner.DefaultShelf);
+            var defaultShelf = owner.Shelves.FirstOrDefault(shelf => shelf.Guid == owner.DefaultShelfGuid)!;
+            parentShelfDbModels.Add(defaultShelf);
         }
 
         Library_DocumentDbModel documentDbModel = new()
@@ -546,87 +552,6 @@ public class Library_Process //singleton service
         };
     }
 
-
-    /*public async Task<Library_ProcessResult> CreateDefaultLibrary(Library_DbContext libraryDb, string ownerGuid)
-    {
-        Library_OwnerDbModel? owner = await libraryDb.Owners
-        .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
-        if (owner is null)
-        {
-            Library_ProcessResult processResult = new()
-            {
-                ErrorTitle = "OwnerGuid",
-                ErrorDescription = $"Couldn't find any owner with guid '{ownerGuid}'!",
-                Success = false,
-            };
-            return processResult;
-        }
-
-        // creating Default library
-        Library_NewLibraryFormModel defaultLibraryFormModel = new()
-        {
-            Title = "Default Library",
-            Description = "Containing all shelves that doesn't belong to anyother libraries."
-        };
-        var result = await CreateNewLibrary(libraryDb, ownerGuid, defaultLibraryFormModel);
-        if (result.Success && result.ResultObject is not null)
-        {
-            owner.DefaultLibrary = (Library_LibraryDbModel)result.ResultObject;
-        }
-
-        return result;
-    }
-    public async Task<Library_ProcessResult> CreateDefaultShelf(Library_DbContext libraryDb, string ownerGuid)
-    {
-        var alreadyDefaultShelf = await libraryDb.Shelves
-        .FirstOrDefaultAsync(shelf => shelf.OwnerGuid == ownerGuid && shelf.Guid == "DefaultShelf");
-        if (alreadyDefaultShelf is not null)
-        {
-            return new Library_ProcessResult()
-            {
-                Success = true,
-                ResultObject = alreadyDefaultShelf,
-            };
-        }
-
-        var defaultLibrary = await libraryDb.Libraries
-        .FirstOrDefaultAsync(lib => lib.OwnerGuid == ownerGuid && lib.Guid == "DefaultLibrary");
-        if (defaultLibrary is null)
-        {
-            // creating Default library
-            var createDefaultLibraryResult = await CreateDefaultLibrary(libraryDb, ownerGuid);
-
-            if (createDefaultLibraryResult.Success &&
-            createDefaultLibraryResult.ResultObject is not null)
-            {
-                defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
-            }
-            else
-            {
-                //log
-                Console.WriteLine($"\n***** Cloudnt find and create default library for the user with guid '{ownerGuid}'!");
-                return createDefaultLibraryResult;
-            }
-        }
-
-        Library_ShelfDbModel defaultShelfDbModel = new()
-        {
-            Title = "Default Shelf",
-            OwnerGuid = ownerGuid,
-            Description = "Containing all documents that doesn't belong to anyother shelves.",
-            Guid = "DefaultShelf",
-            Libraries = [defaultLibrary],
-        };
-
-        await libraryDb.Shelves.AddAsync(defaultShelfDbModel);
-        await libraryDb.SaveChangesAsync();
-
-        return new Library_ProcessResult()
-        {
-            Success = true,
-            ResultObject = defaultShelfDbModel,
-        };
-    }*/
 
     //************************************ seed Library data **********************************
     /*

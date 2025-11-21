@@ -114,7 +114,7 @@ public class LibraryController : ControllerBase
     {
         Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
         .Include(lib => lib.Owner)
-        .ThenInclude(owner => owner.DefaultLibrary)
+        .ThenInclude(owner => owner.Libraries)
         .Include(lib => lib.Shelves)
         .ThenInclude(shelf => shelf.ParentLibraries)
         .AsSplitQuery()
@@ -136,14 +136,15 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        if (libraryDbModel.Guid == libraryDbModel.Owner.DefaultLibrary.Guid)
+        if (libraryDbModel.Guid == libraryDbModel.Owner.DefaultLibraryGuid)
         {
             ModelState.AddModelError("Default Library", $"Cannot Delete default library");
             return BadRequest(ModelState);
         }
 
         //default library
-        var defaultLibrary = libraryDbModel.Owner.DefaultLibrary;
+        var defaultLibrary = libraryDbModel.Owner.Libraries
+        .FirstOrDefault(lib => lib.Guid == libraryDbModel.Owner.DefaultLibraryGuid)!;
 
         //remove the library
         libraryDb.Libraries.Remove(libraryDbModel);
@@ -306,7 +307,7 @@ public class LibraryController : ControllerBase
     {
         Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
-        .ThenInclude(owner => owner.DefaultShelf)
+        .ThenInclude(owner => owner.Shelves)
         .Include(shelf => shelf.Documents)
         .ThenInclude(doc => doc.ParentShelves)
         .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
@@ -327,14 +328,15 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelf.Guid)
+        if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelfGuid)
         {
             ModelState.AddModelError("Default Shelf", "Cannot delete the default shelf!");
             return BadRequest(ModelState);
         }
 
         //default shelf
-        var defaultShelf = shelfDbModel.Owner.DefaultShelf;
+        var defaultShelf = shelfDbModel.Owner.Shelves
+        .FirstOrDefault(shelf => shelf.Guid == shelfDbModel.Owner.DefaultShelfGuid)!;
 
         //remove the shelf
         libraryDb.Shelves.Remove(shelfDbModel);
@@ -933,7 +935,6 @@ public class LibraryController : ControllerBase
         {
             Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
             .Include(lib => lib.Owner)
-            .ThenInclude(owner => owner.DefaultLibrary)
             .FirstOrDefaultAsync(lib => lib.Guid == formModel.Guid);
 
             if (libraryDbModel is null)
@@ -953,7 +954,7 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            if (libraryDbModel.Guid == libraryDbModel.Owner.DefaultLibrary.Guid)
+            if (libraryDbModel.Guid == libraryDbModel.Owner.DefaultLibraryGuid)
             {
                 ModelState.AddModelError("Default Library", "Cannot edit the default library!");
                 return BadRequest(ModelState);
@@ -1004,7 +1005,6 @@ public class LibraryController : ControllerBase
         {
             Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
             .Include(shelf => shelf.Owner)
-            .ThenInclude(owner => owner.DefaultShelf)
             .FirstOrDefaultAsync(shelf => shelf.Guid == formModel.Guid);
             if (shelfDbModel is null)
             {
@@ -1022,7 +1022,7 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelf.Guid)
+            if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelfGuid)
             {
                 ModelState.AddModelError("Default Shelf", "Cannot edit the default shelf!");
                 return BadRequest(ModelState);
@@ -1267,7 +1267,6 @@ public class LibraryController : ControllerBase
             .Include(shelf => shelf.Owner)
             .ThenInclude(owner => owner.Libraries)
             .Include(shelf => shelf.Owner)
-            .ThenInclude(owner => owner.DefaultShelf)
             .AsSplitQuery()
             .FirstOrDefaultAsync(doc => doc.Guid == formModel.ShelfGuid);
             if (shelfDbModel is null)
@@ -1286,7 +1285,7 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelf.Guid)
+            if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelfGuid)
             {
                 ModelState.AddModelError("Default Shelf", "Cannot edit the default shelf!");
                 return BadRequest(ModelState);

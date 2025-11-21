@@ -16,26 +16,21 @@ namespace AspNetCore.Migrations.Library_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Libraries",
+                name: "Owners",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
+                    DefaultLibraryGuid = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Title = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    _integrityVersion = table.Column<byte>(type: "tinyint unsigned", nullable: false),
-                    HasImage = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    DefaultShelfGuid = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Libraries", x => x.Id);
+                    table.PrimaryKey("PK_Owners", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -55,30 +50,6 @@ namespace AspNetCore.Migrations.Library_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Shelves",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Guid = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Title = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    _integrityVersion = table.Column<byte>(type: "tinyint unsigned", nullable: false),
-                    HasImage = table.Column<bool>(type: "tinyint(1)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Shelves", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
@@ -94,6 +65,64 @@ namespace AspNetCore.Migrations.Library_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Libraries",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Guid = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    _integrityVersion = table.Column<byte>(type: "tinyint unsigned", nullable: false),
+                    HasImage = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Libraries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Libraries_Owners_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Owners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Shelves",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Guid = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    _integrityVersion = table.Column<byte>(type: "tinyint unsigned", nullable: false),
+                    HasImage = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Shelves", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Shelves_Owners_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Owners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Documents",
                 columns: table => new
                 {
@@ -101,8 +130,7 @@ namespace AspNetCore.Migrations.Library_Db
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: false)
@@ -118,6 +146,12 @@ namespace AspNetCore.Migrations.Library_Db
                 {
                     table.PrimaryKey("PK_Documents", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Documents_Owners_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Owners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Documents_RelatedVersions_RelatedVersionsId",
                         column: x => x.RelatedVersionsId,
                         principalTable: "RelatedVersions",
@@ -129,15 +163,15 @@ namespace AspNetCore.Migrations.Library_Db
                 name: "Library_LibraryDbModelLibrary_ShelfDbModel",
                 columns: table => new
                 {
-                    LibrariesId = table.Column<int>(type: "int", nullable: false),
+                    ParentLibrariesId = table.Column<int>(type: "int", nullable: false),
                     ShelvesId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Library_LibraryDbModelLibrary_ShelfDbModel", x => new { x.LibrariesId, x.ShelvesId });
+                    table.PrimaryKey("PK_Library_LibraryDbModelLibrary_ShelfDbModel", x => new { x.ParentLibrariesId, x.ShelvesId });
                     table.ForeignKey(
-                        name: "FK_Library_LibraryDbModelLibrary_ShelfDbModel_Libraries_Librari~",
-                        column: x => x.LibrariesId,
+                        name: "FK_Library_LibraryDbModelLibrary_ShelfDbModel_Libraries_ParentL~",
+                        column: x => x.ParentLibrariesId,
                         principalTable: "Libraries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -158,8 +192,7 @@ namespace AspNetCore.Migrations.Library_Db
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Guid = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerId = table.Column<int>(type: "int", nullable: false),
                     Type = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Value = table.Column<string>(type: "longtext", nullable: true)
@@ -169,16 +202,22 @@ namespace AspNetCore.Migrations.Library_Db
                     FileName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Order = table.Column<int>(type: "int", nullable: false),
-                    DocumentId = table.Column<int>(type: "int", nullable: false),
+                    ParentDocumentId = table.Column<int>(type: "int", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Elements", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Elements_Documents_DocumentId",
-                        column: x => x.DocumentId,
+                        name: "FK_Elements_Documents_ParentDocumentId",
+                        column: x => x.ParentDocumentId,
                         principalTable: "Documents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Elements_Owners_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Owners",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -189,11 +228,11 @@ namespace AspNetCore.Migrations.Library_Db
                 columns: table => new
                 {
                     DocumentsId = table.Column<int>(type: "int", nullable: false),
-                    ShelvesId = table.Column<int>(type: "int", nullable: false)
+                    ParentShelvesId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Library_DocumentDbModelLibrary_ShelfDbModel", x => new { x.DocumentsId, x.ShelvesId });
+                    table.PrimaryKey("PK_Library_DocumentDbModelLibrary_ShelfDbModel", x => new { x.DocumentsId, x.ParentShelvesId });
                     table.ForeignKey(
                         name: "FK_Library_DocumentDbModelLibrary_ShelfDbModel_Documents_Docume~",
                         column: x => x.DocumentsId,
@@ -201,8 +240,8 @@ namespace AspNetCore.Migrations.Library_Db
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Library_DocumentDbModelLibrary_ShelfDbModel_Shelves_ShelvesId",
-                        column: x => x.ShelvesId,
+                        name: "FK_Library_DocumentDbModelLibrary_ShelfDbModel_Shelves_ParentSh~",
+                        column: x => x.ParentShelvesId,
                         principalTable: "Shelves",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -241,19 +280,14 @@ namespace AspNetCore.Migrations.Library_Db
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Documents_OwnerGuid",
+                name: "IX_Documents_OwnerId",
                 table: "Documents",
-                column: "OwnerGuid");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Documents_RelatedVersionsId",
                 table: "Documents",
                 column: "RelatedVersionsId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Elements_DocumentId",
-                table: "Elements",
-                column: "DocumentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Elements_Guid",
@@ -262,20 +296,30 @@ namespace AspNetCore.Migrations.Library_Db
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Elements_OwnerId",
+                table: "Elements",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Elements_ParentDocumentId",
+                table: "Elements",
+                column: "ParentDocumentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Libraries_Guid",
                 table: "Libraries",
                 column: "Guid",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Libraries_OwnerGuid",
+                name: "IX_Libraries_OwnerId",
                 table: "Libraries",
-                column: "OwnerGuid");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Library_DocumentDbModelLibrary_ShelfDbModel_ShelvesId",
+                name: "IX_Library_DocumentDbModelLibrary_ShelfDbModel_ParentShelvesId",
                 table: "Library_DocumentDbModelLibrary_ShelfDbModel",
-                column: "ShelvesId");
+                column: "ParentShelvesId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Library_DocumentDbModelLibrary_TagDbModel_TagsId",
@@ -286,6 +330,12 @@ namespace AspNetCore.Migrations.Library_Db
                 name: "IX_Library_LibraryDbModelLibrary_ShelfDbModel_ShelvesId",
                 table: "Library_LibraryDbModelLibrary_ShelfDbModel",
                 column: "ShelvesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Owners_Guid",
+                table: "Owners",
+                column: "Guid",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_RelatedVersions_Guid",
@@ -300,9 +350,9 @@ namespace AspNetCore.Migrations.Library_Db
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Shelves_OwnerGuid",
+                name: "IX_Shelves_OwnerId",
                 table: "Shelves",
-                column: "OwnerGuid");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tags_Name",
@@ -340,6 +390,9 @@ namespace AspNetCore.Migrations.Library_Db
 
             migrationBuilder.DropTable(
                 name: "RelatedVersions");
+
+            migrationBuilder.DropTable(
+                name: "Owners");
         }
     }
 }

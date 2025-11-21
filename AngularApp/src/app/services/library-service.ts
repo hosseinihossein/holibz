@@ -25,8 +25,8 @@ export class LibraryService {
   owner_Storage = signal<RuCache<OwnerModel>>(new RuCache<OwnerModel>());
 
 
-  requestLibraryList(userGuid: string){
-    let quryParams = new HttpParams().set("ownerGuid", userGuid);
+  requestLibraryList(ownerGuid: string){
+    let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
     return this.httpClient.get<LibraryCardModel[]>(
       "/api/Library/List", { params: quryParams}
     ).pipe(

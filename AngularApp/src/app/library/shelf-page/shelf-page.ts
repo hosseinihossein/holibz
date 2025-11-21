@@ -31,7 +31,6 @@ import { MatMenuModule } from '@angular/material/menu';
 })
 export class ShelfPage {
   shelfGuid = signal<string|null>(null);
-  ownerGuid = signal<string|null>(null);
 
   signletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
@@ -56,9 +55,6 @@ export class ShelfPage {
       if(params.has("shelfGuid")){
         this.shelfGuid.set(params.get("shelfGuid"));
       }
-      if(params.has("ownerGuid")){
-        this.ownerGuid.set(params.get("ownerGuid"));
-      }
     });
     
     effect(() => {
@@ -75,8 +71,8 @@ export class ShelfPage {
     
 
     effect(() => {
-      if(this.ownerGuid()){
-        this.librarySerice.requestOwnerModel(this.ownerGuid()!).subscribe({
+      if(this.shelfModel()){
+        this.librarySerice.requestOwnerModel(this.shelfModel()!.ownerGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);

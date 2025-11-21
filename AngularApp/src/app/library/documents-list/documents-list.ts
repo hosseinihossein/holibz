@@ -32,7 +32,7 @@ export class DocumentsList {
     
     effect(() => {
       if(this.shelfGuid() && this.ownerGuid()){
-        this.libraryService.requestDocumentCardList(this.shelfGuid(), this.ownerGuid())?.subscribe({
+        this.libraryService.requestDocumentCardList(this.shelfGuid())?.subscribe({
           next: res => {
             if(res){
               this.documentCardModels.set(res);

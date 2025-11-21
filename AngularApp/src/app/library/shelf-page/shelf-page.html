@@ -1,4 +1,4 @@
-<app-documents-list [shelfGuid]="shelfGuid()!" [ownerGuid]="ownerGuid()!">
+<app-documents-list [shelfGuid]="shelfGuid()!" [ownerGuid]="shelfModel()?.ownerGuid ?? ''">
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
@@ -39,7 +39,7 @@
             </a>
             }
         </mat-card-actions>
-        @if(isMyShelf() && shelfGuid() !== "DefaultShelf"){
+        @if(isMyShelf() && !shelfModel()?.isDefault){
         <button matIconButton [matMenuTriggerFor]="settingMenu" aria-label="library setting menu" id="setting-btn">
             <mat-icon>settings</mat-icon>
         </button>

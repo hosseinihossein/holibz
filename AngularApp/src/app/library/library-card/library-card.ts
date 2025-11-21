@@ -41,7 +41,7 @@ export class LibraryCard {
   }
 
   openLibrary(){
-    this.router.navigate(["/library", this.libraryModel().guid, this.ownerModel()?.guid]);
+    this.router.navigate(["/library", this.libraryModel().guid]);
   }
 }
 
@@ -54,4 +54,5 @@ export class LibraryCardModel {
   integrityVersion:number = 0;
   ownerGuid: string = null!;
   createdAt:Date = null!;
+  isDefault:boolean = false;
 }

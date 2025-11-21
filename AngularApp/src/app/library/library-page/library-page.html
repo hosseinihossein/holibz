@@ -1,4 +1,4 @@
-<app-shelves-list [libraryGuid]="libraryGuid()!" [ownerGuid]="ownerGuid()!">
+<app-shelves-list [libraryGuid]="libraryGuid()!" [ownerGuid]="ownerModel()?.guid ?? ''">
     <mat-card appearance="raised">
         <mat-card-header>
             @if(introductionImage()){
@@ -26,7 +26,7 @@
             </a>
             }
         </mat-card-actions>
-        @if(isMyLibrary() && libraryGuid() !== "DefaultLibrary"){
+        @if(isMyLibrary() && !libraryModel()?.isDefault){
         <button matIconButton [matMenuTriggerFor]="settingMenu" aria-label="library setting menu" id="setting-btn">
             <mat-icon>settings</mat-icon>
         </button>

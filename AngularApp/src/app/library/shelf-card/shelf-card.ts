@@ -46,7 +46,7 @@ export class ShelfCard {
   }
 
   openShelf(){
-    this.router.navigate(["/shelf", this.shelfModel().guid, this.ownerModel()!.guid]);
+    this.router.navigate(["/shelf", this.shelfModel().guid]);
   }
 }
 
@@ -61,4 +61,5 @@ export class ShelfCardModel{
   createdAt:Date = null!;
   hasImage:boolean = false;
   integrityVVersion:number = 0;
+  isDefault:boolean = false;
 }

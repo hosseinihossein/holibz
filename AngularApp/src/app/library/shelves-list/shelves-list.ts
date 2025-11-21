@@ -33,8 +33,8 @@ export class ShelvesList {
   constructor(){
 
     effect(() => {
-      if(this.libraryGuid() && this.ownerGuid()){
-        this.libraryService.requestShelfList(this.libraryGuid(), this.ownerGuid()).subscribe({
+      if(this.libraryGuid()){
+        this.libraryService.requestShelfList(this.libraryGuid()).subscribe({
           next: res => {
             if(res){
               this.shelfModels.set(res);

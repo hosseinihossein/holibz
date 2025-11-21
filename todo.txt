@@ -1,6 +1,6 @@
 - after adding new element to a document, navigate to its fragment
 - add reference element to other elements
-- new migration for Library_DbContext and test
+- create new shelves and documents and continue testing the app features
 - 
 
 

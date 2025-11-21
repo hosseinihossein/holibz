@@ -1165,6 +1165,7 @@ public class Library_LibraryCardModel
     //public string OwnerUsername { get; set; } = null!;
     public string OwnerGuid { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
+    public bool IsDefault { get; set; }
 
 }
 public class Library_ShelfCardModel
@@ -1179,6 +1180,7 @@ public class Library_ShelfCardModel
     public int TotalNumberOfShelfDocuments { get; set; }
     public bool HasImage { get; set; }
     public int IntegrityVersion { get; set; }
+    public bool IsDefault { get; set; }
 }
 public class Library_DocumentCardModel
 {

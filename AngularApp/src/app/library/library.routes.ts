@@ -14,12 +14,12 @@ export const libraryRoutes : Routes = [
     {path: "libraries/:userGuid", component: LibrariesList},
     {path: "libraries", component: LibrariesList, canActivate: [authGuard]},//uses identityService.userModel to get the current user data
     {path: "library/new", component: NewLibraryForm, canActivate: [authGuard]},
-    {path: "library/:libraryGuid/:ownerGuid", component: LibraryPage},
+    {path: "library/:libraryGuid", component: LibraryPage},
     //{path: "library", component: LibraryPage},//uses libararyService.currentLibraryModel to get the data for the selected libraryCard
     //{path: "shelves/:libraryGuid", component: ShelvesList},// equal to library page
     {path: "shelf/new/:libraryGuid", component: NewShelfForm, canActivate: [authGuard]},
     {path: "shelf/new", component: NewShelfForm, canActivate: [authGuard]},
-    {path: "shelf/:shelfGuid/:ownerGuid", component: ShelfPage},
+    {path: "shelf/:shelfGuid", component: ShelfPage},
     //{path: "shelf", component: ShelfPage},//use libraryService.currentShelfModel to get data for the selected shelfCard
     //{path: "documents", component: DocumentsList},// equal to shelf page
     {path: "document/new/:shelfGuid", component: NewDocumentForm, canActivate: [authGuard]},

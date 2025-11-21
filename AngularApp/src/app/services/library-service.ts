@@ -40,11 +40,8 @@ export class LibraryService {
       }),
     );
   }
-  requestShelfList(libraryGuid: string, ownerGuid?: string){
+  requestShelfList(libraryGuid: string){
     let quryParams = new HttpParams().set("libraryGuid", libraryGuid);
-    if(ownerGuid){
-      quryParams = quryParams.set("ownerGuid", ownerGuid)
-    }
     return this.httpClient.get<ShelfCardModel[]>(
       "/api/Library/ShelfList", { params: quryParams}
     ).pipe(
@@ -64,11 +61,8 @@ export class LibraryService {
       "/api/Library/UserShelfList", { params: quryParams}
     );
   }
-  requestDocumentCardList(shelfGuid: string, ownerGuid?: string){
+  requestDocumentCardList(shelfGuid: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
-    if(ownerGuid){
-      quryParams = quryParams.set("ownerGuid", ownerGuid)
-    }
     return this.httpClient.get<DocumentCardModel[]>(
       "/api/Library/DocumentCardList", { params: quryParams}
     ).pipe(
@@ -375,21 +369,22 @@ export class LibraryService {
     );
   }
 
-  getLibraryImageAddress(libraryModel:{libraryGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
-    if(libraryModel?.hasImage && libraryModel.libraryGuid){
-      return `/api/Library/LibraryImage?libraryGuid=${libraryModel.libraryGuid}&v=${libraryModel.integrityVersion}`;
+  getLibraryImageAddress(libraryModel:{guid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    //console.log(JSON.stringify(libraryModel));
+    if(libraryModel?.hasImage && libraryModel.guid){
+      return `/api/Library/LibraryImage?libraryGuid=${libraryModel.guid}&v=${libraryModel.integrityVersion}`;
     }
     return null;
   }
-  getShelfImageAddress(shelfModel:{shelfGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
-    if(shelfModel?.hasImage && shelfModel.shelfGuid){
-      return `/api/Library/ShelfImage?shelfGuid=${shelfModel.shelfGuid}&v=${shelfModel.integrityVersion}`;
+  getShelfImageAddress(shelfModel:{guid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(shelfModel?.hasImage && shelfModel.guid){
+      return `/api/Library/ShelfImage?shelfGuid=${shelfModel.guid}&v=${shelfModel.integrityVersion}`;
     }
     return null;
   }
-  getDocumentImageAddress(documentModel:{documentGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
-    if(documentModel?.hasImage && documentModel.documentGuid){
-      return `/api/Library/DocumentImage?documentGuid=${documentModel.documentGuid}&v=${documentModel.integrityVersion}`;
+  getDocumentImageAddress(documentModel:{guid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(documentModel?.hasImage && documentModel.guid){
+      return `/api/Library/DocumentImage?documentGuid=${documentModel.guid}&v=${documentModel.integrityVersion}`;
     }
     return null;
   }

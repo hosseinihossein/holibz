@@ -61,6 +61,7 @@ public class LibraryController : ControllerBase
             OwnerGuid = lib.Owner.Guid,
             IntegrityVersion = lib.IntegrityVersion,
             HasImage = lib.HasImage,
+            IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
         .ToArrayAsync();
 
@@ -84,6 +85,7 @@ public class LibraryController : ControllerBase
             CreatedAt = lib.CreatedAt,
             IntegrityVersion = lib.IntegrityVersion,
             HasImage = lib.HasImage,
+            IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -210,6 +212,7 @@ public class LibraryController : ControllerBase
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
             HasImage = shelf.HasImage,
             IntegrityVersion = shelf.IntegrityVersion,
+            IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
         })
         .AsSplitQuery()
         .ToArrayAsync();
@@ -276,6 +279,7 @@ public class LibraryController : ControllerBase
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
             HasImage = shelf.HasImage,
             IntegrityVersion = shelf.IntegrityVersion,
+            IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -718,8 +722,8 @@ public class LibraryController : ControllerBase
         int totalNumberOfUserDocuments = await libraryDb.Owners
         .Include(owner => owner.Documents)
         .Where(owner => owner.Guid == ownerGuid)
-        .Select(owner => owner.Documents)
-        .CountAsync();
+        .Select(owner => owner.Documents.Count)
+        .FirstOrDefaultAsync();
 
         return Ok(new { totalNumberOfUserDocuments });
     }
@@ -730,7 +734,8 @@ public class LibraryController : ControllerBase
         int totalNumberOfUserShelves = await libraryDb.Owners
         .Include(owner => owner.Shelves)
         .Where(owner => owner.Guid == ownerGuid)
-        .CountAsync();
+        .Select(owner => owner.Shelves.Count)
+        .FirstOrDefaultAsync();
 
         return Ok(new { totalNumberOfUserShelves });
     }

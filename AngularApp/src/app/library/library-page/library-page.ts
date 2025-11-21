@@ -26,7 +26,6 @@ import { MatMenuModule } from '@angular/material/menu';
 })
 export class LibraryPage {
   libraryGuid = signal<string|null>(null);
-  ownerGuid = signal<string|null>(null);
 
   activatedRoute = inject(ActivatedRoute);
   librarySerice = inject(LibraryService);
@@ -49,9 +48,6 @@ export class LibraryPage {
       if(params.has("libraryGuid")){
         this.libraryGuid.set(params.get("libraryGuid"));
       }
-      if(params.has("ownerGuid")){
-        this.ownerGuid.set(params.get("owneGuid"));
-      }
     });
 
     effect(() => {
@@ -67,8 +63,8 @@ export class LibraryPage {
     });
     
     effect(() => {
-      if(this.ownerGuid()){
-        this.librarySerice.requestOwnerModel(this.ownerGuid()!).subscribe({
+      if(this.libraryModel()){
+        this.librarySerice.requestOwnerModel(this.libraryModel()!.ownerGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);

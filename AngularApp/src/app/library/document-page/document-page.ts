@@ -66,7 +66,6 @@ export class DocumentPage implements AfterViewInit {
     })
   );
 
-  //introductionImageVersion = signal(0);
   introductionImage = computed(()=>this.libraryService.getDocumentImageAddress(this.documentPageService.documentPageModel()));
 
   ownerModel = signal<OwnerModel|null>(null);
@@ -510,19 +509,15 @@ export class DocumentPage implements AfterViewInit {
             this.documentPageService.documentPageModel.update(dpm=>{
               dpm!.title = result.title;
               dpm!.description = result.description;
-              dpm!.hasImage = result.imageChanged ?? dpm!.hasImage;
-              if(result.imageChanged){
-                dpm!.integrityVersion += 1;
-              }
+              dpm!.hasImage = result.hasImage;
+              dpm!.integrityVersion = result.integrityVersion;
               return dpm;
             });
             this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
               dpm!.title = result.title;
               dpm!.description = result.description;
-              dpm!.hasImage = result.imageChanged ?? dpm!.hasImage;
-              if(result.imageChanged){
-                dpm!.integrityVersion += 1;
-              }
+              dpm!.hasImage = result.hasImage;
+              dpm!.integrityVersion = result.integrityVersion;
               return dpm;
             });
           }

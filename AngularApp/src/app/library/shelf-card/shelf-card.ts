@@ -60,6 +60,6 @@ export class ShelfCardModel{
   totalNumberOfShelfDocuments:number = 0;
   createdAt:Date = null!;
   hasImage:boolean = false;
-  integrityVVersion:number = 0;
+  integrityVersion:number = 0;
   isDefault:boolean = false;
 }

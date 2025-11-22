@@ -40,7 +40,6 @@ export class LibraryPage {
   
   displaySubmitSpinner = signal(false);
 
-  introductionImageVersion = signal(0);
   introductionImage = computed(()=>this.librarySerice.getLibraryImageAddress(this.libraryModel()));
 
   constructor(){
@@ -95,13 +94,10 @@ export class LibraryPage {
             this.libraryModel.update(lm=>{
               lm!.title = result.title;
               lm!.description = result.description;
-              lm!.hasImage = result.imageChanged ?? lm!.hasImage;
+              lm!.hasImage = result.hasImage;
+              lm!.integrityVersion = result.integrityVersion;
               return lm;
             });
-            
-            if(result.imageChanged){
-              this.introductionImageVersion.update(v=>{return ++v;});
-            }
           }
         }
       });

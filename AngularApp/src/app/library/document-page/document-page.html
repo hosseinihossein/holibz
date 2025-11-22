@@ -65,7 +65,7 @@
                 }
                 <span id="username">{{ownerModel()?.username}}</span>
             </a>
-            <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version of the document"
+            <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version"
                 style="padding-bottom: 6px;">
                 {{documentPageService.documentPageModel()?.version}}
                 <span style="position: relative;top: 6px;">
@@ -74,8 +74,8 @@
             </button>
             @if(isMyDocument()){
             @if(documentPageService.editMode()){
-            <button matButton="elevated" [matMenuTriggerFor]="elementMenu"
-                matTooltip="Add a new section to the document" class="noPaddingBtn">
+            <button matButton="elevated" [matMenuTriggerFor]="elementMenu" matTooltip="New element"
+                class="noPaddingBtn">
                 <mat-icon>dashboard_customize</mat-icon>
                 <mat-icon>arrow_drop_down</mat-icon>
             </button>
@@ -110,9 +110,21 @@
             </button>
             }
             @for(relatedVersion of documentPageService.documentPageModel()?.relatedVersions; track relatedVersion){
+            @if(relatedVersion.documentGuid === documentPageService.documentPageModel()?.guid){
+            <button mat-menu-item>
+                {{documentPageService.documentPageModel()?.version}}
+            </button>
+            }
+            @else {
             <a mat-menu-item [routerLink]="['/document', relatedVersion.documentGuid]">
                 {{relatedVersion.versionName}}
             </a>
+            }
+            }
+            @if(documentPageService.documentPageModel()?.relatedVersions?.length === 0){
+            <button mat-menu-item>
+                {{documentPageService.documentPageModel()?.version}}
+            </button>
             }
         </mat-menu>
         <mat-menu #elementMenu>

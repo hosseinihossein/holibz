@@ -1,5 +1,5 @@
 import { Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
+import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -15,25 +15,26 @@ import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-e
 import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LibrariesList } from "../../library/libraries-list/libraries-list";
 
 @Component({
   selector: 'app-profile',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent,
-    MatIcon, NgOptimizedImage,
-    MatCheckboxModule, MatButtonModule, LibrariesList],
+    MatIcon, NgOptimizedImage, MatCheckboxModule, MatButtonModule, LibrariesList, RouterLink,
+    MatIconButton],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })
 export class Profile {
   userGuid = signal<string|null>(null);
-  isMyProfile = computed(() => !this.userGuid() || this.userGuid() === this.identityService.userModel()?.guid);
+  isMyProfile = computed(() => this.userGuid() === this.identityService.userModel()?.guid);
 
   singleton = inject(SingletonModes);
   //dialog = inject(MatDialog);
   identityService = inject(IdentityService);
   activatedRoute = inject(ActivatedRoute);
+  router = inject(Router);
 
   userModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.userModel()));
@@ -48,6 +49,12 @@ export class Profile {
     let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
     if(userGuidRouteParam){
       this.userGuid.set(userGuidRouteParam);
+    }
+    else if(this.identityService.isAuthenticated() && this.identityService.userModel()){
+      this.userGuid.set(this.identityService.userModel()!.guid);
+    }
+    else{
+      this.router.navigate(['/login'],{queryParams:{returnUrl:'/profile'}});
     }
 
     effect(() => {

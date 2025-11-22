@@ -91,7 +91,7 @@
     <mat-dialog-actions align="end" style="float: inline-end;">
         <button matButton mat-dialog-close="">Cancel</button>
         <button type="submit" form="introduction-form" matButton="elevated"
-            [disabled]="!introductionForm.valid || (title?.value === data.title && description?.value === data.description)">
+            [disabled]="!introductionForm.valid || (title?.value === data.title && description?.value === data.description && data.imageSrc == previewImgSrc())">
             Submit
         </button>
     </mat-dialog-actions>

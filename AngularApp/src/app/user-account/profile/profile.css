@@ -3,6 +3,7 @@ mat-card{
     max-width: 800px;
     min-width: 350px;
     margin: 50px auto;
+    position: relative;
 }
 
 img#user-profile-img{
@@ -23,4 +24,10 @@ button.edit-btn{
 
 mat-card-content{
     position: relative;
+}
+
+#userAccountManager-link{
+    position: absolute;
+    top: 0;
+    right: 0;
 }

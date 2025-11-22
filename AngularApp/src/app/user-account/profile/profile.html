@@ -34,5 +34,11 @@
                 }
             </p>
         </mat-card-content>
+        @if(isMyProfile()){
+        <a matIconButton aria-label="user account manager link" [routerLink]="['/dashboard','UserAccountManager']"
+            id="userAccountManager-link">
+            <mat-icon>edit</mat-icon>
+        </a>
+        }
     </mat-card>
 </app-libraries-list>

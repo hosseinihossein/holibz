@@ -47,7 +47,6 @@ export class ShelfPage {
 
   displaySubmitSpinner = signal(false);
 
-  introductionImageVersion = signal(0);
   introductionImage = computed(()=>this.librarySerice.getShelfImageAddress(this.shelfModel()));
 
   constructor(){
@@ -103,13 +102,10 @@ export class ShelfPage {
             this.shelfModel.update(shm=>{
               shm!.title = result.title;
               shm!.description = result.description;
-              shm!.hasImage = result.imageChanged ?? shm!.hasImage;
+              shm!.hasImage = result.hasImage;
+              shm!.integrityVersion = result.integrityVersion;
               return shm;
             });
-            
-            if(result.imageChanged){
-              this.introductionImageVersion.update(v=>{return ++v;});
-            }
           }
         }
       });

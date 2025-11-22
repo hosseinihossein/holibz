@@ -36,6 +36,7 @@ mat-form-field{
     object-fit: cover;
     border-radius: 50%;
     overflow: hidden;
+    border: 1px solid var(--mat-sys-outline-variant);
 }
 
 #delete-img-btn{

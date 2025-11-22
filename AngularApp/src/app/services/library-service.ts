@@ -7,7 +7,7 @@ import { DocumentCardModel } from '../library/document-card/document-card';
 import { DocumentPageModel } from '../library/document-page/document-page';
 import { DocumentElementModel } from '../library/document-page/document-elements/document-element/document-element';
 import { Observable, of, tap, throwError } from 'rxjs';
-import { ParentEditorShelfModel } from '../library/new-document-form/new-document-form';
+import { ParentShelfModel } from '../library/new-document-form/new-document-form';
 import { SingletonModes } from './singleton-modes';
 
 @Injectable({
@@ -32,6 +32,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add library card list to cache: "+JSON.stringify(res.map(lib=>lib.title)));
           this.libraryCard_Storage.update(ruCache=>{
             ruCache.add(...res);
             return ruCache;
@@ -47,6 +48,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add shelf card list to cache: "+JSON.stringify(res.map(shelf=>shelf.title)));
           this.shelfCard_Storage.update(ruCache=>{
             ruCache.add(...res);
             return ruCache;
@@ -57,7 +59,7 @@ export class LibraryService {
   }
   requestUserShelfList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
-    return this.httpClient.get<ParentEditorShelfModel[]>(
+    return this.httpClient.get<ParentShelfModel[]>(
       "/api/Library/UserShelfList", { params: quryParams}
     );
   }
@@ -68,6 +70,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add document card list to cache: "+JSON.stringify(res.map(doc=>doc.title)));
           this.documentCard_Storage.update(ruCache=>{
             ruCache.add(...res);
             return ruCache;
@@ -93,6 +96,7 @@ export class LibraryService {
   requestLibraryModel(libraryGuid:string){
     let cachedLibraryCardModel = this.libraryCard_Storage().getWithGuid(libraryGuid);
     if(cachedLibraryCardModel){
+      console.log("got one library card from cache: "+cachedLibraryCardModel.title);
       return of(cachedLibraryCardModel);
     }
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
@@ -101,6 +105,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add one library card to cache: "+JSON.stringify(res.title));
           this.libraryCard_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -112,6 +117,7 @@ export class LibraryService {
   requestShelfModel(shelfGuid:string){
     let cachedShelfCardModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
     if(cachedShelfCardModel){
+      console.log("got one shelf card from cache: "+cachedShelfCardModel.title);
       return of(cachedShelfCardModel);
     }
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
@@ -120,6 +126,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add one shelf card to cache: "+JSON.stringify(res.title));
           this.shelfCard_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -131,6 +138,7 @@ export class LibraryService {
   requestDocumentCardModel(docGuid: string){
     let cachedDocumentCardModel = this.documentCard_Storage().getWithGuid(docGuid);
     if(cachedDocumentCardModel){
+      console.log("got one document card from cache: "+cachedDocumentCardModel.title);
       return of(cachedDocumentCardModel);
     }
     let httpParams = new HttpParams().set("documentGuid", docGuid);
@@ -139,6 +147,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add one document card to cache: "+JSON.stringify(res.title));
           this.documentCard_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -150,6 +159,7 @@ export class LibraryService {
   requestDocumentPageModel(documentGuid:string){
     let cachedDocumentPageModel = this.documentPage_Storage().getWithGuid(documentGuid);
     if(cachedDocumentPageModel){
+      console.log("got one document page from cache: "+cachedDocumentPageModel.title);
       return of(cachedDocumentPageModel);
     }
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
@@ -158,6 +168,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add one documennt page to cache: "+JSON.stringify(res.title));
           this.documentPage_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -351,15 +362,17 @@ export class LibraryService {
   }
 
   requestOwnerModel(ownerGuid:string){
-    let ownerModel = this.owner_Storage().getWithGuid(ownerGuid);
-    if(ownerModel){
-      return of(ownerModel);
+    let cachedOwnerModel = this.owner_Storage().getWithGuid(ownerGuid);
+    if(cachedOwnerModel){
+      console.log("got one owner from cache: "+cachedOwnerModel.username);
+      return of(cachedOwnerModel);
     }
     return this.httpClient.get<OwnerModel>(
       `/api/Library/GetOwnerModel?ownerGuid=${ownerGuid}`
     ).pipe(
       tap(res=>{
         if(res){
+          console.log("add one owner to cache: "+JSON.stringify(res.username));
           this.owner_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -436,6 +449,7 @@ export class RuCache<T extends {guid:string}>{
   private cache:T[] = [];
 
   getWithGuid(guid:string):T|null{
+    //console.log("RuCache.getWithGuid");
     let index = this.cache.findIndex(value=>value.guid === guid);
     if(index >= 0){
       let element = this.cache[index];
@@ -456,11 +470,20 @@ export class RuCache<T extends {guid:string}>{
       }
     });
 
+    if(newValues.length > this.capacity){
+      newValues = newValues.slice(-this.capacity);
+    }
+
     if((this.cache.length + newValues.length) > this.capacity){
       let numberOfExceededElements = this.cache.length + newValues.length - this.capacity;
       let exceededElementsStartIndex = this.cache.length - numberOfExceededElements;
+      if(exceededElementsStartIndex < 0){
+        exceededElementsStartIndex = 0;
+      }
       this.cache.splice(exceededElementsStartIndex);
     }
+
+    //console.log("RuCache.add "+newValues.length+" values");
     
     this.cache.unshift(...newValues);
   }

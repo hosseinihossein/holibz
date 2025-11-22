@@ -4,10 +4,10 @@ mat-card {
     transition: all 150ms;
     position: relative;
 }
-mat-card.alone{
+/*mat-card.alone{
     width: 300px;
     margin: 12px 0;
-}
+}*/
 mat-card.raised{
     border: 1px solid var(--mat-sys-outline-variant);
 }

@@ -19,7 +19,7 @@ import { Router, RouterLink } from '@angular/router';
 export class DocumentCard {
   documentCardModel = input.required<DocumentCardModel>();
   mini = input(false);
-  alone = input(false);
+  //alone = input(false);
   
   singletonModes = inject(SingletonModes);
   identityService = inject(IdentityService);
@@ -60,6 +60,16 @@ export class DocumentCard {
 }
 
 export class DocumentCardModel{
+  constructor(documentCardModel:DocumentCardModel){
+    this.guid = documentCardModel.guid;
+    this.title = documentCardModel.title;
+    this.description = documentCardModel.description;
+    this.headers = documentCardModel.headers.map(h=>h);
+    this.hasImage = documentCardModel.hasImage;
+    this.integrityVersion = documentCardModel.integrityVersion;
+    this.ownerGuid = documentCardModel.ownerGuid;
+  }
+
   guid:string = null!;
   title:string = null!;
   description:string = null!;

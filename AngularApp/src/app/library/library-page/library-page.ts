@@ -87,7 +87,7 @@ export class LibraryPage {
           if(result === "ImageDelete"){
             this.libraryModel.update(lm=>{
               lm!.hasImage = false;
-              return lm;
+              return new LibraryCardModel(lm!);
             });
           }
           else{
@@ -96,7 +96,7 @@ export class LibraryPage {
               lm!.description = result.description;
               lm!.hasImage = result.hasImage;
               lm!.integrityVersion = result.integrityVersion;
-              return lm;
+              return new LibraryCardModel(lm!);
             });
           }
         }

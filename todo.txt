@@ -1,6 +1,8 @@
 - after adding new element to a document, navigate to its fragment
 - add reference element to other elements
 - create new shelves and documents and continue testing the app features
+- test edition and deletion of default library and shelf
+- test edit document's parent shelves
 - 
 
 

@@ -95,7 +95,7 @@ export class ShelfPage {
           if(result === "ImageDelete"){
             this.shelfModel.update(shm=>{
               shm!.hasImage = false;
-              return shm;
+              return new ShelfCardModel(shm!);
             });
           }
           else{
@@ -104,7 +104,7 @@ export class ShelfPage {
               shm!.description = result.description;
               shm!.hasImage = result.hasImage;
               shm!.integrityVersion = result.integrityVersion;
-              return shm;
+              return new ShelfCardModel(shm!);
             });
           }
         }
@@ -123,7 +123,7 @@ export class ShelfPage {
         if(result){
           this.shelfModel.update(shelf=>{
             shelf!.libraries = result;
-            return shelf;
+            return new ShelfCardModel(shelf!);
           });
         }
       });

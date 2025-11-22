@@ -17,7 +17,7 @@ import { SingletonModes } from '../../services/singleton-modes';
 })
 export class ShelvesList {
   libraryGuid = input.required<string>();
-  ownerGuid = input.required<string>();
+  //ownerGuid = input.required<string>();
 
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
@@ -25,7 +25,7 @@ export class ShelvesList {
   singleton = inject(SingletonModes);
 
   shelfModels = signal<ShelfCardModel[]>([]);
-  ownerModel = signal<OwnerModel|null>(null);
+  //ownerModel = signal<OwnerModel|null>(null);
   //ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
   /*isMyShelfList = computed(() => this.identityService.isAuthenticated() && 
   this.identityService.userModel()?.userGuid === this.ownerModel()?.userGuid);*/
@@ -44,7 +44,7 @@ export class ShelvesList {
       }
     });
     
-    effect(() => {
+    /*effect(() => {
       if(this.ownerGuid()){
         this.libraryService.requestOwnerModel(this.ownerGuid()).subscribe({
           next: res => {
@@ -52,6 +52,6 @@ export class ShelvesList {
           },
         });
       }
-    });
+    });*/
   }
 }

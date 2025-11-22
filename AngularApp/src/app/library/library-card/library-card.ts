@@ -46,6 +46,18 @@ export class LibraryCard {
 }
 
 export class LibraryCardModel {
+  constructor(libraryCardModel:LibraryCardModel){
+    this.guid = libraryCardModel.guid;
+    this.title = libraryCardModel.title;
+    this.description = libraryCardModel.description;
+    this.shelvesTitles = libraryCardModel.shelvesTitles.map(s=>s);
+    this.hasImage = libraryCardModel.hasImage;
+    this.integrityVersion = libraryCardModel.integrityVersion;
+    this.ownerGuid = libraryCardModel.ownerGuid;
+    this.createdAt = libraryCardModel.createdAt;
+    this.isDefault = libraryCardModel.isDefault;
+  }
+
   guid: string = null!;
   title: string = null!;
   description?: string; 

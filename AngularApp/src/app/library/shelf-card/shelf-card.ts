@@ -51,6 +51,20 @@ export class ShelfCard {
 }
 
 export class ShelfCardModel{
+  constructor(shelfCardModel:ShelfCardModel){
+    this.guid = shelfCardModel.guid;
+    this.ownerGuid = shelfCardModel.ownerGuid;
+    this.title = shelfCardModel.title;
+    this.description = shelfCardModel.description;
+    this.libraries = shelfCardModel.libraries.map(a=>Object.create(a));
+    this.documentCardModels = shelfCardModel.documentCardModels.map(a=>new DocumentCardModel(a));
+    this.totalNumberOfShelfDocuments = shelfCardModel.totalNumberOfShelfDocuments;
+    this.createdAt = shelfCardModel.createdAt;
+    this.hasImage = shelfCardModel.hasImage;
+    this.integrityVersion = shelfCardModel.integrityVersion;
+    this.isDefault = shelfCardModel.isDefault;
+  }
+
   guid:string = null!;
   ownerGuid:string = null!;
   title:string = null!;

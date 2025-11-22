@@ -150,6 +150,7 @@ public class LibraryController : ControllerBase
 
         //remove the library
         libraryDb.Libraries.Remove(libraryDbModel);
+        await libraryDb.SaveChangesAsync();
 
         //set the delault library as the parent of its non-parent shelves
         foreach (var shelf in libraryDbModel.Shelves)
@@ -159,7 +160,6 @@ public class LibraryController : ControllerBase
                 shelf.ParentLibraries = [defaultLibrary];
             }
         }
-
         await libraryDb.SaveChangesAsync();
 
         DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
@@ -226,18 +226,26 @@ public class LibraryController : ControllerBase
         var userShelfModels = await libraryDb.Owners
         .Include(owner => owner.Shelves)
         .ThenInclude(shelf => shelf.ParentLibraries)
+        .Include(owner => owner.Shelves)
+        .ThenInclude(shelf => shelf.Documents)
         .Where(owner => owner.Guid == ownerGuid)
         .SelectMany(owner => owner.Shelves)
         .Select(shelf => new
         {
             shelf.Guid,
+            shelf.Title,
             Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
             {
                 Guid = shelfLib.Guid,
                 Title = shelfLib.Title,
             }).ToArray(),
-            shelf.Title,
+            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
+            {
+                Guid = doc.Guid,
+                Title = doc.Title,
+            }).ToArray(),
         })
+        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(userShelfModels);
@@ -344,6 +352,7 @@ public class LibraryController : ControllerBase
 
         //remove the shelf
         libraryDb.Shelves.Remove(shelfDbModel);
+        await libraryDb.SaveChangesAsync();
 
         //set the default shelf as the parent of its non-parent documents
         foreach (var doc in shelfDbModel.Documents)
@@ -353,7 +362,6 @@ public class LibraryController : ControllerBase
                 doc.ParentShelves = [defaultShelf];
             }
         }
-
         await libraryDb.SaveChangesAsync();
 
         DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
@@ -908,6 +916,7 @@ public class LibraryController : ControllerBase
                     await formModel.Image.CopyToAsync(fs);
                 }
 
+                documentDbModel.HasImage = true;
                 documentDbModel.IntegrityVersion += 1;
             }
 
@@ -978,6 +987,7 @@ public class LibraryController : ControllerBase
                     await formModel.Image.CopyToAsync(fs);
                 }
 
+                libraryDbModel.HasImage = true;
                 libraryDbModel.IntegrityVersion += 1;
             }
 
@@ -1046,6 +1056,7 @@ public class LibraryController : ControllerBase
                     await formModel.Image.CopyToAsync(fs);
                 }
 
+                shelfDbModel.HasImage = true;
                 shelfDbModel.IntegrityVersion += 1;
             }
 
@@ -1227,6 +1238,8 @@ public class LibraryController : ControllerBase
             Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
             .Include(doc => doc.Owner)
             .ThenInclude(owner => owner.Shelves)
+            .Include(doc => doc.ParentShelves)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(doc =>
                 doc.Guid == formModel.DocumentGuid
             );
@@ -1271,7 +1284,7 @@ public class LibraryController : ControllerBase
             Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
             .Include(shelf => shelf.Owner)
             .ThenInclude(owner => owner.Libraries)
-            .Include(shelf => shelf.Owner)
+            .Include(shelf => shelf.ParentLibraries)
             .AsSplitQuery()
             .FirstOrDefaultAsync(doc => doc.Guid == formModel.ShelfGuid);
             if (shelfDbModel is null)

@@ -57,7 +57,7 @@ export class Profile {
       this.router.navigate(['/login'],{queryParams:{returnUrl:'/profile'}});
     }
 
-    effect(() => {
+    /*effect(() => {
       if(this.isMyProfile()){
         this.identityService.getCsrf().subscribe({
           next: () => {
@@ -69,7 +69,7 @@ export class Profile {
           },
         });
       }
-    });
+    });*/
     
     effect(()=>{
       if(!this.isMyProfile()){

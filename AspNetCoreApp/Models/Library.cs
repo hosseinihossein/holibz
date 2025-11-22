@@ -275,6 +275,9 @@ public class Library_Process //singleton service
     public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, string ownerGuid)
     {
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
+        /*.Include(owner=>owner.Libraries)
+        .Include(owner=>owner.Shelves)
+        .Include(owner=>owner.Documents)*/
         .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
         if (ownerDbModel is null)
         {

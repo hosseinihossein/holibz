@@ -31,10 +31,10 @@ export class LibrariesList {
   libraryModels = signal<LibraryCardModel[]>([]);
   totalNumberOfUserDocuments = signal(0);
   totalNumberOfUserShelves = signal(0);
-  ownerModel = signal<OwnerModel|null>(null);
+  //ownerModel = signal<OwnerModel|null>(null);
   //ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
   isMyLibraries = computed(()=>this.identityService.isAuthenticated() && 
-  this.ownerModel()?.guid === this.identityService.userModel()?.guid);
+  this.ownerGuid() === this.identityService.userModel()?.guid);
 
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
@@ -55,11 +55,11 @@ export class LibrariesList {
     effect(()=>{
       if(this.ownerGuid()){
 
-        this.libraryService.requestOwnerModel(this.ownerGuid()!).subscribe({
+        /*this.libraryService.requestOwnerModel(this.ownerGuid()!).subscribe({
           next: res => {
             this.ownerModel.set(res);
           },
-        });
+        });*/
 
         this.libraryService.requestLibraryList(this.ownerGuid()!).subscribe({
           next: res => {

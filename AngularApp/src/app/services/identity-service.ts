@@ -181,7 +181,7 @@ export class UserProfileModel
     this.integrityVersion = userModel?.integrityVersion;
     this.email = userModel?.email;
     this.displayEmailPublicly = userModel?.displayEmailPublicly;
-    this.roles = userModel?.roles;
+    this.roles = userModel?.roles?.map(r=>r);
   }
   guid: string = null!;
   username?: string;

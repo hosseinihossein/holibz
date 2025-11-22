@@ -37,6 +37,7 @@ import { EditInput } from '../../dialogs/edit-input/edit-input';
 import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
+import { ParentShelfModel } from '../new-document-form/new-document-form';
 
 @Component({
   selector: 'app-document-page',
@@ -343,7 +344,7 @@ export class DocumentPage implements AfterViewInit {
                 let elIndex = dpm!.elements.findIndex(el=>el.guid === editedElement.guid);
                 dpm!.elements.splice(elIndex,1,editedElement);
               }
-              return dpm;
+              return new DocumentPageModel(dpm!);
             });
 
             this.documentPageService.unchangedDocumentPageModel.set(
@@ -421,70 +422,6 @@ export class DocumentPage implements AfterViewInit {
     }
   }
 
-  /*editTitle(){
-    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
-      this.dialog.open(EditInput,{
-        data:{
-          label: "Title",
-          value: this.documentPageService.documentPageModel()?.title,
-        }
-      }).afterClosed().subscribe(result=>{
-        if(result){
-          this.libraryService.requestEditDocumentTitle(
-            this.documentPageService.documentPageModel()!.guid,
-            result
-          ).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.documentPageService.documentPageModel.update(dpm=>{
-                  dpm!.title = result;
-                  return dpm;
-                });
-                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
-                  dpm!.title = result;
-                  return dpm;
-                });
-              }
-            },
-          });
-        }
-      });
-    }
-  }
-  editImage(){
-
-  }
-  editDescription(){
-    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
-      this.dialog.open(EditTextarea,{
-        data:{
-          label: "Brief Introduction",
-          value: this.documentPageService.documentPageModel()?.description,
-        }
-      }).afterClosed().subscribe(result=>{
-        if(result){
-          this.libraryService.requestEditDocumentDescription(
-            this.documentPageService.documentPageModel()!.guid,
-            result
-          ).subscribe({
-            next: res => {
-              if(res && res.success){
-                this.documentPageService.documentPageModel.update(dpm=>{
-                  dpm!.description = result;
-                  return dpm;
-                });
-                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
-                  dpm!.description = result;
-                  return dpm;
-                });
-              }
-            },
-          });
-        }
-      });
-    }
-  }*/
-
   editIntroduction(){
     if(this.isMyDocument()){
       this.dialog.open(EditIntroduction,{data:{
@@ -498,11 +435,11 @@ export class DocumentPage implements AfterViewInit {
           if(result === "ImageDelete"){
             this.documentPageService.documentPageModel.update(dpm=>{
               dpm!.hasImage = false;
-              return dpm;
+              return new DocumentPageModel(dpm!);
             });
             this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
               dpm!.hasImage = false;
-              return dpm;
+              return new DocumentPageModel(dpm!);
             });
           }
           else{
@@ -511,14 +448,14 @@ export class DocumentPage implements AfterViewInit {
               dpm!.description = result.description;
               dpm!.hasImage = result.hasImage;
               dpm!.integrityVersion = result.integrityVersion;
-              return dpm;
+              return new DocumentPageModel(dpm!);
             });
             this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
               dpm!.title = result.title;
               dpm!.description = result.description;
               dpm!.hasImage = result.hasImage;
               dpm!.integrityVersion = result.integrityVersion;
-              return dpm;
+              return new DocumentPageModel(dpm!);
             });
           }
         }
@@ -536,19 +473,14 @@ export class DocumentPage implements AfterViewInit {
       }}).afterClosed().subscribe(result=>{
         if(result){
           //console.log(JSON.stringify(result));
-          let resultShelves = (result as ShelfCardModel[]).map(shelf=>({
-            guid:shelf.guid, 
-            title:shelf.title, 
-            libraries: shelf.libraries.map(lib=>({guid:lib.guid, title:lib.title})), 
-            documents: shelf.documentCardModels.map(doc=>({guid:doc.guid, title:doc.title})),
-          }));
+          let resultShelves = (result as ParentShelfModel[]).map(shelf=>new ParentShelfModel(shelf));
           this.documentPageService.documentPageModel.update(dpm=>{
             dpm!.shelves = resultShelves;
-            return dpm;
+            return new DocumentPageModel(dpm!);
           });
           this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
             dpm!.shelves = resultShelves;
-            return dpm;
+            return new DocumentPageModel(dpm!);
           });
         }
       });
@@ -566,10 +498,10 @@ export class DocumentPageModel {
     this.integrityVersion = documentPageModel.integrityVersion;
     this.description = documentPageModel.description;
     this.version = documentPageModel.version;
-    this.relatedVersions = [...(documentPageModel.relatedVersions.map(a=>Object.create(a)))];
-    this.shelves = documentPageModel.shelves;//[...(documentPageModel.shelves.map(a=>Object.create(a)))];
-    this.elements = [...(documentPageModel.elements.map(a=>new DocumentElementModel(a)))];
-    this.tags = [...documentPageModel.tags];
+    this.relatedVersions = documentPageModel.relatedVersions.map(a=>Object.create(a));
+    this.shelves = documentPageModel.shelves.map(shelf=>new ParentShelfModel(shelf));
+    this.elements = documentPageModel.elements.map(a=>new DocumentElementModel(a));
+    this.tags = documentPageModel.tags.map(t=>t);
     this.createdAt = documentPageModel.createdAt;
   }
 
@@ -581,8 +513,7 @@ export class DocumentPageModel {
   description:string = null!;
   version:string = null!;
   relatedVersions:{versionName:string, documentGuid:string}[] = [];
-  shelves:{guid:string, title:string, libraries:{guid:string, title:string}[], 
-    documents:{guid:string, title:string}[]}[] = [];
+  shelves:ParentShelfModel[] = [];
   elements:DocumentElementModel[] = [];
   tags:string[] = [];
   createdAt:Date = null!;

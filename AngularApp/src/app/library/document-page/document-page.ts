@@ -352,6 +352,8 @@ export class DocumentPage implements AfterViewInit {
             );
             this.documentPageService.editedElementFormModels().clear();
 
+            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+
             this.displaySubmitSpinner.set(false);
           }
         },
@@ -441,6 +443,7 @@ export class DocumentPage implements AfterViewInit {
               dpm!.hasImage = false;
               return new DocumentPageModel(dpm!);
             });
+            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
           }
           else{
             this.documentPageService.documentPageModel.update(dpm=>{
@@ -457,6 +460,7 @@ export class DocumentPage implements AfterViewInit {
               dpm!.integrityVersion = result.integrityVersion;
               return new DocumentPageModel(dpm!);
             });
+            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
           }
         }
       });
@@ -482,6 +486,7 @@ export class DocumentPage implements AfterViewInit {
             dpm!.shelves = resultShelves;
             return new DocumentPageModel(dpm!);
           });
+          this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
         }
       });
     }

@@ -349,7 +349,7 @@ export class LibraryService {
   }
 
   editDocumentParentShelves(documentGuid:string, shelfGuids:string[]){
-    return this.httpClient.post<{success:boolean}>(
+    return this.httpClient.post<{success:boolean, parentShelves:ParentShelfModel[]}>(
       "/api/Library/EditDocumentParentShelves", 
       {documentGuid:documentGuid, shelfGuids:shelfGuids}
     );

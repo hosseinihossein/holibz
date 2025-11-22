@@ -1238,6 +1238,10 @@ public class LibraryController : ControllerBase
             Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
             .Include(doc => doc.Owner)
             .ThenInclude(owner => owner.Shelves)
+            .ThenInclude(shelf => shelf.ParentLibraries)
+            .Include(doc => doc.Owner)
+            .ThenInclude(owner => owner.Shelves)
+            .ThenInclude(shelf => shelf.Documents)
             .Include(doc => doc.ParentShelves)
             .AsSplitQuery()
             .FirstOrDefaultAsync(doc =>
@@ -1264,10 +1268,25 @@ public class LibraryController : ControllerBase
             .ToList();
 
             documentDbModel.ParentShelves = parentShelfDbModels;
-
             await libraryDb.SaveChangesAsync();
 
-            return Ok(new { success = true });
+            var parentShelves = parentShelfDbModels.Select(shelf => new
+            {
+                shelf.Guid,
+                shelf.Title,
+                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
+                {
+                    Guid = shelfLib.Guid,
+                    Title = shelfLib.Title,
+                }).ToArray(),
+                Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
+                {
+                    Guid = doc.Guid,
+                    Title = doc.Title,
+                }).ToArray(),
+            }).ToArray();
+
+            return Ok(new { success = true, parentShelves });
         }
 
         return BadRequest(ModelState);

@@ -102,13 +102,19 @@ export class ParentEditor {
       this.displaySubmitSpinner.set(true);
 
       const calbacks = {
-        next: (res:{success:boolean}) => {
+        next: (res: {success:boolean, parentShelves?:ParentShelfModel[]}) => {
           if(res && res.success){
             this.displaySubmitSpinner.set(false);
             if(this.data.parentOf === "document"){
-              let filteredShelves = 
-              this.allShelfList().filter(shelf=>this.shelfGuids.value.includes(shelf.guid));
-              this.dialogRef.close(filteredShelves);
+              let parentShelves: ParentShelfModel[];
+              if(res.parentShelves){
+                parentShelves = res.parentShelves;
+              }
+              else{
+                parentShelves = 
+                this.allShelfList().filter(shelf=>this.shelfGuids.value.includes(shelf.guid));
+              }
+              this.dialogRef.close(parentShelves);
             }
             else if(this.data.parentOf === "shelf"){
               let filteredLibs:{guid:string,title:string}[] = 

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal, viewChild, viewChildren } from '@angular/core';
+import { AfterViewChecked, AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal, viewChild, viewChildren } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -19,7 +19,7 @@ import { EditElementFormModel, LibraryService, NewElementFormModel, OwnerModel }
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { DocumentCardModel } from '../document-card/document-card';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
-import { NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage, ViewportScroller } from '@angular/common';
 import { Result } from '../../dialogs/result/result';
 import { EditHeader } from '../../dialogs/edit-header/edit-header';
 import { EditCode } from '../../dialogs/edit-code/edit-code';
@@ -48,7 +48,7 @@ import { ParentShelfModel } from '../new-document-form/new-document-form';
   styleUrl: './document-page.css',
   providers: [DocumentPageService]
 })
-export class DocumentPage implements AfterViewInit {
+export class DocumentPage implements AfterViewInit, AfterViewChecked {
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
@@ -59,6 +59,7 @@ export class DocumentPage implements AfterViewInit {
   renderer = inject(Renderer2);
   router = inject(Router);
   documentPageService = inject(DocumentPageService);
+  viewportScroller = inject(ViewportScroller);
 
   documentGuid = signal<string|null>(null);
   sortedElements = computed(()=>
@@ -95,11 +96,18 @@ export class DocumentPage implements AfterViewInit {
     });
     return uniqueParentLibraries.map(upl=>upl.guid);
   });
+
+  newElementGuid = signal<string>("");
   
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("documentGuid")){
         this.documentGuid.set(params.get("documentGuid"));
+      }
+    });
+    this.activatedRoute.fragment.subscribe(fragment=>{
+      if(fragment){
+        this.newElementGuid.set(fragment);
       }
     });
 
@@ -149,6 +157,14 @@ export class DocumentPage implements AfterViewInit {
       }
     });
     
+  }
+  ngAfterViewChecked(): void {
+    if(this.newElementGuid() && !!this.windowService.nativeWindow.document.getElementById(this.newElementGuid())){
+      setTimeout(()=>{
+        this.goToElement(this.newElementGuid());
+        this.newElementGuid.set("");
+      }, 1000);
+    }
   }
   ngAfterViewInit(): void {
     if(this.introductionHeading()){
@@ -204,6 +220,10 @@ export class DocumentPage implements AfterViewInit {
         //this.documentService.updateDocumentTags(result);
       }
     });
+  }
+
+  goToElement(guid:string){
+    this.viewportScroller.scrollToAnchor(guid, {behavior:'smooth'});
   }
 
   addNewElement(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
@@ -304,6 +324,8 @@ export class DocumentPage implements AfterViewInit {
       next: res => {
         if(res){
           this.documentPageService.documentPageModel()?.elements.push(res);
+          //console.log("element exist: "+!!this.windowService.nativeWindow.document.getElementById(res.guid));
+          this.newElementGuid.set(res.guid);
         }
       },
       error: err => {

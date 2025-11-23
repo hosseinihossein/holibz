@@ -32,7 +32,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add library card list to cache: "+JSON.stringify(res.map(lib=>lib.title)));
+          //console.log("add library card list to cache: "+JSON.stringify(res.map(lib=>lib.title)));
           this.libraryCard_Storage.update(ruCache=>{
             ruCache.add(...res);
             return ruCache;
@@ -48,7 +48,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add shelf card list to cache: "+JSON.stringify(res.map(shelf=>shelf.title)));
+          //console.log("add shelf card list to cache: "+JSON.stringify(res.map(shelf=>shelf.title)));
           this.shelfCard_Storage.update(ruCache=>{
             ruCache.add(...res);
             return ruCache;
@@ -70,7 +70,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add document card list to cache: "+JSON.stringify(res.map(doc=>doc.title)));
+          //console.log("add document card list to cache: "+JSON.stringify(res.map(doc=>doc.title)));
           this.documentCard_Storage.update(ruCache=>{
             ruCache.add(...res);
             return ruCache;
@@ -96,7 +96,7 @@ export class LibraryService {
   requestLibraryModel(libraryGuid:string){
     let cachedLibraryCardModel = this.libraryCard_Storage().getWithGuid(libraryGuid);
     if(cachedLibraryCardModel){
-      console.log("got one library card from cache: "+cachedLibraryCardModel.title);
+      //console.log("got one library card from cache: "+cachedLibraryCardModel.title);
       return of(cachedLibraryCardModel);
     }
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
@@ -105,7 +105,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add one library card to cache: "+JSON.stringify(res.title));
+          //console.log("add one library card to cache: "+JSON.stringify(res.title));
           this.libraryCard_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -117,7 +117,7 @@ export class LibraryService {
   requestShelfModel(shelfGuid:string){
     let cachedShelfCardModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
     if(cachedShelfCardModel){
-      console.log("got one shelf card from cache: "+cachedShelfCardModel.title);
+      //console.log("got one shelf card from cache: "+cachedShelfCardModel.title);
       return of(cachedShelfCardModel);
     }
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
@@ -126,7 +126,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add one shelf card to cache: "+JSON.stringify(res.title));
+          //console.log("add one shelf card to cache: "+JSON.stringify(res.title));
           this.shelfCard_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -138,7 +138,7 @@ export class LibraryService {
   requestDocumentCardModel(docGuid: string){
     let cachedDocumentCardModel = this.documentCard_Storage().getWithGuid(docGuid);
     if(cachedDocumentCardModel){
-      console.log("got one document card from cache: "+cachedDocumentCardModel.title);
+      //console.log("got one document card from cache: "+cachedDocumentCardModel.title);
       return of(cachedDocumentCardModel);
     }
     let httpParams = new HttpParams().set("documentGuid", docGuid);
@@ -147,7 +147,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add one document card to cache: "+JSON.stringify(res.title));
+          //console.log("add one document card to cache: "+JSON.stringify(res.title));
           this.documentCard_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -159,7 +159,7 @@ export class LibraryService {
   requestDocumentPageModel(documentGuid:string){
     let cachedDocumentPageModel = this.documentPage_Storage().getWithGuid(documentGuid);
     if(cachedDocumentPageModel){
-      console.log("got one document page from cache: "+cachedDocumentPageModel.title);
+      //console.log("got one document page from cache: "+cachedDocumentPageModel.title);
       return of(cachedDocumentPageModel);
     }
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
@@ -168,7 +168,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add one documennt page to cache: "+JSON.stringify(res.title));
+          //console.log("add one documennt page to cache: "+JSON.stringify(res.title));
           this.documentPage_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;
@@ -364,7 +364,7 @@ export class LibraryService {
   requestOwnerModel(ownerGuid:string){
     let cachedOwnerModel = this.owner_Storage().getWithGuid(ownerGuid);
     if(cachedOwnerModel){
-      console.log("got one owner from cache: "+cachedOwnerModel.username);
+      //console.log("got one owner from cache: "+cachedOwnerModel.username);
       return of(cachedOwnerModel);
     }
     return this.httpClient.get<OwnerModel>(
@@ -372,7 +372,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          console.log("add one owner to cache: "+JSON.stringify(res.username));
+          //console.log("add one owner to cache: "+JSON.stringify(res.username));
           this.owner_Storage.update(ruCache=>{
             ruCache.add(res);
             return ruCache;

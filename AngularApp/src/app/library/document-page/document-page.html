@@ -41,11 +41,13 @@
     <!--------------------- content overview -------------------->
     <mat-sidenav id="endSideNav" mode="side" opened position="end" fixedInViewport fixedTopGap="80" fixedBottomGap="16">
         <p style="font-weight: 500;color: var(--mat-sys-on-surface);margin: 3px;">Contents:</p>
-        <a [href]="`${activatedRoute.snapshot.url.join('/')}#Introduction`" id="overview-headerIntroduction"
+        <!--a [href]="`${activatedRoute.snapshot.url.join('/')}#Introduction`" id="overview-headerIntroduction"
+            [style.paddingLeft.px]="4">Introduction</a-->
+        <a (click)="goToElement('Introduction')" id="overview-headerIntroduction"
             [style.paddingLeft.px]="4">Introduction</a>
         @for(element of documentPageService.documentPageModel()?.elements; track element.guid){
         @if(element.type === "h1" || element.type === "h2"){
-        <a [href]="`${activatedRoute.snapshot.url.join('/')}#${element.guid}`" id="overview-header{{element.guid}}"
+        <a (click)="goToElement(element.guid)" id="overview-header{{element.guid}}"
             [style.paddingLeft.px]="element.type === 'h2' ? 12 : 4">{{element.value}}</a>
         }
         }

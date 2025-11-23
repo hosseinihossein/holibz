@@ -1,4 +1,3 @@
-- after adding new element to a document, navigate to its fragment
 - add reference element to other elements
 - test edition and deletion of default library and shelf
 - create a new dbcontext for followship service

@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { LargeImg } from '../../../../dialogs/large-img/large-img';
 import { DocumentElementModel } from '../document-element/document-element';
 import { NgOptimizedImage } from "@angular/common";
+import { ScrollLocator } from "../scroll-locator/scroll-locator";
 
 @Component({
   selector: 'app-img-element',

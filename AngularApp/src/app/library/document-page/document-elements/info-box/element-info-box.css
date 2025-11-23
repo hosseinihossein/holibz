@@ -1,0 +1,40 @@
+:host{
+    font-size: 12px;
+    position: absolute;
+    top: -8px;
+    width: fit-content;
+    z-index: 2;
+}
+
+#info-div{
+    display: flex;
+    width: 0;
+    height: 0;
+    transition: all 1s;
+    overflow: hidden;
+    background-color: var(--mat-sys-background);
+    border-radius: 16px;
+    box-shadow: var(--mat-sys-outline-variant);
+    transform: translateX(-40px);
+    text-wrap: nowrap;
+}
+#info-div:hover,
+#info-btn:hover + #info-div{
+    width: calc(100% - 40px);
+    height: fit-content;
+    box-shadow: 0 0 5px var(--mat-sys-outline-variant);
+}
+
+#info-btn{
+    float: inline-start;
+    transform: translateX(-40px);
+    opacity: 0.5;
+}
+#info-btn:hover{
+    opacity: 1;
+}
+
+#updatedAt-span{
+    padding: 0 16px;
+    align-self: center;
+}

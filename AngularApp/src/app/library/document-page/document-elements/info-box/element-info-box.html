@@ -1,0 +1,14 @@
+<button matIconButton id="info-btn">
+    <mat-icon>info</mat-icon>
+</button>
+
+<div id="info-div">
+    <button matIconButton matTooltip="Copy link" matTooltipPosition="above" (click)="copyLink()">
+        <mat-icon>link</mat-icon>
+    </button>
+    <button matIconButton matTooltip="Copy fingerprint" matTooltipPosition="above">
+        <mat-icon>fingerprint</mat-icon>
+    </button>
+    <!--span id="full-spacer"></span-->
+    <span id="updatedAt-span">Updated At: {{elementModel().updatedAt | date}}</span>
+</div>

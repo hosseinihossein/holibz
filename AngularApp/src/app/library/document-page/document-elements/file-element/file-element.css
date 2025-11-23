@@ -1,4 +1,4 @@
-div.MainDiv{
+/*div.MainDiv{
     position: relative;
 }
 
@@ -7,9 +7,11 @@ div.editMode{
     border-radius: 16px;
     padding: 3px;
     margin: 4px;
-}
+}*/
 
 a{
+    display: flex;
+    width: fit-content;
     margin: 10px;
     overflow: hidden;
 }

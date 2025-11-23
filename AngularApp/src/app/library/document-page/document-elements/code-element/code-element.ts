@@ -1,10 +1,11 @@
 import { Clipboard } from '@angular/cdk/clipboard';
-import { Component, inject, input } from '@angular/core';
+import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { SectionModel } from '../../../../models/section-model';
 import { DocumentElementModel } from '../document-element/document-element';
+import { ScrollLocator } from "../scroll-locator/scroll-locator";
 
 @Component({
   selector: 'app-code-element',
@@ -15,11 +16,11 @@ import { DocumentElementModel } from '../document-element/document-element';
 export class CodeElement {
   clipboard = inject(Clipboard);
   elementModel = input.required<DocumentElementModel>();
+  codePreElement = viewChild<ElementRef<HTMLPreElement>>("codePre");
   
-  copyCode(event:Event){
-    if(event.currentTarget instanceof HTMLButtonElement){
-      let btn = event.currentTarget as HTMLButtonElement;
-      let code = btn.nextElementSibling?.innerHTML ??  '';
+  copyCode(){
+    if(this.codePreElement()){
+      let code = this.codePreElement()!.nativeElement.innerHTML ??  '';
       code = code.replaceAll("&lt;","<");
       code = code.replaceAll("&gt;",">");
       this.clipboard.copy(code);

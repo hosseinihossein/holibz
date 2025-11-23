@@ -2,14 +2,22 @@ div.mainDiv{
     position: relative;
 }
 
-div.editMode{
+div.mainDiv.editMode{
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 16px;
     padding: 3px;
     margin: 4px;
     transition: /*box-shadow*/all 200ms;
 }
-div.editMode:hover{
+div.mainDiv.editMode:hover{
     /*background-color: var(--mat-sys-outline-variant);*/
     box-shadow: 0 1px 5px var(--mat-sys-outline);
+}
+
+div.mainDiv app-element-info-box{
+    opacity: 0;
+    transition: all 300ms;
+}
+div.mainDiv:hover app-element-info-box{
+    opacity: 1;
 }

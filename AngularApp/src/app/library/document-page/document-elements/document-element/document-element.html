@@ -1,8 +1,12 @@
 <div class="mainDiv" [class.editMode]="documentPageService.editMode()">
     @if(documentPageService.editMode()){
-    <app-edit-box [elementModel]="elementModel()">
-    </app-edit-box>
+    <app-edit-box [elementModel]="elementModel()"></app-edit-box>
     }
+    @else{
+    <app-element-info-box [elementModel]="elementModel()"></app-element-info-box>
+    }
+
+    <app-scroll-locator [id]="elementModel().guid"></app-scroll-locator>
 
     @switch (elementModel().type) {
     @case("h1"){

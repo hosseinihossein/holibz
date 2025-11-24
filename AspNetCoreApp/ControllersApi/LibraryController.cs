@@ -1430,6 +1430,60 @@ public class LibraryController : ControllerBase
         return Ok(followings_OwnerModel);
     }
 
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Follow([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
+        .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
+
+        if (ownerDbModel is null)
+        {
+            ModelState.AddModelError("user", "the specified owner Not found!");
+            return BadRequest(ModelState);
+        }
+
+        string followerGuid = (await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstOrDefaultAsync())!;
+
+        Library_OwnerDbModel followerDbModel = (await libraryDb.Owners
+        .Include(owner => owner.Followings)
+        .FirstOrDefaultAsync(owner => owner.Guid == followerGuid))!;
+
+        followerDbModel.Followings.Add(ownerDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnFollow([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        string followerGuid = (await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstOrDefaultAsync())!;
+
+        Library_OwnerDbModel followerDbModel = (await libraryDb.Owners
+        .Include(owner => owner.Followings)
+        .FirstOrDefaultAsync(owner => owner.Guid == followerGuid))!;
+
+        Library_OwnerDbModel? ownerDbModel = followerDbModel.Followings
+        .FirstOrDefault(owner => owner.Guid == ownerGuid);
+
+        if (ownerDbModel is not null)
+        {
+            followerDbModel.Followings.Remove(ownerDbModel);
+            await libraryDb.SaveChangesAsync();
+        }
+
+        return Ok(new { success = true });
+    }
+
 
 
 
@@ -1440,7 +1494,7 @@ public class LibraryController : ControllerBase
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Include(owner => owner.FavoriteLibraries)
         .ThenInclude(lib => lib.Owner)
-        .AsSplitQuery()
+        //.AsSplitQuery()
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 
         if (ownerDbModel is null)
@@ -1471,15 +1525,15 @@ public class LibraryController : ControllerBase
         .Where(user => favoriteLibrariesOwnersGuids.Contains(user.UserGuid))
         .ToListAsync();
 
-        foreach (var fl in favoriteLibraries)
+        foreach (var favLib in favoriteLibraries)
         {
             var userDbModel = favoriteLibrariesOwners
-            .FirstOrDefault(u => u.UserGuid == fl.Owner.Guid);
+            .FirstOrDefault(u => u.UserGuid == favLib.Owner.Guid);
             if (userDbModel is not null)
             {
-                fl.Owner.Username = userDbModel.UserName!;
-                fl.Owner.HasImage = userDbModel.HasImage!;
-                fl.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
+                favLib.Owner.Username = userDbModel.UserName!;
+                favLib.Owner.HasImage = userDbModel.HasImage!;
+                favLib.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
             }
         }
 
@@ -1491,7 +1545,7 @@ public class LibraryController : ControllerBase
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Include(owner => owner.FavoriteShelves)
         .ThenInclude(shelf => shelf.Owner)
-        .AsSplitQuery()
+        //.AsSplitQuery()
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 
         if (ownerDbModel is null)
@@ -1542,7 +1596,7 @@ public class LibraryController : ControllerBase
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Include(owner => owner.FavoriteDocuments)
         .ThenInclude(doc => doc.Owner)
-        .AsSplitQuery()
+        //.AsSplitQuery()
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 
         if (ownerDbModel is null)
@@ -1588,6 +1642,181 @@ public class LibraryController : ControllerBase
         return Ok(favoriteDocuments);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetUsersInFavorOfLibrary([FromQuery][StringLength(32)] string libraryGuid)
+    {
+        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
+        .Include(lib => lib.InFavorOf)
+        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
+        if (libraryDbModel is null)
+        {
+            ModelState.AddModelError("library", "the specified library Not found!");
+            return BadRequest(ModelState);
+        }
+
+        List<string> usersInFavorOf_Guids = libraryDbModel.InFavorOf
+        .Select(user => user.Guid).ToList();
+
+        List<Identity_UserDbModel> usersInFavorOf_DbModels = await userManager.Users
+        .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
+        .ToListAsync();
+
+        Library_OwnerModel[] usersInFavorOf = usersInFavorOf_DbModels
+        .Select(user => new Library_OwnerModel()
+        {
+            Guid = user.UserGuid,
+            HasImage = user.HasImage,
+            IntegrityVersion = user.IntegrityVersion,
+            Username = user.UserName!,
+        })
+        .ToArray();
+
+        return Ok(usersInFavorOf);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetUsersInFavorOfShelf([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
+        .Include(shelf => shelf.InFavorOf)
+        .FirstOrDefaultAsync(lib => lib.Guid == shelfGuid);
+        if (shelfDbModel is null)
+        {
+            ModelState.AddModelError("shelf", "the specified shelf Not found!");
+            return BadRequest(ModelState);
+        }
+
+        List<string> usersInFavorOf_Guids = shelfDbModel.InFavorOf
+        .Select(user => user.Guid).ToList();
+
+        List<Identity_UserDbModel> usersInFavorOf_DbModels = await userManager.Users
+        .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
+        .ToListAsync();
+
+        Library_OwnerModel[] usersInFavorOf = usersInFavorOf_DbModels
+        .Select(user => new Library_OwnerModel()
+        {
+            Guid = user.UserGuid,
+            HasImage = user.HasImage,
+            IntegrityVersion = user.IntegrityVersion,
+            Username = user.UserName!,
+        })
+        .ToArray();
+
+        return Ok(usersInFavorOf);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetUsersInFavorOfDocument([FromQuery][StringLength(32)] string documentGuid)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .Include(doc => doc.InFavorOf)
+        .FirstOrDefaultAsync(lib => lib.Guid == documentGuid);
+        if (documentDbModel is null)
+        {
+            ModelState.AddModelError("document", "the specified document Not found!");
+            return BadRequest(ModelState);
+        }
+
+        List<string> usersInFavorOf_Guids = documentDbModel.InFavorOf
+        .Select(user => user.Guid).ToList();
+
+        List<Identity_UserDbModel> usersInFavorOf_DbModels = await userManager.Users
+        .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
+        .ToListAsync();
+
+        Library_OwnerModel[] usersInFavorOf = usersInFavorOf_DbModels
+        .Select(user => new Library_OwnerModel()
+        {
+            Guid = user.UserGuid,
+            HasImage = user.HasImage,
+            IntegrityVersion = user.IntegrityVersion,
+            Username = user.UserName!,
+        })
+        .ToArray();
+
+        return Ok(usersInFavorOf);
+    }
+
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddFavoriteLibrary([FromQuery][StringLength(32)] string libraryGuid)
+    {
+        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
+        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
+        if (libraryDbModel is null)
+        {
+            ModelState.AddModelError("library", "the specified library Not found!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstOrDefaultAsync())!;
+
+        Library_OwnerDbModel ownerDbModel = (await libraryDb.Owners
+        .Include(owner => owner.FavoriteLibraries)
+        .FirstOrDefaultAsync(owner => owner.Guid == userGuid))!;
+
+        ownerDbModel.FavoriteLibraries.Add(libraryDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddFavoriteShelf([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
+        .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
+        if (shelfDbModel is null)
+        {
+            ModelState.AddModelError("shelf", "the specified shelf Not found!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstOrDefaultAsync())!;
+
+        Library_OwnerDbModel ownerDbModel = (await libraryDb.Owners
+        .Include(owner => owner.FavoriteLibraries)
+        .FirstOrDefaultAsync(owner => owner.Guid == userGuid))!;
+
+        ownerDbModel.FavoriteShelves.Add(shelfDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+    [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddFavoriteDocument([FromQuery][StringLength(32)] string documentGuid)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+        if (documentDbModel is null)
+        {
+            ModelState.AddModelError("document", "the specified document Not found!");
+            return BadRequest(ModelState);
+        }
+
+        string userGuid = (await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstOrDefaultAsync())!;
+
+        Library_OwnerDbModel ownerDbModel = (await libraryDb.Owners
+        .Include(owner => owner.FavoriteLibraries)
+        .FirstOrDefaultAsync(owner => owner.Guid == userGuid))!;
+
+        ownerDbModel.FavoriteDocuments.Add(documentDbModel);
+        await libraryDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
 
 
 

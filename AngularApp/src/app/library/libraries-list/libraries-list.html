@@ -26,6 +26,19 @@
                 <mat-icon>newsstand</mat-icon>
             </div>
 
+            <button matIconButton class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="Followers">
+                <mat-icon>group</mat-icon>
+                Followers
+            </button>
+            <button matIconButton class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="Followings">
+                <mat-icon>group</mat-icon>
+                Followings
+            </button>
+
+            <div class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="number of likes">
+                <mat-icon>favorite</mat-icon>
+            </div>
+
 
             @if(isMyLibraries()){
             <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">

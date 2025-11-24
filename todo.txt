@@ -10,4 +10,5 @@
 - add the ability for users to send review request to eachother for reading 
 and reacting to their document.
 - add table, list, chart and reference elements to documents
+- create images with different sizes for each uploaded images
 - 

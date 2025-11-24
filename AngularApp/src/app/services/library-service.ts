@@ -15,8 +15,6 @@ import { SingletonModes } from './singleton-modes';
 })
 export class LibraryService {
   private httpClient = inject(HttpClient);
-  //private identityService = inject(IdentityService);
-  //private singleton = inject(SingletonModes);
 
   libraryCard_Storage = signal<RuCache<LibraryCardModel>>(new RuCache<LibraryCardModel>());
   shelfCard_Storage = signal<RuCache<ShelfCardModel>>(new RuCache<ShelfCardModel>());
@@ -402,6 +400,92 @@ export class LibraryService {
     return null;
   }
 
+  //******************************* followship **********************************
+
+  requestToFollow(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.post<{success:boolean}>(
+      "/api/Library/Follow", null, {params:httpParams}
+    );
+  }
+  requestToUnFollow(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.post<{success:boolean}>(
+      "/api/Library/UnFollow", null, {params:httpParams}
+    );
+  }
+
+  requestFollowers(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.get<OwnerModel[]>(
+      "/api/Library/GetFollowers", {params:httpParams}
+    );
+  }
+  requestFollowings(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.get<OwnerModel[]>(
+      "/api/Library/GetFollowings", {params:httpParams}
+    );
+  }
+
+  requestFavoriteLibraries(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.get<FavoriteModel[]>(
+      "/api/Library/GetFavoriteLibraries", {params:httpParams}
+    );
+  }
+  requestFavoriteShelves(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.get<FavoriteModel[]>(
+      "/api/Library/GetFavoriteShelves", {params:httpParams}
+    );
+  }
+  requestFavoriteDocuments(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    this.httpClient.get<FavoriteModel[]>(
+      "/api/Library/GetFavoriteDocuments", {params:httpParams}
+    );
+  }
+
+  requestUsersInFavorOfLibrary(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
+    this.httpClient.get<OwnerModel[]>(
+      "/api/Library/GetUsersInFavorOfLibrary", {params:httpParams}
+    );
+  }
+  requestUsersInFavorOfShelf(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
+    this.httpClient.get<OwnerModel[]>(
+      "/api/Library/GetUsersInFavorOfShelf", {params:httpParams}
+    );
+  }
+  requestUsersInFavorOfDocument(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid", documentGuid);
+    this.httpClient.get<OwnerModel[]>(
+      "/api/Library/GetUsersInFavorOfDocument", {params:httpParams}
+    );
+  }
+
+  requestToAddFavoriteLibrary(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
+    this.httpClient.post<{success:boolean}>(
+      "/api/Library/AddFavoriteLibrary", null, {params:httpParams}
+    );
+  }
+  requestToAddFavoriteShelf(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
+    this.httpClient.post<{success:boolean}>(
+      "/api/Library/AddFavoriteShelf", null, {params:httpParams}
+    );
+  }
+  requestToAddFavoriteDocument(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid", documentGuid);
+    this.httpClient.post<{success:boolean}>(
+      "/api/Library/AddFavoriteDocument", null, {params:httpParams}
+    );
+  }
+
+
 }
 
 class NewLibraryFormModel{
@@ -438,6 +522,12 @@ export class EditElementFormModel{
 }
 
 export class OwnerModel{
+  constructor(ownerModel:OwnerModel){
+    this.guid = ownerModel.guid;
+    this.username = ownerModel.username;
+    this.hasImage = ownerModel.hasImage;
+    this.integrityVersion = ownerModel.integrityVersion;
+  }
   guid:string = null!;
   username:string = null!;
   hasImage:boolean = false;
@@ -487,5 +577,20 @@ export class RuCache<T extends {guid:string}>{
     
     this.cache.unshift(...newValues);
   }
+}
+
+export class FavoriteModel{
+  constructor(favoriteModel:FavoriteModel){
+    this.guid = favoriteModel.guid;
+    this.title = favoriteModel.title;
+    this.hasImage = favoriteModel.hasImage;
+    this.integrityVersion = favoriteModel.integrityVersion;
+    this.owner = new OwnerModel(favoriteModel.owner);
+  }
+  guid:string = null!;
+  title:string = null!;
+  hasImage:boolean = false;
+  integrityVersion:number = 0;
+  owner:OwnerModel = null!;
 }
 

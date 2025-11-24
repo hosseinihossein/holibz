@@ -13,13 +13,18 @@ namespace AspNetCoreApp.Models;
 public class Library_OwnerDbModel
 {
     public int Id { get; set; }
-    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
+    public string Guid { get; set; } = null!;
     public List<Library_LibraryDbModel> Libraries { get; set; } = [];
     public List<Library_ShelfDbModel> Shelves { get; set; } = [];
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
     public List<Library_ElementDbModel> Elements { get; set; } = [];
     public string DefaultLibraryGuid { get; set; } = null!;
     public string DefaultShelfGuid { get; set; } = null!;
+    public List<Library_OwnerDbModel> Followers { get; set; } = [];
+    public List<Library_OwnerDbModel> Followings { get; set; } = [];
+    public List<Library_LibraryDbModel> FavoriteLibraries { get; set; } = [];
+    public List<Library_ShelfDbModel> FavoriteShelves { get; set; } = [];
+    public List<Library_DocumentDbModel> FavoriteDocuments { get; set; } = [];
 }
 public class Library_LibraryDbModel
 {
@@ -38,6 +43,7 @@ public class Library_LibraryDbModel
         set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     public bool HasImage { get; set; } = false;
+    public List<Library_OwnerDbModel> InFavorOf { get; set; } = [];
 }
 public class Library_ShelfDbModel
 {
@@ -57,6 +63,7 @@ public class Library_ShelfDbModel
         set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     public bool HasImage { get; set; } = false;
+    public List<Library_OwnerDbModel> InFavorOf { get; set; } = [];
 }
 public class Library_DocumentDbModel
 {
@@ -79,6 +86,7 @@ public class Library_DocumentDbModel
         set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     public bool HasImage { get; set; } = false;
+    public List<Library_OwnerDbModel> InFavorOf { get; set; } = [];
 }
 public class Library_RelatedVersionsDbModel
 {
@@ -106,6 +114,7 @@ public class Library_TagDbModel
     public List<Library_DocumentDbModel> Documents { get; set; } = [];
 }
 
+
 public class Library_DbContext : DbContext
 {
     public Library_DbContext(DbContextOptions<Library_DbContext> options) : base(options) { }
@@ -121,6 +130,7 @@ public class Library_DbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         //*************************** Relationships *********************************
+        //********************************** Owner ***********************************
         //*********** Owner-Libraries One-To-Many *********
         modelBuilder.Entity<Library_OwnerDbModel>()
         .HasMany(o => o.Libraries)
@@ -158,29 +168,56 @@ public class Library_DbContext : DbContext
         'Library_LibraryDbModel.Owner'. 
         Navigations can only participate in a single relationship.
         */
-
         //*********** Owner-DefaultShelf One-To-One *********
         /*modelBuilder.Entity<Library_OwnerDbModel>()
         .HasOne(o => o.DefaultShelf)
         .WithOne(sh => sh.Owner)
         .IsRequired(true);*/
 
+        //*********** Followers-Followings Many-To-Many *********
+        modelBuilder.Entity<Library_OwnerDbModel>()
+        .HasMany(o => o.Followers)
+        .WithMany(o => o.Followings);
+
+        //*********** Users-FavoriteLibraries Many-To-Many *********
+        modelBuilder.Entity<Library_OwnerDbModel>()
+        .HasMany(o => o.FavoriteLibraries)
+        .WithMany(l => l.InFavorOf);
+
+        //*********** Users-FavoriteShelves Many-To-Many *********
+        modelBuilder.Entity<Library_OwnerDbModel>()
+        .HasMany(o => o.FavoriteShelves)
+        .WithMany(sh => sh.InFavorOf);
+
+        //*********** Users-FavoriteDocuments Many-To-Many *********
+        modelBuilder.Entity<Library_OwnerDbModel>()
+        .HasMany(o => o.FavoriteDocuments)
+        .WithMany(doc => doc.InFavorOf);
+
+
+        //********************************** Library ***********************************
         //*********** Libraries-Shelves Many-To-Many *********
         modelBuilder.Entity<Library_LibraryDbModel>()
         .HasMany(l => l.Shelves)
         .WithMany(sh => sh.ParentLibraries);
 
+
+        //********************************** Shelf ***********************************
         //*********** Shelves-Documents Many-To-Many *********
         modelBuilder.Entity<Library_ShelfDbModel>()
         .HasMany(sh => sh.Documents)
         .WithMany(d => d.ParentShelves);
 
+
+        //********************************** RelatedVersions ***********************************
         //*********** RelatedVerions-Documents One-To-Many *********
         modelBuilder.Entity<Library_RelatedVersionsDbModel>()
         .HasMany(d => d.Documents)
         .WithOne(rv => rv.RelatedVersions)
         .IsRequired(false);
 
+
+        //********************************** Document ***********************************
         //*********** Document-Elements One-To-Many *********
         modelBuilder.Entity<Library_DocumentDbModel>()
         .HasMany(d => d.Elements)
@@ -188,6 +225,8 @@ public class Library_DbContext : DbContext
         .IsRequired(true);
         //.OnDelete(DeleteBehavior.Cascade);//default for required entities
 
+
+        //********************************** Tag ***********************************
         //*********** Tags-Documents Many-To-Many *********
         modelBuilder.Entity<Library_DocumentDbModel>()
         .HasMany(d => d.Tags)
@@ -1360,5 +1399,12 @@ public class Library_OwnerModel
     public bool HasImage { get; set; } = false;
 }
 
-
+public class Library_FavoriteModel
+{
+    public string Guid { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public bool HasImage { get; set; } = false;
+    public int IntegrityVersion { get; set; }
+    public Library_OwnerModel Owner { get; set; } = null!;
+}
 

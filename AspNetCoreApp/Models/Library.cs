@@ -129,6 +129,8 @@ public class Library_DbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         //*************************** Relationships *********************************
         //********************************** Owner ***********************************
         //*********** Owner-Libraries One-To-Many *********

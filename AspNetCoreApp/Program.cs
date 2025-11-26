@@ -314,7 +314,7 @@ public class Program
         foreach (string userGuid in AllConfirmedUsersGuidsExceptAdmin)
         {
             var ownerCreationResult = await libraryProcess.CreateNewOwner(libraryDb, userGuid);
-            string defaultLibraryGuid = ((Library_OwnerDbModel)ownerCreationResult.ResultObject!).DefaultLibraryGuid;
+            /*string defaultLibraryGuid = ((Library_OwnerDbModel)ownerCreationResult.ResultObject!).DefaultLibraryGuid;
             //string defaultShelfGuid = ((Library_OwnerDbModel) ownerCreationResult.ResultObject!).DefaultShelfGuid;
             var nonParentShelves = await libraryDb.Shelves
             .Include(shelf => shelf.ParentLibraries)
@@ -330,9 +330,9 @@ public class Program
                 {
                     shelf.ParentLibraries = [defaultLibrary];
                 }
-            }
+            }*/
         }
-        await libraryDb.SaveChangesAsync();
+        //await libraryDb.SaveChangesAsync();
 
 
 

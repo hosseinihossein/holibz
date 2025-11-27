@@ -1,0 +1,45 @@
+#main-div{
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 16px;
+    padding: 8px;
+    width: 50vw;
+    margin: 50px auto;
+}
+#top-div{
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+/*#like-btn{
+    
+}*/
+#like-btn:hover mat-icon{
+    color: red;
+}
+
+#numberOfLikes-span{
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 8px;
+    background-color: var(--mat-sys-error);
+    color: var(--mat-sys-on-error);
+    cursor: pointer;
+}
+
+#comment-btn{
+    margin: 0 8px;
+}
+
+.full-spacer{
+    flex: 1 1 auto;
+}
+
+mat-button-toggle{
+    font-size: 12px;
+}

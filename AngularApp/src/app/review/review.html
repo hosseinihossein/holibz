@@ -1,0 +1,35 @@
+<div id="main-div">
+    <div id="top-div">
+        <div style="position: relative;margin: 0 8px;">
+            <button matFab aria-label="like button" id="like-btn" (click)="toggleLike()" matTooltip="Like"
+                matTooltipPosition="below">
+                <mat-icon [style]="reviewModel()?.isLiked ? iconService.fillIcon()+'color:red;' : ''">
+                    favorite
+                </mat-icon>
+            </button>
+            <span id="numberOfLikes-span" (click)="openListOfLikes()" matTooltip="Like list" matTooltipPosition="after">
+                {{reviewModel()?.numberOfLikes}}
+            </span>
+        </div>
+
+        <button matFab aria-label="add comment button" id="comment-btn" matTooltip="Write a comment"
+            matTooltipPosition="below">
+            <mat-icon>add_comment</mat-icon>
+        </button>
+
+        <span class="full-spacer"></span>
+
+        <mat-button-toggle-group [formControl]="sortCommentsBy_FormControl" aria-label="sort comments by"
+            (change)="sortComments()" matTooltip="Sort comment by" matTooltipPosition="below">
+            <mat-button-toggle value="Newest">Newest</mat-button-toggle>
+            <mat-button-toggle value="Oldest">Oldest</mat-button-toggle>
+            <mat-button-toggle value="Most Agreed">Most Agreed</mat-button-toggle>
+        </mat-button-toggle-group>
+    </div>
+
+    <div>
+        <app-review-comment></app-review-comment>
+        <app-review-comment></app-review-comment>
+    </div>
+
+</div>

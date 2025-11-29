@@ -7,11 +7,12 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatBadge } from "@angular/material/badge";
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReviewComment } from './comment/comment';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-review',
   imports: [MatButtonModule, MatIcon, MatButtonToggleModule, ReactiveFormsModule,MatTooltipModule,
-    ReviewComment,
+    ReviewComment,MatProgressSpinner
   ],
   templateUrl: './review.html',
   styleUrl: './review.css'
@@ -20,6 +21,8 @@ export class Review {
   iconService = inject(IconService);
 
   reviewModel = signal<ReviewModel|null>(new ReviewModel(null));
+  displaySubmitSpinner = signal(false);
+
   sortCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed">("Newest");
 
   sortComments(){}
@@ -31,6 +34,10 @@ export class Review {
     });
   }
   openListOfLikes(){}
+
+  showMoreComments(){
+    this.displaySubmitSpinner.set(true);
+  }
 
 }
 

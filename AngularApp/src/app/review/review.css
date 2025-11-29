@@ -2,34 +2,38 @@
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 16px;
     padding: 8px;
-    width: 50vw;
+    width: 50%;
+    min-width: 400px;
     margin: 50px auto;
+    position: relative;
 }
 #top-div{
     display: flex;
     align-items: center;
     border-bottom: 1px solid var(--mat-sys-outline-variant);
-    padding-bottom: 8px;
+    padding-bottom: 16px;
     margin-bottom: 8px;
 }
-/*#like-btn{
-    
-}*/
+#top-div mat-icon{
+    font-size: x-large;
+}
+
 #like-btn:hover mat-icon{
     color: red;
 }
 
 #numberOfLikes-span{
     position: absolute;
-    top: -24px;
+    bottom: -28px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 14px;
     padding: 2px 4px;
     border-radius: 8px;
-    background-color: var(--mat-sys-error);
-    color: var(--mat-sys-on-error);
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-secondary-on-container);
     cursor: pointer;
+    font-size: 12px;
 }
 
 #comment-btn{
@@ -42,4 +46,36 @@
 
 mat-button-toggle{
     font-size: 12px;
+}
+
+#submit-spinner-layout{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(5px);
+    z-index: 1;
+}
+mat-spinner#submit-spinner{
+    display: block;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}#submit-spinner-layout{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(5px);
+    z-index: 1;
+}
+mat-spinner#submit-spinner{
+    display: block;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
 }

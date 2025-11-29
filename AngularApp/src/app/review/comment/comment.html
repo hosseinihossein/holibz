@@ -1,4 +1,4 @@
-<mat-card>
+<mat-card [class.reply]="commentModel().isReply">
     <mat-card-header>
         <a [routerLink]="['/profile', writerModel()?.guid]" mat-card-avatar>
             @if(userAvatarSrc()){
@@ -9,15 +9,18 @@
             }
         </a>
         <mat-card-title>
-            <a [routerLink]="['/profile', writerModel()?.guid]">
+            <a [routerLink]="['/profile', writerModel()?.guid]"
+                style="text-decoration: none;display: block;margin: 4px 0;">
                 {{writerModel()?.username ?? "hossein"}}
             </a>
         </mat-card-title>
         @if(commentModel().isReply){
         <mat-card-subtitle>
-            <span id="replyTo-span" (click)="goToElement(commentModel().replyToGuid)">
+            <div id="replyTo-div" (click)="goToElement(commentModel().replyToGuid)">
+                <span>Reply to </span>
+                <span style="font-weight: bold;">"{{commentModel().replyToUsername}}": </span>
                 {{commentModel().replyToBrief}}
-            </span>
+            </div>
         </mat-card-subtitle>
         }
     </mat-card-header>
@@ -27,20 +30,37 @@
     </mat-card-content>
 
     <mat-card-actions align="end">
-        <button matIconButton>
-            <mat-icon [style]="commentModel().amIThumbsUp ? iconService.fillIcon() :''">
-                thumb_up
-            </mat-icon>
-        </button>
-        <button matIconButton>
-            <mat-icon [style]="commentModel().amIThumbsDown ? iconService.fillIcon() :''">
-                thumb_down
-            </mat-icon>
-        </button>
-        <button>
-            <mat-icon>
-                reply
-            </mat-icon>
-        </button>
+        <div style="position: relative;margin: 0 8px;">
+            <button matIconButton matTooltip="Agree" matTooltipPosition="above">
+                <mat-icon [style]="commentModel().amIThumbsUp ? iconService.fillIcon() :''">
+                    thumb_up
+                </mat-icon>
+            </button>
+            <span id="numberOf-span" (click)="openListOfThumbsUps()" matTooltip="Agreed list"
+                matTooltipPosition="above">
+                {{commentModel().numberOfThumbsUps}}
+            </span>
+        </div>
+        <div style="position: relative;margin: 0 8px;">
+            <button matIconButton matTooltip="Disagree" matTooltipPosition="above">
+                <mat-icon [style]="commentModel().amIThumbsDown ? iconService.fillIcon() :''">
+                    thumb_down
+                </mat-icon>
+            </button>
+            <span id="numberOf-span" (click)="openListOfThumbsDowns()" matTooltip="Disagreed list"
+                matTooltipPosition="above">
+                {{commentModel().numberOfThumbsDowns}}
+            </span>
+        </div>
+        <div style="position: relative;margin: 0 8px;">
+            <button matIconButton matTooltip="Reply" matTooltipPosition="above">
+                <mat-icon>
+                    reply
+                </mat-icon>
+            </button>
+            <span id="numberOf-span" (click)="openListOfReplies()" matTooltip="Show replies" matTooltipPosition="above">
+                {{commentModel().numberOfReplies}}
+            </span>
+        </div>
     </mat-card-actions>
 </mat-card>

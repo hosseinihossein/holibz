@@ -1,3 +1,16 @@
+mat-card{
+    margin: 4px auto;
+    width: 100%;
+}
+mat-card.reply{
+    width: 97%;
+    float: inline-end;
+}
+
+mat-card-header{
+    width: 100%;
+}
+
 img.owner-avatar {
     width: 50px;
     height: 50px;
@@ -7,6 +20,35 @@ img.owner-avatar {
 mat-card-title{
     font-size: 16px;
 }
+
 mat-card-subtitle{
     font-size: 12px;
+    width: calc(100% - 88px);
+    position: absolute;
+}
+#replyTo-div{
+    width: 100%;
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    margin: 4px 0;
+}
+#replyTo-div:hover{
+    background-color: var(--mat-sys-secondary-container);
+}
+
+#numberOf-span{
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    padding: 0px 4px;
+    border-radius: 8px;
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-secondary-on-container);
+    cursor: pointer;
+    font-size: 12px;
+    z-index: 1;
 }

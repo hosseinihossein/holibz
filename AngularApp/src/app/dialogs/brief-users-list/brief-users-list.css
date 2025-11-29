@@ -1,0 +1,31 @@
+
+a{
+    text-decoration: none;
+}
+#user-div{
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    margin: 4px auto;
+    color: var(--mat-sys-primary);
+}
+#user-div:hover{
+    background-color: var(--mat-sys-outline-variant);
+}
+
+#submit-spinner-layout{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /*backdrop-filter: blur(5px);*/
+    z-index: 1;
+}
+mat-spinner#submit-spinner{
+    display: block;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}

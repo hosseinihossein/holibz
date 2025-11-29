@@ -13,14 +13,14 @@
         </div>
 
         <button matMiniFab aria-label="add comment button" id="comment-btn" matTooltip="Write a comment"
-            matTooltipPosition="above">
+            matTooltipPosition="above" (click)="onNewComment()">
             <mat-icon>add_comment</mat-icon>
         </button>
 
         <span class="full-spacer"></span>
 
         <mat-button-toggle-group [formControl]="sortCommentsBy_FormControl" aria-label="sort comments by"
-            (change)="sortComments()" matTooltip="Sort comments by" matTooltipPosition="below">
+            (change)="sortComments()" matTooltip="Sort comments by" matTooltipPosition="above">
             <mat-button-toggle value="Newest">Newest</mat-button-toggle>
             <mat-button-toggle value="Oldest">Oldest</mat-button-toggle>
             <mat-button-toggle value="Most Agreed">Most Agreed</mat-button-toggle>
@@ -28,8 +28,10 @@
     </div>
 
     <div class="clearfix" style="width: 100%;position: relative;">
-        <app-review-comment></app-review-comment>
-        <app-review-comment></app-review-comment>
+        @for(comment of reviewModel()?.comments; track comment.guid){
+        <app-review-comment [commentModel]="comment" (replyEvent)="onReplyEvent($event)"></app-review-comment>
+        }
+
 
         @if(displaySubmitSpinner()){
         <div id="submit-spinner-layout">
@@ -38,9 +40,13 @@
         }
     </div>
 
-    <button matButton style="margin: 8px auto;font-size: 12px;width: fit-content;display: flex;"
+    <mat-paginator [length]="reviewModel()?.totalNumberOfComments" [pageSize]="10" [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="handlePageEvent($event)" style="margin: 16px 0;" aria-label="Select page of comments">
+    </mat-paginator>
+
+    <!--button matButton style="margin: 8px auto;font-size: 12px;width: fit-content;display: flex;"
         (click)="showMoreComments()">
         Show more..
-    </button>
+    </button-->
 
 </div>

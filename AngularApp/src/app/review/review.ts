@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, input, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from "@angular/material/button";
 import { MatIcon } from '@angular/material/icon';
 import { IconService } from '../services/icon-service';
@@ -6,12 +6,13 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatBadge } from "@angular/material/badge";
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CommentModel, ReviewComment } from './comment/comment';
+import { CommentModel, NewCommentFormModel, ReviewComment } from './comment/comment';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { BriefUsersList } from '../dialogs/brief-users-list/brief-users-list';
 import { EditTextarea } from '../dialogs/edit-textarea/edit-textarea';
+import { ReviewService } from './review-service';
 
 @Component({
   selector: 'app-review',
@@ -22,80 +23,164 @@ import { EditTextarea } from '../dialogs/edit-textarea/edit-textarea';
   styleUrl: './review.css'
 })
 export class Review {
+  subjectGuid = input.required<string>();
+
+  reviewService = inject(ReviewService);
   iconService = inject(IconService);
   dialog = inject(MatDialog);
 
-  reviewModel = signal<ReviewModel|null>(new ReviewModel(null));
-  displaySubmitSpinner = signal(false);
+  paginator = viewChild(MatPaginator);
 
-  sortCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed">("Most Agreed");
+  reviewModel = signal<ReviewModel>(new ReviewModel(null));
+  displaySubmitSpinner = signal(true);
 
-  sortComments(){}
+  sortCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed">("Oldest",{nonNullable:true});
+
+  constructor(){
+    effect(()=>{
+      if(this.subjectGuid()){
+        this.reviewService.requestReviewModel(this.subjectGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.reviewModel.set(res);
+              this.displaySubmitSpinner.set(false);
+            }
+          },
+        });
+      }
+    });
+  }
+
+  sortComments(){
+    this.displaySubmitSpinner.set(true);
+    if(this.paginator()){
+      this.paginator()!.pageIndex = 1;
+    }
+    this.requestComments();
+  }
+
+  requestComments(){
+    this.reviewService.requestComments(
+      this.subjectGuid(),
+      this.sortCommentsBy_FormControl.value,
+      this.paginator()?.pageIndex,
+      this.paginator()?.pageSize
+    ).subscribe({
+      next: res => {
+        if(res){
+          this.reviewModel.update(rm=>{
+            rm.comments = res;
+            return new ReviewModel(rm);
+          });
+        }
+        this.displaySubmitSpinner.set(false);
+      },
+    });
+  }
   
   toggleLike(){
+    this.reviewService.requestToggleLike(this.subjectGuid()).subscribe({
+      next: res => {
+        if(res){
+          this.reviewModel.update(rm=>{
+            rm.numberOfLikes = res.numberOfLikes;
+            return new ReviewModel(rm);
+          });
+        }
+      },
+    });
+
     this.reviewModel.update(rm=>{
-      rm!.isLiked = !rm?.isLiked;
-      if(rm?.isLiked){
-        rm!.numberOfLikes += 1;
-      }
-      else{
-        rm!.numberOfLikes -= 1;
-      }
-      return rm;
+      rm.amILiked = !rm.amILiked;
+      return new ReviewModel(rm);
     });
   }
 
   openListOfLikes(){
-    this.dialog.open(BriefUsersList, {data:{label:"Likes",type:"Like",totalNumberOfItems:105}, autoFocus:false,});
+    this.dialog.open(BriefUsersList, {
+      data:{label:"Likes",
+        type:"Like",
+        totalNumberOfItems:this.reviewModel()?.numberOfLikes, 
+        subjectGuid: this.subjectGuid()
+      },
+      autoFocus:false,
+    });
   }
 
-  handlePageEvent(e: PageEvent) {
-    let length = e.length;
-    let pageSize = e.pageSize;
-    let pageIndex = e.pageIndex;
+  handlePageEvent(/*e: PageEvent*/) {
+    //let length = e.length;
+    //let pageSize = e.pageSize;
+    //let pageIndex = e.pageIndex;
 
     this.displaySubmitSpinner.set(true);
-    setTimeout(() => {
-      this.displaySubmitSpinner.set(false);
-    }, 1000);
+    this.requestComments();
   }
 
-  onReplyEvent(comment:CommentModel){
-    this.reviewModel.update(r=>{
-      r?.comments.push(comment);
-      return r;
+  onSubmitReply(replyFormModel:NewCommentFormModel){
+    this.displaySubmitSpinner.set(true);
+    this.reviewService.postNewComment(replyFormModel).subscribe({
+      next: res => {
+        if(res){
+          this.reviewModel.update(rm=>{
+            let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentSubjectGuid);
+            rm.comments.splice(index, 0, res);
+            return new ReviewModel(rm);
+          });
+        }
+        this.displaySubmitSpinner.set(false);
+      }
+    });
+  }
+  onDisplayReplies(commentGuid:string){
+    this.displaySubmitSpinner.set(true);
+    this.reviewService.requestComments(commentGuid).subscribe({
+      next: res => {
+        if(res){
+          this.reviewModel.update(rm=>{
+            let index = rm.comments.findIndex(c=>c.guid === commentGuid);
+            rm.comments.splice(index, 0, ...res);
+            return new ReviewModel(rm);
+          });
+        }
+        this.displaySubmitSpinner.set(false);
+      },
     });
   }
 
   onNewComment(){
-    this.dialog.open(EditTextarea,{data:{label:`New Comment`}}).afterClosed().subscribe(result=>{
-          if(result){
-            this.displaySubmitSpinner.set(true);
-    
-            let newComment = new CommentModel(null);
-            newComment.text = result;
-            this.reviewModel.update(r=>{
-              r?.comments.unshift(newComment);
-              return r;
-            });
-    
-            setTimeout(() => {
-              this.displaySubmitSpinner.set(false);
-            }, 1000);
+    this.dialog.open(EditTextarea,{data:{label:`New Comment`}}).afterClosed().subscribe((result)=>{
+      if(result){
+        this.displaySubmitSpinner.set(true);
+
+        let newComment = new NewCommentFormModel();
+        newComment.parentSubjectGuid = this.subjectGuid();
+        newComment.text = result;
+
+        this.reviewService.postNewComment(newComment).subscribe({
+          next: res => {
+            if(res){
+              this.reviewModel.update(rm=>{
+                rm.comments.unshift(res);
+                return new ReviewModel(rm);
+              });
+            }
+            this.displaySubmitSpinner.set(false);
           }
         });
+      }
+    });
   }
 
 }
 
 export class ReviewModel{
   constructor(reviewModel:ReviewModel|null){
-    this.isLiked = reviewModel?.isLiked ?? false;
-    this.numberOfLikes = reviewModel?.numberOfLikes ?? 105;
-    this.totalNumberOfComments = reviewModel?.totalNumberOfComments ?? 12;
-    this.comments = reviewModel?.comments ?? [new CommentModel(null),new CommentModel(null),new CommentModel(null),];
+    this.amILiked = reviewModel?.amILiked ?? false;
+    this.numberOfLikes = reviewModel?.numberOfLikes ?? 0;
+    this.totalNumberOfComments = reviewModel?.totalNumberOfComments ?? 0;
+    this.comments = reviewModel?.comments.map(c=>new CommentModel(c)) ?? [];
   }
-  isLiked:boolean = false;
+  amILiked:boolean = false;
   numberOfLikes:number = 0;
   totalNumberOfComments:number = 0;
   comments:CommentModel[] = [];

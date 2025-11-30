@@ -9,11 +9,13 @@ import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ReviewService } from '../../review/review-service';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-brief-users-list',
   imports: [MatDialogModule, NgOptimizedImage, MatIcon, RouterLink,MatButton,MatFormField,MatInput,
-    MatLabel,MatProgressSpinner
+    MatLabel,MatProgressSpinner,ReactiveFormsModule
   ],
   templateUrl: './brief-users-list.html',
   styleUrl: './brief-users-list.css',
@@ -22,52 +24,66 @@ import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/
   }
 })
 export class BriefUsersList {
-  //readonly dialogRef = inject(MatDialogRef<BriefUsersList>);
-  readonly data = inject<{label:string, documentGuid?:string, commentGuid?:string,
-    totalNumberOfItems:number,type:"Like"|"ThumbsUp"|"ThumbsDown"
+  readonly data = inject<{
+    label?:string, 
+    subjectGuid:string, 
+    totalNumberOfItems:number,
+    type:"Like"|"ThumbsUp"|"ThumbsDown",
   }>(MAT_DIALOG_DATA);
-  readonly singleton = inject(SingletonModes);
 
-  okBtn = viewChild<MatButton>("okBtn");
+  readonly singleton = inject(SingletonModes);
+  reviewService = inject(ReviewService);
 
   users = signal<OwnerModel[]>([]);
-  displaySubmitSpinner = signal(false);
+  displaySubmitSpinner = signal(true);
+  bunch = signal(1);
+  filterControl = new FormControl("",{validators:[Validators.maxLength(32)]});
 
   constructor(){
     if(!this.data.label){
-      this.data.label = "Brief Users List";
+      this.data.label = "Users List";
     }
-    if(!this.data.documentGuid && !this.data.commentGuid){
-      this.users.set([
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hossein"},
-        {guid:"",hasImage:false,integrityVersion:0,username:"hassan"},
-      ]);
-    }
+    this.requestUsers();
   }
 
   onMore(){
     this.displaySubmitSpinner.set(true);
-    setTimeout(() => {
-      this.displaySubmitSpinner.set(false);
-    }, 1000);
+    this.requestUsers();
   }
 
   onUsernameFilter(){
     this.displaySubmitSpinner.set(true);
-    setTimeout(() => {
-      this.displaySubmitSpinner.set(false);
-    }, 1000);
+    this.bunch.set(1);
+    this.requestUsers();
   }
+
+  requestUsers(){
+    const callBacks = {
+      next: (res:OwnerModel[]) => {
+        if(res){
+          this.users.set(res);
+          this.bunch.update(b=>++b);
+          this.displaySubmitSpinner.set(false);
+        }
+      },
+    };
+
+    let filter = null;
+    if(this.filterControl.valid && this.filterControl.value?.trim()){
+      filter = this.filterControl.value.trim();
+    }
+
+    if(this.data.subjectGuid){
+      if(this.data.type === "Like"){
+        this.reviewService.requestLikedUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "ThumbsUp"){
+        this.reviewService.requestThumbsUpUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "ThumbsDown"){
+        this.reviewService.requestThumbsDownUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+      }
+    }
+  }
+
 }

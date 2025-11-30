@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -28,26 +29,6 @@ public class Review_ReviewDbModel
             catch (Exception e) { Console.WriteLine(e.Message); }
         }
     }
-
-    //public List<Review_RateDbModel> Rates { get; set; } = [];
-
-    public List<Review_CommentDbModel> Comments { get; set; } = [];
-}
-/*public class Review_RateDbModel
-{
-    public int Id { get; set; }
-    public Review_ReviewDbModel ParentReview { get; set; } = null!;
-    public Review_UserDbModel Voter { get; set; } = null!;
-    public int Value { get; set; }
-}*/
-public class Review_CommentDbModel
-{
-    public int Id { get; set; }
-    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
-    public Review_ReviewDbModel ParentReview { get; set; } = null!;
-    public string WriterGuid { get; set; } = null!;
-    public string Text { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
 
     public string _thumbsUpBy { get; set; } = JsonSerializer.Serialize(new List<string>());
     [NotMapped]
@@ -88,8 +69,25 @@ public class Review_CommentDbModel
         }
     }
 
-    public List<Review_CommentDbModel> Replies { get; set; } = [];
-    public Review_CommentDbModel? ReplyTo { get; set; } = null;
+    //public List<Review_RateDbModel> Rates { get; set; } = [];
+
+    public List<Review_CommentDbModel> Comments { get; set; } = [];
+}
+/*public class Review_RateDbModel
+{
+    public int Id { get; set; }
+    public Review_ReviewDbModel ParentReview { get; set; } = null!;
+    public Review_UserDbModel Voter { get; set; } = null!;
+    public int Value { get; set; }
+}*/
+public class Review_CommentDbModel
+{
+    public int Id { get; set; }
+    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
+    public Review_ReviewDbModel ParentReview { get; set; } = null!;
+    public string WriterGuid { get; set; } = null!;
+    public string Text { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
 }
 
 public class Review_DbContext : DbContext
@@ -117,12 +115,6 @@ public class Review_DbContext : DbContext
         .WithOne(c => c.ParentReview)
         .IsRequired(true);
 
-        //************* One-to-Many Comment-to-Replies *************
-        modelBuilder.Entity<Review_CommentDbModel>()
-        .HasMany(c => c.Replies)
-        .WithOne(reply => reply.ReplyTo)
-        .IsRequired(false);
-
         //************* Index Columns *************
         //************* Review_ReviewDbModel *************
         modelBuilder.Entity<Review_ReviewDbModel>()
@@ -137,4 +129,36 @@ public class Review_DbContext : DbContext
         .HasIndex(c => c.Guid)
         .IsUnique(true);
     }
+}
+
+//*********************** Models **************************
+public class Review_NewCommentFormModel
+{
+    [StringLength(32)]
+    public string ParentSubjectGuid { get; set; } = null!;
+
+    [StringLength(1000)]
+    public string Text { get; set; } = null!;
+}
+public class Review_CommentModel
+{
+    public string Guid { get; set; } = null!;
+    public string WriterGuid { get; set; } = null!;
+    public bool IsReply { get; set; } = false;
+    public string ReplyToGuid { get; set; } = null!;
+    public string ReplyToBrief { get; set; } = null!;
+    public string ReplyToUsername { get; set; } = null!;
+    public string Text { get; set; } = null!;
+    public bool AmIThumbsUp { get; set; } = false;
+    public bool AmIThumbsDown { get; set; } = false;
+    public int NumberOfThumbsUps { get; set; } = 0;
+    public int NumberOfThumbsDowns { get; set; } = 0;
+    public int NumberOfReplies { get; set; } = 0;
+}
+public class Review_ReviewModel
+{
+    public bool AmILiked { get; set; } = false;
+    public int NumberOfLikes { get; set; } = 0;
+    public int TotalNumberOfComments { get; set; } = 0;
+    public Review_CommentModel[] Comments { get; set; } = [];
 }

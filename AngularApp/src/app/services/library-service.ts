@@ -359,6 +359,7 @@ export class LibraryService {
     );
   }
 
+  //transfer it to the IdentityService
   requestOwnerModel(ownerGuid:string){
     let cachedOwnerModel = this.owner_Storage().getWithGuid(ownerGuid);
     if(cachedOwnerModel){

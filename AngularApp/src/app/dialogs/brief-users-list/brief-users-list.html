@@ -6,7 +6,7 @@
 <mat-dialog-content>
     <mat-form-field style="width: 100%;">
         <mat-label>Filter..</mat-label>
-        <input matInput (input)="onUsernameFilter()">
+        <input matInput [formControl]="filterControl" (input)="onUsernameFilter()">
     </mat-form-field>
     @for(user of users(); track user.guid){
     <div style="position: relative;">

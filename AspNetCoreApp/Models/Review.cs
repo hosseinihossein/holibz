@@ -30,6 +30,25 @@ public class Review_ReviewDbModel
         }
     }
 
+    //public List<Review_RateDbModel> Rates { get; set; } = [];
+
+    public List<Review_CommentDbModel> Comments { get; set; } = [];
+}
+/*public class Review_RateDbModel
+{
+    public int Id { get; set; }
+    public Review_ReviewDbModel ParentReview { get; set; } = null!;
+    public Review_UserDbModel Voter { get; set; } = null!;
+    public int Value { get; set; }
+}*/
+public class Review_CommentDbModel
+{
+    public int Id { get; set; }
+    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
+    public Review_ReviewDbModel ParentReview { get; set; } = null!;
+    public string WriterGuid { get; set; } = null!;
+    public string Text { get; set; } = string.Empty;
+
     public string _thumbsUpBy { get; set; } = JsonSerializer.Serialize(new List<string>());
     [NotMapped]
     public List<string> ThumbsUpBy
@@ -69,25 +88,9 @@ public class Review_ReviewDbModel
         }
     }
 
-    //public List<Review_RateDbModel> Rates { get; set; } = [];
-
-    public List<Review_CommentDbModel> Comments { get; set; } = [];
-}
-/*public class Review_RateDbModel
-{
-    public int Id { get; set; }
-    public Review_ReviewDbModel ParentReview { get; set; } = null!;
-    public Review_UserDbModel Voter { get; set; } = null!;
-    public int Value { get; set; }
-}*/
-public class Review_CommentDbModel
-{
-    public int Id { get; set; }
-    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
-    public Review_ReviewDbModel ParentReview { get; set; } = null!;
-    public string WriterGuid { get; set; } = null!;
-    public string Text { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public Review_CommentDbModel? ReplyTo { get; set; } = null;
+    public List<Review_CommentDbModel> Replies { get; set; } = [];
 }
 
 public class Review_DbContext : DbContext
@@ -114,6 +117,13 @@ public class Review_DbContext : DbContext
         .HasMany(r => r.Comments)
         .WithOne(c => c.ParentReview)
         .IsRequired(true);
+
+        //************* One-to-Many Review-to-Comments *************
+        modelBuilder.Entity<Review_CommentDbModel>()
+        .HasMany(c => c.Replies)
+        .WithOne(c => c.ReplyTo)
+        .IsRequired(false)
+        .OnDelete(DeleteBehavior.Cascade);
 
         //************* Index Columns *************
         //************* Review_ReviewDbModel *************
@@ -154,6 +164,7 @@ public class Review_CommentModel
     public int NumberOfThumbsUps { get; set; } = 0;
     public int NumberOfThumbsDowns { get; set; } = 0;
     public int NumberOfReplies { get; set; } = 0;
+    public DateTime CreatedAt { get; set; }
 }
 public class Review_ReviewModel
 {

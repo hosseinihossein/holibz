@@ -34,7 +34,7 @@ export class Review {
   reviewModel = signal<ReviewModel>(new ReviewModel(null));
   displaySubmitSpinner = signal(true);
 
-  sortCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed">("Oldest",{nonNullable:true});
+  orderCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed"|null>(null);
 
   constructor(){
     effect(()=>{
@@ -51,10 +51,10 @@ export class Review {
     });
   }
 
-  sortComments(){
+  orderComments(){
     this.displaySubmitSpinner.set(true);
     if(this.paginator()){
-      this.paginator()!.pageIndex = 1;
+      this.paginator()!.pageIndex = 0;
     }
     this.requestComments();
   }
@@ -62,7 +62,7 @@ export class Review {
   requestComments(){
     this.reviewService.requestComments(
       this.subjectGuid(),
-      this.sortCommentsBy_FormControl.value,
+      this.orderCommentsBy_FormControl.value,
       this.paginator()?.pageIndex,
       this.paginator()?.pageSize
     ).subscribe({

@@ -108,6 +108,7 @@ export class CommentModel{
     this.numberOfThumbsUps = commentModel.numberOfThumbsUps;
     this.numberOfThumbsDowns = commentModel.numberOfThumbsDowns;
     this.numberOfReplies = commentModel.numberOfReplies;
+    this.createdAt = commentModel.createdAt;
   }
   guid:string = null!;
   writerGuid:string = null!;
@@ -121,6 +122,7 @@ export class CommentModel{
   numberOfThumbsUps:number = 0;
   numberOfThumbsDowns:number = 0;
   numberOfReplies:number = 0;
+  createdAt:Date = null!;
 }
 
 export class NewCommentFormModel{

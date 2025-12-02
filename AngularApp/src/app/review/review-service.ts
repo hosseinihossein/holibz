@@ -25,10 +25,10 @@ export class ReviewService {
     );
   }
 
-  requestComments(subjectGuid:string, sortedBy?:string, pageIndex?:number, pageSize?:number){
+  requestComments(subjectGuid:string, orderBy?:string|null, pageIndex?:number, pageSize?:number){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
-    if(sortedBy){
-      httpParams.set("sortedBy",sortedBy);
+    if(orderBy){
+      httpParams.set("orderBy",orderBy);
     }
     if(pageIndex){
       httpParams.set("pageIndex",pageIndex);

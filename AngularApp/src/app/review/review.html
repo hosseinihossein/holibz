@@ -19,8 +19,8 @@
 
         <span class="full-spacer"></span>
 
-        <mat-button-toggle-group [formControl]="sortCommentsBy_FormControl" aria-label="sort comments by"
-            (change)="sortComments()" matTooltip="Sort comments by" matTooltipPosition="above">
+        <mat-button-toggle-group [formControl]="orderCommentsBy_FormControl" aria-label="order comments by"
+            (change)="orderComments()" matTooltip="Order comments by" matTooltipPosition="above">
             <mat-button-toggle value="Newest">Newest</mat-button-toggle>
             <mat-button-toggle value="Oldest">Oldest</mat-button-toggle>
             <mat-button-toggle value="Most Agreed">Most Agreed</mat-button-toggle>

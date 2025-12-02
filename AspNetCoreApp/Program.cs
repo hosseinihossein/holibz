@@ -92,10 +92,10 @@ public class Program
         //******************* Authentication *******************
         builder.Services.AddAuthentication(options =>
         {
-            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            //options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            //options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            //options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            //options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddCookie(options =>
         {

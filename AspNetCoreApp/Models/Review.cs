@@ -45,7 +45,7 @@ public class Review_CommentDbModel
 {
     public int Id { get; set; }
     public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
-    public Review_ReviewDbModel ParentReview { get; set; } = null!;
+    public Review_ReviewDbModel? ParentReview { get; set; } = null;
     public string WriterGuid { get; set; } = null!;
     public string Text { get; set; } = string.Empty;
 
@@ -116,7 +116,8 @@ public class Review_DbContext : DbContext
         modelBuilder.Entity<Review_ReviewDbModel>()
         .HasMany(r => r.Comments)
         .WithOne(c => c.ParentReview)
-        .IsRequired(true);
+        .IsRequired(false)
+        .OnDelete(DeleteBehavior.Cascade);
 
         //************* One-to-Many Review-to-Comments *************
         modelBuilder.Entity<Review_CommentDbModel>()
@@ -150,14 +151,22 @@ public class Review_NewCommentFormModel
     [StringLength(1000)]
     public string Text { get; set; } = null!;
 }
+public class Review_NewReplyFormModel
+{
+    [StringLength(32)]
+    public string ParentCommentGuid { get; set; } = null!;
+
+    [StringLength(1000)]
+    public string Text { get; set; } = null!;
+}
 public class Review_CommentModel
 {
     public string Guid { get; set; } = null!;
     public string WriterGuid { get; set; } = null!;
     public bool IsReply { get; set; } = false;
-    public string ReplyToGuid { get; set; } = null!;
-    public string ReplyToBrief { get; set; } = null!;
-    public string ReplyToUsername { get; set; } = null!;
+    public string ReplyToGuid { get; set; } = "";
+    public string ReplyToBrief { get; set; } = "";
+    public string ReplyToUsername { get; set; } = "";
     public string Text { get; set; } = null!;
     public bool AmIThumbsUp { get; set; } = false;
     public bool AmIThumbsDown { get; set; } = false;

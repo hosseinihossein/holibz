@@ -24,7 +24,7 @@ import { ReviewService } from '../review-service';
 })
 export class ReviewComment {
   commentModel = input.required<CommentModel>();
-  submitReply = output<NewCommentFormModel>();
+  submitReply = output<NewReplyFormModel>();
   displayReplies = output();
 
   dialog = inject(MatDialog);
@@ -85,8 +85,8 @@ export class ReviewComment {
   onReply(){
     this.dialog.open(EditTextarea,{data:{label:`Reply to ${this.writerModel()?.username}`}}).afterClosed().subscribe(result=>{
       if(result){
-        let replyFormModel = new NewCommentFormModel();
-        replyFormModel.parentSubjectGuid = this.commentModel().guid;
+        let replyFormModel = new NewReplyFormModel();
+        replyFormModel.parentCommentGuid = this.commentModel().guid;
         replyFormModel.text = result;
         this.submitReply.emit(replyFormModel);
       }
@@ -127,5 +127,9 @@ export class CommentModel{
 
 export class NewCommentFormModel{
   parentSubjectGuid:string = "";
+  text:string = "";
+}
+export class NewReplyFormModel{
+  parentCommentGuid:string = "";
   text:string = "";
 }

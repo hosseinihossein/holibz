@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, input, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from "@angular/material/button";
 import { MatIcon } from '@angular/material/icon';
 import { IconService } from '../services/icon-service';
@@ -6,7 +6,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatBadge } from "@angular/material/badge";
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CommentModel, NewCommentFormModel, ReviewComment } from './comment/comment';
+import { CommentModel, NewCommentFormModel, NewReplyFormModel, ReviewComment } from './comment/comment';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
@@ -33,6 +33,7 @@ export class Review {
 
   reviewModel = signal<ReviewModel>(new ReviewModel(null));
   displaySubmitSpinner = signal(true);
+  bunchIndexMap = signal<Map<string,number>>(new Map<string,number>());
 
   orderCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed"|null>(null);
 
@@ -43,6 +44,10 @@ export class Review {
           next: res => {
             if(res){
               this.reviewModel.set(res);
+              this.bunchIndexMap.set(new Map<string,number>());
+              res.comments.forEach(c=>{
+                this.bunchIndexMap().set(c.guid, 0);
+              });
               this.displaySubmitSpinner.set(false);
             }
           },
@@ -71,6 +76,10 @@ export class Review {
           this.reviewModel.update(rm=>{
             rm.comments = res;
             return new ReviewModel(rm);
+          });
+          this.bunchIndexMap.set(new Map<string,number>());
+          res.forEach(c=>{
+            this.bunchIndexMap().set(c.guid, 0);
           });
         }
         this.displaySubmitSpinner.set(false);
@@ -116,16 +125,17 @@ export class Review {
     this.requestComments();
   }
 
-  onSubmitReply(replyFormModel:NewCommentFormModel){
+  onSubmitReply(replyFormModel:NewReplyFormModel){
     this.displaySubmitSpinner.set(true);
-    this.reviewService.postNewComment(replyFormModel).subscribe({
+    this.reviewService.postNewReply(replyFormModel).subscribe({
       next: res => {
         if(res){
           this.reviewModel.update(rm=>{
-            let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentSubjectGuid);
+            let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentCommentGuid);
             rm.comments.splice(index, 0, res);
             return new ReviewModel(rm);
           });
+          this.bunchIndexMap().set(res.guid, 0);
         }
         this.displaySubmitSpinner.set(false);
       }
@@ -133,13 +143,17 @@ export class Review {
   }
   onDisplayReplies(commentGuid:string){
     this.displaySubmitSpinner.set(true);
-    this.reviewService.requestComments(commentGuid).subscribe({
+    this.reviewService.requestReplies(commentGuid, this.bunchIndexMap().get(commentGuid)).subscribe({
       next: res => {
         if(res){
           this.reviewModel.update(rm=>{
             let index = rm.comments.findIndex(c=>c.guid === commentGuid);
             rm.comments.splice(index, 0, ...res);
             return new ReviewModel(rm);
+          });
+          this.bunchIndexMap().set(commentGuid, (this.bunchIndexMap().get(commentGuid) ?? 0) + 1);
+          res.forEach(c=>{
+            this.bunchIndexMap().set(c.guid, 0);
           });
         }
         this.displaySubmitSpinner.set(false);
@@ -163,6 +177,7 @@ export class Review {
                 rm.comments.unshift(res);
                 return new ReviewModel(rm);
               });
+              this.bunchIndexMap().set(res.guid, 0);
             }
             this.displaySubmitSpinner.set(false);
           }

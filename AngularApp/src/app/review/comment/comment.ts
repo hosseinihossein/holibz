@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { LibraryService, OwnerModel } from '../../services/library-service';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -14,11 +14,12 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
 import { ReviewService } from '../review-service';
 import { IdentityService } from '../../services/identity-service';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-review-comment',
   imports: [MatCardModule, RouterLink, NgOptimizedImage, MatIcon, MatButtonModule, MatTooltip,
-    MatProgressSpinner
+    MatProgressSpinner,MatMenuModule,
   ],
   templateUrl: './comment.html',
   styleUrl: './comment.css'
@@ -27,6 +28,9 @@ export class ReviewComment {
   commentModel = input.required<CommentModel>();
   submitReply = output<NewReplyFormModel>();
   displayReplies = output();
+  deleteComment = output();
+  thumbsUp = output();
+  thumbsDown = output();
 
   dialog = inject(MatDialog);
   singletonModes= inject(SingletonModes);

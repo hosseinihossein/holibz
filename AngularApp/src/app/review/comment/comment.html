@@ -31,7 +31,7 @@
 
     <mat-card-actions align="end">
         <div style="position: relative;margin: 0 8px;">
-            <button matIconButton matTooltip="Agree" matTooltipPosition="above">
+            <button matIconButton matTooltip="Agree" matTooltipPosition="above" (click)="thumbsUp.emit()">
                 <mat-icon [style]="commentModel().amIThumbsUp ? iconService.fillIcon() :''">
                     thumb_up
                 </mat-icon>
@@ -42,7 +42,7 @@
             </span>
         </div>
         <div style="position: relative;margin: 0 8px;">
-            <button matIconButton matTooltip="Disagree" matTooltipPosition="above">
+            <button matIconButton matTooltip="Disagree" matTooltipPosition="above" (click)="thumbsDown.emit()">
                 <mat-icon [style]="commentModel().amIThumbsDown ? iconService.fillIcon() :''">
                     thumb_down
                 </mat-icon>
@@ -64,9 +64,18 @@
         </div>
     </mat-card-actions>
 
-    @if(isMyComment){
-    menu
-    }
+    <button matIconButton [matMenuTriggerFor]="moreMenu" id="moreMenu-btn">
+        <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu #moreMenu>
+        <button mat-menu-item>Report</button>
+        @if(isMyComment()){
+        <button mat-menu-item (click)="deleteComment.emit()"
+            style="color: var(--mat-sys-on-error);background-color: var(--mat-sys-error);">
+            Delete
+        </button>
+        }
+    </mat-menu>
 
     @if(displaySubmitSpinner()){
     <div id="submit-spinner-layout">

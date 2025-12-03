@@ -1,6 +1,7 @@
 mat-card{
     margin: 4px auto;
     width: 100%;
+    position: relative;
 }
 mat-card.reply{
     width: 97%;
@@ -51,4 +52,10 @@ mat-card-subtitle{
     cursor: pointer;
     font-size: 12px;
     z-index: 1;
+}
+
+#moreMenu-btn{
+    position: absolute;
+    right: 0;
+    top: 0;
 }

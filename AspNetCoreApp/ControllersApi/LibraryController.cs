@@ -810,19 +810,29 @@ public class LibraryController : ControllerBase
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel)
+    public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel,
+    [FromServices] Review_DbContext reviewDb)
     {
         if (ModelState.IsValid)
         {
-            string userGuid = (await userManager.Users
+            string myGuid = (await userManager.Users
             .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstOrDefaultAsync())!;
 
-            var result = await libraryProcess.CreateNewDocument(libraryDb, userGuid, formModel);
+            var result = await libraryProcess.CreateNewDocument(libraryDb, myGuid, formModel);
             if (result.Success && result.ResultObject is not null)
             {
                 Library_DocumentDbModel documentDbModel = (Library_DocumentDbModel)result.ResultObject;
+
+                Review_ReviewDbModel reviewDbModel = new()
+                {
+                    SubjectGuid = documentDbModel.Guid,
+                    SubjectOwnerGuid = myGuid,
+                };
+                await reviewDb.Reviews.AddAsync(reviewDbModel);
+                await reviewDb.SaveChangesAsync();
+
                 return Ok(new { success = true, documentGuid = documentDbModel.Guid });
             }
 

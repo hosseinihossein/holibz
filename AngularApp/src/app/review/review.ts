@@ -104,6 +104,42 @@ export class Review {
       return new ReviewModel(rm);
     });
   }
+  toggleThumbsUp(commentGuid:string){
+    this.reviewService.requestToggleThumbsUp(commentGuid).subscribe({
+      next: res => {
+        if(res){
+          this.reviewModel.update(rm=>{
+            let comment = rm.comments.find(c=>c.guid == commentGuid)!;
+            comment.amIThumbsUp = !comment.amIThumbsUp;
+            comment.numberOfThumbsUps = res.numberOfThumbUps;
+            if(comment.amIThumbsUp && comment.amIThumbsDown){
+              comment.amIThumbsDown = false;
+              comment.numberOfThumbsDowns--;
+            }
+            return new ReviewModel(rm);
+          });
+        }
+      },
+    });
+  }
+  toggleThumbsDown(commentGuid:string){
+    this.reviewService.requestToggleThumbsDown(commentGuid).subscribe({
+      next: res => {
+        if(res){
+          this.reviewModel.update(rm=>{
+            let comment = rm.comments.find(c=>c.guid == commentGuid)!;
+            comment.amIThumbsDown = !comment.amIThumbsDown;
+            comment.numberOfThumbsDowns = res.numberOfThumbDowns;
+            if(comment.amIThumbsDown && comment.amIThumbsUp){
+              comment.amIThumbsUp = false;
+              comment.numberOfThumbsUps--;
+            }
+            return new ReviewModel(rm);
+          });
+        }
+      },
+    });
+  }
 
   openListOfLikes(){
     this.dialog.open(BriefUsersList, {
@@ -189,7 +225,10 @@ export class Review {
     this.reviewService.requestDeleteComment(commentGuid).subscribe({
       next: res => {
         if(res && res.success){
-          this.deleteCommentAndRepliesRecursively(commentGuid, this.reviewModel().comments)
+          this.deleteCommentAndRepliesRecursively(commentGuid, this.reviewModel().comments);
+          this.reviewModel.update(rm=>{
+            return new ReviewModel(rm);
+          });
         }
       }
     });

@@ -52,6 +52,20 @@ public class Program
             new MySqlServerVersion(new Version(8, 0, 42)));
         });
 
+        //******************* Review_DbContext *******************
+        builder.Services.AddDbContext<Review_DbContext>(opts =>
+        {
+            opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:ReviewConnection"],
+            new MySqlServerVersion(new Version(8, 0, 42)));
+        });
+
+        //******************* Notification_DbContext *******************
+        builder.Services.AddDbContext<Notification_DbContext>(opts =>
+        {
+            opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:NotificationConnection"],
+            new MySqlServerVersion(new Version(8, 0, 42)));
+        });
+
 
 
 
@@ -255,6 +269,12 @@ public class Program
 
         Library_DbContext libraryDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Library_DbContext>();
         libraryDb.Database.Migrate();
+
+        Review_DbContext reviewDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Review_DbContext>();
+        reviewDb.Database.Migrate();
+
+        Notification_DbContext notifDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Notification_DbContext>();
+        notifDb.Database.Migrate();
 
         Console.WriteLine("** All DB Migration Completed! **");
 

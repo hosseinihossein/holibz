@@ -772,6 +772,7 @@ public class ReviewController : ControllerBase
         if (!commentDbModel.ThumbsUpBy.Remove(myGuid))
         {
             commentDbModel.ThumbsUpBy.Add(myGuid);
+            commentDbModel.ThumbsDownBy.Remove(myGuid);
         }
 
         await reviewDb.SaveChangesAsync();
@@ -800,6 +801,7 @@ public class ReviewController : ControllerBase
         if (!commentDbModel.ThumbsDownBy.Remove(myGuid))
         {
             commentDbModel.ThumbsDownBy.Add(myGuid);
+            commentDbModel.ThumbsUpBy.Remove(myGuid);
         }
 
         await reviewDb.SaveChangesAsync();

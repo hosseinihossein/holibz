@@ -65,6 +65,12 @@ export class ReviewService {
       "/api/Review/SubmitNewComment", formData
     );
   }
+  requestDeleteComment(commentGuid:string){
+    let httpParams = new HttpParams().set("commentGuid",commentGuid);
+    return this.httpClient.delete<{success:boolean}>(
+      "/api/Review/DeleteComment", {params:httpParams}
+    );
+  }
 
   requestToggleLike(subjectGuid:string){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
@@ -85,14 +91,14 @@ export class ReviewService {
     );
   }
 
-  requestLikedUserList(subjectGuid:string, bunchIndex:number, filter?:string|null){
+  requestLikesUserList(subjectGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
     httpParams.set("bunchIndex", bunchIndex);
     if(filter?.trim()){
       httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
-      "/api/Review/GetLikedUserList", {params:httpParams}
+      "/api/Review/GetLikesUserList", {params:httpParams}
     );
   }
   requestThumbsUpUserList(commentGuid:string, bunchIndex:number, filter?:string|null){
@@ -115,6 +121,8 @@ export class ReviewService {
       "/api/Review/GetThumbsDownUserList", {params:httpParams}
     );
   }
+
+  
 
 
 }

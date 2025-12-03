@@ -64,9 +64,14 @@
         </div>
     </mat-card-actions>
 
+    @if(isMyComment){
+    menu
+    }
+
     @if(displaySubmitSpinner()){
     <div id="submit-spinner-layout">
         <mat-spinner id="submit-spinner"></mat-spinner>
     </div>
     }
+
 </mat-card>

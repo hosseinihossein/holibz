@@ -689,6 +689,36 @@ public class ReviewController : ControllerBase
         return BadRequest(ModelState);
     }
 
+    [HttpDelete]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteComment([FromQuery][StringLength(32)] string commentGuid)
+    {
+        Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .FirstOrDefaultAsync(c => c.Guid == commentGuid);
+        if (commentDbModel is null)
+        {
+            ModelState.AddModelError("commentGuid", "There's not comment with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        if (commentDbModel.WriterGuid == myGuid)
+        {
+            reviewDb.Comments.Remove(commentDbModel);
+            await reviewDb.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+
+        ModelState.AddModelError("Authorization", "Only the writer of the comment can delete the comment!");
+        return BadRequest(ModelState);
+    }
+
 
 
 
@@ -782,24 +812,310 @@ public class ReviewController : ControllerBase
 
 
     [HttpGet]
-    public async Task<IActionResult> GetLikedUserList([FromQuery][StringLength(32)] string subjectGuid,
-    [FromQuery] int bunchIndex, [FromQuery][StringLength(30)] string? filter)
+    public async Task<IActionResult> GetLikesUserList([FromQuery][StringLength(32)] string subjectGuid,
+    [FromQuery] int? bunchIndex, [FromQuery][StringLength(30)] string? filter,
+    [FromServices] Library_DbContext libraryDb)
     {
+        Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
+        .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
+        if (reviewDbModel is null)
+        {
+            ModelState.AddModelError("subjectGuid", "There's no review with the specified guid!");
+            return BadRequest(ModelState);
+        }
 
+        string? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
+        bunchIndex ??= 0;
+        int bunchSize = 10;
+
+        if (string.IsNullOrWhiteSpace(filter))
+        {
+            filter = null;
+        }
+        else
+        {
+            filter = filter.Trim();
+        }
+
+        List<string> likedByGuids = reviewDbModel.LikedByGuids;
+        if (filter is not null)
+        {
+            likedByGuids = await userManager.Users
+            .Where(u => reviewDbModel.LikedByGuids.Contains(u.UserGuid) &&
+            u.NormalizedUserName!.Contains(userManager.NormalizeName(filter)))
+            .Select(u => u.UserGuid)
+            .ToListAsync();
+        }
+
+        List<string> myFollowingsLikesGuids = [];
+        List<string> othersLikesGuids = [];
+        if (myGuid is not null)
+        {
+            List<string> myFollowingsGuids = await libraryDb.Owners
+            .Where(o => o.Guid == myGuid)
+            .Include(o => o.Followings)
+            .SelectMany(o => o.Followings)
+            .Select(f => f.Guid)
+            .ToListAsync();
+
+            myFollowingsLikesGuids = likedByGuids
+            .Intersect(myFollowingsGuids)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToList();
+
+            if (myFollowingsLikesGuids.Count < bunchSize)
+            {
+                int totalNumberOfMyFollowingsLikes = likedByGuids
+                .Intersect(myFollowingsGuids)
+                .Count();
+                int numberOfSkipOthersLikes = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsLikes;
+                if (numberOfSkipOthersLikes < 0) numberOfSkipOthersLikes = 0;
+
+                int numberOfNeededOthersLikes = bunchSize - myFollowingsLikesGuids.Count;
+
+                othersLikesGuids = likedByGuids
+                .Where(lg => !myFollowingsLikesGuids.Contains(lg))
+                .Skip(numberOfSkipOthersLikes)
+                .Take(numberOfNeededOthersLikes)
+                .ToList();
+            }
+
+        }
+        else
+        {
+            othersLikesGuids = likedByGuids
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToList();
+        }
+
+        List<string> likesUserGuids = [.. myFollowingsLikesGuids, .. othersLikesGuids];
+
+        Library_OwnerModel[] likesOwnerModels = await userManager.Users
+        .Where(u => likesUserGuids.Contains(u.UserGuid))
+        .Select(u => new Library_OwnerModel()
+        {
+            Guid = u.UserGuid,
+            HasImage = u.HasImage,
+            IntegrityVersion = u.IntegrityVersion,
+            Username = u.UserName!,
+        })
+        .ToArrayAsync();
+
+        return Ok(likesOwnerModels);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetThumbsUpUserList([FromQuery][StringLength(32)] string commentGuid,
-    [FromQuery] int bunchIndex, [FromQuery][StringLength(30)] string? filter)
+    [FromQuery] int? bunchIndex, [FromQuery][StringLength(30)] string? filter,
+    [FromServices] Library_DbContext libraryDb)
     {
+        Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .FirstOrDefaultAsync(c => c.Guid == commentGuid);
+        if (commentDbModel is null)
+        {
+            ModelState.AddModelError("commentGuid", "There's no comment with the specified guid!");
+            return BadRequest(ModelState);
+        }
 
+        string? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
+        bunchIndex ??= 0;
+        int bunchSize = 10;
+
+        if (string.IsNullOrWhiteSpace(filter))
+        {
+            filter = null;
+        }
+        else
+        {
+            filter = filter.Trim();
+        }
+
+        List<string> thumbsUpByGuids = commentDbModel.ThumbsUpBy;
+        if (filter is not null)
+        {
+            thumbsUpByGuids = await userManager.Users
+            .Where(u => commentDbModel.ThumbsUpBy.Contains(u.UserGuid) &&
+            u.NormalizedUserName!.Contains(userManager.NormalizeName(filter)))
+            .Select(u => u.UserGuid)
+            .ToListAsync();
+        }
+
+        List<string> myFollowingsThumbsUpsGuids = [];
+        List<string> othersThumbsUpsGuids = [];
+        if (myGuid is not null)
+        {
+            List<string> myFollowingsGuids = await libraryDb.Owners
+            .Where(o => o.Guid == myGuid)
+            .Include(o => o.Followings)
+            .SelectMany(o => o.Followings)
+            .Select(f => f.Guid)
+            .ToListAsync();
+
+            myFollowingsThumbsUpsGuids = thumbsUpByGuids
+            .Intersect(myFollowingsGuids)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToList();
+
+            if (myFollowingsThumbsUpsGuids.Count < bunchSize)
+            {
+                int totalNumberOfMyFollowingsThumbsUps = thumbsUpByGuids
+                .Intersect(myFollowingsGuids)
+                .Count();
+                int numberOfSkipOthersThumbsUps = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsThumbsUps;
+                if (numberOfSkipOthersThumbsUps < 0) numberOfSkipOthersThumbsUps = 0;
+
+                int numberOfNeededOthersThumbsUps = bunchSize - myFollowingsThumbsUpsGuids.Count;
+
+                othersThumbsUpsGuids = thumbsUpByGuids
+                .Where(lg => !myFollowingsThumbsUpsGuids.Contains(lg))
+                .Skip(numberOfSkipOthersThumbsUps)
+                .Take(numberOfNeededOthersThumbsUps)
+                .ToList();
+            }
+        }
+        else
+        {
+            othersThumbsUpsGuids = thumbsUpByGuids
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToList();
+        }
+
+        List<string> thumbsUpsUserGuids = [.. myFollowingsThumbsUpsGuids, .. othersThumbsUpsGuids];
+
+        Library_OwnerModel[] thumbsUpsOwnerModels = await userManager.Users
+        .Where(u => thumbsUpsUserGuids.Contains(u.UserGuid))
+        .Select(u => new Library_OwnerModel()
+        {
+            Guid = u.UserGuid,
+            HasImage = u.HasImage,
+            IntegrityVersion = u.IntegrityVersion,
+            Username = u.UserName!,
+        })
+        .ToArrayAsync();
+
+        return Ok(thumbsUpsOwnerModels);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetThumbsDownUserList([FromQuery][StringLength(32)] string commentGuid,
-    [FromQuery] int bunchIndex, [FromQuery][StringLength(30)] string? filter)
+    [FromQuery] int? bunchIndex, [FromQuery][StringLength(30)] string? filter,
+    [FromServices] Library_DbContext libraryDb)
     {
+        Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .FirstOrDefaultAsync(c => c.Guid == commentGuid);
+        if (commentDbModel is null)
+        {
+            ModelState.AddModelError("commentGuid", "There's no comment with the specified guid!");
+            return BadRequest(ModelState);
+        }
 
+        string? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
+        bunchIndex ??= 0;
+        int bunchSize = 10;
+
+        if (string.IsNullOrWhiteSpace(filter))
+        {
+            filter = null;
+        }
+        else
+        {
+            filter = filter.Trim();
+        }
+
+        List<string> thumbsDownByGuids = commentDbModel.ThumbsDownBy;
+        if (filter is not null)
+        {
+            thumbsDownByGuids = await userManager.Users
+            .Where(u => commentDbModel.ThumbsDownBy.Contains(u.UserGuid) &&
+            u.NormalizedUserName!.Contains(userManager.NormalizeName(filter)))
+            .Select(u => u.UserGuid)
+            .ToListAsync();
+        }
+
+        List<string> myFollowingsThumbsDownsGuids = [];
+        List<string> othersThumbsDownsGuids = [];
+        if (myGuid is not null)
+        {
+            List<string> myFollowingsGuids = await libraryDb.Owners
+            .Where(o => o.Guid == myGuid)
+            .Include(o => o.Followings)
+            .SelectMany(o => o.Followings)
+            .Select(f => f.Guid)
+            .ToListAsync();
+
+            myFollowingsThumbsDownsGuids = thumbsDownByGuids
+            .Intersect(myFollowingsGuids)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToList();
+
+            if (myFollowingsThumbsDownsGuids.Count < bunchSize)
+            {
+                int totalNumberOfMyFollowingsThumbsDowns = thumbsDownByGuids
+                .Intersect(myFollowingsGuids)
+                .Count();
+                int numberOfSkipOthersThumbsDowns = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsThumbsDowns;
+                if (numberOfSkipOthersThumbsDowns < 0) numberOfSkipOthersThumbsDowns = 0;
+
+                int numberOfNeededOthersThumbsDowns = bunchSize - myFollowingsThumbsDownsGuids.Count;
+
+                othersThumbsDownsGuids = thumbsDownByGuids
+                .Where(lg => !myFollowingsThumbsDownsGuids.Contains(lg))
+                .Skip(numberOfSkipOthersThumbsDowns)
+                .Take(numberOfNeededOthersThumbsDowns)
+                .ToList();
+            }
+        }
+        else
+        {
+            othersThumbsDownsGuids = thumbsDownByGuids
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToList();
+        }
+
+        List<string> thumbsDownsUserGuids = [.. myFollowingsThumbsDownsGuids, .. othersThumbsDownsGuids];
+
+        Library_OwnerModel[] thumbsUpsOwnerModels = await userManager.Users
+        .Where(u => thumbsDownsUserGuids.Contains(u.UserGuid))
+        .Select(u => new Library_OwnerModel()
+        {
+            Guid = u.UserGuid,
+            HasImage = u.HasImage,
+            IntegrityVersion = u.IntegrityVersion,
+            Username = u.UserName!,
+        })
+        .ToArrayAsync();
+
+        return Ok(thumbsUpsOwnerModels);
     }
 
 }

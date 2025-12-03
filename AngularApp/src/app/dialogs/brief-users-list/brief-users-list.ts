@@ -75,7 +75,7 @@ export class BriefUsersList {
 
     if(this.data.subjectGuid){
       if(this.data.type === "Like"){
-        this.reviewService.requestLikedUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+        this.reviewService.requestLikesUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
       }
       else if(this.data.type === "ThumbsUp"){
         this.reviewService.requestThumbsUpUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);

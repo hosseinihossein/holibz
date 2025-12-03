@@ -13,6 +13,7 @@ import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
 import { ReviewService } from '../review-service';
+import { IdentityService } from '../../services/identity-service';
 
 @Component({
   selector: 'app-review-comment',
@@ -33,11 +34,13 @@ export class ReviewComment {
   iconService = inject(IconService);
   libraryService = inject(LibraryService);
   reviewService = inject(ReviewService);
+  identityService  =inject(IdentityService);
 
   //commentModel = signal<CommentModel>(new CommentModel(null));
   writerModel = signal<OwnerModel|null>(null);
   userAvatarSrc = computed(()=>this.singletonModes.getUserImageAddress(this.writerModel()));
   displaySubmitSpinner = signal(false);
+  isMyComment = computed(()=>this.commentModel().writerGuid === this.identityService.userModel()?.guid);
 
   constructor(){
     effect(()=>{

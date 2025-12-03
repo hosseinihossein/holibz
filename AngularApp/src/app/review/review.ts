@@ -160,7 +160,6 @@ export class Review {
       },
     });
   }
-
   onNewComment(){
     this.dialog.open(EditTextarea,{data:{label:`New Comment`}}).afterClosed().subscribe((result)=>{
       if(result){
@@ -182,6 +181,25 @@ export class Review {
             this.displaySubmitSpinner.set(false);
           }
         });
+      }
+    });
+  }
+  onDeleteComment(commentGuid:string){
+    this.displaySubmitSpinner.set(true);
+    this.reviewService.requestDeleteComment(commentGuid).subscribe({
+      next: res => {
+        if(res && res.success){
+          this.deleteCommentAndRepliesRecursively(commentGuid, this.reviewModel().comments)
+        }
+      }
+    });
+  }
+  deleteCommentAndRepliesRecursively(commentGuid:string, comments:CommentModel[]){
+    let index = comments.findIndex(c=>c.guid === commentGuid);
+    comments.splice(index,1);
+    comments.forEach(c=>{
+      if(c.replyToGuid === commentGuid){
+        this.deleteCommentAndRepliesRecursively(c.guid, comments);
       }
     });
   }

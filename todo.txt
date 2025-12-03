@@ -1,11 +1,7 @@
-- add reference element to other elements
+- add reference element to other elements(and some other elements such as table, chart, list, ...)
 - test edition and deletion of default library and shelf
-- create a new dbcontext for followship service
-- transfer requestOwnerModel from libraryService to IdentityService(rename it to requestUserModel)
-- transfer GetOwnerModel from libraryController to IdentityController(rename it to GetUserModel)
-- rename the OwnerModel class to UserModel
 - set documentPage to show the comment mentioned in the queryParams(redirected from notification)
-- 
+- display followings in the likedByusers first
 - 
 
 

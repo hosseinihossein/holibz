@@ -1,7 +1,6 @@
 - add reference element to other elements(and some other elements such as table, chart, list, ...)
 - test edition and deletion of default library and shelf
 - set documentPage to show the comment mentioned in the queryParams(redirected from notification)
-- display followings in the likedByusers first
 - 
 
 

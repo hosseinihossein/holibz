@@ -282,104 +282,94 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 /******************************** Identity Process *******************************/
 public class Identity_Process
 {
-    //readonly DirectoryInfo UserSeedDirectoryInfo;
     public readonly DirectoryInfo Storage_Users;
-    //readonly IWebHostEnvironment env;
+    readonly string SeedFileName = "data.json";
     public Identity_Process(IWebHostEnvironment _env)
     {
-        //UserSeedDirectoryInfo = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "UsersSeedData"));
         Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "Users"));
     }
 
-    /*
-        public async Task UpdateUserSeed(Identity_UserDbModel user,
-        UserManager<Identity_UserDbModel> userManager)
+    //************************************ seed User data **********************************
+    public async Task Update_UserSeed(Identity_UserDbModel user,
+    UserManager<Identity_UserDbModel> userManager)
+    {
+        Identity_UserSeedModel? seedModel = await Identity_UserSeedModel.Factory(user, userManager);
+        if (seedModel is null) return;
+
+        string json = JsonSerializer.Serialize(seedModel);
+        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, user.UserGuid));
+        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_UserSeed(string userGuid)
+    {
+        string seedPath = Path.Combine(Storage_Users.FullName, userGuid, SeedFileName);
+        if (File.Exists(seedPath))
         {
-            Identity_UserSeedModel userSeedModel = new()
+            try
             {
-                UserName = user.UserName!,
-                Email = user.Email!,
-                EmailConfirmed = user.EmailConfirmed,
-                UserGuid = user.UserGuid,
-                PasswordHash = user.PasswordHash!,
-                Description = user.Description,
-                DisplayEmailPublicly = user.DisplayEmailPublicly,
-                CreatedAt = user.CreatedAt,
-                Roles = [.. await userManager.GetRolesAsync(user)],
-            };
-
-            string json = JsonSerializer.Serialize(userSeedModel);
-            DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, user.UserGuid));
-            string userSeedPath = Path.Combine(seedDirectory.FullName, "data.json");
-
-            await File.WriteAllTextAsync(userSeedPath, json);
-        }
-
-        public void DeleteUserSeed(string userGuid)
-        {
-            string userSeedPath = Path.Combine(Storage_Users.FullName, userGuid, "data.json");
-            if (File.Exists(userSeedPath))
+                File.Delete(seedPath);
+            }
+            catch (Exception e)
             {
-                File.Delete(userSeedPath);
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
             }
         }
-
-        public async Task SeedUsersToDb(UserManager<Identity_UserDbModel> userManager)
+    }
+    public async Task Seed_UsersToDb(UserManager<Identity_UserDbModel> userManager)
+    {
+        foreach (var seedDirectory in Storage_Users.EnumerateDirectories())
         {
-            foreach (var userDirectory in Storage_Users.EnumerateDirectories())
+            var dbModelExist = await userManager.Users
+            .AnyAsync(o => o.UserGuid == seedDirectory.Name);
+            if (dbModelExist)
             {
-                var myUser = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userDirectory.Name);
-                if (myUser != null) continue;
+                continue;
+            }
 
-                //here myUser is null
-                string userSeedPath = Path.Combine(Storage_Users.FullName, userDirectory.Name, "data.json");
-                if (!File.Exists(userSeedPath))
-                {
-                    continue;
-                }
+            string seedPath = Path.Combine(Storage_Users.FullName, seedDirectory.Name, SeedFileName);
+            if (!File.Exists(seedPath))
+            {
+                continue;
+            }
 
-                string json = await File.ReadAllTextAsync(userSeedPath);
-                Identity_UserSeedModel? userSeedModel;
-                try
-                {
-                    userSeedModel = JsonSerializer.Deserialize<Identity_UserSeedModel>(json);
-                }
-                catch
+            string json = await File.ReadAllTextAsync(seedPath);
+            Identity_UserSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Identity_UserSeedModel>(json);
+            }
+            catch
+            {
+                //log
+                Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                Identity_UserDbModel userDbModel = seedModel.GetDbModel();
+                IdentityResult result = await userManager.CreateAsync(userDbModel);
+                if (!result.Succeeded)
                 {
                     //log
-                    Console.WriteLine($"\n***** an exception occured during deserializing user seed data! userGuid: '{userDirectory.Name}'");
+                    Console.WriteLine($"\n     ***** Couldn't seed a user to the db! userGuid '{userDbModel.UserGuid}'");
                     continue;
                 }
-                if (userSeedModel is not null)
-                {
-                    myUser = new Identity_UserDbModel()
-                    {
-                        UserName = userSeedModel.UserName,
-                        Email = userSeedModel.Email,
-                        EmailConfirmed = userSeedModel.EmailConfirmed,
-                        UserGuid = userSeedModel.UserGuid,
-                        PasswordHash = userSeedModel.PasswordHash,
-                        Description = userSeedModel.Description,
-                        DisplayEmailPublicly = userSeedModel.DisplayEmailPublicly,
-                        CreatedAt = userSeedModel.CreatedAt,
-                    };
-                    IdentityResult result = await userManager.CreateAsync(myUser);
-                    if (!result.Succeeded)
-                    {
-                        //log
-                        continue;
-                    }
 
-                    foreach (string roleName in userSeedModel.Roles)
-                    {
-                        await userManager.AddToRoleAsync(myUser, roleName);
-                    }
+                foreach (string roleName in seedModel.Roles)
+                {
+                    await userManager.AddToRoleAsync(userDbModel, roleName);
                 }
             }
         }
-    */
+    }
+
+
 }
-/*public class Identity_UserSeedModel
+
+//************************* Seed Models *************************
+public class Identity_UserSeedModel
 {
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -387,10 +377,51 @@ public class Identity_Process
     public string UserGuid { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public bool DisplayEmailPublicly { get; set; } = false;
+    public bool DisplayEmailPublicly { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool HasImage { get; set; }
     public string[] Roles { get; set; } = [];
-}*/
+
+    public static async Task<Identity_UserSeedModel?> Factory(Identity_UserDbModel user,
+    UserManager<Identity_UserDbModel> userManager)
+    {
+        string[] roles = (await userManager.GetRolesAsync(user)).ToArray();
+
+        Identity_UserSeedModel? seedModel = new()
+        {
+            CreatedAt = user.CreatedAt,
+            Description = user.Description,
+            DisplayEmailPublicly = user.DisplayEmailPublicly,
+            Email = user.Email!,
+            EmailConfirmed = user.EmailConfirmed,
+            HasImage = user.HasImage,
+            PasswordHash = user.PasswordHash!,
+            UserGuid = user.UserGuid,
+            UserName = user.UserName!,
+            Roles = roles,
+        };
+
+        return seedModel;
+    }
+
+    public Identity_UserDbModel GetDbModel()
+    {
+        Identity_UserDbModel userDbModel = new()
+        {
+            CreatedAt = CreatedAt,
+            Description = Description,
+            DisplayEmailPublicly = DisplayEmailPublicly,
+            Email = Email,
+            EmailConfirmed = EmailConfirmed,
+            HasImage = HasImage,
+            PasswordHash = PasswordHash,
+            UserGuid = UserGuid,
+            UserName = UserName,
+        };
+
+        return userDbModel;
+    }
+}
 
 
 

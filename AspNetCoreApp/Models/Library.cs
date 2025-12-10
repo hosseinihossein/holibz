@@ -281,10 +281,12 @@ public class Library_Process //singleton service
     readonly DirectoryInfo Storage_Tags;
     readonly DirectoryInfo Storage_RelatedVersions;
     readonly FileNameValidator fileNameValidator;
-    readonly string SeedFileName = "data.json";
+    readonly string SeedFileName;
 
-    public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator)
+    public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator,
+    IConfiguration config)
     {
+        SeedFileName = config["SeedFileName"] ?? "data.json";
         Storage_Owners = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Owners"));
         Storage_Libraries = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
         Storage_Shelves = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
@@ -651,10 +653,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_OwnerSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing Owner seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -719,10 +722,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_LibrarySeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing Library seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -787,10 +791,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_ShelfSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing Shelf seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -855,10 +860,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_DocumentSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing Document seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -923,10 +929,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_ElementSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing Element seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -991,10 +998,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_RelatedVersionsSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing RelatedVersions seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -1059,10 +1067,11 @@ public class Library_Process //singleton service
             {
                 seedModel = JsonSerializer.Deserialize<Library_TagSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing Tag seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)
@@ -1132,12 +1141,21 @@ public class Library_OwnerSeedModel
 
     public async Task<Library_OwnerDbModel?> GetDbModel(Library_DbContext libraryDb)
     {
-        List<Library_OwnerDbModel> followers = await libraryDb.Owners
-        .Where(o => FollowersGuids.Contains(o.Guid))
-        .ToListAsync();
-        List<Library_OwnerDbModel> followings = await libraryDb.Owners
-        .Where(o => FollowingsGuids.Contains(o.Guid))
-        .ToListAsync();
+        List<Library_OwnerDbModel> followers = [];
+        if (FollowersGuids.Length > 0)
+        {
+            followers = await libraryDb.Owners
+            .Where(o => FollowersGuids.Contains(o.Guid))
+            .ToListAsync();
+        }
+
+        List<Library_OwnerDbModel> followings = [];
+        if (FollowingsGuids.Length > 0)
+        {
+            followings = await libraryDb.Owners
+            .Where(o => FollowingsGuids.Contains(o.Guid))
+            .ToListAsync();
+        }
 
         Library_OwnerDbModel ownerDbModel = new()
         {
@@ -1196,9 +1214,13 @@ public class Library_LibrarySeedModel
             return null;
         }
 
-        List<Library_OwnerDbModel> inFavorOf = await libraryDb.Owners
-        .Where(o => InFavorOfGuids.Contains(o.Guid))
-        .ToListAsync();
+        List<Library_OwnerDbModel> inFavorOf = [];
+        if (InFavorOfGuids.Length > 0)
+        {
+            inFavorOf = await libraryDb.Owners
+            .Where(o => InFavorOfGuids.Contains(o.Guid))
+            .ToListAsync();
+        }
 
         Library_LibraryDbModel libraryDbModel = new()
         {
@@ -1262,13 +1284,21 @@ public class Library_ShelfSeedModel
             return null;
         }
 
-        List<Library_OwnerDbModel> inFavorOf = await libraryDb.Owners
-        .Where(o => InFavorOfGuids.Contains(o.Guid))
-        .ToListAsync();
+        List<Library_OwnerDbModel> inFavorOf = [];
+        if (InFavorOfGuids.Length > 0)
+        {
+            inFavorOf = await libraryDb.Owners
+            .Where(o => InFavorOfGuids.Contains(o.Guid))
+            .ToListAsync();
+        }
 
-        List<Library_LibraryDbModel> parentLibraries = await libraryDb.Libraries
-        .Where(l => ParentLibrariesGuids.Contains(l.Guid))
-        .ToListAsync();
+        List<Library_LibraryDbModel> parentLibraries = [];
+        if (ParentLibrariesGuids.Length > 0)
+        {
+            parentLibraries = await libraryDb.Libraries
+            .Where(l => ParentLibrariesGuids.Contains(l.Guid))
+            .ToListAsync();
+        }
 
         Library_ShelfDbModel shelfDbModel = new()
         {
@@ -1335,13 +1365,21 @@ public class Library_DocumentSeedModel
             return null;
         }
 
-        List<Library_OwnerDbModel> inFavorOf = await libraryDb.Owners
-        .Where(o => InFavorOfGuids.Contains(o.Guid))
-        .ToListAsync();
+        List<Library_OwnerDbModel> inFavorOf = [];
+        if (InFavorOfGuids.Length > 0)
+        {
+            inFavorOf = await libraryDb.Owners
+            .Where(o => InFavorOfGuids.Contains(o.Guid))
+            .ToListAsync();
+        }
 
-        List<Library_ShelfDbModel> parentShelves = await libraryDb.Shelves
-        .Where(shelf => ParentShelvesGuids.Contains(shelf.Guid))
-        .ToListAsync();
+        List<Library_ShelfDbModel> parentShelves = [];
+        if (ParentShelvesGuids.Length > 0)
+        {
+            parentShelves = await libraryDb.Shelves
+            .Where(shelf => ParentShelvesGuids.Contains(shelf.Guid))
+            .ToListAsync();
+        }
 
         Library_DocumentDbModel documentDbModel = new()
         {
@@ -1458,9 +1496,13 @@ public class Library_RelatedVersionsSeedModel
 
     public async Task<Library_RelatedVersionsDbModel?> GetDbModel(Library_DbContext libraryDb)
     {
-        List<Library_DocumentDbModel> documents = await libraryDb.Documents
-        .Where(doc => DocumentsGuids.Contains(doc.Guid))
-        .ToListAsync();
+        List<Library_DocumentDbModel> documents = [];
+        if (DocumentsGuids.Length > 0)
+        {
+            documents = await libraryDb.Documents
+            .Where(doc => DocumentsGuids.Contains(doc.Guid))
+            .ToListAsync();
+        }
 
         Library_RelatedVersionsDbModel relatedVersionsDbModel = new()
         {
@@ -1496,9 +1538,13 @@ public class Library_TagSeedModel
 
     public async Task<Library_TagDbModel?> GetDbModel(Library_DbContext libraryDb)
     {
-        List<Library_DocumentDbModel> documents = await libraryDb.Documents
-        .Where(doc => DocumentsGuids.Contains(doc.Guid))
-        .ToListAsync();
+        List<Library_DocumentDbModel> documents = [];
+        if (DocumentsGuids.Length > 0)
+        {
+            documents = await libraryDb.Documents
+            .Where(doc => DocumentsGuids.Contains(doc.Guid))
+            .ToListAsync();
+        }
 
         Library_TagDbModel tagDbModel = new()
         {

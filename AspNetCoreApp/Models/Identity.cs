@@ -283,9 +283,10 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 public class Identity_Process
 {
     public readonly DirectoryInfo Storage_Users;
-    readonly string SeedFileName = "data.json";
-    public Identity_Process(IWebHostEnvironment _env)
+    readonly string SeedFileName;
+    public Identity_Process(IWebHostEnvironment _env, IConfiguration config)
     {
+        SeedFileName = config["SeedFileName"] ?? "data.json";
         Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "Users"));
     }
 
@@ -340,10 +341,11 @@ public class Identity_Process
             {
                 seedModel = JsonSerializer.Deserialize<Identity_UserSeedModel>(json);
             }
-            catch
+            catch (Exception e)
             {
                 //log
                 Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
                 continue;
             }
             if (seedModel is not null)

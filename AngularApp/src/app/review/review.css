@@ -2,7 +2,7 @@
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 16px;
     padding: 8px;
-    width: 50%;
+    width: 100%;
     min-width: 400px;
     margin: 50px auto;
     position: relative;

@@ -38,12 +38,13 @@ import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
 import { ParentShelfModel } from '../new-document-form/new-document-form';
+import { Review } from '../../review/review';
 
 @Component({
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
     MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip, RouterLink,
-    NgOptimizedImage, MatBadge,MatProgressSpinner],
+    NgOptimizedImage, MatBadge, MatProgressSpinner, Review],
   templateUrl: './document-page.html',
   styleUrl: './document-page.css',
   providers: [DocumentPageService]

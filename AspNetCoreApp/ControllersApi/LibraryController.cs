@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace AspNetCoreApp.Controllers;
+namespace AspNetCoreApp.ControllersApi;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -811,7 +811,7 @@ public class LibraryController : ControllerBase
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel,
-    [FromServices] Review_DbContext reviewDb)
+    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb)
     {
         if (ModelState.IsValid)
         {
@@ -825,13 +825,14 @@ public class LibraryController : ControllerBase
             {
                 Library_DocumentDbModel documentDbModel = (Library_DocumentDbModel)result.ResultObject;
 
-                Review_ReviewDbModel reviewDbModel = new()
+                /*Review_ReviewDbModel reviewDbModel = new()
                 {
                     SubjectGuid = documentDbModel.Guid,
                     SubjectOwnerGuid = myGuid,
                 };
                 await reviewDb.Reviews.AddAsync(reviewDbModel);
-                await reviewDb.SaveChangesAsync();
+                await reviewDb.SaveChangesAsync();*/
+                await reviewProcess.CreateNewReview(reviewDb, documentDbModel.Guid, myGuid);
 
                 return Ok(new { success = true, documentGuid = documentDbModel.Guid });
             }

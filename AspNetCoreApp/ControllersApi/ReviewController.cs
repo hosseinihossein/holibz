@@ -741,10 +741,16 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (!reviewDbModel.LikedByGuids.Remove(myGuid))
+        List<string> temp = new(reviewDbModel.LikedByGuids);
+        if (reviewDbModel.LikedByGuids.Contains(myGuid))
         {
-            reviewDbModel.LikedByGuids.Add(myGuid);
+            temp.Remove(myGuid);
         }
+        else
+        {
+            temp.Add(myGuid);
+        }
+        reviewDbModel.LikedByGuids = temp;
 
         await reviewDb.SaveChangesAsync();
 
@@ -769,11 +775,19 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (!commentDbModel.ThumbsUpBy.Remove(myGuid))
+        List<string> tempUp = new(commentDbModel.ThumbsUpBy);
+        List<string> tempDown = new(commentDbModel.ThumbsDownBy);
+        if (commentDbModel.ThumbsUpBy.Contains(myGuid))
         {
-            commentDbModel.ThumbsUpBy.Add(myGuid);
-            commentDbModel.ThumbsDownBy.Remove(myGuid);
+            tempUp.Remove(myGuid);
         }
+        else
+        {
+            tempUp.Add(myGuid);
+            tempDown.Remove(myGuid);
+        }
+        commentDbModel.ThumbsUpBy = tempUp;
+        commentDbModel.ThumbsDownBy = tempDown;
 
         await reviewDb.SaveChangesAsync();
 
@@ -798,11 +812,19 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (!commentDbModel.ThumbsDownBy.Remove(myGuid))
+        List<string> tempUp = new(commentDbModel.ThumbsUpBy);
+        List<string> tempDown = new(commentDbModel.ThumbsDownBy);
+        if (commentDbModel.ThumbsDownBy.Contains(myGuid))
         {
-            commentDbModel.ThumbsDownBy.Add(myGuid);
-            commentDbModel.ThumbsUpBy.Remove(myGuid);
+            tempDown.Remove(myGuid);
         }
+        else
+        {
+            tempDown.Add(myGuid);
+            tempUp.Remove(myGuid);
+        }
+        commentDbModel.ThumbsUpBy = tempUp;
+        commentDbModel.ThumbsDownBy = tempDown;
 
         await reviewDb.SaveChangesAsync();
 

@@ -82,7 +82,7 @@ public class Review_CommentDbModel
             catch (Exception e) { Console.WriteLine(e.Message); }
         }
     }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Review_CommentDbModel? ReplyTo { get; set; } = null;
     public List<Review_CommentDbModel> Replies { get; set; } = [];
 }
@@ -191,6 +191,20 @@ public class Review_Process
         Storage_Reviews = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Reviews"));
         Storage_Comments = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Comments"));
     }
+
+    public async Task CreateNewReview(Review_DbContext reviewDb, string subjectGuid,
+    string ownerGuid)
+    {
+        Review_ReviewDbModel reviewDbModel = new()
+        {
+            SubjectGuid = subjectGuid,
+            SubjectOwnerGuid = ownerGuid,
+        };
+
+        await reviewDb.Reviews.AddAsync(reviewDbModel);
+        await reviewDb.SaveChangesAsync();
+    }
+
 
     //************************************ seed Review data **********************************
     public async Task Update_ReviewSeed(string subjectGuid, Review_DbContext reviewDb)

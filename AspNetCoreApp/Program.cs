@@ -245,6 +245,7 @@ public class Program
         builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
         builder.Services.AddSingleton<Library_Process>();
         builder.Services.AddSingleton<FileNameValidator>();
+        builder.Services.AddSingleton<Review_Process>();
 
 
 

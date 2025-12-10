@@ -209,12 +209,18 @@
 
         <!-------------------------------------------------->
 
-        <!--------------------- sections -------------------->
+        <!--------------------- elements -------------------->
         @for(element of sortedElements(); track element.guid){
         <app-document-element [elementModel]="element" (headingInitialized)="onHeadingInit($event)">
         </app-document-element>
         }
 
+        <!--------------------- elements -------------------->
+        @if(documentGuid()){
+        <app-review [subjectGuid]="documentGuid()!"></app-review>
+        }
+
+        <!--------------------- spinner -------------------->
         <!--div style="border: 1px solid gray; height: 200vh;"></div-->
         @if(displaySubmitSpinner()){
         <div id="submit-spinner-layout">

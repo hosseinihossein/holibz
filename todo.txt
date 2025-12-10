@@ -11,4 +11,5 @@
 and reacting to their document.
 - add table, list, chart and reference elements to documents
 - create images with different sizes for each uploaded images
+- upgrade to Angular v21
 - 

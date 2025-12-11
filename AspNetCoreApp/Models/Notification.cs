@@ -198,7 +198,7 @@ public class Notification_Process
             }
             if (seedModel is not null)
             {
-                Notification_NotificationDbModel? dbModel = await seedModel.GetDbModel(notifDb);
+                Notification_NotificationDbModel? dbModel = seedModel.GetDbModel(/*notifDb*/);
                 if (dbModel is not null)
                 {
                     await notifDb.Notifications.AddAsync(dbModel);
@@ -266,7 +266,7 @@ public class Notification_NotificationSeedModel
         return seedModel;
     }
 
-    public async Task<Notification_NotificationDbModel?> GetDbModel(Notification_DbContext notifDb)
+    public Notification_NotificationDbModel? GetDbModel(/*Notification_DbContext notifDb*/)
     {
         /*Notification_UserDbModel? owner = await notifDb.Users
         .FirstOrDefaultAsync(u => u.Guid == OwnerGuid);

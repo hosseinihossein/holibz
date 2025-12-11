@@ -3,7 +3,7 @@ import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from "@angular/material/card";
 import { MatIcon } from '@angular/material/icon';
 import { SingletonModes } from '../../services/singleton-modes';
-import { MatTooltip } from '@angular/material/tooltip';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { EditUserImage } from '../../dialogs/edit-user-image/edit-user-image';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
@@ -17,12 +17,13 @@ import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LibrariesList } from "../../library/libraries-list/libraries-list";
+import { MatBadgeModule } from '@angular/material/badge';
 
 @Component({
   selector: 'app-profile',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent,
     MatIcon, NgOptimizedImage, MatCheckboxModule, MatButtonModule, LibrariesList, RouterLink,
-    MatIconButton],
+    MatIconButton, MatBadgeModule, MatTooltipModule],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })
@@ -42,6 +43,10 @@ export class Profile {
   description = computed(()=>this.userModel()?.description);
   email = computed(()=>this.userModel()?.email);
   displayEmailPublicly = computed(()=>this.userModel()?.displayEmailPublicly);
+
+  numberOfFollowers = signal(0);
+  numberOfFollowings = signal(0);
+  totalNumberOfLikes = signal(0);
 
   //errorResponse = signal("");
 

@@ -41,4 +41,16 @@
         </a>
         }
     </mat-card>
+
+    <!-- default ng-content -->
+    <button matIconButton class="icon-box" [matBadge]="numberOfFollowers()" matTooltip="Followers">
+        <mat-icon>groups</mat-icon>
+    </button>
+    <button matIconButton class="icon-box" [matBadge]="numberOfFollowings()" matTooltip="Followings">
+        <mat-icon>group_search</mat-icon>
+    </button>
+    <div class="icon-box" [matBadge]="totalNumberOfLikes()" matTooltip="number of likes">
+        <mat-icon>favorite</mat-icon>
+    </div>
+
 </app-libraries-list>

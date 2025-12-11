@@ -4,7 +4,7 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-        <ng-content />
+        <ng-content select="mat-card" />
 
         <div class="top-box clearfix">
             <!-- [matBadge]="userModel()?.username" matBadgePosition="below" -->
@@ -26,19 +26,8 @@
                 <mat-icon>newsstand</mat-icon>
             </div>
 
-            <button matIconButton class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="Followers">
-                <mat-icon>group</mat-icon>
-                Followers
-            </button>
-            <button matIconButton class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="Followings">
-                <mat-icon>group</mat-icon>
-                Followings
-            </button>
-
-            <div class="icon-box" [matBadge]="totalNumberOfUserDocuments()" matTooltip="number of likes">
-                <mat-icon>favorite</mat-icon>
-            </div>
-
+            <!-- other buttons -->
+            <ng-content />
 
             @if(isMyLibraries()){
             <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">

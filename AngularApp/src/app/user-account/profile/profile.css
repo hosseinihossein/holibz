@@ -31,3 +31,26 @@ mat-card-content{
     top: 0;
     right: 0;
 }
+
+.icon-box{
+    width: 56px;
+    height: 56px;
+    float: left;
+    margin: 0 8px;
+    border-radius: 50%;
+    padding: 0;
+}
+
+.icon-box:hover{
+    background-color: var(--mat-sys-primary-container);
+}
+
+.icon-box mat-icon{
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+    text-align: center;
+    position: relative;
+    top: 14px;
+    float: left;
+}

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Library_Db
 {
     [DbContext(typeof(Library_DbContext))]
-    [Migration("20251121084135_Initial")]
+    [Migration("20251211064329_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -275,6 +275,21 @@ namespace AspNetCore.Migrations.Library_Db
                     b.ToTable("Tags");
                 });
 
+            modelBuilder.Entity("Library_DocumentDbModelLibrary_OwnerDbModel", b =>
+                {
+                    b.Property<int>("FavoriteDocumentsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InFavorOfId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FavoriteDocumentsId", "InFavorOfId");
+
+                    b.HasIndex("InFavorOfId");
+
+                    b.ToTable("Library_DocumentDbModelLibrary_OwnerDbModel");
+                });
+
             modelBuilder.Entity("Library_DocumentDbModelLibrary_ShelfDbModel", b =>
                 {
                     b.Property<int>("DocumentsId")
@@ -305,6 +320,21 @@ namespace AspNetCore.Migrations.Library_Db
                     b.ToTable("Library_DocumentDbModelLibrary_TagDbModel");
                 });
 
+            modelBuilder.Entity("Library_LibraryDbModelLibrary_OwnerDbModel", b =>
+                {
+                    b.Property<int>("FavoriteLibrariesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InFavorOfId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FavoriteLibrariesId", "InFavorOfId");
+
+                    b.HasIndex("InFavorOfId");
+
+                    b.ToTable("Library_LibraryDbModelLibrary_OwnerDbModel");
+                });
+
             modelBuilder.Entity("Library_LibraryDbModelLibrary_ShelfDbModel", b =>
                 {
                     b.Property<int>("ParentLibrariesId")
@@ -318,6 +348,36 @@ namespace AspNetCore.Migrations.Library_Db
                     b.HasIndex("ShelvesId");
 
                     b.ToTable("Library_LibraryDbModelLibrary_ShelfDbModel");
+                });
+
+            modelBuilder.Entity("Library_OwnerDbModelLibrary_OwnerDbModel", b =>
+                {
+                    b.Property<int>("FollowersId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FollowingsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FollowersId", "FollowingsId");
+
+                    b.HasIndex("FollowingsId");
+
+                    b.ToTable("Library_OwnerDbModelLibrary_OwnerDbModel");
+                });
+
+            modelBuilder.Entity("Library_OwnerDbModelLibrary_ShelfDbModel", b =>
+                {
+                    b.Property<int>("FavoriteShelvesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InFavorOfId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FavoriteShelvesId", "InFavorOfId");
+
+                    b.HasIndex("InFavorOfId");
+
+                    b.ToTable("Library_OwnerDbModelLibrary_ShelfDbModel");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_DocumentDbModel", b =>
@@ -378,6 +438,21 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Library_DocumentDbModelLibrary_OwnerDbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("FavoriteDocumentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("InFavorOfId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Library_DocumentDbModelLibrary_ShelfDbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", null)
@@ -408,6 +483,21 @@ namespace AspNetCore.Migrations.Library_Db
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Library_LibraryDbModelLibrary_OwnerDbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_LibraryDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("FavoriteLibrariesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("InFavorOfId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Library_LibraryDbModelLibrary_ShelfDbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Library_LibraryDbModel", null)
@@ -419,6 +509,36 @@ namespace AspNetCore.Migrations.Library_Db
                     b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", null)
                         .WithMany()
                         .HasForeignKey("ShelvesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Library_OwnerDbModelLibrary_OwnerDbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("FollowersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("FollowingsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Library_OwnerDbModelLibrary_ShelfDbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("FavoriteShelvesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
+                        .WithMany()
+                        .HasForeignKey("InFavorOfId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

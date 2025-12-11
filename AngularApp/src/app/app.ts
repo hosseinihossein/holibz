@@ -6,7 +6,7 @@ import { Review } from './review/review';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavBar,Review],
+  imports: [RouterOutlet, NavBar],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

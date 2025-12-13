@@ -555,6 +555,9 @@ public class Library_Process //singleton service
             await libraryDb.Elements.AddAsync(elementDbmodel);
             await libraryDb.SaveChangesAsync();
 
+            //reorder elements
+            _ = ReorderElements(libraryDb, documentDbmodel.Guid);
+
             return new Library_ProcessResult()
             {
                 Success = true,
@@ -587,6 +590,9 @@ public class Library_Process //singleton service
                 await formModel.File.CopyToAsync(fs);
             }
 
+            //reorder elements
+            _ = ReorderElements(libraryDb, documentDbmodel.Guid);
+
             return new Library_ProcessResult()
             {
                 Success = true,
@@ -601,6 +607,30 @@ public class Library_Process //singleton service
             ErrorDescription = $"The element Type is unknown! Element type: '{formModel.Type}'",
         };
     }
+    public async Task<Library_ProcessResult> ReorderElements(Library_DbContext libraryDb, string parentDocumentGuid)
+    {
+        List<Library_ElementDbModel> elementsToReorder = (await libraryDb.Documents
+        .Include(doc => doc.Elements)
+        .Where(doc => doc.Guid == parentDocumentGuid)
+        .Select(doc => doc.Elements)
+        .FirstOrDefaultAsync())!
+        .OrderBy(el => el.Order)
+        .ToList();
+
+        for (int i = 0; i < elementsToReorder.Count; i++)
+        {
+            elementsToReorder[i].Order = i;
+        }
+
+        await libraryDb.SaveChangesAsync();
+
+        return new Library_ProcessResult()
+        {
+            Success = true,
+            ResultObject = elementsToReorder,
+        };
+    }
+
 
 
     //************************************ seed Owner data **********************************

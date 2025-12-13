@@ -49,7 +49,7 @@ import { Review } from '../../review/review';
   styleUrl: './document-page.css',
   providers: [DocumentPageService]
 })
-export class DocumentPage implements AfterViewInit, AfterViewChecked {
+export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   //clipboard = inject(Clipboard);
   windowService = inject(WindowService);
   readonly dialog = inject(MatDialog);
@@ -97,18 +97,11 @@ export class DocumentPage implements AfterViewInit, AfterViewChecked {
     });
     return uniqueParentLibraries.map(upl=>upl.guid);
   });
-
-  newElementGuid = signal<string>("");
   
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("documentGuid")){
         this.documentGuid.set(params.get("documentGuid"));
-      }
-    });
-    this.activatedRoute.fragment.subscribe(fragment=>{
-      if(fragment){
-        this.newElementGuid.set(fragment);
       }
     });
 
@@ -159,18 +152,20 @@ export class DocumentPage implements AfterViewInit, AfterViewChecked {
     });
     
   }
-  ngAfterViewChecked(): void {
-    if(this.newElementGuid() && !!this.windowService.nativeWindow.document.getElementById(this.newElementGuid())){
-      setTimeout(()=>{
-        this.goToElement(this.newElementGuid());
-        this.newElementGuid.set("");
-      }, 1000);
-    }
-  }
+  
   ngAfterViewInit(): void {
     if(this.introductionHeading()){
       this.headingElements.update(elements=>[...elements, this.introductionHeading().nativeElement]);
     }
+
+    this.activatedRoute.fragment.subscribe(fragment=>{
+      if(fragment){
+        let elementGuid = fragment;
+        setTimeout(()=>{
+          this.goToElement(elementGuid);
+        }, 1000);
+      }
+    });
   }
 
   onHeadingInit(headingElement: HTMLHeadingElement){
@@ -324,9 +319,17 @@ export class DocumentPage implements AfterViewInit, AfterViewChecked {
     this.libraryService.createNewElement(newElementFormModel).subscribe({
       next: res => {
         if(res){
-          this.documentPageService.documentPageModel()?.elements.push(res);
-          //console.log("element exist: "+!!this.windowService.nativeWindow.document.getElementById(res.guid));
-          this.newElementGuid.set(res.guid);
+          this.documentPageService.documentPageModel.update(dpm=>{
+            dpm?.elements.push(res);
+            return new DocumentPageModel(dpm!);
+          });
+          this.documentPageService.unchangedDocumentPageModel.set(
+            new DocumentPageModel(this.documentPageService.documentPageModel()!)
+          );
+          
+          setTimeout(()=>{
+            this.goToElement(res.guid);
+          }, 1000);
         }
       },
       error: err => {

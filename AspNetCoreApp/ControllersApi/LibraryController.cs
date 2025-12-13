@@ -622,6 +622,7 @@ public class LibraryController : ControllerBase
             .AsSplitQuery()
             .ToListAsync();
 
+            //make sure all edited elements belong to the same document
             IEnumerable<string> parentDocumentGuids = elementDbModels.Select(el => el.ParentDocument.Guid).Distinct();
             if (parentDocumentGuids.Count() > 1)
             {
@@ -647,32 +648,29 @@ public class LibraryController : ControllerBase
             bool needToReorder = false;
             foreach (var elementDbModel in elementDbModels)
             {
-                var formModel = formModels.FirstOrDefault(fm => fm.Guid == elementDbModel.Guid);
+                var formModel = formModels.First(fm => fm.Guid == elementDbModel.Guid);
 
-                if (formModel is not null)
+                if (formModel.Delete ?? false)
                 {
-                    if (formModel.Delete ?? false)
-                    {
-                        //deletedElements.Add(elementDbModel);
-                        libraryDb.Elements.Remove(elementDbModel);
-                        needToReorder = true;
+                    //deletedElements.Add(elementDbModel);
+                    libraryDb.Elements.Remove(elementDbModel);
+                    needToReorder = true;
 
-                        if (!string.IsNullOrWhiteSpace(elementDbModel.FileName))
+                    if (!string.IsNullOrWhiteSpace(elementDbModel.FileName))
+                    {
+                        string filePath = Path.Combine(Storage_Elements.FullName,
+                        elementDbModel.Guid, elementDbModel.FileName);
+                        if (System.IO.File.Exists(filePath))
                         {
-                            string filePath = Path.Combine(Storage_Elements.FullName,
-                            elementDbModel.Guid, elementDbModel.FileName);
-                            if (System.IO.File.Exists(filePath))
-                            {
-                                System.IO.File.Delete(filePath);
-                            }
+                            System.IO.File.Delete(filePath);
                         }
                     }
-                    else
-                    {
-                        elementDbModel.Order = formModel.Order ?? elementDbModel.Order;
-                        elementDbModel.Title = formModel.Title ?? elementDbModel.Title;
-                        elementDbModel.Value = formModel.Value ?? elementDbModel.Value;
-                    }
+                }
+                else
+                {
+                    elementDbModel.Order = formModel.Order ?? elementDbModel.Order;
+                    elementDbModel.Title = formModel.Title ?? elementDbModel.Title;
+                    elementDbModel.Value = formModel.Value ?? elementDbModel.Value;
                 }
             }
 
@@ -681,22 +679,12 @@ public class LibraryController : ControllerBase
             //elementDbModels.RemoveAll(el => deletedElements.Contains(el));
             if (needToReorder)
             {
-                List<Library_ElementDbModel> elementsToReorder = (await libraryDb.Documents
-                .Include(doc => doc.Elements)
-                .Where(doc => doc.Guid == parentDocumentGuids.Single())
-                .Select(doc => doc.Elements)
-                .FirstOrDefaultAsync())!
-                .OrderBy(el => el.Order)
-                .ToList();
+                var result = await libraryProcess.ReorderElements(libraryDb, parentDocumentGuids.Single());
 
-                for (int i = 0; i < elementsToReorder.Count; i++)
+                if (result.Success && result.ResultObject is not null)
                 {
-                    elementsToReorder[i].Order = i;
+                    elementDbModels = (List<Library_ElementDbModel>)result.ResultObject;
                 }
-
-                await libraryDb.SaveChangesAsync();
-
-                elementDbModels = elementsToReorder;
             }
 
             //create response

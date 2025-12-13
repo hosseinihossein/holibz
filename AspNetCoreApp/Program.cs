@@ -5,6 +5,7 @@ using AspNetCoreApp.Models;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
@@ -108,10 +109,11 @@ public class Program
         {
             //options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             //options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
-        .AddCookie(options =>
+        /*.AddCookie(options =>
         {
             options.ExpireTimeSpan = TimeSpan.FromHours(10);
             options.Cookie.Expiration = TimeSpan.FromHours(10);
@@ -153,7 +155,7 @@ public class Program
                     return Task.CompletedTask;
                 },
             };
-        })
+        })*/
         .AddJwtBearer(options =>
         {
             var jwtSettings = builder.Configuration.GetSection("JwtSettings");

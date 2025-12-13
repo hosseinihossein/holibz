@@ -79,6 +79,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
 
   headingElements = signal<HTMLHeadingElement[]>([]);
   introductionHeading = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
+  reviewComponent = viewChild.required(Review,{read:ElementRef});
 
   shelfGuidToParentLibrariesTitlesMap = computed<Map<string,string>>(()=>{
     let map = new Map<string,string>();
@@ -156,6 +157,9 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   ngAfterViewInit(): void {
     if(this.introductionHeading()){
       this.headingElements.update(elements=>[...elements, this.introductionHeading().nativeElement]);
+    }
+    if(this.reviewComponent()){
+      this.headingElements.update(elements=>[...elements, this.reviewComponent().nativeElement]);
     }
 
     this.activatedRoute.fragment.subscribe(fragment=>{

@@ -63,6 +63,9 @@ public class ReviewController : ControllerBase
             .Select(u => u.UserGuid)
             .FirstAsync();
         }
+        //Console.WriteLine($"\n\n*****     myGuid: {myGuid}     *****\n\n");
+        //Console.WriteLine($"\n\n*****     IsAuthenticated: {User.Identity?.IsAuthenticated}     *****\n\n");
+        //Console.WriteLine($"\n\n*****     User.Identity.Name: {User.Identity?.Name}     *****\n\n");
 
         int totalNumberOfComments = await reviewDb.Reviews
         .Where(r => r.SubjectGuid == subjectGuid)

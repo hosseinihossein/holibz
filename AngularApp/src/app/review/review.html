@@ -31,7 +31,7 @@
         @for(comment of reviewModel().comments; track comment.guid){
         <app-review-comment [commentModel]="comment" (submitReply)="onSubmitReply($event)"
             (displayReplies)="onDisplayReplies(comment.guid)" (deleteComment)="onDeleteComment(comment.guid)"
-            (thumbsUp)="toggleThumbsUp(comment.guid)" (thumbsDown)="toggleThumbsDown(comment.guid)">
+            (thumbsUp)="toggleThumbsUp(comment.guid)" (thumbsDown)="toggleThumbsDown(comment.guid)" [id]="comment.guid">
         </app-review-comment>
         }
 

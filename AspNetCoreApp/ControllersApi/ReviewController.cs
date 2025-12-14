@@ -63,9 +63,6 @@ public class ReviewController : ControllerBase
             .Select(u => u.UserGuid)
             .FirstAsync();
         }
-        //Console.WriteLine($"\n\n*****     myGuid: {myGuid}     *****\n\n");
-        //Console.WriteLine($"\n\n*****     IsAuthenticated: {User.Identity?.IsAuthenticated}     *****\n\n");
-        //Console.WriteLine($"\n\n*****     User.Identity.Name: {User.Identity?.Name}     *****\n\n");
 
         int totalNumberOfComments = await reviewDb.Reviews
         .Where(r => r.SubjectGuid == subjectGuid)
@@ -507,7 +504,7 @@ public class ReviewController : ControllerBase
                 NumberOfReplies = rep.Replies.Count,
                 NumberOfThumbsDowns = rep.ThumbsDownBy.Count,
                 NumberOfThumbsUps = rep.ThumbsUpBy.Count,
-                ReplyToBrief = rep.ReplyTo!.Text.Substring(0, 128),
+                ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
                 ReplyToGuid = rep.ReplyTo.Guid,
                 ReplyToUsername = commentWriterUsername,
                 Text = rep.Text,
@@ -554,7 +551,7 @@ public class ReviewController : ControllerBase
                     NumberOfReplies = rep.Replies.Count,
                     NumberOfThumbsDowns = rep.ThumbsDownBy.Count,
                     NumberOfThumbsUps = rep.ThumbsUpBy.Count,
-                    ReplyToBrief = rep.ReplyTo!.Text.Substring(0, 128),
+                    ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
                     ReplyToGuid = rep.ReplyTo.Guid,
                     ReplyToUsername = commentWriterUsername,
                     Text = rep.Text,
@@ -582,7 +579,7 @@ public class ReviewController : ControllerBase
                 NumberOfReplies = rep.Replies.Count,
                 NumberOfThumbsDowns = rep.ThumbsDownBy.Count,
                 NumberOfThumbsUps = rep.ThumbsUpBy.Count,
-                ReplyToBrief = rep.ReplyTo!.Text.Substring(0, 128),
+                ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
                 ReplyToGuid = rep.ReplyTo.Guid,
                 ReplyToUsername = commentWriterUsername,
                 Text = rep.Text,
@@ -674,6 +671,7 @@ public class ReviewController : ControllerBase
             await reviewDb.Comments.AddAsync(comment);
             await reviewDb.SaveChangesAsync();
 
+            int briefLength = parentCommentDbModel.Text.Length > 128 ? 128 : parentCommentDbModel.Text.Length;
             Review_CommentModel replyModel = new()
             {
                 CreatedAt = comment.CreatedAt,
@@ -681,7 +679,7 @@ public class ReviewController : ControllerBase
                 Text = comment.Text,
                 WriterGuid = comment.WriterGuid,
                 IsReply = true,
-                ReplyToBrief = parentCommentDbModel.Text.Substring(0, 128),
+                ReplyToBrief = parentCommentDbModel.Text[..briefLength],
                 ReplyToGuid = parentCommentDbModel.Guid,
                 ReplyToUsername = parentCommentWriterUserName,
             };
@@ -727,7 +725,7 @@ public class ReviewController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleLike([FromQuery][StringLength(32)] string subjectGuid)
     {
@@ -761,7 +759,7 @@ public class ReviewController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleThumbsUp([FromQuery][StringLength(32)] string commentGuid)
     {
@@ -798,7 +796,7 @@ public class ReviewController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleThumbsDown([FromQuery][StringLength(32)] string commentGuid)
     {

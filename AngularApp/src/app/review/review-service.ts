@@ -62,7 +62,7 @@ export class ReviewService {
     formData.append("Text", formModel.text);
     
     return this.httpClient.post<CommentModel>(
-      "/api/Review/SubmitNewComment", formData
+      "/api/Review/SubmitNewReply", formData
     );
   }
   requestDeleteComment(commentGuid:string){

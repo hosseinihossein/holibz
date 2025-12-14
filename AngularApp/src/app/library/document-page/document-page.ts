@@ -152,6 +152,19 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
       }
     });
     
+    effect(()=>{
+      if(this.identityService.isAuthenticated()){
+        this.identityService.getCsrf().subscribe({
+          next: () => {
+            console.log("csrf token recieved successfully.");
+          },
+          error: err => {
+            console.log("couldn't get csrf token");
+            throw(err);
+          }
+        });
+      }
+    });
   }
   
   ngAfterViewInit(): void {

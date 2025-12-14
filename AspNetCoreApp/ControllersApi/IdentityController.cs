@@ -45,7 +45,7 @@ public class IdentityController : ControllerBase
 
     [HttpGet]
     [GenerateAntiforgeryTokenCookie]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     public IActionResult GetCsrf()
     {
         return Ok();
@@ -293,7 +293,7 @@ public class IdentityController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitUsername(
         //[FromBody] string username,//BadRequest status 400, username is required, The JSON value could not be converted to System.String. it didn't work even by newtonsoft json.
@@ -328,7 +328,7 @@ public class IdentityController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     //[ValidateAntiForgeryToken]//there's no need to the antiforgery when turnstile is set
     public async Task<IActionResult> ChangeEmail([FromBody] Identity_EmailValidationFormModel formModel,
     [FromServices] IEmailSender emailSender, [FromServices] TurnstileService turnstileService)
@@ -433,7 +433,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitUserImage(UserImageFileModel model)
@@ -461,7 +461,7 @@ public class IdentityController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteUserImage()
     {
@@ -485,7 +485,7 @@ public class IdentityController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitDescription([FromBody] DescriptionModel model)
     {
@@ -515,7 +515,7 @@ public class IdentityController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword([FromBody] Identity_ChangePasswordFormModel formModel)
     {
@@ -592,7 +592,7 @@ public class IdentityController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitDisplayEmailPublicly([FromBody] DisplayEmailPubliclyModel model)
     {

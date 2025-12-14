@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, input, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from "@angular/material/button";
 import { MatIcon } from '@angular/material/icon';
 import { IconService } from '../services/icon-service';
@@ -13,6 +13,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { BriefUsersList } from '../dialogs/brief-users-list/brief-users-list';
 import { EditTextarea } from '../dialogs/edit-textarea/edit-textarea';
 import { ReviewService } from './review-service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { IdentityService } from '../services/identity-service';
 
 @Component({
   selector: 'app-review',
@@ -28,6 +30,8 @@ export class Review {
   reviewService = inject(ReviewService);
   iconService = inject(IconService);
   dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  identityService = inject(IdentityService);
 
   paginator = viewChild(MatPaginator);
 
@@ -88,57 +92,90 @@ export class Review {
   }
   
   toggleLike(){
-    this.reviewService.requestToggleLike(this.subjectGuid()).subscribe({
-      next: res => {
-        if(res){
-          this.reviewModel.update(rm=>{
-            rm.numberOfLikes = res.numberOfLikes;
-            return new ReviewModel(rm);
-          });
-        }
-      },
-    });
-
-    this.reviewModel.update(rm=>{
-      rm.amILiked = !rm.amILiked;
-      return new ReviewModel(rm);
-    });
+    if(this.identityService.isAuthenticated()){
+      this.reviewService.requestToggleLike(this.subjectGuid()).subscribe({
+        next: res => {
+          if(res){
+            this.reviewModel.update(rm=>{
+              rm.numberOfLikes = res.numberOfLikes;
+              return new ReviewModel(rm);
+            });
+          }
+        },
+      });
+  
+      this.reviewModel.update(rm=>{
+        rm.amILiked = !rm.amILiked;
+        return new ReviewModel(rm);
+      });
+    }
+    else{
+      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+    }
   }
   toggleThumbsUp(commentGuid:string){
-    this.reviewService.requestToggleThumbsUp(commentGuid).subscribe({
-      next: res => {
-        if(res){
-          this.reviewModel.update(rm=>{
-            let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-            comment.amIThumbsUp = !comment.amIThumbsUp;
-            comment.numberOfThumbsUps = res.numberOfThumbUps;
-            if(comment.amIThumbsUp && comment.amIThumbsDown){
-              comment.amIThumbsDown = false;
-              comment.numberOfThumbsDowns--;
-            }
-            return new ReviewModel(rm);
-          });
+    if(this.identityService.isAuthenticated()){
+      this.reviewService.requestToggleThumbsUp(commentGuid).subscribe({
+        next: res => {
+          if(res){
+            this.reviewModel.update(rm=>{
+              let comment = rm.comments.find(c=>c.guid == commentGuid)!;
+              //comment.amIThumbsUp = !comment.amIThumbsUp;
+              comment.numberOfThumbsUps = res.numberOfThumbUps;
+              if(comment.amIThumbsUp && comment.amIThumbsDown){
+                //comment.amIThumbsDown = false;
+                comment.numberOfThumbsDowns--;
+              }
+              return new ReviewModel(rm);
+            });
+          }
+        },
+      });
+
+      this.reviewModel.update(rm=>{
+        let comment = rm.comments.find(c=>c.guid == commentGuid)!;
+        comment.amIThumbsUp = !comment.amIThumbsUp;
+        if(comment.amIThumbsUp && comment.amIThumbsDown){
+          comment.amIThumbsDown = false;
         }
-      },
-    });
+        return new ReviewModel(rm);
+      });
+    }
+    else{
+      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+    }
   }
   toggleThumbsDown(commentGuid:string){
-    this.reviewService.requestToggleThumbsDown(commentGuid).subscribe({
-      next: res => {
-        if(res){
-          this.reviewModel.update(rm=>{
-            let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-            comment.amIThumbsDown = !comment.amIThumbsDown;
-            comment.numberOfThumbsDowns = res.numberOfThumbDowns;
-            if(comment.amIThumbsDown && comment.amIThumbsUp){
-              comment.amIThumbsUp = false;
-              comment.numberOfThumbsUps--;
-            }
-            return new ReviewModel(rm);
-          });
+    if(this.identityService.isAuthenticated()){
+      this.reviewService.requestToggleThumbsDown(commentGuid).subscribe({
+        next: res => {
+          if(res){
+            this.reviewModel.update(rm=>{
+              let comment = rm.comments.find(c=>c.guid == commentGuid)!;
+              //comment.amIThumbsDown = !comment.amIThumbsDown;
+              comment.numberOfThumbsDowns = res.numberOfThumbDowns;
+              if(comment.amIThumbsDown && comment.amIThumbsUp){
+                //comment.amIThumbsUp = false;
+                comment.numberOfThumbsUps--;
+              }
+              return new ReviewModel(rm);
+            });
+          }
+        },
+      });
+
+      this.reviewModel.update(rm=>{
+        let comment = rm.comments.find(c=>c.guid == commentGuid)!;
+        comment.amIThumbsDown = !comment.amIThumbsDown;
+        if(comment.amIThumbsDown && comment.amIThumbsUp){
+          comment.amIThumbsUp = false;
         }
-      },
-    });
+        return new ReviewModel(rm);
+      });
+    }
+    else{
+      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+    }
   }
 
   openListOfLikes(){
@@ -167,14 +204,18 @@ export class Review {
       next: res => {
         if(res){
           this.reviewModel.update(rm=>{
-            let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentCommentGuid);
+            let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentCommentGuid) + 1;
             rm.comments.splice(index, 0, res);
             return new ReviewModel(rm);
           });
           this.bunchIndexMap().set(res.guid, 0);
         }
         this.displaySubmitSpinner.set(false);
-      }
+      },
+      error: err => {
+        this.displaySubmitSpinner.set(false);
+        throw(err);
+      },
     });
   }
   onDisplayReplies(commentGuid:string){
@@ -183,7 +224,7 @@ export class Review {
       next: res => {
         if(res){
           this.reviewModel.update(rm=>{
-            let index = rm.comments.findIndex(c=>c.guid === commentGuid);
+            let index = rm.comments.findIndex(c=>c.guid === commentGuid) + 1;
             rm.comments.splice(index, 0, ...res);
             return new ReviewModel(rm);
           });
@@ -197,41 +238,61 @@ export class Review {
     });
   }
   onNewComment(){
-    this.dialog.open(EditTextarea,{data:{label:`New Comment`}}).afterClosed().subscribe((result)=>{
-      if(result){
-        this.displaySubmitSpinner.set(true);
-
-        let newComment = new NewCommentFormModel();
-        newComment.parentSubjectGuid = this.subjectGuid();
-        newComment.text = result;
-
-        this.reviewService.postNewComment(newComment).subscribe({
-          next: res => {
-            if(res){
-              this.reviewModel.update(rm=>{
-                rm.comments.unshift(res);
-                return new ReviewModel(rm);
-              });
-              this.bunchIndexMap().set(res.guid, 0);
+    if(this.identityService.isAuthenticated()){
+      this.dialog.open(EditTextarea,{data:{label:`New Comment`}}).afterClosed().subscribe((result)=>{
+        if(result){
+          this.displaySubmitSpinner.set(true);
+  
+          let newComment = new NewCommentFormModel();
+          newComment.parentSubjectGuid = this.subjectGuid();
+          newComment.text = result;
+  
+          this.reviewService.postNewComment(newComment).subscribe({
+            next: res => {
+              if(res){
+                this.reviewModel.update(rm=>{
+                  rm.comments.unshift(res);
+                  return new ReviewModel(rm);
+                });
+                this.bunchIndexMap().set(res.guid, 0);
+              }
+              this.displaySubmitSpinner.set(false);
+            },
+            error: err => {
+              this.displaySubmitSpinner.set(false);
+              throw(err);
             }
-            this.displaySubmitSpinner.set(false);
-          }
-        });
-      }
-    });
-  }
-  onDeleteComment(commentGuid:string){
-    this.displaySubmitSpinner.set(true);
-    this.reviewService.requestDeleteComment(commentGuid).subscribe({
-      next: res => {
-        if(res && res.success){
-          this.deleteCommentAndRepliesRecursively(commentGuid, this.reviewModel().comments);
-          this.reviewModel.update(rm=>{
-            return new ReviewModel(rm);
           });
         }
-      }
-    });
+      });
+    }
+    else{
+      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+    }
+  }
+  onDeleteComment(commentGuid:string){
+    if(!this.identityService.isAuthenticated()){
+      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+    }
+
+    let comment = this.reviewModel().comments.find(c=>c.guid == commentGuid);
+    if(comment?.writerGuid === this.identityService.userModel()?.guid){
+      this.displaySubmitSpinner.set(true);
+      this.reviewService.requestDeleteComment(commentGuid).subscribe({
+        next: res => {
+          if(res && res.success){
+            this.deleteCommentAndRepliesRecursively(commentGuid, this.reviewModel().comments);
+            this.reviewModel.update(rm=>{
+              return new ReviewModel(rm);
+            });
+            this.displaySubmitSpinner.set(false);
+          }
+        }
+      });
+    }
+    else{
+      this.snackBar.open("Only the writer delete their comments!", "Ok", { duration: 5000 });
+    }
   }
   deleteCommentAndRepliesRecursively(commentGuid:string, comments:CommentModel[]){
     let index = comments.findIndex(c=>c.guid === commentGuid);

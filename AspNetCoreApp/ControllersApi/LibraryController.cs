@@ -110,7 +110,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
@@ -313,7 +313,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
@@ -522,7 +522,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid)
     {
@@ -606,7 +606,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditElements([FromBody] Library_EditElementFormModel[] formModels)
     {
@@ -741,7 +741,7 @@ public class LibraryController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewLibrary(Library_NewLibraryFormModel formModel)
@@ -768,7 +768,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewShelf(Library_NewShelfFormModel formModel)
@@ -795,7 +795,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel,
@@ -833,7 +833,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewElement(Library_NewElementFormModel formModel)
@@ -876,7 +876,7 @@ public class LibraryController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditDocumentIntroduction(
@@ -938,7 +938,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditLibraryIntroduction(
@@ -1009,7 +1009,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditShelfIntroduction(
@@ -1082,7 +1082,7 @@ public class LibraryController : ControllerBase
 
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteDocumentIntroductionImage([FromQuery][StringLength(32)]
     string documentGuid)
@@ -1129,7 +1129,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteLibraryIntroductionImage([FromQuery][StringLength(32)]
     string libraryGuid)
@@ -1176,7 +1176,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteShelfIntroductionImage([FromQuery][StringLength(32)]
     string shelfGuid)
@@ -1227,7 +1227,7 @@ public class LibraryController : ControllerBase
 
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditDocumentParentShelves([FromBody]
     Library_DocumentParentShelvesFormModel formModel)
@@ -1292,7 +1292,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditShelfParentLibraries([FromBody]
     Library_ShelfParentLibrariesFormModel formModel)
@@ -1430,7 +1430,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Follow([FromQuery][StringLength(32)] string ownerGuid)
     {
@@ -1458,7 +1458,7 @@ public class LibraryController : ControllerBase
         return Ok(new { success = true });
     }
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UnFollow([FromQuery][StringLength(32)] string ownerGuid)
     {
@@ -1736,7 +1736,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddFavoriteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
@@ -1763,7 +1763,7 @@ public class LibraryController : ControllerBase
         return Ok(new { success = true });
     }
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddFavoriteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
@@ -1790,7 +1790,7 @@ public class LibraryController : ControllerBase
         return Ok(new { success = true });
     }
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddFavoriteDocument([FromQuery][StringLength(32)] string documentGuid)
     {

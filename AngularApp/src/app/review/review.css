@@ -2,10 +2,20 @@
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 16px;
     padding: 8px;
-    width: 100%;
+    /*width: 100%;*/
     min-width: 400px;
     margin: 50px auto;
     position: relative;
+}
+#main-div::before{
+    content: "Reviews";
+    position: absolute;
+    top: -12px;
+    /*left: calc(50% - 2rem);*/
+    /*transform: translateX(-50%);*/
+    background: var(--mat-sys-background);
+    padding: 0 8px;
+    color: var(--mat-sys-outline);
 }
 #top-div{
     display: flex;

@@ -45,7 +45,8 @@ public class ReviewController : ControllerBase
 
 
     [HttpGet]
-    public async Task<IActionResult> GetReviewModel([FromQuery][StringLength(32)] string subjectGuid)
+    public async Task<IActionResult> GetReviewModel([FromQuery][StringLength(32)] string subjectGuid,
+    [FromQuery][StringLength(32)] string? commentGuid)
     {
         Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
         .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
@@ -72,6 +73,43 @@ public class ReviewController : ControllerBase
         //.Where(c => c.ReplyTo == null)
         .CountAsync();
 
+        Review_CommentModel? requestedCommentModel = null;
+        if (commentGuid is not null)
+        {
+            requestedCommentModel = await reviewDb.Comments
+            .Where(c => c.Guid == commentGuid)
+            .Include(c => c.ReplyTo)
+            .Include(c => c.Replies)
+            .Select(c => new Review_CommentModel()
+            {
+                AmIThumbsDown = myGuid != null && c.ThumbsDownBy.Contains(myGuid),
+                AmIThumbsUp = myGuid != null && c.ThumbsUpBy.Contains(myGuid),
+                CreatedAt = c.CreatedAt,
+                Guid = c.Guid,
+                IsReply = c.ReplyTo != null,
+                NumberOfReplies = c.Replies.Count,
+                NumberOfThumbsDowns = c.ThumbsDownBy.Count,
+                NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                ReplyToBrief = c.ReplyTo == null ? "" : c.ReplyTo.Text.Substring(0, c.ReplyTo.Text.Length > 128 ? 128 : c.ReplyTo.Text.Length),
+                ReplyToGuid = c.ReplyTo == null ? "" : c.ReplyTo.Guid,
+                ReplyToUsername = c.ReplyTo == null ? "" : c.ReplyTo.WriterGuid,//UserGuid instead of UserName
+                Text = c.Text,
+                WriterGuid = c.WriterGuid,
+            })
+            .AsSplitQuery()
+            .FirstOrDefaultAsync();
+
+            if (requestedCommentModel is not null && requestedCommentModel.IsReply)
+            {
+                string? replyToUserName = await userManager.Users
+                .Where(u => u.UserGuid == requestedCommentModel.ReplyToUsername)//use the UserGuid got instead of UserName
+                .Select(u => u.UserName)
+                .FirstOrDefaultAsync();
+                requestedCommentModel.ReplyToUsername = replyToUserName ?? "";// replace UserName by UserGuid
+            }
+        }
+
+        int commentTakeNumber = 10;
         Review_CommentModel[] myCommentsModels = [];
         Review_CommentModel[] othersCommentsModels = [];
         if (myGuid is not null)
@@ -84,7 +122,7 @@ public class ReviewController : ControllerBase
             .ThenInclude(c => c.Replies)
             .SelectMany(r => r.Comments)
             .Where(c => c.WriterGuid == myGuid/* && c.ReplyTo == null*/)
-            .Take(10)
+            .Take(commentTakeNumber)
             .Select(c => new Review_CommentModel()
             {
                 AmIThumbsDown = c.ThumbsDownBy.Contains(myGuid),
@@ -104,9 +142,9 @@ public class ReviewController : ControllerBase
             .AsSplitQuery()
             .ToArrayAsync();
 
-            if (myCommentsModels.Length < 10)
+            if (myCommentsModels.Length < commentTakeNumber)
             {
-                int numberOfNeededOthersComments = 10 - myCommentsModels.Length;
+                int numberOfNeededOthersComments = commentTakeNumber - myCommentsModels.Length;
 
                 othersCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
@@ -147,7 +185,7 @@ public class ReviewController : ControllerBase
             .ThenInclude(c => c.Replies)
             .SelectMany(r => r.Comments)
             //.Where(c => c.ReplyTo == null)
-            .Take(10)
+            .Take(commentTakeNumber)
             .Select(c => new Review_CommentModel()
             {
                 AmIThumbsDown = false,
@@ -168,10 +206,19 @@ public class ReviewController : ControllerBase
             .ToArrayAsync();
         }
 
+        Review_CommentModel[] comments = [];
+        if (requestedCommentModel is not null)
+        {
+            comments = [requestedCommentModel, .. myCommentsModels, .. othersCommentsModels];
+        }
+        else
+        {
+            comments = [.. myCommentsModels, .. othersCommentsModels];
+        }
         Review_ReviewModel reviewModel = new()
         {
             AmILiked = myGuid is not null && reviewDbModel.LikedByGuids.Contains(myGuid),
-            Comments = [.. myCommentsModels, .. othersCommentsModels],
+            Comments = comments,
             NumberOfLikes = reviewDbModel.LikedByGuids.Count,
             TotalNumberOfComments = totalNumberOfComments,
         };

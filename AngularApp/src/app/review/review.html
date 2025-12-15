@@ -3,6 +3,8 @@
         <div style="position: relative;margin: 0 8px;">
             <button matMiniFab aria-label="like button" id="like-btn" (click)="toggleLike()" matTooltip="Like"
                 matTooltipPosition="above">
+                <!-- does this work after updating to v21 and migrating to zoneless app? -->
+                <!-- if Not then define an if to check the identityService.isAuthenticated() -->
                 <mat-icon [style]="reviewModel().amILiked ? iconService.fillIcon()+'color:red;' : ''">
                     favorite
                 </mat-icon>

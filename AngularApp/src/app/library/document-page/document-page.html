@@ -51,7 +51,9 @@
             [style.paddingLeft.px]="element.type === 'h2' ? 12 : 4">{{element.value}}</a>
         }
         }
-        <a (click)="goToElement('Review')" id="overview-ReviewComponent" [style.paddingLeft.px]="4">Review</a>
+        <a (click)="goToElement('Review')" id="overview-ReviewComponent" [style.paddingLeft.px]="4">
+            Reviews
+        </a>
     </mat-sidenav>
 
     <mat-sidenav-content [class.editMode]="documentPageService.editMode()">
@@ -218,9 +220,10 @@
 
         <!--------------------- Review -------------------->
         <div style="position: relative;">
-            <div style="position: absolute; top: 48px; width: 100%;" id="Review"></div>
+            <div style="position: absolute; top: -64px; width: 100%;" id="Review"></div>
             @if(documentGuid()){
-            <app-review [subjectGuid]="documentGuid()!" id="ReviewComponent"></app-review>
+            <app-review id="ReviewComponent" [subjectGuid]="documentGuid()!"
+                [requestedCommentGuid]="requestedCommentGuid() ?? ''"></app-review>
             }
         </div>
 

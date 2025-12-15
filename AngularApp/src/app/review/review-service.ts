@@ -18,8 +18,11 @@ export class ReviewService {
     );
   }
 
-  requestReviewModel(subjectGuid:string){
+  requestReviewModel(subjectGuid:string,commentGuid?:string){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
+    if(commentGuid){
+      httpParams = httpParams.set("commentGuid",commentGuid);
+    }
     return this.httpClient.get<ReviewModel>(
       "/api/Review/GetReviewModel", {params:httpParams}
     );

@@ -15,6 +15,7 @@ import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list'
 import { ReviewService } from '../review-service';
 import { IdentityService } from '../../services/identity-service';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-review-comment',
@@ -39,6 +40,7 @@ export class ReviewComment {
   libraryService = inject(LibraryService);
   reviewService = inject(ReviewService);
   identityService  =inject(IdentityService);
+  private snackBar = inject(MatSnackBar);
 
   //commentModel = signal<CommentModel>(new CommentModel(null));
   writerModel = signal<OwnerModel|null>(null);
@@ -90,14 +92,19 @@ export class ReviewComment {
   }
 
   onReply(){
-    this.dialog.open(EditTextarea,{data:{label:`Reply to ${this.writerModel()?.username}`}}).afterClosed().subscribe(result=>{
-      if(result){
-        let replyFormModel = new NewReplyFormModel();
-        replyFormModel.parentCommentGuid = this.commentModel().guid;
-        replyFormModel.text = result;
-        this.submitReply.emit(replyFormModel);
-      }
-    });
+    if(this.identityService.isAuthenticated()){
+      this.dialog.open(EditTextarea,{data:{label:`Reply to ${this.writerModel()?.username}`}}).afterClosed().subscribe(result=>{
+        if(result){
+          let replyFormModel = new NewReplyFormModel();
+          replyFormModel.parentCommentGuid = this.commentModel().guid;
+          replyFormModel.text = result;
+          this.submitReply.emit(replyFormModel);
+        }
+      });
+    }
+    else{
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
+    }
   }
 }
 

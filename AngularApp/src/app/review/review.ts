@@ -26,6 +26,7 @@ import { IdentityService } from '../services/identity-service';
 })
 export class Review {
   subjectGuid = input.required<string>();
+  requestedCommentGuid = input<string>();
 
   reviewService = inject(ReviewService);
   iconService = inject(IconService);
@@ -44,7 +45,7 @@ export class Review {
   constructor(){
     effect(()=>{
       if(this.subjectGuid()){
-        this.reviewService.requestReviewModel(this.subjectGuid()).subscribe({
+        this.reviewService.requestReviewModel(this.subjectGuid(), this.requestedCommentGuid()).subscribe({
           next: res => {
             if(res){
               this.reviewModel.set(res);
@@ -110,7 +111,7 @@ export class Review {
       });
     }
     else{
-      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
     }
   }
   toggleThumbsUp(commentGuid:string){
@@ -120,12 +121,7 @@ export class Review {
           if(res){
             this.reviewModel.update(rm=>{
               let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-              //comment.amIThumbsUp = !comment.amIThumbsUp;
               comment.numberOfThumbsUps = res.numberOfThumbUps;
-              if(comment.amIThumbsUp && comment.amIThumbsDown){
-                //comment.amIThumbsDown = false;
-                comment.numberOfThumbsDowns--;
-              }
               return new ReviewModel(rm);
             });
           }
@@ -137,12 +133,13 @@ export class Review {
         comment.amIThumbsUp = !comment.amIThumbsUp;
         if(comment.amIThumbsUp && comment.amIThumbsDown){
           comment.amIThumbsDown = false;
+          comment.numberOfThumbsDowns--;
         }
         return new ReviewModel(rm);
       });
     }
     else{
-      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
     }
   }
   toggleThumbsDown(commentGuid:string){
@@ -152,12 +149,7 @@ export class Review {
           if(res){
             this.reviewModel.update(rm=>{
               let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-              //comment.amIThumbsDown = !comment.amIThumbsDown;
               comment.numberOfThumbsDowns = res.numberOfThumbDowns;
-              if(comment.amIThumbsDown && comment.amIThumbsUp){
-                //comment.amIThumbsUp = false;
-                comment.numberOfThumbsUps--;
-              }
               return new ReviewModel(rm);
             });
           }
@@ -169,12 +161,13 @@ export class Review {
         comment.amIThumbsDown = !comment.amIThumbsDown;
         if(comment.amIThumbsDown && comment.amIThumbsUp){
           comment.amIThumbsUp = false;
+          comment.numberOfThumbsUps--;
         }
         return new ReviewModel(rm);
       });
     }
     else{
-      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
     }
   }
 
@@ -267,12 +260,12 @@ export class Review {
       });
     }
     else{
-      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
     }
   }
   onDeleteComment(commentGuid:string){
     if(!this.identityService.isAuthenticated()){
-      this.snackBar.open("Login first", "Ok", { duration: 5000 });
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
     }
 
     let comment = this.reviewModel().comments.find(c=>c.guid == commentGuid);

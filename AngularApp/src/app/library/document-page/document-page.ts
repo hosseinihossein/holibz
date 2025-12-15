@@ -63,6 +63,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   viewportScroller = inject(ViewportScroller);
 
   documentGuid = signal<string|null>(null);
+  requestedCommentGuid = signal<string|null>(null);
   sortedElements = computed(()=>
     this.documentPageService.documentPageModel()?.elements.sort((a,b)=>{
       if(a.order > b.order)return 1;else return -1;
@@ -103,6 +104,11 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("documentGuid")){
         this.documentGuid.set(params.get("documentGuid"));
+      }
+    });
+    this.activatedRoute.queryParamMap.subscribe(queryParams=>{
+      if(queryParams.has("commentGuid")){
+        this.requestedCommentGuid.set(queryParams.get("commentGuid"));
       }
     });
 

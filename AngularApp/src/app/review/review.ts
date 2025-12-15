@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, input, model, output, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from "@angular/material/button";
 import { MatIcon } from '@angular/material/icon';
 import { IconService } from '../services/icon-service';
@@ -26,7 +26,7 @@ import { IdentityService } from '../services/identity-service';
 })
 export class Review {
   subjectGuid = input.required<string>();
-  requestedCommentGuid = input<string>();
+  requestedCommentGuid = model<string>();
 
   reviewService = inject(ReviewService);
   iconService = inject(IconService);
@@ -199,6 +199,8 @@ export class Review {
           this.reviewModel.update(rm=>{
             let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentCommentGuid) + 1;
             rm.comments.splice(index, 0, res);
+            let comment = rm.comments[index-1];
+            comment.numberOfReplies += 1;
             return new ReviewModel(rm);
           });
           this.bunchIndexMap().set(res.guid, 0);

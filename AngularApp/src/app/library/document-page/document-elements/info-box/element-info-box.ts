@@ -1,5 +1,5 @@
 import { Clipboard } from '@angular/cdk/clipboard';
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -30,11 +30,17 @@ export class ElementInfoBox {
     return `${href}#${this.elementModel().guid}`;
   });
 
+  infoDiv = viewChild.required<ElementRef<HTMLDivElement>>("infoDiv");
+
   copyLink(){
     this.clipboard.copy(this.elementLink());
   }
 
   copyElementGuid(){
     this.clipboard.copy(this.elementModel().guid);
+  }
+
+  toggleOpenInfo(){
+    this.infoDiv().nativeElement.classList.toggle("open");
   }
 }

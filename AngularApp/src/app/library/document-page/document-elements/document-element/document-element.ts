@@ -15,7 +15,8 @@ import { ElementInfoBox } from "../info-box/element-info-box";
 
 @Component({
   selector: 'app-document-element',
-  imports: [EditBox, H1Element, H2Element, PElement, ImgElement, CodeElement, FileElement, LinkElement, ScrollLocator, ElementInfoBox],
+  imports: [EditBox, H1Element, H2Element, PElement, ImgElement, CodeElement, FileElement, LinkElement, 
+    ElementInfoBox],
   templateUrl: './document-element.html',
   styleUrl: './document-element.css'
 })

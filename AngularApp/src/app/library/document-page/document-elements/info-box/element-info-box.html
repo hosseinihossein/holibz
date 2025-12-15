@@ -1,8 +1,8 @@
-<button matIconButton id="info-btn">
+<button matIconButton id="info-btn" (click)="toggleOpenInfo()">
     <mat-icon>info</mat-icon>
 </button>
 
-<div id="info-div">
+<div id="info-div" #infoDiv>
     <button matIconButton matTooltip="Copy link" matTooltipPosition="above" (click)="copyLink()">
         <mat-icon>link</mat-icon>
     </button>

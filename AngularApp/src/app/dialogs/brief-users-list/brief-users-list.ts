@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogContent, MatDialogModule } from "@angular/material/dialog";
 import { OwnerModel } from '../../services/library-service';
 import { NgOptimizedImage } from "@angular/common";
@@ -11,6 +11,7 @@ import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReviewService } from '../../review/review-service';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-brief-users-list',
@@ -23,7 +24,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
     'style':"padding:16px;position:relative;"
   }
 })
-export class BriefUsersList {
+export class BriefUsersList implements AfterViewInit {
   readonly data = inject<{
     label?:string, 
     subjectGuid:string, 
@@ -35,8 +36,9 @@ export class BriefUsersList {
   reviewService = inject(ReviewService);
 
   users = signal<OwnerModel[]>([]);
+  displayMore = computed(()=>this.users().length < this.data.totalNumberOfItems);
   displaySubmitSpinner = signal(true);
-  bunch = signal(1);
+  bunchIndex = signal(0);
   filterControl = new FormControl("",{validators:[Validators.maxLength(32)]});
 
   constructor(){
@@ -45,24 +47,36 @@ export class BriefUsersList {
     }
     this.requestUsers();
   }
+  ngAfterViewInit(): void {
+    this.filterControl.valueChanges.pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    ).subscribe({
+      next: () => {
+        this.displaySubmitSpinner.set(true);
+        this.bunchIndex.set(0);
+        this.requestUsers();
+      },
+    });
+  }
 
   onMore(){
     this.displaySubmitSpinner.set(true);
     this.requestUsers();
   }
 
-  onUsernameFilter(){
+  /*onUsernameFilter(){
     this.displaySubmitSpinner.set(true);
-    this.bunch.set(1);
+    this.bunchIndex.set(0);
     this.requestUsers();
-  }
+  }*/
 
   requestUsers(){
     const callBacks = {
       next: (res:OwnerModel[]) => {
         if(res){
           this.users.set(res);
-          this.bunch.update(b=>++b);
+          this.bunchIndex.update(b=>++b);
           this.displaySubmitSpinner.set(false);
         }
       },
@@ -75,13 +89,13 @@ export class BriefUsersList {
 
     if(this.data.subjectGuid){
       if(this.data.type === "Like"){
-        this.reviewService.requestLikesUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+        this.reviewService.requestLikesUserList(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
       }
       else if(this.data.type === "ThumbsUp"){
-        this.reviewService.requestThumbsUpUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+        this.reviewService.requestThumbsUpUserList(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
       }
       else if(this.data.type === "ThumbsDown"){
-        this.reviewService.requestThumbsDownUserList(this.data.subjectGuid, this.bunch(), filter).subscribe(callBacks);
+        this.reviewService.requestThumbsDownUserList(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
       }
     }
   }

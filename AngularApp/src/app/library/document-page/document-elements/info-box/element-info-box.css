@@ -18,8 +18,13 @@
     transform: translateX(-40px);
     text-wrap: nowrap;
 }
-#info-div:hover,
+/*#info-div:hover,
 #info-btn:hover + #info-div{
+    width: calc(100% - 40px);
+    height: fit-content;
+    box-shadow: 0 0 5px var(--mat-sys-outline-variant);
+}*/
+#info-div.open{
     width: calc(100% - 40px);
     height: fit-content;
     box-shadow: 0 0 5px var(--mat-sys-outline-variant);

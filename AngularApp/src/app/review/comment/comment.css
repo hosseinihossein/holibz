@@ -1,11 +1,11 @@
 mat-card{
     margin: 4px auto;
-    width: 100%;
+    /*width: 100%;*/
     position: relative;
 }
 mat-card.reply{
     width: 97%;
-    float: inline-end;
+    /*float: inline-end;*/
 }
 
 mat-card-header{

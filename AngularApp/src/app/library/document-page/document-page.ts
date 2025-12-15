@@ -174,8 +174,10 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   }
   
   ngAfterViewInit(): void {
+    this.viewportScroller.setOffset([0,64]);//[xOffset, yOffset]
+
     if(this.introductionHeading()){
-      this.headingElements.update(elements=>[...elements, this.introductionHeading().nativeElement]);
+      this.headingElements.update(elements=>[this.introductionHeading().nativeElement, ...elements]);
     }
     if(this.reviewComponent()){
       this.headingElements.update(elements=>[...elements, this.reviewComponent().nativeElement]);

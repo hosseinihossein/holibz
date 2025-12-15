@@ -1,4 +1,4 @@
-<mat-card [class.reply]="commentModel().isReply">
+<mat-card [class.reply]="commentModel().isReply" [id]="commentModel().guid">
     <mat-card-header>
         <a [routerLink]="['/profile', writerModel()?.guid]" mat-card-avatar>
             @if(userAvatarSrc()){

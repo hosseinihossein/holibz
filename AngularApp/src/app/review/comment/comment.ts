@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, model, OnInit, output, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { LibraryService, OwnerModel } from '../../services/library-service';
 import { SingletonModes } from '../../services/singleton-modes';
@@ -16,6 +16,7 @@ import { ReviewService } from '../review-service';
 import { IdentityService } from '../../services/identity-service';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { WindowService } from '../../services/window-service';
 
 @Component({
   selector: 'app-review-comment',
@@ -25,13 +26,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   templateUrl: './comment.html',
   styleUrl: './comment.css'
 })
-export class ReviewComment {
+export class ReviewComment implements OnInit {
   commentModel = input.required<CommentModel>();
   submitReply = output<NewReplyFormModel>();
   displayReplies = output();
   deleteComment = output();
   thumbsUp = output();
   thumbsDown = output();
+  parentComment = output<string>();
 
   dialog = inject(MatDialog);
   singletonModes= inject(SingletonModes);
@@ -41,6 +43,7 @@ export class ReviewComment {
   reviewService = inject(ReviewService);
   identityService  =inject(IdentityService);
   private snackBar = inject(MatSnackBar);
+  windowService = inject(WindowService);
 
   //commentModel = signal<CommentModel>(new CommentModel(null));
   writerModel = signal<OwnerModel|null>(null);
@@ -61,9 +64,24 @@ export class ReviewComment {
       }
     });
   }
+  ngOnInit(): void {
+    this.viewportScroller.setOffset([0,64]);//[xOffset, yOffset]
+  }
 
   goToElement(guid:string){
-    this.viewportScroller.scrollToAnchor(guid, {behavior:'smooth'});
+    if(this.windowService.nativeWindow.document.getElementById(guid)){
+      this.viewportScroller.scrollToAnchor(guid, {behavior:'smooth'});
+    }
+    else{
+      this.parentComment.emit(guid);
+    }
+    /*let address = this.windowService.nativeWindow.location.href;
+    if(address.includes("?commentGuid=")){
+      let commentGuidIndex = address.indexOf("?commentGuid=");
+      address = address.substring(0,commentGuidIndex);
+    }
+    address = address + "?commentGuid=" + guid + "#" + guid;
+    this.windowService.nativeWindow.location.href = address;*/
   }
 
   openListOfThumbsUps(){

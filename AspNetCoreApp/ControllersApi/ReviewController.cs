@@ -275,7 +275,7 @@ public class ReviewController : ControllerBase
             {
                 myCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                //.Include(r => r.Comments)
                 //.ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
@@ -299,7 +299,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.WriterGuid,
                 })
-                .AsSplitQuery()
+                //.AsSplitQuery()
                 .ToArrayAsync();
 
                 if (myCommentsModels.Length < pageSize.Value)
@@ -327,7 +327,7 @@ public class ReviewController : ControllerBase
 
                     othersCommentsModels = await reviewDb.Reviews
                     .Where(r => r.SubjectGuid == subjectGuid)
-                    .Include(r => r.Comments)
+                    //.Include(r => r.Comments)
                     //.ThenInclude(c => c.ReplyTo)
                     .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
@@ -351,7 +351,7 @@ public class ReviewController : ControllerBase
                         Text = c.Text,
                         WriterGuid = c.WriterGuid,
                     })
-                    .AsSplitQuery()
+                    //.AsSplitQuery()
                     .ToArrayAsync();
                 }
             }
@@ -359,7 +359,7 @@ public class ReviewController : ControllerBase
             {
                 othersCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                //.Include(r => r.Comments)
                 //.ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
@@ -383,7 +383,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.WriterGuid,
                 })
-                .AsSplitQuery()
+                //.AsSplitQuery()
                 .ToArrayAsync();
             }
 
@@ -396,7 +396,7 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                //.Include(r => r.Comments)
                 //.ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
@@ -421,7 +421,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.WriterGuid,
                 })
-                .AsSplitQuery()
+                //.AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -431,7 +431,7 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                //.Include(r => r.Comments)
                 //.ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
@@ -456,7 +456,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.WriterGuid,
                 })
-                .AsSplitQuery()
+                //.AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -466,13 +466,13 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                //.Include(r => r.Comments)
                 //.ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
                 .SelectMany(r => r.Comments)
                 //.Where(c => c.ReplyTo == null)
-                .OrderByDescending(c => c.ThumbsUpBy.Count)
+                .OrderByDescending(c => c._thumbsUpBy.Length)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
                 .Select(c => new Review_CommentModel()
@@ -491,7 +491,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.WriterGuid,
                 })
-                .AsSplitQuery()
+                //.AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);

@@ -31,13 +31,13 @@ export class ReviewService {
   requestComments(subjectGuid:string, orderBy?:string|null, pageIndex?:number, pageSize?:number){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
     if(orderBy){
-      httpParams.set("orderBy",orderBy);
+      httpParams = httpParams.set("orderBy",orderBy);
     }
     if(pageIndex){
-      httpParams.set("pageIndex",pageIndex);
+      httpParams = httpParams.set("pageIndex",pageIndex);
     }
     if(pageSize){
-      httpParams.set("pageSize",pageSize);
+      httpParams = httpParams.set("pageSize",pageSize);
     }
     return this.httpClient.get<CommentModel[]>(
       "/api/Review/GetComments", {params:httpParams}
@@ -45,7 +45,7 @@ export class ReviewService {
   }
   requestReplies(commentGuid:string, bunchIndex:number=0){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
-    httpParams.set("bunchIndex", bunchIndex);
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
     return this.httpClient.get<CommentModel[]>(
       "/api/Review/GetReplies", {params:httpParams}
     );
@@ -96,9 +96,9 @@ export class ReviewService {
 
   requestLikesUserList(subjectGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
-    httpParams.set("bunchIndex", bunchIndex);
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
     if(filter?.trim()){
-      httpParams.set("filter", filter.trim());
+      httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
       "/api/Review/GetLikesUserList", {params:httpParams}
@@ -106,9 +106,9 @@ export class ReviewService {
   }
   requestThumbsUpUserList(commentGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
-    httpParams.set("bunchIndex", bunchIndex);
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
     if(filter?.trim()){
-      httpParams.set("filter", filter.trim());
+      httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
       "/api/Review/GetThumbsUpUserList", {params:httpParams}
@@ -116,9 +116,9 @@ export class ReviewService {
   }
   requestThumbsDownUserList(commentGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
-    httpParams.set("bunchIndex", bunchIndex);
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
     if(filter?.trim()){
-      httpParams.set("filter", filter.trim());
+      httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
       "/api/Review/GetThumbsDownUserList", {params:httpParams}

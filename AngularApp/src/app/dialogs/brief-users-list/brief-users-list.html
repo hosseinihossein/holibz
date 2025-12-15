@@ -6,7 +6,7 @@
 <mat-dialog-content>
     <mat-form-field style="width: 100%;">
         <mat-label>Filter..</mat-label>
-        <input matInput [formControl]="filterControl" (input)="onUsernameFilter()">
+        <input matInput [formControl]="filterControl">
     </mat-form-field>
     @for(user of users(); track user.guid){
     <div style="position: relative;">
@@ -32,10 +32,9 @@
     }
 
     <mat-dialog-actions>
-        @if(users().length <= data.totalNumberOfItems){ <button matButton (click)="onMore()">
-            More
-            </button>
-            }
-            <button matButton mat-dialog-close>Ok</button>
+        @if(displayMore()) {
+        <button matButton (click)="onMore()">More</button>
+        }
+        <button matButton mat-dialog-close>Ok</button>
     </mat-dialog-actions>
 </mat-dialog-content>

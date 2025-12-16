@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, input, model, output, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, input, model, OnInit, output, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from "@angular/material/button";
 import { MatIcon } from '@angular/material/icon';
 import { IconService } from '../services/icon-service';
@@ -15,6 +15,7 @@ import { EditTextarea } from '../dialogs/edit-textarea/edit-textarea';
 import { ReviewService } from './review-service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { IdentityService } from '../services/identity-service';
+import { ViewportScroller } from '@angular/common';
 
 @Component({
   selector: 'app-review',
@@ -24,15 +25,16 @@ import { IdentityService } from '../services/identity-service';
   templateUrl: './review.html',
   styleUrl: './review.css'
 })
-export class Review {
+export class Review implements OnInit {
   subjectGuid = input.required<string>();
-  requestedCommentGuid = model<string>();
+  requestedCommentGuid = model<string|null>(null);
 
   reviewService = inject(ReviewService);
   iconService = inject(IconService);
   dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   identityService = inject(IdentityService);
+  viewportScroller = inject(ViewportScroller);
 
   paginator = viewChild(MatPaginator);
 
@@ -53,12 +55,26 @@ export class Review {
               res.comments.forEach(c=>{
                 this.bunchIndexMap().set(c.guid, 0);
               });
+
+              if(this.requestedCommentGuid()){
+                setTimeout(() => {
+                  this.goToComment(this.requestedCommentGuid()!);
+                }, 1000);
+              }
+
               this.displaySubmitSpinner.set(false);
             }
           },
         });
       }
     });
+  }
+  ngOnInit(): void {
+    this.viewportScroller.setOffset([0,64]);//[xOffset, yOffset]
+  }
+
+  goToComment(guid:string){
+    this.viewportScroller.scrollToAnchor(guid, {behavior:'smooth'});
   }
 
   orderComments(){

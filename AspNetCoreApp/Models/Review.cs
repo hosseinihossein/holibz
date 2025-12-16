@@ -203,6 +203,13 @@ public class Review_Process
 
         await reviewDb.Reviews.AddAsync(reviewDbModel);
         await reviewDb.SaveChangesAsync();
+
+        //seed
+        _ = Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
+    }
+    public async Task DeleteReview(Review_DbContext reviewDb, string subjectGuid)
+    {
+
     }
 
 

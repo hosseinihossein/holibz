@@ -45,7 +45,8 @@ public class IdentityController : Controller
                 // creating Library_OwnerDbModel and its default library and shelf
                 await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
 
-                //await identityProcess.UpdateUserSeed(user, userManager);
+                //seed
+                _ = identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Confirmed.</h2>";
                 ViewBag.ResultState = "success";
@@ -94,7 +95,8 @@ public class IdentityController : Controller
                 // creating Library_OwnerDbModel and its default library and shelf
                 await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
 
-                //await identityProcess.UpdateUserSeed(user, userManager);
+                //seed
+                _ = identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Changed. You need to login again to see changes.</h2>";
                 ViewBag.ResultState = "success";
@@ -111,52 +113,8 @@ public class IdentityController : Controller
         }
         return BadRequest(ModelState);
     }
-    /*
-        private async Task CreateDefaultLibraryAndShelf(Library_process libraryProcess, Library_DbContext libraryDb,
-        string ownerGuid)
-        {
-            // creating Default library
-            Library_NewLibrayFormModel libraryFormModel = new()
-            {
-                Title = "Default Library",
-                Decription = "Containing all shelves that doesn't belong to anyother libraries."
-            };
-            var createDefaultLibraryResult = await libraryProcess.CreateNewLibrary(libraryDb, ownerGuid, libraryFormModel);
 
-            Library_LibraryDbModel? defaultLibrary;
-            if (createDefaultLibraryResult.Success &&
-            createDefaultLibraryResult.ResultObject is not null)
-            {
-                defaultLibrary = (Library_LibraryDbModel)createDefaultLibraryResult.ResultObject;
-            }
-            else
-            {
-                defaultLibrary = await libraryDb.Libraries.FirstOrDefaultAsync(lib =>
-                lib.OwnerGuid == ownerGuid && lib.Title == "Default Library");
-            }
-            if (defaultLibrary is null)
-            {
-                //log
-                Console.WriteLine("\n***** /Identity/CreateDefaultLibraryAndShelf, defaultLibrary is null! Couldn't create Default library and shelf");
-            }
-            else
-            {
-                // creating Default shelf in Default library
-                Library_NewShelfFormModel shelfFormModel = new()
-                {
-                    Title = "Default Shelf",
-                    Decription = "Containing all documents that doesn't belong to anyother shelves.",
-                    LibraryGuid = defaultLibrary.Guid,
-                };
-                var createDefaultShelfResult = await libraryProcess.CreateNewShelf(libraryDb, ownerGuid, shelfFormModel);
-                if (!createDefaultShelfResult.Success)
-                {
-                    //log
-                    Console.WriteLine("\n***** /Identity/CreateDefaultLibraryAndShelf, Couldn't create Default shelf!");
-                }
-            }
-        }
-    */
+
 
 
 
@@ -203,7 +161,8 @@ public class IdentityController : Controller
             await userManager.ResetPasswordAsync(user, formModel.Token, formModel.NewPassword);
             if (result.Succeeded)
             {
-                //await identityProcess.UpdateUserSeed(user, userManager);
+                //seed
+                _ = identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your new password successfully set.</h2>";
                 ViewBag.ResultState = "success";

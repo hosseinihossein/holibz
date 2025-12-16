@@ -10,7 +10,6 @@ import { CodeElement } from '../code-element/code-element';
 import { FileElement } from '../file-element/file-element';
 import { LinkElement } from '../link-element/link-element';
 import { DocumentPageService } from '../../document-page-service';
-import { ScrollLocator } from "../scroll-locator/scroll-locator";
 import { ElementInfoBox } from "../info-box/element-info-box";
 
 @Component({

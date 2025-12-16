@@ -18,7 +18,7 @@ export class ReviewService {
     );
   }
 
-  requestReviewModel(subjectGuid:string,commentGuid?:string){
+  requestReviewModel(subjectGuid:string,commentGuid?:string|null){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
     if(commentGuid){
       httpParams = httpParams.set("commentGuid",commentGuid);

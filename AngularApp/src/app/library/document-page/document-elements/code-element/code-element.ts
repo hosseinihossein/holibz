@@ -5,7 +5,6 @@ import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { SectionModel } from '../../../../models/section-model';
 import { DocumentElementModel } from '../document-element/document-element';
-import { ScrollLocator } from "../scroll-locator/scroll-locator";
 
 @Component({
   selector: 'app-code-element',

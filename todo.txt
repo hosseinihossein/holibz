@@ -1,8 +1,10 @@
 - add reference element to other elements(and some other elements such as table, chart, list, ...)
 - test edition and deletion of default library and shelf
 - enable choosing heading for adding new element
-- add date to comments
-- 
+- set review as lazy loading by defer
+- launch notifications
+- test and complete seeding data
+-  
 
 
 - set changedetection onpush and do some other performance updates like ssr

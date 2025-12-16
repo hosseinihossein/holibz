@@ -112,7 +112,8 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid)
+    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid,
+    [FromServices] Library_Process libraryProcess)
     {
         Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
         .Include(lib => lib.Owner)
@@ -151,6 +152,9 @@ public class LibraryController : ControllerBase
         //remove the library
         libraryDb.Libraries.Remove(libraryDbModel);
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        libraryProcess.Delete_LibrarySeed(libraryDbModel.Guid);
 
         //set the delault library as the parent of its non-parent shelves
         foreach (var shelf in libraryDbModel.Shelves)

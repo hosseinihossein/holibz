@@ -1,7 +1,6 @@
 import { AfterViewInit, Component, ElementRef, input, output, viewChild } from '@angular/core';
 import { DocumentElement, DocumentElementModel } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
-import { ScrollLocator } from "../scroll-locator/scroll-locator";
 
 @Component({
   selector: 'app-h1-element',

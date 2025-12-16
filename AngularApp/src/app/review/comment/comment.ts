@@ -3,7 +3,7 @@ import { MatCardModule } from '@angular/material/card';
 import { LibraryService, OwnerModel } from '../../services/library-service';
 import { SingletonModes } from '../../services/singleton-modes';
 import { RouterLink } from '@angular/router';
-import { NgOptimizedImage, ViewportScroller } from '@angular/common';
+import { DatePipe, NgOptimizedImage, ViewportScroller } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import { MatButtonModule } from "@angular/material/button";
 import { IconService } from '../../services/icon-service';
@@ -21,7 +21,7 @@ import { WindowService } from '../../services/window-service';
 @Component({
   selector: 'app-review-comment',
   imports: [MatCardModule, RouterLink, NgOptimizedImage, MatIcon, MatButtonModule, MatTooltip,
-    MatProgressSpinner,MatMenuModule,
+    MatProgressSpinner,MatMenuModule, DatePipe
   ],
   templateUrl: './comment.html',
   styleUrl: './comment.css'
@@ -75,13 +75,6 @@ export class ReviewComment implements OnInit {
     else{
       this.parentComment.emit(guid);
     }
-    /*let address = this.windowService.nativeWindow.location.href;
-    if(address.includes("?commentGuid=")){
-      let commentGuidIndex = address.indexOf("?commentGuid=");
-      address = address.substring(0,commentGuidIndex);
-    }
-    address = address + "?commentGuid=" + guid + "#" + guid;
-    this.windowService.nativeWindow.location.href = address;*/
   }
 
   openListOfThumbsUps(){

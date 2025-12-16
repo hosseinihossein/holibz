@@ -10,9 +10,10 @@
         </a>
         <mat-card-title>
             <a [routerLink]="['/profile', writerModel()?.guid]"
-                style="text-decoration: none;display: block;margin: 4px 0;">
+                style="text-decoration: none;display: inline-block;margin: 4px 0;">
                 {{writerModel()?.username ?? "hossein"}}
             </a>
+            <span style="font-size: 0.75rem;">&nbsp; on {{commentModel().createdAt | date}}</span>
         </mat-card-title>
         @if(commentModel().isReply){
         <mat-card-subtitle>

@@ -322,9 +322,6 @@ public class Library_Process //singleton service
     public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, string ownerGuid)
     {
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
-        /*.Include(owner=>owner.Libraries)
-        .Include(owner=>owner.Shelves)
-        .Include(owner=>owner.Documents)*/
         .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
         if (ownerDbModel is null)
         {
@@ -350,6 +347,9 @@ public class Library_Process //singleton service
 
             await libraryDb.Owners.AddAsync(ownerDbModel);
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            _ = Update_OwnerSeed(ownerDbModel.Guid, libraryDb);
         }
 
         return new Library_ProcessResult()
@@ -394,6 +394,9 @@ public class Library_Process //singleton service
 
         await libraryDb.Libraries.AddAsync(libraryDbModel);
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        _ = Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult() { Success = true, ResultObject = libraryDbModel };
     }
@@ -450,6 +453,9 @@ public class Library_Process //singleton service
         await libraryDb.Shelves.AddAsync(shelfDbModel);
         await libraryDb.SaveChangesAsync();
 
+        //seed
+        _ = Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+
         return new Library_ProcessResult() { Success = true, ResultObject = shelfDbModel };
     }
     public async Task<Library_ProcessResult> CreateNewDocument(Library_DbContext libraryDb, string ownerGuid,
@@ -505,6 +511,9 @@ public class Library_Process //singleton service
         await libraryDb.Documents.AddAsync(documentDbModel);
         await libraryDb.SaveChangesAsync();
 
+        //seed
+        _ = Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+
         return new Library_ProcessResult()
         {
             Success = true,
@@ -556,7 +565,10 @@ public class Library_Process //singleton service
             await libraryDb.SaveChangesAsync();
 
             //reorder elements
-            _ = ReorderElements(libraryDb, documentDbmodel.Guid);
+            await ReorderElements(libraryDb, documentDbmodel.Guid);
+
+            //seed
+            _ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
 
             return new Library_ProcessResult()
             {
@@ -591,7 +603,10 @@ public class Library_Process //singleton service
             }
 
             //reorder elements
-            _ = ReorderElements(libraryDb, documentDbmodel.Guid);
+            await ReorderElements(libraryDb, documentDbmodel.Guid);
+
+            //seed
+            _ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
 
             return new Library_ProcessResult()
             {

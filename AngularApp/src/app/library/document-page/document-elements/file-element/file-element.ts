@@ -4,7 +4,6 @@ import { MatIcon } from '@angular/material/icon';
 import { DocumentElement, DocumentElementModel } from "../document-element/document-element";
 import { SectionModel } from '../../../../models/section-model';
 import { DocumentService } from '../../../../services/document-service';
-import { ScrollLocator } from "../scroll-locator/scroll-locator";
 
 @Component({
   selector: 'app-file-element',

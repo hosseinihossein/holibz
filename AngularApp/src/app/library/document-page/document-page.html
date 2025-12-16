@@ -217,16 +217,13 @@
         }
 
         <!--------------------- Review -------------------->
-        <!--div style="position: relative;">
-            <div style="position: absolute; top: -64px; width: 100%;" id="Review"></div-->
         @if(documentGuid()){
         <app-review id="ReviewComponent" [subjectGuid]="documentGuid()!"
-            [requestedCommentGuid]="requestedCommentGuid() ?? ''"></app-review>
+            [(requestedCommentGuid)]="requestedCommentGuid">
+        </app-review>
         }
-        <!--/div-->
 
         <!--------------------- spinner -------------------->
-        <!--div style="border: 1px solid gray; height: 200vh;"></div-->
         @if(displaySubmitSpinner()){
         <div id="submit-spinner-layout">
             <mat-spinner id="submit-spinner"></mat-spinner>

@@ -27,7 +27,7 @@ public class LibraryController : ControllerBase
 
 
     public LibraryController(Library_DbContext _libraryDb, UserManager<Identity_UserDbModel> _userManager,
-    Library_Process _libraryProcess, Identity_Process _identityProcess)
+    Library_Process _libraryProcess/*, Identity_Process _identityProcess*/)
     {
         libraryDb = _libraryDb;
         userManager = _userManager;
@@ -112,8 +112,8 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid,
-    [FromServices] Library_Process libraryProcess)
+    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid/*,
+    [FromServices] Library_Process libraryProcess*/)
     {
         Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
         .Include(lib => lib.Owner)
@@ -154,7 +154,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        libraryProcess.Delete_LibrarySeed(libraryDbModel.Guid);
+        //libraryProcess.Delete_LibrarySeed(libraryDbModel.Guid);
 
         //set the delault library as the parent of its non-parent shelves
         foreach (var shelf in libraryDbModel.Shelves)
@@ -165,6 +165,10 @@ public class LibraryController : ControllerBase
             }
         }
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        //string[] shelvesGuids = libraryDbModel.Shelves.Select(sh => sh.Guid).ToArray();
+        //_ = libraryProcess.Update_ShelvesSeeds(shelvesGuids, libraryDb);
 
         DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
         if (libraryDirectoryInfo.Exists)
@@ -319,7 +323,8 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid)
+    public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid/*,
+    [FromServices] Library_Process libraryProcess*/)
     {
         Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
@@ -358,6 +363,9 @@ public class LibraryController : ControllerBase
         libraryDb.Shelves.Remove(shelfDbModel);
         await libraryDb.SaveChangesAsync();
 
+        //seed
+        //libraryProcess.Delete_ShelfSeed(shelfDbModel.Guid);
+
         //set the default shelf as the parent of its non-parent documents
         foreach (var doc in shelfDbModel.Documents)
         {
@@ -367,6 +375,10 @@ public class LibraryController : ControllerBase
             }
         }
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        //string[] documentsGuids = shelfDbModel.Documents.Select(doc => doc.Guid).ToArray();
+        //_ = libraryProcess.Update_DocumentsSeeds(documentsGuids, libraryDb);
 
         DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
         if (shelfDirectoryInfo.Exists)
@@ -554,26 +566,32 @@ public class LibraryController : ControllerBase
 
         //delete directory path from Storage_Document
         string directoryPath = Path.Combine(Storage_Documents.FullName, documentDbModel.Guid);
-        try
+        if (Directory.Exists(directoryPath))
         {
-            System.IO.Directory.Delete(directoryPath, true);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"\n***** {e.Message}");
+            try
+            {
+                System.IO.Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"\n***** {e.Message}");
+            }
         }
 
         //delete directory path of elements from storage
         foreach (string elementGuid in documentDbModel.Elements.Select(el => el.Guid))
         {
             string elemenDirPath = Path.Combine(Storage_Elements.FullName, elementGuid);
-            try
+            if (Directory.Exists(elemenDirPath))
             {
-                System.IO.Directory.Delete(elemenDirPath, true);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"\n***** {e.Message}");
+                try
+                {
+                    System.IO.Directory.Delete(elemenDirPath, true);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"\n***** {e.Message}");
+                }
             }
         }
 

@@ -642,8 +642,8 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewCommentFormModel formModel,
-    [FromServices] Review_Process reviewProcess)
+    public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewCommentFormModel formModel/*,
+    [FromServices] Review_Process reviewProcess*/)
     {
         if (ModelState.IsValid)
         {
@@ -671,7 +671,7 @@ public class ReviewController : ControllerBase
             await reviewDb.SaveChangesAsync();
 
             //seed
-            _ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
+            //_ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
 
             Review_CommentModel commentModel = new()
             {
@@ -690,8 +690,8 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReplyFormModel formModel,
-    [FromServices] Review_Process reviewProcess)
+    public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReplyFormModel formModel/*,
+    [FromServices] Review_Process reviewProcess*/)
     {
         if (ModelState.IsValid)
         {
@@ -724,7 +724,7 @@ public class ReviewController : ControllerBase
             await reviewDb.SaveChangesAsync();
 
             //seed
-            _ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
+            //_ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
 
             int briefLength = parentCommentDbModel.Text.Length > 128 ? 128 : parentCommentDbModel.Text.Length;
             Review_CommentModel replyModel = new()
@@ -748,8 +748,8 @@ public class ReviewController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteComment([FromQuery][StringLength(32)] string commentGuid,
-    [FromServices] Review_Process reviewProcess)
+    public async Task<IActionResult> DeleteComment([FromQuery][StringLength(32)] string commentGuid/*,
+    [FromServices] Review_Process reviewProcess*/)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
@@ -770,7 +770,7 @@ public class ReviewController : ControllerBase
             await reviewDb.SaveChangesAsync();
 
             //seed
-            reviewProcess.Delete_CommentSeed(commentDbModel.Guid);
+            //reviewProcess.Delete_CommentSeed(commentDbModel.Guid);
 
             return Ok(new { success = true });
         }
@@ -786,8 +786,8 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleLike([FromQuery][StringLength(32)] string subjectGuid,
-    [FromServices] Review_Process reviewProcess)
+    public async Task<IActionResult> ToggleLike([FromQuery][StringLength(32)] string subjectGuid/*,
+    [FromServices] Review_Process reviewProcess*/)
     {
         Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
         .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
@@ -816,7 +816,7 @@ public class ReviewController : ControllerBase
         await reviewDb.SaveChangesAsync();
 
         //seed
-        _ = reviewProcess.Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
+        //_ = reviewProcess.Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
 
         return Ok(new { numberOfLikes = reviewDbModel.LikedByGuids.Count });
     }
@@ -824,8 +824,8 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleThumbsUp([FromQuery][StringLength(32)] string commentGuid,
-    [FromServices] Review_Process reviewProcess)
+    public async Task<IActionResult> ToggleThumbsUp([FromQuery][StringLength(32)] string commentGuid/*,
+    [FromServices] Review_Process reviewProcess*/)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
@@ -857,7 +857,7 @@ public class ReviewController : ControllerBase
         await reviewDb.SaveChangesAsync();
 
         //seed
-        _ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
+        //_ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
         return Ok(new { numberOfThumbUps = commentDbModel.ThumbsUpBy.Count });
     }
@@ -865,8 +865,8 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleThumbsDown([FromQuery][StringLength(32)] string commentGuid,
-    [FromServices] Review_Process reviewProcess)
+    public async Task<IActionResult> ToggleThumbsDown([FromQuery][StringLength(32)] string commentGuid/*,
+    [FromServices] Review_Process reviewProcess*/)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
@@ -898,7 +898,7 @@ public class ReviewController : ControllerBase
         await reviewDb.SaveChangesAsync();
 
         //seed
-        _ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
+        //_ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
         return Ok(new { numberOfThumbDowns = commentDbModel.ThumbsDownBy.Count });
     }

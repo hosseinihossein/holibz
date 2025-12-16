@@ -349,7 +349,7 @@ public class Library_Process //singleton service
             await libraryDb.SaveChangesAsync();
 
             //seed
-            _ = Update_OwnerSeed(ownerDbModel.Guid, libraryDb);
+            //_ = Update_OwnerSeed(ownerDbModel.Guid, libraryDb);
         }
 
         return new Library_ProcessResult()
@@ -396,7 +396,7 @@ public class Library_Process //singleton service
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+        //_ = Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult() { Success = true, ResultObject = libraryDbModel };
     }
@@ -454,7 +454,7 @@ public class Library_Process //singleton service
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+        //_ = Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult() { Success = true, ResultObject = shelfDbModel };
     }
@@ -512,7 +512,7 @@ public class Library_Process //singleton service
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        //_ = Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult()
         {
@@ -568,7 +568,7 @@ public class Library_Process //singleton service
             await ReorderElements(libraryDb, documentDbmodel.Guid);
 
             //seed
-            _ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
+            //_ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
 
             return new Library_ProcessResult()
             {
@@ -606,7 +606,7 @@ public class Library_Process //singleton service
             await ReorderElements(libraryDb, documentDbmodel.Guid);
 
             //seed
-            _ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
+            //_ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
 
             return new Library_ProcessResult()
             {
@@ -787,6 +787,13 @@ public class Library_Process //singleton service
     }
 
     //************************************ seed Shelf data **********************************
+    public async Task Update_ShelvesSeeds(string[] dbModelsGuids, Library_DbContext libraryDb)
+    {
+        foreach (string guid in dbModelsGuids)
+        {
+            await Update_ShelfSeed(guid, libraryDb);
+        }
+    }
     public async Task Update_ShelfSeed(string dbModelGuid, Library_DbContext libraryDb)
     {
         Library_ShelfSeedModel? seedModel = await Library_ShelfSeedModel.Factory(dbModelGuid, libraryDb);
@@ -856,6 +863,13 @@ public class Library_Process //singleton service
     }
 
     //************************************ seed Document data **********************************
+    public async Task Update_DocumentsSeeds(string[] dbModelsGuids, Library_DbContext libraryDb)
+    {
+        foreach (string guid in dbModelsGuids)
+        {
+            await Update_DocumentSeed(guid, libraryDb);
+        }
+    }
     public async Task Update_DocumentSeed(string dbModelGuid, Library_DbContext libraryDb)
     {
         Library_DocumentSeedModel? seedModel = await Library_DocumentSeedModel.Factory(dbModelGuid, libraryDb);

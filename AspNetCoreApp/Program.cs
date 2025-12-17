@@ -315,6 +315,11 @@ public class Program
             await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
             await userManager.AddToRoleAsync(admin, "Identity_Admins");
         }
+        if (await roleManager.FindByNameAsync("Backup_Admins") == null)
+        {
+            await roleManager.CreateAsync(new Identity_RoleDbModel("Backup_Admins") { Description = "Backup Admins" });
+            await userManager.AddToRoleAsync(admin, "Backup_Admins");
+        }
 
         //***** Seed Users *****
         /*if (app.Configuration["Seed:Identity"] == "true")

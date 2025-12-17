@@ -187,7 +187,7 @@ public class Review_Process
 
     public Review_Process(IWebHostEnvironment _env, IConfiguration config)
     {
-        SeedFileName = config["SeedFileName"] ?? "data.json";
+        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
         Storage_Reviews = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Reviews"));
         Storage_Comments = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Comments"));
     }

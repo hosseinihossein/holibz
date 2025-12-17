@@ -64,7 +64,7 @@ public class Notification_Process
 
     public Notification_Process(IWebHostEnvironment _env, IConfiguration config)
     {
-        SeedFileName = config["SeedFileName"] ?? "data.json";
+        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
         //Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Users"));
         Storage_Notifications = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Notifications"));
     }

@@ -2,6 +2,11 @@ namespace AspNetCoreApp.Models;
 
 public class FileNameValidator
 {
+    readonly string SeedFileName;
+    public FileNameValidator(IConfiguration config)
+    {
+        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
+    }
     public string GetValidFileName(string suggestedFileName)
     {
         if (string.IsNullOrWhiteSpace(suggestedFileName))
@@ -39,6 +44,12 @@ public class FileNameValidator
         if (string.IsNullOrWhiteSpace(validFileName))
         {
             validFileName = "file";
+        }
+
+        //SeedFileName
+        if (validFileName == SeedFileName)
+        {
+            validFileName = "User_" + validFileName;
         }
 
         return validFileName;

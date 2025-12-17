@@ -286,7 +286,7 @@ public class Library_Process //singleton service
     public Library_Process(IWebHostEnvironment _env, FileNameValidator _fileNameValidator,
     IConfiguration config)
     {
-        SeedFileName = config["SeedFileName"] ?? "data.json";
+        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
         Storage_Owners = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Owners"));
         Storage_Libraries = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
         Storage_Shelves = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));

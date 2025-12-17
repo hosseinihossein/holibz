@@ -286,7 +286,7 @@ public class Identity_Process
     readonly string SeedFileName;
     public Identity_Process(IWebHostEnvironment _env, IConfiguration config)
     {
-        SeedFileName = config["SeedFileName"] ?? "data.json";
+        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
         Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "Users"));
     }
 

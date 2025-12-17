@@ -38,7 +38,7 @@ public class BackupController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Backup_Admins")]
-    public async Task<IActionResult> GetBackupInfo()
+    public async Task<IActionResult> GetBackupStatus()
     {
         Backup_Status? status = null;
         if (System.IO.File.Exists(backupProcess.StatusFilePath))
@@ -50,6 +50,20 @@ public class BackupController : ControllerBase
             status = new();
         }
         return Ok(status);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Backup_Admins")]
+    public async Task<IActionResult> DownloadBackupFile()
+    {
+        string backupFilePath = Path.Combine(backupProcess.Backup_Directory.FullName, backupProcess.BackupFileName);
+        if (System.IO.File.Exists(backupFilePath))
+        {
+            DateTime createdAt = System.IO.File.GetLastWriteTimeUtc(backupFilePath);
+            string downloadFileName = createdAt.ToString("YYYY_MM_dd_HH_mm_ss") + "_" + backupProcess.BackupFileName;
+            return PhysicalFile(backupFilePath, "application/octet-stream", downloadFileName, true);
+        }
+        return NotFound();
     }
 
     [HttpGet]

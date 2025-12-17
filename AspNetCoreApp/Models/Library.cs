@@ -158,25 +158,6 @@ public class Library_DbContext : DbContext
         .WithOne(el => el.Owner)
         .IsRequired(true);
 
-        //*********** Owner-DefaultLibrary One-To-One *********
-        /*modelBuilder.Entity<Library_OwnerDbModel>()
-        .HasOne(o => o.DefaultLibrary)
-        .WithOne(l => l.Owner)
-        .IsRequired(true);*/
-        /*
-        Unable to create a 'DbContext' of type 'Library_DbContext'. 
-        The exception 'Cannot create a relationship between 'Library_LibraryDbModel.Owner' and 
-        'Library_OwnerDbModel.
-        DefaultLibrary' because a relationship already exists between 'Library_OwnerDbModel.Libraries' and 
-        'Library_LibraryDbModel.Owner'. 
-        Navigations can only participate in a single relationship.
-        */
-        //*********** Owner-DefaultShelf One-To-One *********
-        /*modelBuilder.Entity<Library_OwnerDbModel>()
-        .HasOne(o => o.DefaultShelf)
-        .WithOne(sh => sh.Owner)
-        .IsRequired(true);*/
-
         //*********** Followers-Followings Many-To-Many *********
         modelBuilder.Entity<Library_OwnerDbModel>()
         .HasMany(o => o.Followers)
@@ -659,14 +640,14 @@ public class Library_Process //singleton service
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_OwnerSeed(string dbModelGuid)
+    public void Delete_OwnerDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_Owners.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Owners.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -728,14 +709,14 @@ public class Library_Process //singleton service
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_LibrarySeed(string dbModelGuid)
+    public void Delete_LibraryDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_Libraries.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Libraries.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -804,14 +785,14 @@ public class Library_Process //singleton service
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_ShelfSeed(string dbModelGuid)
+    public void Delete_ShelfDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_Shelves.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Shelves.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -880,14 +861,14 @@ public class Library_Process //singleton service
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_DocumentSeed(string dbModelGuid)
+    public void Delete_DocumentDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_Documents.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Documents.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -949,14 +930,14 @@ public class Library_Process //singleton service
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_ElementSeed(string dbModelGuid)
+    public void Delete_ElementDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_Elements.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Elements.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -1018,14 +999,14 @@ public class Library_Process //singleton service
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_RelatedVersionsSeed(string dbModelGuid)
+    public void Delete_RelatedVersionsDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_RelatedVersions.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_RelatedVersions.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -1077,24 +1058,24 @@ public class Library_Process //singleton service
     }
 
     //************************************ seed Tag data **********************************
-    public async Task Update_TagSeed(string dbModelGuid, Library_DbContext libraryDb)
+    public async Task Update_TagSeed(string tagName, Library_DbContext libraryDb)
     {
-        Library_TagSeedModel? seedModel = await Library_TagSeedModel.Factory(dbModelGuid, libraryDb);
+        Library_TagSeedModel? seedModel = await Library_TagSeedModel.Factory(tagName, libraryDb);
         if (seedModel is null) return;
 
         string json = JsonSerializer.Serialize(seedModel);
-        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Tags.FullName, dbModelGuid));
+        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Tags.FullName, tagName));
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_TagSeed(string dbModelGuid)
+    public void Delete_TagDirectory(string tagName)
     {
-        string seedPath = Path.Combine(Storage_Tags.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Tags.FullName, tagName);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {

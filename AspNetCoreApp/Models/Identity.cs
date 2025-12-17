@@ -302,14 +302,14 @@ public class Identity_Process
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_UserSeed(string userGuid)
+    public void Delete_UserDirectory(string userGuid)
     {
-        string seedPath = Path.Combine(Storage_Users.FullName, userGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Users.FullName, userGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -366,7 +366,6 @@ public class Identity_Process
             }
         }
     }
-
 
 }
 

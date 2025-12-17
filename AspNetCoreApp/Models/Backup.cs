@@ -14,6 +14,8 @@ public enum Backup_StatusEnum
     Not_Started,
     Generating_Seed_Started,
     Generating_Seed_Completed,
+    Creating_Zip_File_Started,
+    Creating_Zip_File_Completed,
 }
 public class Backup_Status
 {
@@ -24,6 +26,7 @@ public class Backup_Status
     public string Notification_SeedStatus { get; set; } = Backup_StatusEnum.Not_Started.ToString();
     public string[] Description { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int FileSize { get; set; }
 }
 
 public class Backup_Process
@@ -31,6 +34,7 @@ public class Backup_Process
     public readonly DirectoryInfo Backup_Directory;
     public readonly string StatusFilePath;
     readonly string SeedFileName;
+    public readonly string BackupFileName = "backup.zip";
     readonly DirectoryInfo Storage_Directory;
 
     readonly Identity_Process identityProcess;
@@ -122,8 +126,21 @@ public class Backup_Process
         await System.IO.File.WriteAllTextAsync(StatusFilePath, statusJson);
 
         //zip the Storage directory
-        string backupFilePath = Path.Combine(Backup_Directory.FullName, "backup.zip");
+        status.Overall_Status += " , " + Backup_StatusEnum.Creating_Zip_File_Started.ToString();
+        statusJson = JsonSerializer.Serialize(status);
+        await System.IO.File.WriteAllTextAsync(StatusFilePath, statusJson);
+
+        string backupFilePath = Path.Combine(Backup_Directory.FullName, BackupFileName);
         ZipFile.CreateFromDirectory(Storage_Directory.FullName, backupFilePath);
+
+        status.Overall_Status += " , " + Backup_StatusEnum.Creating_Zip_File_Completed.ToString();
+        FileInfo backupFileInfo = new FileInfo(backupFilePath);
+        if (backupFileInfo.Exists)
+        {
+            status.FileSize = (int)backupFileInfo.Length / 1024 / 1024;//size in MB
+        }
+        statusJson = JsonSerializer.Serialize(status);
+        await System.IO.File.WriteAllTextAsync(StatusFilePath, statusJson);
 
     }
     public async Task GenerateIdentitySeed(UserManager<Identity_UserDbModel> userManager)

@@ -5,83 +5,33 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreApp.Models;
 
+public class Review_UserDbModel
+{
+    public int Id { get; set; }
+    public string Guid { get; set; } = null!;
+    public List<Review_ReviewDbModel> Reviews { get; set; } = [];
+    public List<Review_CommentDbModel> Comments { get; set; } = [];
+    public List<Review_ReviewDbModel> Likes { get; set; } = [];
+    public List<Review_CommentDbModel> ThumbsUps { get; set; } = [];
+    public List<Review_CommentDbModel> ThumbsDowns { get; set; } = [];
+}
 public class Review_ReviewDbModel
 {
     public int Id { get; set; }
     public string SubjectGuid { get; set; } = null!;
-    public string SubjectOwnerGuid { get; set; } = null!;
-    public string _likedByGuids { get; set; } = JsonSerializer.Serialize(new List<string>());
-    [NotMapped]
-    public List<string> LikedByGuids
-    {
-        get
-        {
-            try { return JsonSerializer.Deserialize<List<string>>(_likedByGuids) ?? []; }
-            //log
-            catch (Exception e) { Console.WriteLine(e.Message); return []; }
-        }
-        set
-        {
-            value ??= [];
-            try { _likedByGuids = JsonSerializer.Serialize(value); }
-            //log
-            catch (Exception e) { Console.WriteLine(e.Message); }
-        }
-    }
-    //public List<Review_RateDbModel> Rates { get; set; } = [];
+    public Review_UserDbModel Owner { get; set; } = null!;
+    public List<Review_UserDbModel> Likes { get; set; } = [];
     public List<Review_CommentDbModel> Comments { get; set; } = [];
 }
-/*public class Review_RateDbModel
-{
-    public int Id { get; set; }
-    public Review_ReviewDbModel ParentReview { get; set; } = null!;
-    public Review_UserDbModel Voter { get; set; } = null!;
-    public int Value { get; set; }
-}*/
 public class Review_CommentDbModel
 {
     public int Id { get; set; }
     public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
-    public Review_ReviewDbModel? ParentReview { get; set; } = null;
-    public string WriterGuid { get; set; } = null!;
+    public Review_ReviewDbModel ParentReview { get; set; } = null!;
+    public Review_UserDbModel Writer { get; set; } = null!;
     public string Text { get; set; } = string.Empty;
-    public string _thumbsUpBy { get; set; } = JsonSerializer.Serialize(new List<string>());
-    [NotMapped]
-    public List<string> ThumbsUpBy
-    {
-        get
-        {
-            try { return JsonSerializer.Deserialize<List<string>>(_thumbsUpBy) ?? []; }
-            //log
-            catch (Exception e) { Console.WriteLine(e.Message); return []; }
-        }
-        set
-        {
-            value ??= [];
-            try { _thumbsUpBy = JsonSerializer.Serialize(value); }
-            //log
-            catch (Exception e) { Console.WriteLine(e.Message); }
-        }
-    }
-    public string _thumbsDownBy { get; set; } = JsonSerializer.Serialize(new List<string>());
-    [NotMapped]
-    public List<string> ThumbsDownBy
-    {
-        get
-        {
-            try { return JsonSerializer.Deserialize<List<string>>(_thumbsDownBy) ?? []; }
-            //log
-            catch (Exception e)
-            { Console.WriteLine(e.Message); return []; }
-        }
-        set
-        {
-            value ??= [];
-            try { _thumbsDownBy = JsonSerializer.Serialize(value); }
-            //log
-            catch (Exception e) { Console.WriteLine(e.Message); }
-        }
-    }
+    public List<Review_UserDbModel> ThumbsUps { get; set; } = [];
+    public List<Review_UserDbModel> ThumbsDowns { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Review_CommentDbModel? ReplyTo { get; set; } = null;
     public List<Review_CommentDbModel> Replies { get; set; } = [];
@@ -91,29 +41,51 @@ public class Review_DbContext : DbContext
 {
     public Review_DbContext(DbContextOptions<Review_DbContext> options) : base(options) { }
 
+    public DbSet<Review_UserDbModel> Users { get; set; } = null!;
     public DbSet<Review_ReviewDbModel> Reviews { get; set; } = null!;
-    //public DbSet<Review_RateDbModel> Rates { get; set; } = null!;
     public DbSet<Review_CommentDbModel> Comments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        //************* Review_ReviewDbModel *************
-        //************* One-to-Many Review-to-Rates *************
-        /*modelBuilder.Entity<Review_ReviewDbModel>()
-        .HasMany(r => r.Rates)
-        .WithOne(rate => rate.ParentReview)
-        .IsRequired(true);*/
+        //************* Review_UserDbModel *************
+        //************* One-to-Many User-to-Review *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasMany(u => u.Reviews)
+        .WithOne(r => r.Owner)
+        .IsRequired(true);
 
+        //************* One-to-Many User-to-Review *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasMany(u => u.Comments)
+        .WithOne(r => r.Writer)
+        .IsRequired(true);
+
+        //************* Many-to-Many User-to-Review_Likes *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasMany(u => u.Likes)
+        .WithMany(r => r.Likes);
+
+        //************* Many-to-Many User-to-Comment_ThumbsUp *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasMany(u => u.ThumbsUps)
+        .WithMany(r => r.ThumbsUps);
+
+        //************* Many-to-Many User-to-Comment_ThumbsDown *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasMany(u => u.ThumbsDowns)
+        .WithMany(r => r.ThumbsDowns);
+
+        //************* Review_ReviewDbModel *************
         //************* One-to-Many Review-to-Comments *************
         modelBuilder.Entity<Review_ReviewDbModel>()
         .HasMany(r => r.Comments)
         .WithOne(c => c.ParentReview)
-        .IsRequired(false)
-        .OnDelete(DeleteBehavior.Cascade);
+        .IsRequired(true);
 
-        //************* One-to-Many Review-to-Comments *************
+        //************* Review_ReviewDbModel *************
+        //************* One-to-Many Comment-to-Replies *************
         modelBuilder.Entity<Review_CommentDbModel>()
         .HasMany(c => c.Replies)
         .WithOne(c => c.ReplyTo)
@@ -122,12 +94,14 @@ public class Review_DbContext : DbContext
 
         //************* Index Columns *************
         //************* Review_ReviewDbModel *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasIndex(u => u.Guid)
+        .IsUnique(true);
+
+        //************* Review_ReviewDbModel *************
         modelBuilder.Entity<Review_ReviewDbModel>()
         .HasIndex(r => r.SubjectGuid)
         .IsUnique(true);
-        modelBuilder.Entity<Review_ReviewDbModel>()
-        .HasIndex(r => r.SubjectOwnerGuid)
-        .IsUnique(false);
 
         //************* Review_CommentDbModel *************
         modelBuilder.Entity<Review_CommentDbModel>()
@@ -181,6 +155,7 @@ public class Review_ReviewModel
 //*********************** Process **************************
 public class Review_Process
 {
+    readonly DirectoryInfo Storage_Users;
     readonly DirectoryInfo Storage_Reviews;
     readonly DirectoryInfo Storage_Comments;
     readonly string SeedFileName;
@@ -188,17 +163,41 @@ public class Review_Process
     public Review_Process(IWebHostEnvironment _env, IConfiguration config)
     {
         SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
+        Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Users"));
         Storage_Reviews = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Reviews"));
         Storage_Comments = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Comments"));
     }
 
+    public async Task CreateNewUser(Review_DbContext reviewDb, string userGuid)
+    {
+        Review_UserDbModel? userDbModel = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == userGuid);
+        if (userDbModel is not null) return;
+        //here userDbModel is null
+        userDbModel = new() { Guid = userGuid };
+        await reviewDb.Users.AddAsync(userDbModel);
+        await reviewDb.SaveChangesAsync();
+
+        //seed
+
+    }
     public async Task CreateNewReview(Review_DbContext reviewDb, string subjectGuid,
     string ownerGuid)
     {
-        Review_ReviewDbModel reviewDbModel = new()
+        Review_ReviewDbModel? reviewDbModel =
+        await reviewDb.Reviews.FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
+        if (reviewDbModel is not null) return;
+        //here reviewDbModel is null
+        Review_UserDbModel? ownerDbModel = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == ownerGuid);
+        if (ownerDbModel is null)
+        {
+            //log
+            Console.WriteLine($"\n     ***** Couldn't find Review_UserDbModel with guid {ownerGuid} *****");
+            return;
+        }
+        reviewDbModel = new()
         {
             SubjectGuid = subjectGuid,
-            SubjectOwnerGuid = ownerGuid,
+            Owner = ownerDbModel,
         };
 
         await reviewDb.Reviews.AddAsync(reviewDbModel);
@@ -208,6 +207,75 @@ public class Review_Process
         //_ = Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
     }
 
+
+    //************************************ seed User data **********************************
+    public async Task Update_UserSeed(string userGuid, Review_DbContext reviewDb)
+    {
+        Review_UserSeedModel? seedModel = Review_UserSeedModel.Factory(userGuid);
+        if (seedModel is null) return;
+
+        string json = JsonSerializer.Serialize(seedModel);
+        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, userGuid));
+        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+        await File.WriteAllTextAsync(seedPath, json);
+    }
+    public void Delete_UserDirectory(string userGuid)
+    {
+        string directoryPath = Path.Combine(Storage_Users.FullName, userGuid);
+        if (Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+            }
+        }
+    }
+    public async Task Seed_UserToDb(Review_DbContext reviewDb)
+    {
+        foreach (var seedDirectory in Storage_Users.EnumerateDirectories())
+        {
+            var dbModelExist = await reviewDb.Users
+            .AnyAsync(o => o.Guid == seedDirectory.Name);
+            if (dbModelExist)
+            {
+                continue;
+            }
+
+            string seedPath = Path.Combine(Storage_Users.FullName, seedDirectory.Name, SeedFileName);
+            if (!File.Exists(seedPath))
+            {
+                continue;
+            }
+
+            string json = await File.ReadAllTextAsync(seedPath);
+            Review_UserSeedModel? seedModel;
+            try
+            {
+                seedModel = JsonSerializer.Deserialize<Review_UserSeedModel>(json);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+                continue;
+            }
+            if (seedModel is not null)
+            {
+                Review_UserDbModel dbModel = seedModel.GetDbModel();
+                if (dbModel is not null)
+                {
+                    await reviewDb.Users.AddAsync(dbModel);
+                    await reviewDb.SaveChangesAsync();
+                }
+            }
+        }
+    }
 
     //************************************ seed Review data **********************************
     public async Task Update_ReviewSeed(string subjectGuid, Review_DbContext reviewDb)
@@ -220,14 +288,14 @@ public class Review_Process
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_ReviewSeed(string subjectGuid)
+    public void Delete_ReviewDirectory(string subjectGuid)
     {
-        string seedPath = Path.Combine(Storage_Reviews.FullName, subjectGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Reviews.FullName, subjectGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -268,7 +336,7 @@ public class Review_Process
             }
             if (seedModel is not null)
             {
-                Review_ReviewDbModel? dbModel = seedModel.GetDbModel();
+                Review_ReviewDbModel? dbModel = await seedModel.GetDbModel(reviewDb);
                 if (dbModel is not null)
                 {
                     await reviewDb.Reviews.AddAsync(dbModel);
@@ -289,14 +357,14 @@ public class Review_Process
         string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
         await File.WriteAllTextAsync(seedPath, json);
     }
-    public void Delete_CommentSeed(string dbModelGuid)
+    public void Delete_CommentDirectory(string dbModelGuid)
     {
-        string seedPath = Path.Combine(Storage_Comments.FullName, dbModelGuid, SeedFileName);
-        if (File.Exists(seedPath))
+        string directoryPath = Path.Combine(Storage_Comments.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
         {
             try
             {
-                File.Delete(seedPath);
+                Directory.Delete(directoryPath, true);
             }
             catch (Exception e)
             {
@@ -349,36 +417,68 @@ public class Review_Process
 
 }
 //*********************** Seed Models **************************
+public class Review_UserSeedModel
+{
+    public string Guid { get; set; } = null!;
+
+    public static Review_UserSeedModel Factory(string userGuid)
+    {
+        Review_UserSeedModel seedModel = new() { Guid = userGuid };
+        return seedModel;
+    }
+
+    public Review_UserDbModel GetDbModel()
+    {
+        Review_UserDbModel reviewDbModel = new()
+        {
+            Guid = Guid,
+        };
+
+        return reviewDbModel;
+    }
+}
 public class Review_ReviewSeedModel
 {
     public string SubjectGuid { get; set; } = null!;
-    public string SubjectOwnerGuid { get; set; } = null!;
+    public string OwnerGuid { get; set; } = null!;
     public string[] LikedByGuids { get; set; } = [];
 
     public static async Task<Review_ReviewSeedModel?> Factory(string subjectGuid,
     Review_DbContext reviewDb)
     {
         Review_ReviewSeedModel? seedModel = await reviewDb.Reviews
-        .Where(o => o.SubjectGuid == subjectGuid)
-        .Select(o => new Review_ReviewSeedModel()
+        .Where(r => r.SubjectGuid == subjectGuid)
+        .Include(r => r.Owner)
+        .Include(r => r.Likes)
+        .Select(r => new Review_ReviewSeedModel()
         {
-            LikedByGuids = o.LikedByGuids.ToArray(),
-            SubjectGuid = o.SubjectGuid,
-            SubjectOwnerGuid = o.SubjectOwnerGuid,
+            LikedByGuids = r.Likes.Select(u => u.Guid).ToArray(),
+            SubjectGuid = r.SubjectGuid,
+            OwnerGuid = r.Owner.Guid,
         })
-        //.AsSplitQuery()
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         return seedModel;
     }
 
-    public Review_ReviewDbModel? GetDbModel()
+    public async Task<Review_ReviewDbModel?> GetDbModel(Review_DbContext reviewDb)
     {
+        List<Review_UserDbModel> likes = await reviewDb.Users
+        .Where(u => LikedByGuids.Contains(u.Guid))
+        .ToListAsync();
+        Review_UserDbModel? owner = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == OwnerGuid);
+        if (owner is null)
+        {
+            //log
+            Console.WriteLine($"\n     ***** Review's owner cannot be null, ownerGuid {OwnerGuid} *****");
+            return null;
+        }
         Review_ReviewDbModel reviewDbModel = new()
         {
-            LikedByGuids = LikedByGuids.ToList(),
+            Likes = likes,
             SubjectGuid = SubjectGuid,
-            SubjectOwnerGuid = SubjectOwnerGuid,
+            Owner = owner,
         };
 
         return reviewDbModel;
@@ -387,11 +487,11 @@ public class Review_ReviewSeedModel
 public class Review_CommentSeedModel
 {
     public string Guid { get; set; } = null!;
-    public string? ParentReviewGuid { get; set; } = null;
+    public string ParentReviewGuid { get; set; } = null!;
     public string WriterGuid { get; set; } = null!;
     public string Text { get; set; } = string.Empty;
-    public string[] ThumbsUpBy { get; set; } = [];
-    public string[] ThumbsDownBy { get; set; } = [];
+    public string[] ThumbsUpsGuids { get; set; } = [];
+    public string[] ThumbsDownsGuids { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public string? ReplyToGuid { get; set; } = null;
     public string[] RepliesGuids { get; set; } = [];
@@ -404,17 +504,20 @@ public class Review_CommentSeedModel
         .Include(c => c.ParentReview)
         .Include(c => c.ReplyTo)
         .Include(c => c.Replies)
+        .Include(c => c.ThumbsUps)
+        .Include(c => c.ThumbsDowns)
+        .Include(c => c.Writer)
         .Select(c => new Review_CommentSeedModel()
         {
             Guid = c.Guid,
             CreatedAt = c.CreatedAt,
-            ParentReviewGuid = c.ParentReview == null ? null : c.ParentReview.SubjectGuid,
+            ParentReviewGuid = c.ParentReview.SubjectGuid,
             RepliesGuids = c.Replies.Select(r => r.Guid).ToArray(),
             ReplyToGuid = c.ReplyTo == null ? null : c.ReplyTo.Guid,
             Text = c.Text,
-            ThumbsDownBy = c.ThumbsDownBy.ToArray(),
-            ThumbsUpBy = c.ThumbsUpBy.ToArray(),
-            WriterGuid = c.WriterGuid,
+            ThumbsDownsGuids = c.ThumbsDowns.Select(u => u.Guid).ToArray(),
+            ThumbsUpsGuids = c.ThumbsUps.Select(u => u.Guid).ToArray(),
+            WriterGuid = c.Writer.Guid,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -445,17 +548,27 @@ public class Review_CommentSeedModel
             }
         }
 
-        Review_ReviewDbModel? parentReview = null;
-        if (ParentReviewGuid is not null)
+        Review_ReviewDbModel? parentReview = await reviewDb.Reviews
+        .FirstOrDefaultAsync(c => c.SubjectGuid == ParentReviewGuid);
+        if (parentReview == null)
         {
-            parentReview = await reviewDb.Reviews
-            .FirstOrDefaultAsync(c => c.SubjectGuid == ParentReviewGuid);
-            if (parentReview == null)
-            {
-                //log
-                Console.WriteLine($"\n     ***** parent review Not found with guid '{ParentReviewGuid}'!");
-                return null;
-            }
+            //log
+            Console.WriteLine($"\n     ***** parent review Not found with guid '{ParentReviewGuid}'!");
+            return null;
+        }
+
+        List<Review_UserDbModel> thumbsDowns = await reviewDb.Users
+        .Where(u => ThumbsDownsGuids.Contains(u.Guid)).ToListAsync();
+
+        List<Review_UserDbModel> thumbsUps = await reviewDb.Users
+        .Where(u => ThumbsUpsGuids.Contains(u.Guid)).ToListAsync();
+
+        Review_UserDbModel? writer = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == WriterGuid);
+        if (writer is null)
+        {
+            //log
+            Console.WriteLine($"\n     ***** writer can not be null, writer guid: {WriterGuid} *****");
+            return null;
         }
 
         Review_CommentDbModel commentDbModel = new()
@@ -466,9 +579,9 @@ public class Review_CommentSeedModel
             Replies = replies,
             ReplyTo = replyTo,
             Text = Text,
-            ThumbsDownBy = ThumbsDownBy.ToList(),
-            ThumbsUpBy = ThumbsUpBy.ToList(),
-            WriterGuid = WriterGuid,
+            ThumbsDowns = thumbsDowns,
+            ThumbsUps = thumbsUps,
+            Writer = writer,
         };
 
         return commentDbModel;

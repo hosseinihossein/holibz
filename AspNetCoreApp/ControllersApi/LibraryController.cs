@@ -1763,7 +1763,7 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddFavoriteLibrary([FromQuery][StringLength(32)] string libraryGuid)
+    public async Task<IActionResult> ToggleFavoriteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
         Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
         .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
@@ -1782,7 +1782,10 @@ public class LibraryController : ControllerBase
         .Include(owner => owner.FavoriteLibraries)
         .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
 
-        myDbModel.FavoriteLibraries.Add(libraryDbModel);
+        if (!myDbModel.FavoriteLibraries.Remove(libraryDbModel))
+        {
+            myDbModel.FavoriteLibraries.Add(libraryDbModel);
+        }
         await libraryDb.SaveChangesAsync();
 
         //seed
@@ -1793,7 +1796,7 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddFavoriteShelf([FromQuery][StringLength(32)] string shelfGuid)
+    public async Task<IActionResult> ToggleFavoriteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
         Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
         .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
@@ -1809,10 +1812,13 @@ public class LibraryController : ControllerBase
         .FirstOrDefaultAsync())!;
 
         Library_OwnerDbModel myDbModel = (await libraryDb.Owners
-        .Include(owner => owner.FavoriteLibraries)
+        .Include(owner => owner.FavoriteShelves)
         .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
 
-        myDbModel.FavoriteShelves.Add(shelfDbModel);
+        if (!myDbModel.FavoriteShelves.Remove(shelfDbModel))
+        {
+            myDbModel.FavoriteShelves.Add(shelfDbModel);
+        }
         await libraryDb.SaveChangesAsync();
 
         //seed
@@ -1823,7 +1829,7 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddFavoriteDocument([FromQuery][StringLength(32)] string documentGuid)
+    public async Task<IActionResult> ToggleFavoriteDocument([FromQuery][StringLength(32)] string documentGuid)
     {
         Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
         .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
@@ -1839,10 +1845,13 @@ public class LibraryController : ControllerBase
         .FirstOrDefaultAsync())!;
 
         Library_OwnerDbModel myDbModel = (await libraryDb.Owners
-        .Include(owner => owner.FavoriteLibraries)
+        .Include(owner => owner.FavoriteDocuments)
         .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
 
-        myDbModel.FavoriteDocuments.Add(documentDbModel);
+        if (!myDbModel.FavoriteDocuments.Remove(documentDbModel))
+        {
+            myDbModel.FavoriteDocuments.Add(documentDbModel);
+        }
         await libraryDb.SaveChangesAsync();
 
         //seed

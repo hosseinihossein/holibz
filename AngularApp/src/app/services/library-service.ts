@@ -467,22 +467,22 @@ export class LibraryService {
     );
   }
 
-  requestToAddFavoriteLibrary(libraryGuid:string){
+  requestToToggleFavoriteLibrary(libraryGuid:string){
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
     this.httpClient.post<{success:boolean}>(
-      "/api/Library/AddFavoriteLibrary", null, {params:httpParams}
+      "/api/Library/ToggleFavoriteLibrary", null, {params:httpParams}
     );
   }
-  requestToAddFavoriteShelf(shelfGuid:string){
+  requestToToggleFavoriteShelf(shelfGuid:string){
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
     this.httpClient.post<{success:boolean}>(
-      "/api/Library/AddFavoriteShelf", null, {params:httpParams}
+      "/api/Library/ToggleFavoriteShelf", null, {params:httpParams}
     );
   }
-  requestToAddFavoriteDocument(documentGuid:string){
+  requestToToggleFavoriteDocument(documentGuid:string){
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
     this.httpClient.post<{success:boolean}>(
-      "/api/Library/AddFavoriteDocument", null, {params:httpParams}
+      "/api/Library/ToggleFavoriteDocument", null, {params:httpParams}
     );
   }
 

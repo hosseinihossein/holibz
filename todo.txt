@@ -5,6 +5,7 @@
 - launch notifications
 - test and complete seeding data
 - define methods for recursively deleting removed entities directories from storage
+- change addFavorites to toggleFavorites
 - 
 
 

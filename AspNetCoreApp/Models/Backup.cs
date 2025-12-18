@@ -65,7 +65,7 @@ public class Backup_Process
 
 
 
-    public async Task GenerateFullBackup(UserManager<Identity_UserDbModel> userManager,
+    public async Task BackupFullProcess(UserManager<Identity_UserDbModel> userManager,
     Library_DbContext libraryDb, Review_DbContext reviewDb, Notification_DbContext notifDb)
     {
         //define backup status

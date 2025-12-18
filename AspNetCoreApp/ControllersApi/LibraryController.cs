@@ -21,13 +21,12 @@ public class LibraryController : ControllerBase
     readonly DirectoryInfo Storage_Documents;
     readonly DirectoryInfo Storage_Elements;
     readonly Library_Process libraryProcess;
-    //readonly Identity_Process identityProcess;
 
 
 
 
     public LibraryController(Library_DbContext _libraryDb, UserManager<Identity_UserDbModel> _userManager,
-    Library_Process _libraryProcess/*, Identity_Process _identityProcess*/)
+    Library_Process _libraryProcess)
     {
         libraryDb = _libraryDb;
         userManager = _userManager;
@@ -36,7 +35,6 @@ public class LibraryController : ControllerBase
         Storage_Documents = _libraryProcess.Storage_Documents;
         Storage_Elements = _libraryProcess.Storage_Elements;
         libraryProcess = _libraryProcess;
-        //identityProcess = _identityProcess;
     }
 
 
@@ -112,8 +110,7 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid/*,
-    [FromServices] Library_Process libraryProcess*/)
+    public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
         Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
         .Include(lib => lib.Owner)
@@ -154,7 +151,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //libraryProcess.Delete_LibrarySeed(libraryDbModel.Guid);
+        libraryProcess.Delete_LibraryDirectory(libraryDbModel.Guid);
 
         //set the delault library as the parent of its non-parent shelves
         foreach (var shelf in libraryDbModel.Shelves)
@@ -167,8 +164,8 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //string[] shelvesGuids = libraryDbModel.Shelves.Select(sh => sh.Guid).ToArray();
-        //_ = libraryProcess.Update_ShelvesSeeds(shelvesGuids, libraryDb);
+        string[] shelvesGuids = libraryDbModel.Shelves.Select(sh => sh.Guid).ToArray();
+        _ = libraryProcess.Update_ShelvesSeeds(shelvesGuids, libraryDb);
 
         DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
         if (libraryDirectoryInfo.Exists)
@@ -323,8 +320,7 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid/*,
-    [FromServices] Library_Process libraryProcess*/)
+    public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
         Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
@@ -364,7 +360,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //libraryProcess.Delete_ShelfSeed(shelfDbModel.Guid);
+        libraryProcess.Delete_ShelfDirectory(shelfDbModel.Guid);
 
         //set the default shelf as the parent of its non-parent documents
         foreach (var doc in shelfDbModel.Documents)
@@ -377,8 +373,8 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //string[] documentsGuids = shelfDbModel.Documents.Select(doc => doc.Guid).ToArray();
-        //_ = libraryProcess.Update_DocumentsSeeds(documentsGuids, libraryDb);
+        string[] documentsGuids = shelfDbModel.Documents.Select(doc => doc.Guid).ToArray();
+        _ = libraryProcess.Update_DocumentsSeeds(documentsGuids, libraryDb);
 
         DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
         if (shelfDirectoryInfo.Exists)
@@ -564,35 +560,12 @@ public class LibraryController : ControllerBase
         libraryDb.Documents.Remove(documentDbModel);
         await libraryDb.SaveChangesAsync();
 
-        //delete directory path from Storage_Document
-        string directoryPath = Path.Combine(Storage_Documents.FullName, documentDbModel.Guid);
-        if (Directory.Exists(directoryPath))
-        {
-            try
-            {
-                System.IO.Directory.Delete(directoryPath, true);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"\n***** {e.Message}");
-            }
-        }
-
+        //seed
+        libraryProcess.Delete_DocumentDirectory(documentDbModel.Guid);
         //delete directory path of elements from storage
         foreach (string elementGuid in documentDbModel.Elements.Select(el => el.Guid))
         {
-            string elemenDirPath = Path.Combine(Storage_Elements.FullName, elementGuid);
-            if (Directory.Exists(elemenDirPath))
-            {
-                try
-                {
-                    System.IO.Directory.Delete(elemenDirPath, true);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"\n***** {e.Message}");
-                }
-            }
+            libraryProcess.Delete_ElementDirectory(elementGuid);
         }
 
         return Ok(new { success = true });
@@ -666,27 +639,14 @@ public class LibraryController : ControllerBase
                 }
             }
 
-            //List<Library_ElementDbModel> deletedElements = [];
             bool needToReorder = false;
             foreach (var elementDbModel in elementDbModels)
             {
                 var formModel = formModels.First(fm => fm.Guid == elementDbModel.Guid);
-
                 if (formModel.Delete ?? false)
                 {
-                    //deletedElements.Add(elementDbModel);
                     libraryDb.Elements.Remove(elementDbModel);
                     needToReorder = true;
-
-                    if (!string.IsNullOrWhiteSpace(elementDbModel.FileName))
-                    {
-                        string filePath = Path.Combine(Storage_Elements.FullName,
-                        elementDbModel.Guid, elementDbModel.FileName);
-                        if (System.IO.File.Exists(filePath))
-                        {
-                            System.IO.File.Delete(filePath);
-                        }
-                    }
                 }
                 else
                 {
@@ -698,14 +658,26 @@ public class LibraryController : ControllerBase
 
             await libraryDb.SaveChangesAsync();
 
-            //elementDbModels.RemoveAll(el => deletedElements.Contains(el));
             if (needToReorder)
             {
                 var result = await libraryProcess.ReorderElements(libraryDb, parentDocumentGuids.Single());
-
                 if (result.Success && result.ResultObject is not null)
                 {
                     elementDbModels = (List<Library_ElementDbModel>)result.ResultObject;
+                }
+            }
+
+            //seed
+            foreach (var elementDbModel in elementDbModels)
+            {
+                var formModel = formModels.First(fm => fm.Guid == elementDbModel.Guid);
+                if (formModel.Delete ?? false)
+                {
+                    libraryProcess.Delete_ElementDirectory(elementDbModel.Guid);
+                }
+                else
+                {
+                    await libraryProcess.Update_ElementSeed(elementDbModel.Guid, libraryDb);
                 }
             }
 
@@ -943,6 +915,9 @@ public class LibraryController : ControllerBase
 
             await libraryDb.SaveChangesAsync();
 
+            //seed
+            _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+
             return Ok(new
             {
                 success = true,
@@ -1014,6 +989,9 @@ public class LibraryController : ControllerBase
 
             await libraryDb.SaveChangesAsync();
 
+            //seed
+            _ = libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+
             return Ok(new
             {
                 success = true,
@@ -1066,7 +1044,6 @@ public class LibraryController : ControllerBase
 
             shelfDbModel.Title = formModel.Title;
             shelfDbModel.Description = string.IsNullOrWhiteSpace(formModel.Description) ? null : formModel.Description;
-            //await libraryDb.SaveChangesAsync();
 
             if (formModel.Image is not null)
             {
@@ -1082,6 +1059,9 @@ public class LibraryController : ControllerBase
             }
 
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
             return Ok(new
             {
@@ -1147,6 +1127,9 @@ public class LibraryController : ControllerBase
         documentDbModel.IntegrityVersion = 0;
         await libraryDb.SaveChangesAsync();
 
+        //seed
+        _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+
         return Ok(new { success = true });
     }
 
@@ -1194,6 +1177,9 @@ public class LibraryController : ControllerBase
         libraryDbModel.IntegrityVersion = 0;
         await libraryDb.SaveChangesAsync();
 
+        //seed
+        _ = libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+
         return Ok(new { success = true });
     }
 
@@ -1240,6 +1226,9 @@ public class LibraryController : ControllerBase
         shelfDbModel.HasImage = false;
         shelfDbModel.IntegrityVersion = 0;
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1290,6 +1279,9 @@ public class LibraryController : ControllerBase
 
             documentDbModel.ParentShelves = parentShelfDbModels;
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
             var parentShelves = parentShelfDbModels.Select(shelf => new
             {
@@ -1356,6 +1348,9 @@ public class LibraryController : ControllerBase
             shelfDbModel.ParentLibraries = parentLibraryDbModels;
 
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
             return Ok(new { success = true });
         }
@@ -1456,10 +1451,10 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Follow([FromQuery][StringLength(32)] string ownerGuid)
     {
-        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
+        Library_OwnerDbModel? followingDbModel = await libraryDb.Owners
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 
-        if (ownerDbModel is null)
+        if (followingDbModel is null)
         {
             ModelState.AddModelError("user", "the specified owner Not found!");
             return BadRequest(ModelState);
@@ -1474,8 +1469,12 @@ public class LibraryController : ControllerBase
         .Include(owner => owner.Followings)
         .FirstOrDefaultAsync(owner => owner.Guid == followerGuid))!;
 
-        followerDbModel.Followings.Add(ownerDbModel);
+        followerDbModel.Followings.Add(followingDbModel);
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        await libraryProcess.Update_OwnerSeed(followerDbModel.Guid, libraryDb);
+        _ = libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1493,13 +1492,17 @@ public class LibraryController : ControllerBase
         .Include(owner => owner.Followings)
         .FirstOrDefaultAsync(owner => owner.Guid == followerGuid))!;
 
-        Library_OwnerDbModel? ownerDbModel = followerDbModel.Followings
+        Library_OwnerDbModel? followingDbModel = followerDbModel.Followings
         .FirstOrDefault(owner => owner.Guid == ownerGuid);
 
-        if (ownerDbModel is not null)
+        if (followingDbModel is not null)
         {
-            followerDbModel.Followings.Remove(ownerDbModel);
+            followerDbModel.Followings.Remove(followingDbModel);
             await libraryDb.SaveChangesAsync();
+
+            //seed
+            await libraryProcess.Update_OwnerSeed(followerDbModel.Guid, libraryDb);
+            _ = libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
         }
 
         return Ok(new { success = true });
@@ -1770,17 +1773,20 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        string userGuid = (await userManager.Users
+        string myGuid = (await userManager.Users
         .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
         .Select(user => user.UserGuid)
         .FirstOrDefaultAsync())!;
 
-        Library_OwnerDbModel ownerDbModel = (await libraryDb.Owners
+        Library_OwnerDbModel myDbModel = (await libraryDb.Owners
         .Include(owner => owner.FavoriteLibraries)
-        .FirstOrDefaultAsync(owner => owner.Guid == userGuid))!;
+        .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
 
-        ownerDbModel.FavoriteLibraries.Add(libraryDbModel);
+        myDbModel.FavoriteLibraries.Add(libraryDbModel);
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        _ = libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1797,17 +1803,20 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        string userGuid = (await userManager.Users
+        string myGuid = (await userManager.Users
         .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
         .Select(user => user.UserGuid)
         .FirstOrDefaultAsync())!;
 
-        Library_OwnerDbModel ownerDbModel = (await libraryDb.Owners
+        Library_OwnerDbModel myDbModel = (await libraryDb.Owners
         .Include(owner => owner.FavoriteLibraries)
-        .FirstOrDefaultAsync(owner => owner.Guid == userGuid))!;
+        .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
 
-        ownerDbModel.FavoriteShelves.Add(shelfDbModel);
+        myDbModel.FavoriteShelves.Add(shelfDbModel);
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1824,17 +1833,20 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        string userGuid = (await userManager.Users
+        string myGuid = (await userManager.Users
         .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
         .Select(user => user.UserGuid)
         .FirstOrDefaultAsync())!;
 
-        Library_OwnerDbModel ownerDbModel = (await libraryDb.Owners
+        Library_OwnerDbModel myDbModel = (await libraryDb.Owners
         .Include(owner => owner.FavoriteLibraries)
-        .FirstOrDefaultAsync(owner => owner.Guid == userGuid))!;
+        .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
 
-        ownerDbModel.FavoriteDocuments.Add(documentDbModel);
+        myDbModel.FavoriteDocuments.Add(documentDbModel);
         await libraryDb.SaveChangesAsync();
+
+        //seed
+        _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }

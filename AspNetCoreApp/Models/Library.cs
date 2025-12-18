@@ -330,7 +330,7 @@ public class Library_Process //singleton service
             await libraryDb.SaveChangesAsync();
 
             //seed
-            //_ = Update_OwnerSeed(ownerDbModel.Guid, libraryDb);
+            _ = Update_OwnerSeed(ownerDbModel.Guid, libraryDb);
         }
 
         return new Library_ProcessResult()
@@ -377,7 +377,7 @@ public class Library_Process //singleton service
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //_ = Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+        _ = Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult() { Success = true, ResultObject = libraryDbModel };
     }
@@ -435,7 +435,7 @@ public class Library_Process //singleton service
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //_ = Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+        _ = Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult() { Success = true, ResultObject = shelfDbModel };
     }
@@ -493,7 +493,7 @@ public class Library_Process //singleton service
         await libraryDb.SaveChangesAsync();
 
         //seed
-        //_ = Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        _ = Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult()
         {
@@ -549,7 +549,7 @@ public class Library_Process //singleton service
             await ReorderElements(libraryDb, documentDbmodel.Guid);
 
             //seed
-            //_ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
+            _ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
 
             return new Library_ProcessResult()
             {
@@ -587,7 +587,7 @@ public class Library_Process //singleton service
             await ReorderElements(libraryDb, documentDbmodel.Guid);
 
             //seed
-            //_ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
+            _ = Update_ElementSeed(elementDbmodel.Guid, libraryDb);
 
             return new Library_ProcessResult()
             {

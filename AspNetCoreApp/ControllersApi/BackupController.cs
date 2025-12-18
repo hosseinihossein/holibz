@@ -70,7 +70,7 @@ public class BackupController : ControllerBase
     [Authorize(Roles = "Backup_Admins")]
     public async Task<IActionResult> GenerateFullBackup()
     {
-        _ = backupProcess.GenerateFullBackup(userManager, libraryDb, reviewDb, notifDb);
+        _ = backupProcess.BackupFullProcess(userManager, libraryDb, reviewDb, notifDb);
         return Ok(new { success = true });
     }
 

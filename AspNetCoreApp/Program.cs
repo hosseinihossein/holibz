@@ -248,6 +248,7 @@ public class Program
         builder.Services.AddSingleton<Library_Process>();
         builder.Services.AddSingleton<FileNameValidator>();
         builder.Services.AddSingleton<Review_Process>();
+        builder.Services.AddSingleton<Backup_Process>();
 
 
 

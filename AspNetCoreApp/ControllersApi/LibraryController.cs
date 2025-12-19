@@ -536,7 +536,8 @@ public class LibraryController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid)
+    public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid,
+    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb)
     {
         Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
         .Include(doc => doc.Owner)
@@ -566,6 +567,18 @@ public class LibraryController : ControllerBase
         foreach (string elementGuid in documentDbModel.Elements.Select(el => el.Guid))
         {
             libraryProcess.Delete_ElementDirectory(elementGuid);
+        }
+
+        //delete review
+        Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
+        .FirstOrDefaultAsync(r => r.SubjectGuid == documentDbModel.Guid);
+        if (reviewDbModel is not null)
+        {
+            //first delete directories
+            await reviewProcess.DeleteReviewAndCommentsDirectories(reviewDb, documentDbModel.Guid);
+            //then remove from db
+            reviewDb.Reviews.Remove(reviewDbModel);
+            await reviewDb.SaveChangesAsync();
         }
 
         return Ok(new { success = true });

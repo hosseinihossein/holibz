@@ -207,6 +207,50 @@ public class Review_Process
         //_ = Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
     }
 
+    public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }
+    public async Task DeleteReviewAndCommentsDirectories(Review_DbContext reviewDb, string subjectGuid)
+    {
+        List<string> commentsGuids = await reviewDb.Reviews
+        .Where(r => r.SubjectGuid == subjectGuid)
+        .Include(r => r.Comments)
+        .SelectMany(r => r.Comments)
+        .Select(c => c.Guid)
+        .ToListAsync();
+
+        foreach (string commentGuid in commentsGuids)
+        {
+            await DeleteCommentsDirectoriesRecursively(reviewDb, commentGuid);
+        }
+
+        Delete_ReviewDirectory(subjectGuid);
+    }
+    public async Task DeleteCommentsDirectoriesRecursively(Review_DbContext reviewDb, string parentCommentGuid)
+    {
+        List<string> deleteList = [parentCommentGuid];
+        for (int i = 0; i < deleteList.Count; i++)
+        {
+            string commentGuid = deleteList[i];
+            deleteList.AddRange(await GetRepliesGuids(reviewDb, commentGuid));
+        }
+
+        foreach (string commentGuid in deleteList)
+        {
+            Delete_CommentDirectory(commentGuid);
+        }
+    }
+    private async Task<List<string>> GetRepliesGuids(Review_DbContext reviewDb,
+    string parentCommentGuid)
+    {
+        List<string> repliesGuids = await reviewDb.Comments
+        .Where(c => c.Guid == parentCommentGuid)
+        .Include(c => c.Replies)
+        .SelectMany(c => c.Replies)
+        .Select(r => r.Guid)
+        .ToListAsync();
+
+        return repliesGuids;
+    }
+
 
     //************************************ seed User data **********************************
     public async Task Update_UserSeed(string userGuid, Review_DbContext reviewDb)

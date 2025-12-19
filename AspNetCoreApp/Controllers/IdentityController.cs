@@ -17,8 +17,9 @@ public class IdentityController : Controller
     }
 
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token,
-    [FromQuery][StringLength(60)] string email, /*[FromServices] Identity_Process identityProcess,*/
-    [FromServices] Library_DbContext libraryDb, [FromServices] Library_Process libraryProcess)
+    [FromQuery][StringLength(60)] string email, [FromServices] Identity_Process identityProcess,
+    [FromServices] Library_DbContext libraryDb, [FromServices] Library_Process libraryProcess,
+    Review_Process reviewProcess, Review_DbContext reviewDb)
     {
         if (ModelState.IsValid)
         {
@@ -44,9 +45,11 @@ public class IdentityController : Controller
             {
                 // creating Library_OwnerDbModel and its default library and shelf
                 await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
+                // creating Review_UserDbModel
+                await reviewProcess.CreateNewUser(reviewDb, user.UserGuid);
 
                 //seed
-                //_ = identityProcess.Update_UserSeed(user, userManager);
+                _ = identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Confirmed.</h2>";
                 ViewBag.ResultState = "success";
@@ -66,8 +69,8 @@ public class IdentityController : Controller
 
     public async Task<IActionResult> ConfirmNewEmail([FromQuery][StringLength(32)] string userGuid,
     [FromQuery] string token, [FromQuery][StringLength(60)] string newEmail,
-    /*[FromServices] Identity_Process identityProcess,*/ [FromServices] Library_DbContext libraryDb,
-    [FromServices] Library_Process libraryProcess)
+    [FromServices] Identity_Process identityProcess, [FromServices] Library_DbContext libraryDb,
+    [FromServices] Library_Process libraryProcess, Review_Process reviewProcess, Review_DbContext reviewDb)
     {
         if (ModelState.IsValid)
         {
@@ -94,9 +97,11 @@ public class IdentityController : Controller
             {
                 // creating Library_OwnerDbModel and its default library and shelf
                 await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
+                // creating Review_UserDbModel
+                await reviewProcess.CreateNewUser(reviewDb, user.UserGuid);
 
                 //seed
-                //_ = identityProcess.Update_UserSeed(user, userManager);
+                _ = identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Changed. You need to login again to see changes.</h2>";
                 ViewBag.ResultState = "success";
@@ -143,8 +148,8 @@ public class IdentityController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel/*,
-    [FromServices] Identity_Process identityProcess*/)
+    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel,
+    [FromServices] Identity_Process identityProcess)
     {
         if (ModelState.IsValid)
         {
@@ -162,7 +167,7 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 //seed
-                //_ = identityProcess.Update_UserSeed(user, userManager);
+                _ = identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your new password successfully set.</h2>";
                 ViewBag.ResultState = "success";

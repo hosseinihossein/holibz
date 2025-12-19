@@ -38,7 +38,20 @@ public class BackupController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Backup_Admins")]
-    public async Task<IActionResult> GetBackupStatus()
+    public IActionResult GetBackupStatus()
+    {
+        Backup_Status? status = null;
+        if (System.IO.File.Exists(backupProcess.StatusFilePath))
+        {
+            status = JsonSerializer.Deserialize<Backup_Status>(backupProcess.StatusFilePath);
+        }
+        status ??= new();
+        return Ok(status);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Backup_Admins")]
+    public IActionResult DownloadBackupFile()
     {
         Backup_Status? status = null;
         if (System.IO.File.Exists(backupProcess.StatusFilePath))
@@ -47,47 +60,60 @@ public class BackupController : ControllerBase
         }
         if (status is null)
         {
-            status = new();
+            return NotFound("status file not found!");
         }
-        return Ok(status);
-    }
-
-    [HttpGet]
-    [Authorize(Roles = "Backup_Admins")]
-    public async Task<IActionResult> DownloadBackupFile()
-    {
-        string backupFilePath = Path.Combine(backupProcess.Backup_Directory.FullName, backupProcess.BackupFileName);
+        string backupFilePath = Path.Combine(backupProcess.Backup_Directory.FullName, status.FileName);
         if (System.IO.File.Exists(backupFilePath))
         {
             /*In ASP.NET Core, when you return a file using PhysicalFile, File, or FileContentResult, 
             the framework automatically sets the Content-Disposition header to attachment if 
             you pass a fileDownloadName.*/
-            DateTime createdAt = System.IO.File.GetLastWriteTimeUtc(backupFilePath);
-            string downloadFileName = createdAt.ToString("YYYY_MM_dd_HH_mm_ss") + "_" + backupProcess.BackupFileName;
-            return PhysicalFile(backupFilePath, "application/octet-stream", downloadFileName, true);
+            return PhysicalFile(backupFilePath, "application/octet-stream", status.FileName, true);
         }
         return NotFound();
     }
 
     [HttpGet]
     [Authorize(Roles = "Backup_Admins")]
-    public async Task<IActionResult> GenerateBackupFile()
+    public IActionResult GenerateBackupFile()
     {
         _ = backupProcess.GenerateBackupZipFile();
         return Ok();
     }
 
+    [HttpDelete]
+    [Authorize(Roles = "Backup_Admins")]
+    public IActionResult DeleteBackupFile()
+    {
+
+        if (backupProcess.Backup_Directory.Exists)
+        {
+            foreach (FileInfo file in backupProcess.Backup_Directory.EnumerateFiles())
+            {
+                try
+                {
+                    file.Delete();
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** couldn't delet file {file.Name} from backup directory *****");
+                    Console.WriteLine(e.Message);
+                }
+            }
+        }
+        return Ok();
+    }
 
 
 
-
-    [HttpGet]
+    /*[HttpGet]
     [Authorize(Roles = "Backup_Admins")]
     public async Task<IActionResult> ProcessFullBackup()
     {
         _ = backupProcess.BackupFullProcess(userManager, libraryDb, reviewDb, notifDb);
         return Ok();
-    }
+    }*/
 
 
 }

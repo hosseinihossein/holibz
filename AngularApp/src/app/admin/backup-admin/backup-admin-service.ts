@@ -19,17 +19,16 @@ export class BackupAdminService {
       observe: "body",//by default return response body, so it's optional
     });
   }
+  requestDeleteBackup(){
+    return this.httpClient.delete("/api/Backup/DeleteBackupFile");
+  }
 
 }
 
 export class BackupStatus {
   overall_Status:string = null!;
-  identity_SeedStatus:string = null!;
-  library_SeedStatus:string = null!;
-  review_SeedStatus:string = null!;
-  notification_SeedStatus:string = null!;
-  description:string[] = [];
   createdAt:Date = null!;
   fileSize:number = 0;
   fileName:string = null!;
+  readyToDownload:boolean = false;
 }

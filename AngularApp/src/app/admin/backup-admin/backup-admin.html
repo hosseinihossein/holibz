@@ -1,12 +1,20 @@
 <mat-card>
     <mat-card-header>
-        <mat-card-title>{{}}</mat-card-title>
-        <mat-card-subtitle>{{}}</mat-card-subtitle>
+        <mat-card-title>{{backupStatus()?.fileName}}</mat-card-title>
+        <mat-card-subtitle>{{backupStatus()?.createdAt | date}}</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-        <p>{{}}</p>
+        <p>Ready to download: {{backupStatus()?.readyToDownload}}</p>
+        <p>File Size: {{backupStatus()?.fileSize}}</p>
+        <p>Status: {{backupStatus()?.overall_Status}}</p>
     </mat-card-content>
     <mat-card-actions align="end">
-        <a matButton href="/api/Backup/DownloadBackupFile" download>Download</a>
+        @if(backupStatus()){
+        <button matButton (click)="downloadFile()">Download</button>
+        <button matButton (click)="deleteFile()">Delete</button>
+        }
+        @else {
+        <button matButton (click)="generateFile()">Generate</button>
+        }
     </mat-card-actions>
 </mat-card>

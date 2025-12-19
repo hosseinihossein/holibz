@@ -873,6 +873,8 @@ public class ReviewController : ControllerBase
         {
             Review_CommentDbModel? parentCommentDbModel = await reviewDb.Comments
             .Include(c => c.Writer)
+            .Include(c => c.ParentReview)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Guid == formModel.ParentCommentGuid);
             if (parentCommentDbModel is null)
             {
@@ -898,6 +900,7 @@ public class ReviewController : ControllerBase
                 ReplyTo = parentCommentDbModel,
                 Text = formModel.Text,
                 Writer = myDbModel,
+                ParentReview = parentCommentDbModel.ParentReview,
             };
 
             await reviewDb.Comments.AddAsync(reply);
@@ -945,19 +948,20 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (commentDbModel.Writer.Guid == myGuid)
+        if (commentDbModel.Writer.Guid != myGuid)
         {
-            reviewDb.Comments.Remove(commentDbModel);
-            await reviewDb.SaveChangesAsync();
-
-            //seed
-            reviewProcess.Delete_CommentDirectory(commentDbModel.Guid);
-
-            return Ok(new { success = true });
+            ModelState.AddModelError("Authorization", "Only the writer of the comment can delete the comment!");
+            return BadRequest(ModelState);
         }
 
-        ModelState.AddModelError("Authorization", "Only the writer of the comment can delete the comment!");
-        return BadRequest(ModelState);
+        //seed
+        //first delete directories
+        await reviewProcess.DeleteCommentsDirectoriesRecursively(reviewDb, commentDbModel.Guid);
+
+        reviewDb.Comments.Remove(commentDbModel);
+        await reviewDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
     }
 
 

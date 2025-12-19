@@ -6,6 +6,7 @@
 - test and complete seeding data
 - define methods for recursively deleting removed entities directories from storage
 - how to get more replies
+- create review_User after adding new users
 - 
 
 

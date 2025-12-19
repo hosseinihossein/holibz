@@ -358,9 +358,9 @@ public class ReviewController : ControllerBase
         int totalNumberOfComments = await reviewDb.Reviews
         .Where(r => r.SubjectGuid == subjectGuid)
         .Include(r => r.Comments)
-        //.ThenInclude(c => c.ReplyTo)
+        .ThenInclude(c => c.ReplyTo)
         .SelectMany(r => r.Comments)
-        //.Where(c => c.ReplyTo == null)
+        .Where(c => c.ReplyTo == null)
         .CountAsync();
 
         if (pageIndex.Value > 0 && (pageIndex.Value * pageSize) >= totalNumberOfComments)
@@ -385,31 +385,37 @@ public class ReviewController : ControllerBase
             {
                 myCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                //.Include(r => r.Comments)
-                //.ThenInclude(c => c.ReplyTo)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.Writer)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsDowns)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsUps)
                 .SelectMany(r => r.Comments)
-                .Where(c => c.WriterGuid == myGuid/* && c.ReplyTo == null*/)
+                .Where(c => c.Writer.Guid == myGuid && c.ReplyTo == null)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
                 .Select(c => new Review_CommentModel()
                 {
-                    AmIThumbsDown = c.ThumbsDownBy.Contains(myGuid),
-                    AmIThumbsUp = c.ThumbsUpBy.Contains(myGuid),
+                    AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                    AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                     CreatedAt = c.CreatedAt,
                     Guid = c.Guid,
                     IsReply = false,
                     NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                    NumberOfThumbsDowns = c.ThumbsDowns.Count,
+                    NumberOfThumbsUps = c.ThumbsUps.Count,
                     ReplyToBrief = "",
                     ReplyToGuid = "",
                     ReplyToUsername = "",
                     Text = c.Text,
-                    WriterGuid = c.WriterGuid,
+                    WriterGuid = c.Writer.Guid,
                 })
-                //.AsSplitQuery()
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 if (myCommentsModels.Length < pageSize.Value)
@@ -420,9 +426,12 @@ public class ReviewController : ControllerBase
                         totalNumberOfMyComments = await reviewDb.Reviews
                         .Where(r => r.SubjectGuid == subjectGuid)
                         .Include(r => r.Comments)
-                        //.ThenInclude(c => c.ReplyTo)
+                        .ThenInclude(c => c.ReplyTo)
+                        .Include(r => r.Comments)
+                        .ThenInclude(c => c.Writer)
                         .SelectMany(r => r.Comments)
-                        .Where(c => c.WriterGuid == myGuid/* && c.ReplyTo == null*/)
+                        .Where(c => c.Writer.Guid == myGuid && c.ReplyTo == null)
+                        .AsSplitQuery()
                         .CountAsync();
                     }
                     else
@@ -437,31 +446,37 @@ public class ReviewController : ControllerBase
 
                     othersCommentsModels = await reviewDb.Reviews
                     .Where(r => r.SubjectGuid == subjectGuid)
-                    //.Include(r => r.Comments)
-                    //.ThenInclude(c => c.ReplyTo)
+                    .Include(r => r.Comments)
+                    .ThenInclude(c => c.ReplyTo)
                     .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
+                    .Include(r => r.Comments)
+                    .ThenInclude(c => c.Writer)
+                    .Include(r => r.Comments)
+                    .ThenInclude(c => c.ThumbsDowns)
+                    .Include(r => r.Comments)
+                    .ThenInclude(c => c.ThumbsUps)
                     .SelectMany(r => r.Comments)
-                    .Where(c => c.WriterGuid != myGuid/* && c.ReplyTo == null*/)
+                    .Where(c => c.Writer.Guid != myGuid && c.ReplyTo == null)
                     .Skip(numberOfSkipOthersComments)
                     .Take(numberOfNeededOthersComments)
                     .Select(c => new Review_CommentModel()
                     {
-                        AmIThumbsDown = c.ThumbsDownBy.Contains(myGuid),
-                        AmIThumbsUp = c.ThumbsUpBy.Contains(myGuid),
+                        AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                        AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                         CreatedAt = c.CreatedAt,
                         Guid = c.Guid,
                         IsReply = false,
                         NumberOfReplies = c.Replies.Count,
-                        NumberOfThumbsDowns = c.ThumbsDownBy.Count,
-                        NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                        NumberOfThumbsDowns = c.ThumbsDowns.Count,
+                        NumberOfThumbsUps = c.ThumbsUps.Count,
                         ReplyToBrief = "",
                         ReplyToGuid = "",
                         ReplyToUsername = "",
                         Text = c.Text,
-                        WriterGuid = c.WriterGuid,
+                        WriterGuid = c.Writer.Guid,
                     })
-                    //.AsSplitQuery()
+                    .AsSplitQuery()
                     .ToArrayAsync();
                 }
             }
@@ -469,12 +484,18 @@ public class ReviewController : ControllerBase
             {
                 othersCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                //.Include(r => r.Comments)
-                //.ThenInclude(c => c.ReplyTo)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.Writer)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsDowns)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsUps)
                 .SelectMany(r => r.Comments)
-                //.Where(c => c.ReplyTo == null)
+                .Where(c => c.ReplyTo == null)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
                 .Select(c => new Review_CommentModel()
@@ -485,15 +506,15 @@ public class ReviewController : ControllerBase
                     Guid = c.Guid,
                     IsReply = false,
                     NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                    NumberOfThumbsDowns = c.ThumbsDowns.Count,
+                    NumberOfThumbsUps = c.ThumbsUps.Count,
                     ReplyToBrief = "",
                     ReplyToGuid = "",
                     ReplyToUsername = "",
                     Text = c.Text,
-                    WriterGuid = c.WriterGuid,
+                    WriterGuid = c.Writer.Guid,
                 })
-                //.AsSplitQuery()
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
 
@@ -506,32 +527,38 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                //.Include(r => r.Comments)
-                //.ThenInclude(c => c.ReplyTo)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.Writer)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsDowns)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsUps)
                 .SelectMany(r => r.Comments)
-                //.Where(c => c.ReplyTo == null)
+                .Where(c => c.ReplyTo == null)
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
                 .Select(c => new Review_CommentModel()
                 {
-                    AmIThumbsDown = myGuid != null && c.ThumbsDownBy.Contains(myGuid),
-                    AmIThumbsUp = myGuid != null && c.ThumbsUpBy.Contains(myGuid),
+                    AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                    AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                     CreatedAt = c.CreatedAt,
                     Guid = c.Guid,
                     IsReply = false,
                     NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                    NumberOfThumbsDowns = c.ThumbsDowns.Count,
+                    NumberOfThumbsUps = c.ThumbsUps.Count,
                     ReplyToBrief = "",
                     ReplyToGuid = "",
                     ReplyToUsername = "",
                     Text = c.Text,
-                    WriterGuid = c.WriterGuid,
+                    WriterGuid = c.Writer.Guid,
                 })
-                //.AsSplitQuery()
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -541,32 +568,38 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                //.Include(r => r.Comments)
-                //.ThenInclude(c => c.ReplyTo)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.Writer)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsDowns)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsUps)
                 .SelectMany(r => r.Comments)
-                //.Where(c => c.ReplyTo == null)
+                .Where(c => c.ReplyTo == null)
                 .OrderBy(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
                 .Select(c => new Review_CommentModel()
                 {
-                    AmIThumbsDown = myGuid != null && c.ThumbsDownBy.Contains(myGuid),
-                    AmIThumbsUp = myGuid != null && c.ThumbsUpBy.Contains(myGuid),
+                    AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                    AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                     CreatedAt = c.CreatedAt,
                     Guid = c.Guid,
                     IsReply = false,
                     NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                    NumberOfThumbsDowns = c.ThumbsDowns.Count,
+                    NumberOfThumbsUps = c.ThumbsUps.Count,
                     ReplyToBrief = "",
                     ReplyToGuid = "",
                     ReplyToUsername = "",
                     Text = c.Text,
-                    WriterGuid = c.WriterGuid,
+                    WriterGuid = c.Writer.Guid,
                 })
-                //.AsSplitQuery()
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -576,32 +609,38 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                //.Include(r => r.Comments)
-                //.ThenInclude(c => c.ReplyTo)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                 .ThenInclude(c => c.Replies)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.Writer)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsDowns)
+                .Include(r => r.Comments)
+                .ThenInclude(c => c.ThumbsUps)
                 .SelectMany(r => r.Comments)
-                //.Where(c => c.ReplyTo == null)
-                .OrderByDescending(c => c._thumbsUpBy.Length)
+                .Where(c => c.ReplyTo == null)
+                .OrderByDescending(c => c.ThumbsUps.Count)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
                 .Select(c => new Review_CommentModel()
                 {
-                    AmIThumbsDown = myGuid != null && c.ThumbsDownBy.Contains(myGuid),
-                    AmIThumbsUp = myGuid != null && c.ThumbsUpBy.Contains(myGuid),
+                    AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                    AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                     CreatedAt = c.CreatedAt,
                     Guid = c.Guid,
                     IsReply = false,
                     NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpBy.Count,
+                    NumberOfThumbsDowns = c.ThumbsDowns.Count,
+                    NumberOfThumbsUps = c.ThumbsUps.Count,
                     ReplyToBrief = "",
                     ReplyToGuid = "",
                     ReplyToUsername = "",
                     Text = c.Text,
-                    WriterGuid = c.WriterGuid,
+                    WriterGuid = c.Writer.Guid,
                 })
-                //.AsSplitQuery()
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -616,6 +655,7 @@ public class ReviewController : ControllerBase
     [FromQuery] int? bunchIndex)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .Include(c => c.Writer)
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
         {
@@ -624,7 +664,7 @@ public class ReviewController : ControllerBase
         }
 
         string commentWriterUsername = await userManager.Users
-        .Where(u => u.UserGuid == commentDbModel.WriterGuid)
+        .Where(u => u.UserGuid == commentDbModel.Writer.Guid)
         .Select(u => u.UserName)
         .FirstOrDefaultAsync() ?? "Unkown UserName";
 
@@ -647,26 +687,33 @@ public class ReviewController : ControllerBase
             .Where(c => c.Guid == commentGuid)
             .Include(c => c.Replies)
             .ThenInclude(rep => rep.Replies)
+            .Include(c => c.Replies)
+            .ThenInclude(rep => rep.Writer)
+            .Include(c => c.Replies)
+            .ThenInclude(rep => rep.ThumbsDowns)
+            .Include(c => c.Replies)
+            .ThenInclude(rep => rep.ThumbsUps)
             .SelectMany(c => c.Replies)
-            .Where(rep => rep.WriterGuid == myGuid)
+            .Where(rep => rep.Writer.Guid == myGuid)
             .Skip(bunchIndex.Value * 10)
             .Take(10)
             .Select(rep => new Review_CommentModel()
             {
-                AmIThumbsDown = rep.ThumbsDownBy.Contains(myGuid),
-                AmIThumbsUp = rep.ThumbsUpBy.Contains(myGuid),
+                AmIThumbsDown = rep.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                AmIThumbsUp = rep.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                 CreatedAt = rep.CreatedAt,
                 Guid = rep.Guid,
                 IsReply = true,
                 NumberOfReplies = rep.Replies.Count,
-                NumberOfThumbsDowns = rep.ThumbsDownBy.Count,
-                NumberOfThumbsUps = rep.ThumbsUpBy.Count,
+                NumberOfThumbsDowns = rep.ThumbsDowns.Count,
+                NumberOfThumbsUps = rep.ThumbsUps.Count,
                 ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
                 ReplyToGuid = rep.ReplyTo.Guid,
                 ReplyToUsername = commentWriterUsername,
                 Text = rep.Text,
-                WriterGuid = rep.WriterGuid,
+                WriterGuid = rep.Writer.Guid,
             })
+            .AsSplitQuery()
             .ToArrayAsync();
 
             if (myRepliesModels.Length < 10)
@@ -677,8 +724,10 @@ public class ReviewController : ControllerBase
                     totalNumberOfMyReplies = await reviewDb.Comments
                     .Where(c => c.Guid == commentGuid)
                     .Include(c => c.Replies)
+                    .Include(c => c.Writer)
                     .SelectMany(c => c.Replies)
-                    .Where(rep => rep.WriterGuid == myGuid)
+                    .Where(rep => rep.Writer.Guid == myGuid)
+                    .AsSplitQuery()
                     .CountAsync();
                 }
                 else
@@ -694,35 +743,48 @@ public class ReviewController : ControllerBase
                 .Where(c => c.Guid == commentGuid)
                 .Include(c => c.Replies)
                 .ThenInclude(rep => rep.Replies)
+                .Include(c => c.Replies)
+                .ThenInclude(rep => rep.Writer)
+                .Include(c => c.Replies)
+                .ThenInclude(rep => rep.ThumbsDowns)
+                .Include(c => c.Replies)
+                .ThenInclude(rep => rep.ThumbsUps)
                 .SelectMany(c => c.Replies)
-                .Where(rep => rep.WriterGuid != myGuid)
+                .Where(rep => rep.Writer.Guid != myGuid)
                 .Skip(numberOfSkipOthersReplies)
                 .Take(numberOfNeededOthersReplies)
                 .Select(rep => new Review_CommentModel()
                 {
-                    AmIThumbsDown = rep.ThumbsDownBy.Contains(myGuid),
-                    AmIThumbsUp = rep.ThumbsUpBy.Contains(myGuid),
+                    AmIThumbsDown = rep.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
+                    AmIThumbsUp = rep.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
                     CreatedAt = rep.CreatedAt,
                     Guid = rep.Guid,
                     IsReply = true,
                     NumberOfReplies = rep.Replies.Count,
-                    NumberOfThumbsDowns = rep.ThumbsDownBy.Count,
-                    NumberOfThumbsUps = rep.ThumbsUpBy.Count,
+                    NumberOfThumbsDowns = rep.ThumbsDowns.Count,
+                    NumberOfThumbsUps = rep.ThumbsUps.Count,
                     ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
                     ReplyToGuid = rep.ReplyTo.Guid,
                     ReplyToUsername = commentWriterUsername,
                     Text = rep.Text,
-                    WriterGuid = rep.WriterGuid,
+                    WriterGuid = rep.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
         }
-        else
+        else//here myGuid is null
         {
             othersRepliesModels = await reviewDb.Comments
             .Where(c => c.Guid == commentGuid)
             .Include(c => c.Replies)
             .ThenInclude(rep => rep.Replies)
+            .Include(c => c.Replies)
+            .ThenInclude(rep => rep.Writer)
+            .Include(c => c.Replies)
+            .ThenInclude(rep => rep.ThumbsDowns)
+            .Include(c => c.Replies)
+            .ThenInclude(rep => rep.ThumbsUps)
             .SelectMany(c => c.Replies)
             .Skip(bunchIndex.Value * 10)
             .Take(10)
@@ -734,14 +796,15 @@ public class ReviewController : ControllerBase
                 Guid = rep.Guid,
                 IsReply = true,
                 NumberOfReplies = rep.Replies.Count,
-                NumberOfThumbsDowns = rep.ThumbsDownBy.Count,
-                NumberOfThumbsUps = rep.ThumbsUpBy.Count,
+                NumberOfThumbsDowns = rep.ThumbsDowns.Count,
+                NumberOfThumbsUps = rep.ThumbsUps.Count,
                 ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
                 ReplyToGuid = rep.ReplyTo.Guid,
                 ReplyToUsername = commentWriterUsername,
                 Text = rep.Text,
-                WriterGuid = rep.WriterGuid,
+                WriterGuid = rep.Writer.Guid,
             })
+            .AsSplitQuery()
             .ToArrayAsync();
         }
 
@@ -752,8 +815,8 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewCommentFormModel formModel/*,
-    [FromServices] Review_Process reviewProcess*/)
+    public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewCommentFormModel formModel,
+    [FromServices] Review_Process reviewProcess)
     {
         if (ModelState.IsValid)
         {
@@ -770,25 +833,28 @@ public class ReviewController : ControllerBase
             .Select(u => u.UserGuid)
             .FirstAsync();
 
+            Review_UserDbModel myDbModel =
+            (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+
             Review_CommentDbModel comment = new()
             {
                 ParentReview = parentReviewDbModel,
                 Text = formModel.Text,
-                WriterGuid = myGuid,
+                Writer = myDbModel,
             };
 
             await reviewDb.Comments.AddAsync(comment);
             await reviewDb.SaveChangesAsync();
 
             //seed
-            //_ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
+            _ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
 
             Review_CommentModel commentModel = new()
             {
                 CreatedAt = comment.CreatedAt,
                 Guid = comment.Guid,
                 Text = comment.Text,
-                WriterGuid = comment.WriterGuid,
+                WriterGuid = comment.Writer.Guid,
             };
 
             return Ok(commentModel);
@@ -800,12 +866,13 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReplyFormModel formModel/*,
-    [FromServices] Review_Process reviewProcess*/)
+    public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReplyFormModel formModel,
+    [FromServices] Review_Process reviewProcess)
     {
         if (ModelState.IsValid)
         {
             Review_CommentDbModel? parentCommentDbModel = await reviewDb.Comments
+            .Include(c => c.Writer)
             .FirstOrDefaultAsync(c => c.Guid == formModel.ParentCommentGuid);
             if (parentCommentDbModel is null)
             {
@@ -814,7 +881,7 @@ public class ReviewController : ControllerBase
             }
 
             string parentCommentWriterUserName = await userManager.Users
-            .Where(u => u.UserGuid == parentCommentDbModel.WriterGuid)
+            .Where(u => u.UserGuid == parentCommentDbModel.Writer.Guid)
             .Select(u => u.UserName!)
             .FirstAsync();
 
@@ -823,26 +890,29 @@ public class ReviewController : ControllerBase
             .Select(u => u.UserGuid)
             .FirstAsync();
 
-            Review_CommentDbModel comment = new()
+            Review_UserDbModel myDbModel =
+            (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+
+            Review_CommentDbModel reply = new()
             {
                 ReplyTo = parentCommentDbModel,
                 Text = formModel.Text,
-                WriterGuid = myGuid,
+                Writer = myDbModel,
             };
 
-            await reviewDb.Comments.AddAsync(comment);
+            await reviewDb.Comments.AddAsync(reply);
             await reviewDb.SaveChangesAsync();
 
             //seed
-            //_ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
+            _ = reviewProcess.Update_CommentSeed(reply.Guid, reviewDb);
 
             int briefLength = parentCommentDbModel.Text.Length > 128 ? 128 : parentCommentDbModel.Text.Length;
             Review_CommentModel replyModel = new()
             {
-                CreatedAt = comment.CreatedAt,
-                Guid = comment.Guid,
-                Text = comment.Text,
-                WriterGuid = comment.WriterGuid,
+                CreatedAt = reply.CreatedAt,
+                Guid = reply.Guid,
+                Text = reply.Text,
+                WriterGuid = reply.Writer.Guid,
                 IsReply = true,
                 ReplyToBrief = parentCommentDbModel.Text[..briefLength],
                 ReplyToGuid = parentCommentDbModel.Guid,
@@ -858,10 +928,11 @@ public class ReviewController : ControllerBase
     [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteComment([FromQuery][StringLength(32)] string commentGuid/*,
-    [FromServices] Review_Process reviewProcess*/)
+    public async Task<IActionResult> DeleteComment([FromQuery][StringLength(32)] string commentGuid,
+    [FromServices] Review_Process reviewProcess)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .Include(c => c.Writer)
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
         {
@@ -874,13 +945,13 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (commentDbModel.WriterGuid == myGuid)
+        if (commentDbModel.Writer.Guid == myGuid)
         {
             reviewDb.Comments.Remove(commentDbModel);
             await reviewDb.SaveChangesAsync();
 
             //seed
-            //reviewProcess.Delete_CommentSeed(commentDbModel.Guid);
+            reviewProcess.Delete_CommentDirectory(commentDbModel.Guid);
 
             return Ok(new { success = true });
         }
@@ -896,10 +967,11 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleLike([FromQuery][StringLength(32)] string subjectGuid/*,
-    [FromServices] Review_Process reviewProcess*/)
+    public async Task<IActionResult> ToggleLike([FromQuery][StringLength(32)] string subjectGuid,
+    [FromServices] Review_Process reviewProcess)
     {
         Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
+        .Include(r => r.Likes)
         .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
         if (reviewDbModel is null)
         {
@@ -912,32 +984,32 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        List<string> temp = new(reviewDbModel.LikedByGuids);
-        if (reviewDbModel.LikedByGuids.Contains(myGuid))
+        Review_UserDbModel myDbModel =
+        (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+
+        if (!reviewDbModel.Likes.Remove(myDbModel))
         {
-            temp.Remove(myGuid);
+            reviewDbModel.Likes.Add(myDbModel);
         }
-        else
-        {
-            temp.Add(myGuid);
-        }
-        reviewDbModel.LikedByGuids = temp;
 
         await reviewDb.SaveChangesAsync();
 
         //seed
-        //_ = reviewProcess.Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
+        _ = reviewProcess.Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
 
-        return Ok(new { numberOfLikes = reviewDbModel.LikedByGuids.Count });
+        return Ok(new { numberOfLikes = reviewDbModel.Likes.Count });
     }
 
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleThumbsUp([FromQuery][StringLength(32)] string commentGuid/*,
-    [FromServices] Review_Process reviewProcess*/)
+    public async Task<IActionResult> ToggleThumbsUp([FromQuery][StringLength(32)] string commentGuid,
+    [FromServices] Review_Process reviewProcess)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .Include(c => c.ThumbsDowns)
+        .Include(c => c.ThumbsUps)
+        .AsSplitQuery()
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
         {
@@ -950,35 +1022,33 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        List<string> tempUp = new(commentDbModel.ThumbsUpBy);
-        List<string> tempDown = new(commentDbModel.ThumbsDownBy);
-        if (commentDbModel.ThumbsUpBy.Contains(myGuid))
+        Review_UserDbModel myDbModel =
+        (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+
+        if (!commentDbModel.ThumbsUps.Remove(myDbModel))
         {
-            tempUp.Remove(myGuid);
+            commentDbModel.ThumbsUps.Add(myDbModel);
+            commentDbModel.ThumbsDowns.Remove(myDbModel);
         }
-        else
-        {
-            tempUp.Add(myGuid);
-            tempDown.Remove(myGuid);
-        }
-        commentDbModel.ThumbsUpBy = tempUp;
-        commentDbModel.ThumbsDownBy = tempDown;
 
         await reviewDb.SaveChangesAsync();
 
         //seed
-        //_ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
+        _ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
-        return Ok(new { numberOfThumbUps = commentDbModel.ThumbsUpBy.Count });
+        return Ok(new { numberOfThumbUps = commentDbModel.ThumbsUps.Count });
     }
 
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleThumbsDown([FromQuery][StringLength(32)] string commentGuid/*,
-    [FromServices] Review_Process reviewProcess*/)
+    public async Task<IActionResult> ToggleThumbsDown([FromQuery][StringLength(32)] string commentGuid,
+    [FromServices] Review_Process reviewProcess)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .Include(c => c.ThumbsDowns)
+        .Include(c => c.ThumbsUps)
+        .AsSingleQuery()
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
         {
@@ -991,26 +1061,21 @@ public class ReviewController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        List<string> tempUp = new(commentDbModel.ThumbsUpBy);
-        List<string> tempDown = new(commentDbModel.ThumbsDownBy);
-        if (commentDbModel.ThumbsDownBy.Contains(myGuid))
+        Review_UserDbModel myDbModel =
+        (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+
+        if (!commentDbModel.ThumbsDowns.Remove(myDbModel))
         {
-            tempDown.Remove(myGuid);
+            commentDbModel.ThumbsDowns.Add(myDbModel);
+            commentDbModel.ThumbsUps.Remove(myDbModel);
         }
-        else
-        {
-            tempDown.Add(myGuid);
-            tempUp.Remove(myGuid);
-        }
-        commentDbModel.ThumbsUpBy = tempUp;
-        commentDbModel.ThumbsDownBy = tempDown;
 
         await reviewDb.SaveChangesAsync();
 
         //seed
-        //_ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
+        _ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
-        return Ok(new { numberOfThumbDowns = commentDbModel.ThumbsDownBy.Count });
+        return Ok(new { numberOfThumbDowns = commentDbModel.ThumbsDowns.Count });
     }
 
 
@@ -1023,6 +1088,7 @@ public class ReviewController : ControllerBase
     [FromServices] Library_DbContext libraryDb)
     {
         Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
+        .Include(r => r.Likes)
         .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
         if (reviewDbModel is null)
         {
@@ -1051,11 +1117,11 @@ public class ReviewController : ControllerBase
             filter = filter.Trim();
         }
 
-        List<string> likedByGuids = reviewDbModel.LikedByGuids;
+        List<string> likedByGuids = reviewDbModel.Likes.Select(u => u.Guid).ToList();
         if (filter is not null)
         {
             likedByGuids = await userManager.Users
-            .Where(u => reviewDbModel.LikedByGuids.Contains(u.UserGuid) &&
+            .Where(u => likedByGuids.Contains(u.UserGuid) &&
             u.NormalizedUserName!.Contains(userManager.NormalizeName(filter)))
             .Select(u => u.UserGuid)
             .ToListAsync();
@@ -1077,6 +1143,11 @@ public class ReviewController : ControllerBase
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
             .ToList();
+
+            if (likedByGuids.Contains(myGuid))
+            {
+                myFollowingsLikesGuids = [myGuid, .. myFollowingsLikesGuids];
+            }
 
             if (myFollowingsLikesGuids.Count < bunchSize)
             {
@@ -1126,6 +1197,7 @@ public class ReviewController : ControllerBase
     [FromServices] Library_DbContext libraryDb)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .Include(c => c.ThumbsUps)
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
         {
@@ -1154,11 +1226,11 @@ public class ReviewController : ControllerBase
             filter = filter.Trim();
         }
 
-        List<string> thumbsUpByGuids = commentDbModel.ThumbsUpBy;
+        List<string> thumbsUpByGuids = commentDbModel.ThumbsUps.Select(u => u.Guid).ToList();
         if (filter is not null)
         {
             thumbsUpByGuids = await userManager.Users
-            .Where(u => commentDbModel.ThumbsUpBy.Contains(u.UserGuid) &&
+            .Where(u => thumbsUpByGuids.Contains(u.UserGuid) &&
             u.NormalizedUserName!.Contains(userManager.NormalizeName(filter)))
             .Select(u => u.UserGuid)
             .ToListAsync();
@@ -1180,6 +1252,11 @@ public class ReviewController : ControllerBase
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
             .ToList();
+
+            if (thumbsUpByGuids.Contains(myGuid))
+            {
+                myFollowingsThumbsUpsGuids = [myGuid, .. myFollowingsThumbsUpsGuids];
+            }
 
             if (myFollowingsThumbsUpsGuids.Count < bunchSize)
             {
@@ -1228,6 +1305,7 @@ public class ReviewController : ControllerBase
     [FromServices] Library_DbContext libraryDb)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
+        .Include(c => c.ThumbsDowns)
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
         {
@@ -1256,11 +1334,11 @@ public class ReviewController : ControllerBase
             filter = filter.Trim();
         }
 
-        List<string> thumbsDownByGuids = commentDbModel.ThumbsDownBy;
+        List<string> thumbsDownByGuids = commentDbModel.ThumbsDowns.Select(u => u.Guid).ToList();
         if (filter is not null)
         {
             thumbsDownByGuids = await userManager.Users
-            .Where(u => commentDbModel.ThumbsDownBy.Contains(u.UserGuid) &&
+            .Where(u => thumbsDownByGuids.Contains(u.UserGuid) &&
             u.NormalizedUserName!.Contains(userManager.NormalizeName(filter)))
             .Select(u => u.UserGuid)
             .ToListAsync();
@@ -1282,6 +1360,11 @@ public class ReviewController : ControllerBase
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
             .ToList();
+
+            if (thumbsDownByGuids.Contains(myGuid))
+            {
+                myFollowingsThumbsDownsGuids = [myGuid, .. myFollowingsThumbsDownsGuids];
+            }
 
             if (myFollowingsThumbsDownsGuids.Count < bunchSize)
             {

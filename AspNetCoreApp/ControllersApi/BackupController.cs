@@ -59,6 +59,9 @@ public class BackupController : ControllerBase
         string backupFilePath = Path.Combine(backupProcess.Backup_Directory.FullName, backupProcess.BackupFileName);
         if (System.IO.File.Exists(backupFilePath))
         {
+            /*In ASP.NET Core, when you return a file using PhysicalFile, File, or FileContentResult, 
+            the framework automatically sets the Content-Disposition header to attachment if 
+            you pass a fileDownloadName.*/
             DateTime createdAt = System.IO.File.GetLastWriteTimeUtc(backupFilePath);
             string downloadFileName = createdAt.ToString("YYYY_MM_dd_HH_mm_ss") + "_" + backupProcess.BackupFileName;
             return PhysicalFile(backupFilePath, "application/octet-stream", downloadFileName, true);
@@ -68,10 +71,22 @@ public class BackupController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Backup_Admins")]
-    public async Task<IActionResult> GenerateFullBackup()
+    public async Task<IActionResult> GenerateBackupFile()
+    {
+        _ = backupProcess.GenerateBackupZipFile();
+        return Ok();
+    }
+
+
+
+
+
+    [HttpGet]
+    [Authorize(Roles = "Backup_Admins")]
+    public async Task<IActionResult> ProcessFullBackup()
     {
         _ = backupProcess.BackupFullProcess(userManager, libraryDb, reviewDb, notifDb);
-        return Ok(new { success = true });
+        return Ok();
     }
 
 

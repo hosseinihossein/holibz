@@ -27,6 +27,7 @@ public class Backup_Status
     public string[] Description { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public int FileSize { get; set; }
+    public string FileName { get; set; } = null!;?
 }
 
 public class Backup_Process
@@ -248,6 +249,29 @@ public class Backup_Process
                 }
             }
         }
+    }
+
+    public async Task GenerateBackupZipFile()
+    {
+        //define backup status
+        Backup_Status status = new();
+
+        //zip the Storage directory
+        status.Overall_Status += " , " + Backup_StatusEnum.Creating_Zip_File_Started.ToString();
+        string statusJson = JsonSerializer.Serialize(status);
+        await System.IO.File.WriteAllTextAsync(StatusFilePath, statusJson);
+
+        string backupFilePath = Path.Combine(Backup_Directory.FullName, BackupFileName);
+        ZipFile.CreateFromDirectory(Storage_Directory.FullName, backupFilePath);
+
+        status.Overall_Status += " , " + Backup_StatusEnum.Creating_Zip_File_Completed.ToString();
+        FileInfo backupFileInfo = new FileInfo(backupFilePath);
+        if (backupFileInfo.Exists)
+        {
+            status.FileSize = (int)backupFileInfo.Length / 1024 / 1024;//size in MB
+        }
+        statusJson = JsonSerializer.Serialize(status);
+        await System.IO.File.WriteAllTextAsync(StatusFilePath, statusJson);
     }
 
 }

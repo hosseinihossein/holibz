@@ -60,10 +60,6 @@ export class AdminService {
     );
   }
 
-  requestBackupStatus(){
-    
-  }
-
 }
 
 export class UsersListFilterModel{

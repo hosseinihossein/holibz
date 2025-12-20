@@ -484,6 +484,7 @@ public class Program
 
 
         //******************* app.Run ******************
+        Console.WriteLine("app.Run();");
         app.Run();
     }
 }

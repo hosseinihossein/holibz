@@ -19,7 +19,7 @@ declare const turnstile:any;
 @Component({
   selector: 'app-login',
   imports: [MatFormField, MatInput, MatLabel, MatError, MatIcon, MatButton, MatIconButton, MatSuffix,
-    ReactiveFormsModule, JsonPipe, MatProgressSpinnerModule, RouterLink],
+    ReactiveFormsModule, MatProgressSpinnerModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -34,7 +34,7 @@ export class Login implements AfterViewInit {
   password = computed(()=>this.loginForm().controls["Password"]);
   cfTurnstile = computed(()=>this.loginForm().controls["CfTurnstileResponse"]);
 
-  errorResponse = signal<object | null>(null);
+  //errorResponse = signal<object | null>(null);
   displaySubmitSpinner = signal(false);
   widgetId = signal("");
 
@@ -128,7 +128,7 @@ export class Login implements AfterViewInit {
             else{
               this.loginForm().setErrors({loginError: err.error});
             }
-            this.errorResponse.set(err.error);
+            //this.errorResponse.set(err.error);
           }
           else{
             throwError(()=>err);

@@ -45,9 +45,9 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> List([FromQuery][StringLength(32)] string ownerGuid)
     {
         Library_LibraryCardModel[] libraryCardModels = await libraryDb.Owners
+        .Where(owner => owner.Guid == ownerGuid)
         .Include(owner => owner.Libraries)
         .ThenInclude(lib => lib.Shelves)
-        .Where(owner => owner.Guid == ownerGuid)
         .SelectMany(owner => owner.Libraries)
         .Select(lib => new Library_LibraryCardModel()
         {
@@ -61,6 +61,7 @@ public class LibraryController : ControllerBase
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
+        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(libraryCardModels);
@@ -186,8 +187,8 @@ public class LibraryController : ControllerBase
         Library_ShelfCardModel[] shelfCardModels = await libraryDb.Libraries
         .Include(lib => lib.Owner)
         .Include(lib => lib.Shelves)
-        .ThenInclude(shelf => shelf.Documents)
-        .ThenInclude(doc => doc.Elements)
+            .ThenInclude(shelf => shelf.Documents)
+                .ThenInclude(doc => doc.Elements)
         .Where(lib => lib.Guid == libraryGuid)
         .SelectMany(lib => lib.Shelves)
         .Select(shelf => new Library_ShelfCardModel()
@@ -230,9 +231,9 @@ public class LibraryController : ControllerBase
     {
         var userShelfModels = await libraryDb.Owners
         .Include(owner => owner.Shelves)
-        .ThenInclude(shelf => shelf.ParentLibraries)
+            .ThenInclude(shelf => shelf.ParentLibraries)
         .Include(owner => owner.Shelves)
-        .ThenInclude(shelf => shelf.Documents)
+            .ThenInclude(shelf => shelf.Documents)
         .Where(owner => owner.Guid == ownerGuid)
         .SelectMany(owner => owner.Shelves)
         .Select(shelf => new
@@ -263,7 +264,7 @@ public class LibraryController : ControllerBase
         .Include(shelf => shelf.Owner)
         .Include(shelf => shelf.ParentLibraries)
         .Include(shelf => shelf.Documents)
-        .ThenInclude(doc => doc.Elements)
+            .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Guid == shelfGuid)
         .Select(shelf => new Library_ShelfCardModel()
         {
@@ -324,9 +325,10 @@ public class LibraryController : ControllerBase
     {
         Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
-        .ThenInclude(owner => owner.Shelves)
+            .ThenInclude(owner => owner.Shelves)
         .Include(shelf => shelf.Documents)
-        .ThenInclude(doc => doc.ParentShelves)
+            .ThenInclude(doc => doc.ParentShelves)
+        .AsSplitQuery()
         .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
 
         if (shelfDbModel is null)
@@ -395,7 +397,7 @@ public class LibraryController : ControllerBase
         Library_DocumentCardModel[] documentCardModels = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
         .Include(shelf => shelf.Documents)
-        .ThenInclude(doc => doc.Elements)
+            .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Guid == shelfGuid)
         .SelectMany(shelf => shelf.Documents)
         .Select(doc => new Library_DocumentCardModel()
@@ -431,6 +433,7 @@ public class LibraryController : ControllerBase
             HasImage = doc.HasImage,
             IntegrityVersion = doc.IntegrityVersion,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentCardModel is null)
@@ -1204,7 +1207,7 @@ public class LibraryController : ControllerBase
     {
         Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
-            .FirstOrDefaultAsync(doc => doc.Guid == shelfGuid);
+        .FirstOrDefaultAsync(doc => doc.Guid == shelfGuid);
         if (shelfDbModel is null)
         {
             ModelState.AddModelError("Guid", "Couldn't find the specified shelf!");
@@ -1260,11 +1263,11 @@ public class LibraryController : ControllerBase
         {
             Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
             .Include(doc => doc.Owner)
-            .ThenInclude(owner => owner.Shelves)
-            .ThenInclude(shelf => shelf.ParentLibraries)
+                .ThenInclude(owner => owner.Shelves)
+                    .ThenInclude(shelf => shelf.ParentLibraries)
             .Include(doc => doc.Owner)
-            .ThenInclude(owner => owner.Shelves)
-            .ThenInclude(shelf => shelf.Documents)
+                .ThenInclude(owner => owner.Shelves)
+                    .ThenInclude(shelf => shelf.Documents)
             .Include(doc => doc.ParentShelves)
             .AsSplitQuery()
             .FirstOrDefaultAsync(doc =>
@@ -1328,7 +1331,7 @@ public class LibraryController : ControllerBase
         {
             Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
             .Include(shelf => shelf.Owner)
-            .ThenInclude(owner => owner.Libraries)
+                .ThenInclude(owner => owner.Libraries)
             .Include(shelf => shelf.ParentLibraries)
             .AsSplitQuery()
             .FirstOrDefaultAsync(doc => doc.Guid == formModel.ShelfGuid);
@@ -1530,7 +1533,7 @@ public class LibraryController : ControllerBase
     {
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Include(owner => owner.FavoriteLibraries)
-        .ThenInclude(lib => lib.Owner)
+            .ThenInclude(lib => lib.Owner)
         //.AsSplitQuery()
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 
@@ -1581,7 +1584,7 @@ public class LibraryController : ControllerBase
     {
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Include(owner => owner.FavoriteShelves)
-        .ThenInclude(shelf => shelf.Owner)
+            .ThenInclude(shelf => shelf.Owner)
         //.AsSplitQuery()
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 
@@ -1632,7 +1635,7 @@ public class LibraryController : ControllerBase
     {
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Include(owner => owner.FavoriteDocuments)
-        .ThenInclude(doc => doc.Owner)
+            .ThenInclude(doc => doc.Owner)
         //.AsSplitQuery()
         .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
 

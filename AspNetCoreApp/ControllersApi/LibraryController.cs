@@ -54,7 +54,7 @@ public class LibraryController : ControllerBase
             Guid = lib.Guid,
             Title = lib.Title,
             Description = lib.Description,
-            ShelvesTitles = lib.Shelves.Take(10).Select(shelf => shelf.Title).ToArray(),
+            ShelvesTitles = lib.Shelves.OrderBy(shelf => shelf.Id).Take(10).Select(shelf => shelf.Title).ToArray(),
             CreatedAt = lib.CreatedAt,
             OwnerGuid = lib.Owner.Guid,
             IntegrityVersion = lib.IntegrityVersion,
@@ -79,7 +79,7 @@ public class LibraryController : ControllerBase
             Guid = lib.Guid,
             Title = lib.Title,
             Description = lib.Description,
-            ShelvesTitles = lib.Shelves.Take(10).Select(shelf => shelf.Title).ToArray(),
+            ShelvesTitles = lib.Shelves.OrderBy(shelf => shelf.Id).Take(10).Select(shelf => shelf.Title).ToArray(),
             OwnerGuid = lib.Owner.Guid,
             CreatedAt = lib.CreatedAt,
             IntegrityVersion = lib.IntegrityVersion,
@@ -196,6 +196,7 @@ public class LibraryController : ControllerBase
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
             DocumentCardModels = shelf.Documents
+            .OrderBy(doc => doc.Id)
             .Take(10)
             .Select(doc => new Library_DocumentCardModel()
             {
@@ -271,6 +272,7 @@ public class LibraryController : ControllerBase
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
             DocumentCardModels = shelf.Documents
+            .OrderBy(doc => doc.Id)
             .Take(10)
             .Select(doc => new Library_DocumentCardModel()
             {

@@ -7,19 +7,19 @@ namespace AspNetCoreApp.Models;
 
 public enum Backup_StatusEnum
 {
-    Deleting_Old_Seeds_Started,
-    Deleting_Old_Seeds_Completed,
-    Deleting_Removed_Entitiies_Directories_Started,
-    Deleting_Removed_Entitiies_Directories_Completed,
+    //Deleting_Old_Seeds_Started,
+    //Deleting_Old_Seeds_Completed,
+    //Deleting_Removed_Entitiies_Directories_Started,
+    //Deleting_Removed_Entitiies_Directories_Completed,
     Not_Started,
-    Generating_Seed_Started,
-    Generating_Seed_Completed,
+    //Generating_Seed_Started,
+    //Generating_Seed_Completed,
     Creating_Zip_File_Started,
     Creating_Zip_File_Completed,
 }
 public class Backup_Status
 {
-    public string Overall_Status { get; set; } = Backup_StatusEnum.Deleting_Old_Seeds_Started.ToString();
+    public string Overall_Status { get; set; } = Backup_StatusEnum.Not_Started.ToString();
     /*
     public string Identity_SeedStatus { get; set; } = Backup_StatusEnum.Not_Started.ToString();
     public string Library_SeedStatus { get; set; } = Backup_StatusEnum.Not_Started.ToString();
@@ -28,7 +28,7 @@ public class Backup_Status
     public string[] Description { get; set; } = [];
     */
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public int FileSize { get; set; }
+    public double FileSize { get; set; }
     public string FileName { get; set; } = null!;
     public bool ReadyToDownload { get; set; } = false;
 }
@@ -76,7 +76,7 @@ public class Backup_Process
             //define backup status
             Backup_Status status = new();
             DateTime createdAt = status.CreatedAt;
-            string backupFileName = createdAt.ToString("YYYY_MM_dd_HH_mm_ss") + "_" + BackupFileNameWithoutDate;
+            string backupFileName = createdAt.ToString("yyyy_MM_dd_HH_mm_ss") + "_" + BackupFileNameWithoutDate;
             status.FileName = backupFileName;
 
             //delete old seed files, then deleted entities directories can be distinguished
@@ -263,7 +263,7 @@ public class Backup_Process
         //define backup status
         Backup_Status status = new();
         DateTime createdAt = status.CreatedAt;
-        string backupFileName = createdAt.ToString("YYYY_MM_dd_HH_mm_ss") + "_" + BackupFileNameWithoutDate;
+        string backupFileName = createdAt.ToString("yyyy_MM_dd_HH_mm_ss") + "_" + BackupFileNameWithoutDate;
         status.FileName = backupFileName;
 
         //zip the Storage directory
@@ -275,10 +275,11 @@ public class Backup_Process
         ZipFile.CreateFromDirectory(Storage_Directory.FullName, backupFilePath);
 
         status.Overall_Status += " , " + Backup_StatusEnum.Creating_Zip_File_Completed.ToString();
-        FileInfo backupFileInfo = new FileInfo(backupFilePath);
+        FileInfo backupFileInfo = new FileInfo(backupFilePath);//fileInfo needed for fie length
         if (backupFileInfo.Exists)
         {
-            status.FileSize = (int)backupFileInfo.Length / 1024 / 1024;//size in MB
+            status.FileSize = (double)backupFileInfo.Length / 1024 / 1024;//size in MB
+            status.ReadyToDownload = true;
         }
         statusJson = JsonSerializer.Serialize(status);
         await System.IO.File.WriteAllTextAsync(StatusFilePath, statusJson);

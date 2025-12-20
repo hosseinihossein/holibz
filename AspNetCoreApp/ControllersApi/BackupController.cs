@@ -38,12 +38,13 @@ public class BackupController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Backup_Admins")]
-    public IActionResult GetBackupStatus()
+    public async Task<IActionResult> GetBackupStatus()
     {
         Backup_Status? status = null;
         if (System.IO.File.Exists(backupProcess.StatusFilePath))
         {
-            status = JsonSerializer.Deserialize<Backup_Status>(backupProcess.StatusFilePath);
+            string json = await System.IO.File.ReadAllTextAsync(backupProcess.StatusFilePath);
+            status = JsonSerializer.Deserialize<Backup_Status>(json);
         }
         status ??= new();
         return Ok(status);
@@ -51,12 +52,13 @@ public class BackupController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Backup_Admins")]
-    public IActionResult DownloadBackupFile()
+    public async Task<IActionResult> DownloadBackupFile()
     {
         Backup_Status? status = null;
         if (System.IO.File.Exists(backupProcess.StatusFilePath))
         {
-            status = JsonSerializer.Deserialize<Backup_Status>(backupProcess.StatusFilePath);
+            string json = await System.IO.File.ReadAllTextAsync(backupProcess.StatusFilePath);
+            status = JsonSerializer.Deserialize<Backup_Status>(json);
         }
         if (status is null)
         {

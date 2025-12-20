@@ -3,8 +3,9 @@
 - enable choosing heading for adding new element
 - set review as lazy loading by defer
 - launch notifications
-- test and complete seeding data
 - how to get more replies
+- change downloading file and images of documents to use httpClient to have more control over it
+- set angular app to show access denied message instead of application error
 - 
 
 

@@ -14,7 +14,7 @@ export class BackupAdminService {
     return this.httpClient.get("/api/Backup/GenerateBackupFile");
   }
   requestDownloadingBackupFile(){
-    return this.httpClient.get("/api/Backup/GenerateBackupFile", {
+    return this.httpClient.get("/api/Backup/DownloadBackupFile", {
       responseType: "blob",//browsers handle Blob streaming efficiently
       observe: "body",//by default return response body, so it's optional
     });

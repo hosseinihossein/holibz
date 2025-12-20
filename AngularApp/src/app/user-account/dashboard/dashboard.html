@@ -30,6 +30,14 @@
             </a>
         </div>
         }
+        @if(identityService.userModel()?.roles?.includes("Backup_Admins")){
+        <div class="sidenav-option-container">
+            <a matFab extended [routerLink]="['/BackupAdmin']">
+                <mat-icon>cloud_sync</mat-icon>
+                Backup
+            </a>
+        </div>
+        }
     </mat-sidenav>
 
     <mat-sidenav-content>

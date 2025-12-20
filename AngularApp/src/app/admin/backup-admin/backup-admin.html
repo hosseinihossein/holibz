@@ -8,12 +8,20 @@
         <p>File Size: {{backupStatus()?.fileSize}}</p>
         <p>Status: {{backupStatus()?.overall_Status}}</p>
     </mat-card-content>
+    <mat-card-actions align="start">
+        @if(timer()){
+        <span style="font-size: 0.75rem;">Refresh in {{timer()}} seconds.</span>
+        }
+    </mat-card-actions>
     <mat-card-actions align="end">
-        @if(backupStatus()){
+        @if(backupStatus()?.readyToDownload){
         <button matButton (click)="downloadFile()">Download</button>
+        }
+        @if(backupStatus() && (backupStatus()!.fileName ||
+        (backupStatus()!.fileSize && backupStatus()!.fileSize > 0))){
         <button matButton (click)="deleteFile()">Delete</button>
         }
-        @else {
+        @if(backupStatus()?.overall_Status === "Not_Started") {
         <button matButton (click)="generateFile()">Generate</button>
         }
     </mat-card-actions>

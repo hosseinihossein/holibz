@@ -16,6 +16,7 @@ import { Result } from '../../dialogs/result/result';
 })
 export class BackupAdmin implements OnDestroy {
   private refreshInterval = 0;
+  private timerInterval = 0;
   backupStatus = signal<BackupStatus|null>(null);
 
   backupService = inject(BackupAdminService);
@@ -23,6 +24,7 @@ export class BackupAdmin implements OnDestroy {
   dialog = inject(MatDialog);
 
   matCardActions = viewChild.required(MatCardActions, {read:ElementRef});
+  timer = signal<number|null>(null);
 
   constructor(){
     this.backupService.requestBackupStatus().subscribe({
@@ -39,6 +41,7 @@ export class BackupAdmin implements OnDestroy {
   }
   ngOnDestroy(): void {
     clearInterval(this.refreshInterval);
+    clearInterval(this.timerInterval);
   }
 
   downloadFile() {
@@ -66,7 +69,17 @@ export class BackupAdmin implements OnDestroy {
     if(this.backupStatus()){
       this.backupService.requestDeleteBackup().subscribe({
         next: ()=>{
-          this.backupStatus.set(null);
+          this.backupService.requestBackupStatus().subscribe({
+            next: res => {
+              if(res){
+                this.backupStatus.set(res);
+              }
+            },
+            error: err => {
+              console.log(JSON.stringify(err));
+              this.backupStatus.set(null);
+            },
+          });
         },
       });
     }
@@ -74,12 +87,29 @@ export class BackupAdmin implements OnDestroy {
   generateFile(){
     this.backupService.requestGeneratingBackupFile().subscribe({
       next: () => {
-        //define interval
+        //define timer interval
+        this.timerInterval = setInterval(() => {
+          this.timer.update(t=>{
+            if(t === null || t <= 0){
+              t = 10;
+            }
+            else{
+              t -= 1;
+            }
+            return t;
+          });
+        }, 1000);
+        //define refresh interval
         this.refreshInterval = setInterval(() => {
           this.backupService.requestBackupStatus().subscribe({
             next: res => {
               if(res){
                 this.backupStatus.set(res);
+                if(res.readyToDownload){
+                  clearInterval(this.refreshInterval);
+                  clearInterval(this.timerInterval);
+                  this.timer.set(null);
+                }
               }
             },
             error: err => {

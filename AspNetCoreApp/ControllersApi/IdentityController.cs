@@ -282,7 +282,7 @@ public class IdentityController : ControllerBase
         "<p>Please click " +
         $"<a href='https://localhost:5443/Identity/ConfirmEmail?token={token}&email={user.Email}' " +
         "target='_blank'>'Here'</a>" +
-        " to confirm your email validation.</p>";
+        " to confirm your email.</p>";
 
         await emailSender.SendEmailAsync(user.UserName!, user.Email!,
         "Email Validation", emailMessage);
@@ -378,7 +378,7 @@ public class IdentityController : ControllerBase
         "<p>Please click " +
         $"<a href='https://localhost:5443/Identity/ConfirmNewEmail?userGuid={user.UserGuid}&token={token}&newEmail={newEmail}' " +
         "target='_blank'>'Here'</a>" +
-        " to confirm your new email validation.</p>";
+        " to confirm your new email.</p>";
 
         await emailSender.SendEmailAsync(user.UserName!, newEmail!,
         "New Email Validation", emailMessage);

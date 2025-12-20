@@ -61,7 +61,7 @@ export class Login implements AfterViewInit {
         "refresh-expired": "manual",
         "refresh-timeout": "manual",
         callback: (token:string) => {
-          const errors = this.loginForm().errors;
+          const errors = Object.create(this.loginForm().errors);
           this.cfTurnstile()?.setValue(token);
           for(let error in errors){
             if(error !== "turnstileError"){

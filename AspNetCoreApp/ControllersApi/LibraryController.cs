@@ -165,7 +165,7 @@ public class LibraryController : ControllerBase
 
         //seed
         string[] shelvesGuids = libraryDbModel.Shelves.Select(sh => sh.Guid).ToArray();
-        _ = libraryProcess.Update_ShelvesSeeds(shelvesGuids, libraryDb);
+        await libraryProcess.Update_ShelvesSeeds(shelvesGuids, libraryDb);
 
         DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
         if (libraryDirectoryInfo.Exists)
@@ -374,7 +374,7 @@ public class LibraryController : ControllerBase
 
         //seed
         string[] documentsGuids = shelfDbModel.Documents.Select(doc => doc.Guid).ToArray();
-        _ = libraryProcess.Update_DocumentsSeeds(documentsGuids, libraryDb);
+        await libraryProcess.Update_DocumentsSeeds(documentsGuids, libraryDb);
 
         DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
         if (shelfDirectoryInfo.Exists)
@@ -929,7 +929,7 @@ public class LibraryController : ControllerBase
             await libraryDb.SaveChangesAsync();
 
             //seed
-            _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+            await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
             return Ok(new
             {
@@ -1003,7 +1003,7 @@ public class LibraryController : ControllerBase
             await libraryDb.SaveChangesAsync();
 
             //seed
-            _ = libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+            await libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
             return Ok(new
             {
@@ -1074,7 +1074,7 @@ public class LibraryController : ControllerBase
             await libraryDb.SaveChangesAsync();
 
             //seed
-            _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+            await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
             return Ok(new
             {
@@ -1141,7 +1141,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1191,7 +1191,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+        await libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1241,7 +1241,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+        await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1294,7 +1294,7 @@ public class LibraryController : ControllerBase
             await libraryDb.SaveChangesAsync();
 
             //seed
-            _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+            await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
             var parentShelves = parentShelfDbModels.Select(shelf => new
             {
@@ -1363,7 +1363,7 @@ public class LibraryController : ControllerBase
             await libraryDb.SaveChangesAsync();
 
             //seed
-            _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+            await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
             return Ok(new { success = true });
         }
@@ -1487,7 +1487,7 @@ public class LibraryController : ControllerBase
 
         //seed
         await libraryProcess.Update_OwnerSeed(followerDbModel.Guid, libraryDb);
-        _ = libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
+        await libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1515,7 +1515,7 @@ public class LibraryController : ControllerBase
 
             //seed
             await libraryProcess.Update_OwnerSeed(followerDbModel.Guid, libraryDb);
-            _ = libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
+            await libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
         }
 
         return Ok(new { success = true });
@@ -1802,7 +1802,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+        await libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1835,7 +1835,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+        await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }
@@ -1868,7 +1868,7 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         //seed
-        _ = libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
         return Ok(new { success = true });
     }

@@ -847,7 +847,7 @@ public class ReviewController : ControllerBase
             await reviewDb.SaveChangesAsync();
 
             //seed
-            _ = reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
+            await reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
 
             Review_CommentModel commentModel = new()
             {
@@ -907,7 +907,7 @@ public class ReviewController : ControllerBase
             await reviewDb.SaveChangesAsync();
 
             //seed
-            _ = reviewProcess.Update_CommentSeed(reply.Guid, reviewDb);
+            await reviewProcess.Update_CommentSeed(reply.Guid, reviewDb);
 
             int briefLength = parentCommentDbModel.Text.Length > 128 ? 128 : parentCommentDbModel.Text.Length;
             Review_CommentModel replyModel = new()
@@ -999,7 +999,7 @@ public class ReviewController : ControllerBase
         await reviewDb.SaveChangesAsync();
 
         //seed
-        _ = reviewProcess.Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
+        await reviewProcess.Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
 
         return Ok(new { numberOfLikes = reviewDbModel.Likes.Count });
     }
@@ -1038,7 +1038,7 @@ public class ReviewController : ControllerBase
         await reviewDb.SaveChangesAsync();
 
         //seed
-        _ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
+        await reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
         return Ok(new { numberOfThumbUps = commentDbModel.ThumbsUps.Count });
     }
@@ -1077,7 +1077,7 @@ public class ReviewController : ControllerBase
         await reviewDb.SaveChangesAsync();
 
         //seed
-        _ = reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
+        await reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
         return Ok(new { numberOfThumbDowns = commentDbModel.ThumbsDowns.Count });
     }

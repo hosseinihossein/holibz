@@ -178,7 +178,7 @@ public class Review_Process
         await reviewDb.SaveChangesAsync();
 
         //seed
-
+        await Update_UserSeed(userGuid, reviewDb);
     }
     public async Task CreateNewReview(Review_DbContext reviewDb, string subjectGuid,
     string ownerGuid)
@@ -204,10 +204,10 @@ public class Review_Process
         await reviewDb.SaveChangesAsync();
 
         //seed
-        //_ = Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
+        await Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
     }
 
-    public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }
+    //public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }
     public async Task DeleteReviewAndCommentsDirectories(Review_DbContext reviewDb, string subjectGuid)
     {
         List<string> commentsGuids = await reviewDb.Reviews

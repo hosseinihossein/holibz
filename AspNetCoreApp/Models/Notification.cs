@@ -8,6 +8,7 @@ public class Notification_UserDbModel
     public int Id { get; set; }
     public string Guid { get; set; } = null!;
     public List<Notification_NotificationDbModel> Notifications { get; set; } = [];
+    //public bool EnableForComments = true;
 }
 public class Notification_NotificationDbModel
 {

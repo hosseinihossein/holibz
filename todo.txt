@@ -17,4 +17,5 @@ and reacting to their document.
 - add table, list, chart and reference elements to documents
 - create images with different sizes for each uploaded images
 - upgrade to Angular v21
+- add Async to the end of the name of async methods in models process class
 - 

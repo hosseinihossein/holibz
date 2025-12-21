@@ -84,7 +84,7 @@ public class ReviewController : ControllerBase
             Review_CommentModel? requestedCommentModel = await GetRequestedComment(commentGuid);
             if (requestedCommentModel is not null)
             {
-                requestedCommentWithParentsModels = [.. requestedCommentWithParentsModels, requestedCommentModel];
+                requestedCommentWithParentsModels = [requestedCommentModel, .. requestedCommentWithParentsModels];
                 if (requestedCommentModel.IsReply)
                 {
                     commentGuid = requestedCommentModel.ReplyToGuid;
@@ -229,67 +229,6 @@ public class ReviewController : ControllerBase
 
         return Ok(reviewModel);
     }
-
-    [HttpGet]
-    async Task<IActionResult> GetReviewModelWithSpecifiedComment([FromQuery][StringLength(32)] string subjectGuid,
-    [FromQuery][StringLength(32)] string? commentGuid)
-    {
-        Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
-        .Include(r => r.Likes)
-        .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
-        if (reviewDbModel is null)
-        {
-            ModelState.AddModelError("subjectGuid", "There's no review with the specified guid!");
-            return BadRequest(ModelState);
-        }
-
-        string? myGuid = null;
-        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
-        {
-            myGuid = await userManager.Users
-            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity.Name))
-            .Select(u => u.UserGuid)
-            .FirstAsync();
-        }
-
-        int totalNumberOfComments = await reviewDb.Reviews
-        .Where(r => r.SubjectGuid == subjectGuid)
-        .Include(r => r.Comments)
-        .ThenInclude(c => c.ReplyTo)
-        .SelectMany(r => r.Comments)
-        .Where(c => c.ReplyTo == null)
-        .CountAsync();
-
-        Review_CommentModel[] requestedCommentWithParentsModels = [];
-        while (!string.IsNullOrWhiteSpace(commentGuid))
-        {
-            Review_CommentModel? requestedCommentModel = await GetRequestedComment(commentGuid);
-            if (requestedCommentModel is not null)
-            {
-                requestedCommentWithParentsModels = [.. requestedCommentWithParentsModels, requestedCommentModel];
-                if (requestedCommentModel.IsReply)
-                {
-                    commentGuid = requestedCommentModel.ReplyToGuid;
-                }
-                else
-                {
-                    commentGuid = null;
-                }
-            }
-        }
-
-        Review_ReviewModel reviewModel = new()
-        {
-            AmILiked = myGuid is not null && reviewDbModel.Likes.Select(u => u.Guid).Contains(myGuid),
-            Comments = requestedCommentWithParentsModels,
-            NumberOfLikes = reviewDbModel.Likes.Count,
-            TotalNumberOfComments = totalNumberOfComments,
-        };
-
-        return Ok(reviewModel);
-
-    }
-
     private async Task<Review_CommentModel?> GetRequestedComment(string commentGuid)
     {
         string? myGuid = null;
@@ -825,11 +764,13 @@ public class ReviewController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewCommentFormModel formModel,
-    [FromServices] Review_Process reviewProcess)
+    [FromServices] Review_Process reviewProcess, [FromServices] Notification_DbContext notifDb,
+    [FromServices] Notification_Process notifProcess, [FromServices] Library_DbContext libraryDb)
     {
         if (ModelState.IsValid)
         {
             Review_ReviewDbModel? parentReviewDbModel = await reviewDb.Reviews
+            .Include(r => r.Owner)
             .FirstOrDefaultAsync(r => r.SubjectGuid == formModel.ParentSubjectGuid);
             if (parentReviewDbModel is null)
             {
@@ -837,13 +778,13 @@ public class ReviewController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            string myGuid = await userManager.Users
+            var me = await userManager.Users
             .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
-            .Select(u => u.UserGuid)
+            .Select(u => new { u.UserGuid, u.UserName })
             .FirstAsync();
 
             Review_UserDbModel myDbModel =
-            (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+            (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == me.UserGuid))!;
 
             Review_CommentDbModel comment = new()
             {
@@ -857,6 +798,24 @@ public class ReviewController : ControllerBase
 
             //seed
             await reviewProcess.Update_CommentSeed(comment.Guid, reviewDb);
+
+            //notif
+            string documentTitle = await libraryDb.Documents
+            .Where(doc => doc.Guid == parentReviewDbModel.SubjectGuid)
+            .Select(doc => doc.Title)
+            .FirstAsync();
+            Notification_NotifCreationModel notifModel = new()
+            {
+                OwnerGuid = parentReviewDbModel.Owner.Guid,
+                SubjectGuid = comment.Guid,
+                Title = "New Comment",
+                Description = [
+                    $" From '{me.UserName}' on document '{documentTitle}': ",
+                    comment.Text[..(comment.Text.Length > 128 ? 128 : comment.Text.Length)],
+                ],
+                Link = $"document/{parentReviewDbModel.SubjectGuid}?commentGuid={comment.Guid}",
+            };
+            await notifProcess.CreateNewNotification(notifDb, notifModel);
 
             Review_CommentModel commentModel = new()
             {

@@ -19,7 +19,8 @@ public class IdentityController : Controller
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token,
     [FromQuery][StringLength(60)] string email, [FromServices] Identity_Process identityProcess,
     [FromServices] Library_DbContext libraryDb, [FromServices] Library_Process libraryProcess,
-    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb)
+    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb,
+    [FromServices] Notification_DbContext notifDb, [FromServices] Notification_Process notifProcess)
     {
         if (ModelState.IsValid)
         {
@@ -47,6 +48,8 @@ public class IdentityController : Controller
                 await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
                 // creating Review_UserDbModel
                 await reviewProcess.CreateNewUser(reviewDb, user.UserGuid);
+                // creating Notification_UserDbModel
+                await notifProcess.CreateNewUser(notifDb, user.UserGuid);
 
                 //seed
                 await identityProcess.Update_UserSeed(user, userManager);
@@ -71,7 +74,8 @@ public class IdentityController : Controller
     [FromQuery] string token, [FromQuery][StringLength(60)] string newEmail,
     [FromServices] Identity_Process identityProcess, [FromServices] Library_DbContext libraryDb,
     [FromServices] Library_Process libraryProcess, [FromServices] Review_Process reviewProcess,
-    [FromServices] Review_DbContext reviewDb)
+    [FromServices] Review_DbContext reviewDb, [FromServices] Notification_DbContext notifDb,
+    [FromServices] Notification_Process notifProcess)
     {
         if (ModelState.IsValid)
         {
@@ -100,6 +104,8 @@ public class IdentityController : Controller
                 await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
                 // creating Review_UserDbModel
                 await reviewProcess.CreateNewUser(reviewDb, user.UserGuid);
+                // creating Notification_UserDbModel
+                await notifProcess.CreateNewUser(notifDb, user.UserGuid);
 
                 //seed
                 await identityProcess.Update_UserSeed(user, userManager);

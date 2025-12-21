@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using AspNetCoreApp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,6 +28,18 @@ public class NotificationController : ControllerBase
 
 
 
-    //[]
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetNotifications()
+    {
+
+    }
+
+    [HttpDelete]
+    [Authorize]
+    public async Task<IActionResult> DeleteNotification([FromQuery][StringLength(32)] string notifGuid)
+    {
+
+    }
 
 }

@@ -208,7 +208,8 @@ public class Review_Process
     }
 
     //public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }
-    public async Task DeleteReviewAndCommentsDirectories(Review_DbContext reviewDb, string subjectGuid)
+    public async Task DeleteReviewAndCommentsDirectories(Review_DbContext reviewDb, string subjectGuid,
+    Notification_Process notifProcess, Notification_DbContext notifDb)
     {
         List<string> commentsGuids = await reviewDb.Reviews
         .Where(r => r.SubjectGuid == subjectGuid)
@@ -219,12 +220,13 @@ public class Review_Process
 
         foreach (string commentGuid in commentsGuids)
         {
-            await DeleteCommentsDirectoriesRecursively(reviewDb, commentGuid);
+            await DeleteCommentsDirectoriesRecursively(reviewDb, commentGuid, notifProcess, notifDb);
         }
 
         Delete_ReviewDirectory(subjectGuid);
     }
-    public async Task DeleteCommentsDirectoriesRecursively(Review_DbContext reviewDb, string parentCommentGuid)
+    public async Task DeleteCommentsDirectoriesRecursively(Review_DbContext reviewDb,
+    string parentCommentGuid, Notification_Process notifProcess, Notification_DbContext notifDb)
     {
         List<string> deleteList = [parentCommentGuid];
         for (int i = 0; i < deleteList.Count; i++)
@@ -236,6 +238,7 @@ public class Review_Process
         foreach (string commentGuid in deleteList)
         {
             Delete_CommentDirectory(commentGuid);
+            await notifProcess.DeleteNotification(notifDb, commentGuid);
         }
     }
     private async Task<List<string>> GetRepliesGuids(Review_DbContext reviewDb,

@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, effect, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatButton, MatIconButton } from '@angular/material/button';
@@ -12,23 +12,47 @@ import { SingletonModes } from '../services/singleton-modes';
 import { RouterLink } from '@angular/router';
 import { IdentityService } from '../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
+import { NotificationService } from '../notification/notification-service';
+import { MatBadge } from '@angular/material/badge';
 
 @Component({
   selector: 'app-nav-bar',
   imports: [MatIcon, MatToolbar, MatButton, MatIconButton, MatActionList, MatMenu, MatMenuTrigger, MatMenuItem,
-    DropdownButton, AccountDropdown, MatTooltip, RouterLink,NgOptimizedImage],
+    DropdownButton, AccountDropdown, MatTooltip, RouterLink,NgOptimizedImage, MatBadge, RouterLink],
   templateUrl: './nav-bar.html',
   styleUrl: './nav-bar.css'
 })
-export class NavBar {
+export class NavBar implements OnDestroy {
   windowService = inject(WindowService);
-  document = inject(DOCUMENT);
+  //document = inject(DOCUMENT);
   singletonModes = inject(SingletonModes);
   identityService = inject(IdentityService);
+  notifService = inject(NotificationService);
+
+  numberOfNotifications = signal<number>(0);
+  notificationInterval = signal<number>(0);
   
   displayShadow = signal(false);
 
   constructor(){
+    effect(()=>{
+      if(this.identityService.isAuthenticated()){
+        this.notificationInterval.set(setInterval(() => {
+          this.notifService.requestNumberOfNotifications().subscribe({
+            next: res => {
+              if(res){
+                this.numberOfNotifications.set(res.numberOfNotifications);
+              }
+            }
+          });
+        }, 10_000));//every 10 seconds
+      }
+      else{
+        clearInterval(this.notificationInterval());
+        this.numberOfNotifications.set(0);
+      }
+    });
+
     this.windowService.nativeWindow.addEventListener("scroll", ()=>{
       if(this.windowService.nativeWindow.scrollY >= 5){
         this.displayShadow.set(true);
@@ -37,6 +61,10 @@ export class NavBar {
         this.displayShadow.set(false);
       }
     });
+  }
+  
+  ngOnDestroy(): void {
+    clearInterval(this.notificationInterval());
   }
 
 }

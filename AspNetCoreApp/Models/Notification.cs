@@ -98,7 +98,9 @@ public class Notification_Process
         await notifDb.Users.FirstOrDefaultAsync(u => u.Guid == newNotifModel.OwnerGuid);
         if (owner is null)
         {
-            return;
+            //return;
+            await CreateNewUser(notifDb, newNotifModel.OwnerGuid);
+            owner = await notifDb.Users.FirstAsync(u => u.Guid == newNotifModel.OwnerGuid);
         }
 
         Notification_NotificationDbModel notifDbModel = new()
@@ -115,6 +117,31 @@ public class Notification_Process
 
         //seed
         await Update_NotificationSeed(notifDbModel.Guid, notifDb);
+    }
+    public async Task DeleteNotification(Notification_DbContext notifDb, string subjectGuid)
+    {
+        List<string> notifsGuids =
+        await notifDb.Notifications
+        .Include(n => n.Owner)
+        .Where(n => n.SubjectGuid == subjectGuid)
+        .Select(n => n.Guid)
+        .ToListAsync();
+
+        if (notifsGuids.Count == 0)
+        {
+            return;
+        }
+
+        await notifDb.Notifications
+        .Include(n => n.Owner)
+        .Where(n => n.SubjectGuid == subjectGuid)
+        .ExecuteDeleteAsync();
+
+        //seed
+        foreach (string notifGuid in notifsGuids)
+        {
+            Delete_NotificationDirectory(notifGuid);
+        }
     }
 
 

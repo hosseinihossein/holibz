@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Notification_Db
 {
     [DbContext(typeof(Notification_DbContext))]
-    [Migration("20251211064946_Initial")]
+    [Migration("20251222150822_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -36,7 +36,8 @@ namespace AspNetCore.Migrations.Notification_Db
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Description")
+                    b.PrimitiveCollection<string>("Description")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Guid")
@@ -46,9 +47,8 @@ namespace AspNetCore.Migrations.Notification_Db
                     b.Property<string>("Link")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("OwnerGuid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("SubjectGuid")
                         .HasColumnType("varchar(255)");
@@ -62,11 +62,47 @@ namespace AspNetCore.Migrations.Notification_Db
                     b.HasIndex("Guid")
                         .IsUnique();
 
-                    b.HasIndex("OwnerGuid");
+                    b.HasIndex("OwnerId");
 
                     b.HasIndex("SubjectGuid");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Notification_UserDbModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Guid")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Notification_NotificationDbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Notification_UserDbModel", "Owner")
+                        .WithMany("Notifications")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Notification_UserDbModel", b =>
+                {
+                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }

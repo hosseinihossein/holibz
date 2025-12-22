@@ -2,6 +2,10 @@
     position: relative;
 }
 
+mat-card{
+    margin: 4px 8px;
+}
+
 #submit-spinner-layout{
     position: absolute;
     top: 0;

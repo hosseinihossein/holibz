@@ -16,6 +16,21 @@ namespace AspNetCore.Migrations.Notification_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Guid = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Notifications",
                 columns: table => new
                 {
@@ -25,11 +40,10 @@ namespace AspNetCore.Migrations.Notification_Db
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     SubjectGuid = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    OwnerGuid = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OwnerId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
+                    Description = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Link = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -38,6 +52,12 @@ namespace AspNetCore.Migrations.Notification_Db
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Notifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Users_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -48,14 +68,20 @@ namespace AspNetCore.Migrations.Notification_Db
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Notifications_OwnerGuid",
+                name: "IX_Notifications_OwnerId",
                 table: "Notifications",
-                column: "OwnerGuid");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_SubjectGuid",
                 table: "Notifications",
                 column: "SubjectGuid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Guid",
+                table: "Users",
+                column: "Guid",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -63,6 +89,9 @@ namespace AspNetCore.Migrations.Notification_Db
         {
             migrationBuilder.DropTable(
                 name: "Notifications");
+
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

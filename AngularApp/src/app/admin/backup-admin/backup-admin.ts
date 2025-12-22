@@ -15,8 +15,8 @@ import { Result } from '../../dialogs/result/result';
   styleUrl: './backup-admin.css'
 })
 export class BackupAdmin implements OnDestroy {
-  private refreshInterval = 0;
-  private timerInterval = 0;
+  private refreshInterval = signal<number>(0);
+  private timerInterval = signal<number>(0);
   backupStatus = signal<BackupStatus|null>(null);
 
   backupService = inject(BackupAdminService);
@@ -40,8 +40,8 @@ export class BackupAdmin implements OnDestroy {
     });
   }
   ngOnDestroy(): void {
-    clearInterval(this.refreshInterval);
-    clearInterval(this.timerInterval);
+    clearInterval(this.refreshInterval());
+    clearInterval(this.timerInterval());
   }
 
   downloadFile() {
@@ -88,7 +88,7 @@ export class BackupAdmin implements OnDestroy {
     this.backupService.requestGeneratingBackupFile().subscribe({
       next: () => {
         //define timer interval
-        this.timerInterval = setInterval(() => {
+        this.timerInterval.set(setInterval(() => {
           this.timer.update(t=>{
             if(t === null || t <= 0){
               t = 10;
@@ -98,16 +98,16 @@ export class BackupAdmin implements OnDestroy {
             }
             return t;
           });
-        }, 1000);
+        }, 1000));
         //define refresh interval
-        this.refreshInterval = setInterval(() => {
+        this.refreshInterval.set(setInterval(() => {
           this.backupService.requestBackupStatus().subscribe({
             next: res => {
               if(res){
                 this.backupStatus.set(res);
                 if(res.readyToDownload){
-                  clearInterval(this.refreshInterval);
-                  clearInterval(this.timerInterval);
+                  clearInterval(this.refreshInterval());
+                  clearInterval(this.timerInterval());
                   this.timer.set(null);
                 }
               }
@@ -117,7 +117,7 @@ export class BackupAdmin implements OnDestroy {
               this.backupStatus.set(null);
             },
           });
-        }, 10000);//every 10 seconds
+        }, 10000));//every 10 seconds
 
         //display result
         this.dialog.open(Result, {data:{

@@ -9,7 +9,9 @@ export class NotificationService {
   private readonly httpClient = inject(HttpClient);
 
   requestNumberOfNotifications(){
-    return this.httpClient.get<{numberOfNotifications:number}>("/api/Notification/GetNumberOfNotifications");
+    return this.httpClient.get<{numberOfNotifications:number}>(
+      "/api/Notification/GetNumberOfNotifications"
+    );
   }
   requestNotifications(pageIndex?:number, pageSize?:number){
     let httpParams = new HttpParams();

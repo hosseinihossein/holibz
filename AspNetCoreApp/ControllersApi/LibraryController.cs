@@ -542,7 +542,8 @@ public class LibraryController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid,
-    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb)
+    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb,
+    [FromServices] Notification_DbContext notifDb, [FromServices] Notification_Process notifProcess)
     {
         Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
         .Include(doc => doc.Owner)
@@ -579,8 +580,9 @@ public class LibraryController : ControllerBase
         .FirstOrDefaultAsync(r => r.SubjectGuid == documentDbModel.Guid);
         if (reviewDbModel is not null)
         {
-            //first delete directories
-            await reviewProcess.DeleteReviewAndCommentsDirectories(reviewDb, documentDbModel.Guid);
+            //first delete directories and notifs
+            await reviewProcess.DeleteReviewAndCommentsDirectories(reviewDb, documentDbModel.Guid,
+            notifProcess, notifDb);
             //then remove from db
             reviewDb.Reviews.Remove(reviewDbModel);
             await reviewDb.SaveChangesAsync();

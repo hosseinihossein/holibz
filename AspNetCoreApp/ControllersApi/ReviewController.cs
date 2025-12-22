@@ -810,10 +810,10 @@ public class ReviewController : ControllerBase
                 SubjectGuid = comment.Guid,
                 Title = "New Comment",
                 Description = [
-                    $" From '{me.UserName}' on document '{documentTitle}': ",
+                    $"From '{me.UserName}' for document '{documentTitle}': ",
                     comment.Text[..(comment.Text.Length > 128 ? 128 : comment.Text.Length)],
                 ],
-                Link = $"document/{parentReviewDbModel.SubjectGuid}?commentGuid={comment.Guid}",
+                Link = $"/document/{parentReviewDbModel.SubjectGuid}?commentGuid={comment.Guid}",
             };
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 
@@ -835,7 +835,8 @@ public class ReviewController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReplyFormModel formModel,
-    [FromServices] Review_Process reviewProcess)
+    [FromServices] Review_Process reviewProcess, [FromServices] Notification_DbContext notifDb,
+    [FromServices] Notification_Process notifProcess, [FromServices] Library_DbContext libraryDb)
     {
         if (ModelState.IsValid)
         {
@@ -855,13 +856,13 @@ public class ReviewController : ControllerBase
             .Select(u => u.UserName!)
             .FirstAsync();
 
-            string myGuid = await userManager.Users
+            var me = await userManager.Users
             .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
-            .Select(u => u.UserGuid)
+            .Select(u => new { u.UserGuid, u.UserName })
             .FirstAsync();
 
             Review_UserDbModel myDbModel =
-            (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
+            (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == me.UserGuid))!;
 
             Review_CommentDbModel reply = new()
             {
@@ -876,6 +877,25 @@ public class ReviewController : ControllerBase
 
             //seed
             await reviewProcess.Update_CommentSeed(reply.Guid, reviewDb);
+
+            //notif
+            Review_ReviewDbModel parentReviewDbModel = parentCommentDbModel.ParentReview;
+            string documentTitle = await libraryDb.Documents
+            .Where(doc => doc.Guid == parentReviewDbModel.SubjectGuid)
+            .Select(doc => doc.Title)
+            .FirstAsync();
+            Notification_NotifCreationModel notifModel = new()
+            {
+                OwnerGuid = parentCommentDbModel.Writer.Guid,
+                SubjectGuid = parentCommentDbModel.Guid,
+                Title = "New Reply",
+                Description = [
+                    $"From '{me.UserName}' in document '{documentTitle}': ",
+                    reply.Text[..(reply.Text.Length > 128 ? 128 : reply.Text.Length)],
+                ],
+                Link = $"/document/{parentReviewDbModel.SubjectGuid}?commentGuid={reply.Guid}",
+            };
+            await notifProcess.CreateNewNotification(notifDb, notifModel);
 
             int briefLength = parentCommentDbModel.Text.Length > 128 ? 128 : parentCommentDbModel.Text.Length;
             Review_CommentModel replyModel = new()
@@ -900,7 +920,8 @@ public class ReviewController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteComment([FromQuery][StringLength(32)] string commentGuid,
-    [FromServices] Review_Process reviewProcess)
+    [FromServices] Review_Process reviewProcess, [FromServices] Notification_DbContext notifDb,
+    [FromServices] Notification_Process notifProcess)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
         .Include(c => c.Writer)
@@ -923,8 +944,9 @@ public class ReviewController : ControllerBase
         }
 
         //seed
-        //first delete directories
-        await reviewProcess.DeleteCommentsDirectoriesRecursively(reviewDb, commentDbModel.Guid);
+        //first delete directories and notif
+        await reviewProcess.DeleteCommentsDirectoriesRecursively(reviewDb, commentDbModel.Guid,
+        notifProcess, notifDb);
 
         reviewDb.Comments.Remove(commentDbModel);
         await reviewDb.SaveChangesAsync();

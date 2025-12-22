@@ -9,5 +9,5 @@ export const dashboardRoutes : Routes = [
     //{path: "profile", component: Profile, canActivate: [authGuard]},
     //{path: "libraries", component: LibrariesList}
     {path: "UserAccountManager", component: UserAccountManager, canActivate: [authGuard]},
-    {path: "Notifications", component: Notification, canActivate: [authGuard]},
+    {path: "Notification", component: Notification, canActivate: [authGuard]},
 ];

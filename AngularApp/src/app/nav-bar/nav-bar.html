@@ -1,6 +1,6 @@
 <mat-toolbar [class.shadow]="displayShadow()">
     <a matIconButton [routerLink]="['/']" style="overflow: hidden;width: 50px;height: 50px;padding: 0;margin: 0;">
-        <img [ngSrc]="singletonModes.darkMode() ? 'HLlogo-DarkMode.png' : 'HLlogo-LightMode.png'" alt="HLlogo"
+        <img [ngSrc]="singletonModes.darkMode() ? 'HLlogo-DarkMode.png' : 'HLlogo-LightMode.png'" alt="HoLibz logo"
             width="50" height="50" priority style="width:50px;height:50px;margin: 0;padding: 0;">
     </a>
 
@@ -26,6 +26,12 @@
     <button matIconButton class="lightDarkBtn" matTooltip="Dark Mode" (click)="singletonModes.toggleDarkMode()">
         <mat-icon>dark_mode</mat-icon>
     </button>
+    }
+    @if(numberOfNotifications() && numberOfNotifications() > 0){
+    <a matIconButton [matBadge]="numberOfNotifications()" matTooltip="Notifications"
+        [routerLink]="['/dashboard/Notification']">
+        <mat-icon>notifications</mat-icon>
+    </a>
     }
     <app-account-dropdown [menu]="account"></app-account-dropdown>
 

@@ -1,16 +1,17 @@
 import { DatePipe } from '@angular/common';
 import { Component, effect, inject, signal, viewChild } from '@angular/core';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardActions, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from '@angular/material/card';
 import { NotificationService } from './notification-service';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-notification',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions, 
-    MatButton, DatePipe, RouterLink, MatPaginatorModule, MatProgressSpinner],
+    MatButton, DatePipe, MatPaginatorModule, MatProgressSpinner, MatIcon],
   templateUrl: './notification.html',
   styleUrl: './notification.css'
 })
@@ -19,6 +20,7 @@ export class Notification {
   totalNumberOfNotifs = signal<number>(0);
 
   notifService = inject(NotificationService);
+  router = inject(Router);
 
   paginator = viewChild.required(MatPaginator);
 
@@ -83,6 +85,10 @@ export class Notification {
         this.displaySubmitSpinner.set(false);
       },
     });
+  }
+
+  openNotif(link:string){
+    this.router.navigateByUrl(link);
   }
 
 }

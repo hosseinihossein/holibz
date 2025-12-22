@@ -22,6 +22,12 @@
                 User Account Manager
             </a>
         </div>
+        <div class="sidenav-option-container">
+            <a matFab extended [routerLink]="['Notification']">
+                <mat-icon>edit_notifications</mat-icon>
+                Notifications
+            </a>
+        </div>
         @if(identityService.userModel()?.roles?.includes("Identity_Admins")){
         <div class="sidenav-option-container">
             <a matFab extended [routerLink]="['/UsersList']">

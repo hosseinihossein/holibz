@@ -3,9 +3,11 @@ import { Profile } from "../profile/profile";
 import { LibrariesList } from "../../library/libraries-list/libraries-list";
 import { UserAccountManager } from "../user-account-manager/user-account-manager";
 import { authGuard } from "../../guards/auth-guard";
+import { Notification } from "../../notification/notification";
 
 export const dashboardRoutes : Routes = [
     //{path: "profile", component: Profile, canActivate: [authGuard]},
     //{path: "libraries", component: LibrariesList}
-    {path: "UserAccountManager", component: UserAccountManager, canActivate: [authGuard]}
+    {path: "UserAccountManager", component: UserAccountManager, canActivate: [authGuard]},
+    {path: "Notifications", component: Notification, canActivate: [authGuard]},
 ];

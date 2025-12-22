@@ -1,19 +1,27 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { NotificationModel } from './notification';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  readonly httpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
 
   requestNumberOfNotifications(){
     return this.httpClient.get<{numberOfNotifications:number}>("/api/Notification/GetNumberOfNotifications");
   }
   requestNotifications(pageIndex?:number, pageSize?:number){
-    let httpParams = new HttpParams().set("pageIndex",)
-    if()
-    return this.httpClient.get<NotificationModel[]>("/api/Notification/GetNotifications");
+    let httpParams = new HttpParams();
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex",pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize",pageSize);
+    }
+    return this.httpClient.get<NotificationModel[]>(
+      "/api/Notification/GetNotifications", {params: httpParams}
+    );
   }
   requestDeleteNotification(notifGuid:string){
     let httpParams = new HttpParams().set("notifGuid", notifGuid);
@@ -28,11 +36,5 @@ export class NotificationService {
   }
 }
 
-export class NotificationModel {
-  Guid:string = null!;
-  Title:string = null!;
-  Description:string[] = [];
-  Link?:string|null = null;
-  CreatedAt:Date = null!;
-}
+
 

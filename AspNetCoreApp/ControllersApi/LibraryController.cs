@@ -1409,6 +1409,7 @@ public class LibraryController : ControllerBase
 
 
 
+    //*************************** followship *************************
     [HttpGet]
     public async Task<IActionResult> GetFollowers([FromQuery][StringLength(32)] string ownerGuid)
     {
@@ -1882,5 +1883,113 @@ public class LibraryController : ControllerBase
 
 
 
+
+
+    //************************* tags *************************
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditDocumentTags([FromForm] Library_EditTagsFormModel formModel)
+    {
+        if (ModelState.IsValid)
+        {
+            Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+            .Include(doc => doc.Owner)
+            .Include(doc => doc.Tags)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(doc => doc.Guid == formModel.DocumentGuid);
+
+            if (documentDbModel is null)
+            {
+                ModelState.AddModelError("documentGuid", $"couldn't find any document with the specified guid '{formModel.DocumentGuid}'");
+                return BadRequest(ModelState);
+            }
+
+            string myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+
+            if (myGuid != documentDbModel.Owner.Guid)
+            {
+                ModelState.AddModelError("Authorize", $"Only the owner of the document can edit its tags!");
+                return BadRequest(ModelState);
+            }
+
+            List<Library_TagDbModel> oldTags = [.. documentDbModel.Tags];
+
+            //remove not contained from the list
+            List<Library_TagDbModel> removedTagsDbModels =
+            documentDbModel.Tags.Where(t => !formModel.Tags.Contains(t.Name)).ToList();
+            foreach (var removedTagDbModel in removedTagsDbModels)
+            {
+                documentDbModel.Tags.Remove(removedTagDbModel);
+            }
+
+            List<string> newlyAddedTags = [];
+            foreach (string tag in formModel.Tags)
+            {
+                if (!documentDbModel.Tags.Select(t => t.Name).Contains(tag))
+                {
+                    Library_TagDbModel? tagDbModel =
+                    await libraryDb.Tags.FirstOrDefaultAsync(t => t.Name == tag);
+                    tagDbModel ??= new() { Name = tag };
+                    documentDbModel.Tags.Add(tagDbModel);
+                    newlyAddedTags.Add(tagDbModel.Name);
+                }
+            }
+            await libraryDb.SaveChangesAsync();
+
+            //seed added
+            foreach (string newlyAddedTag in newlyAddedTags)
+            {
+                await libraryProcess.Update_TagSeed(newlyAddedTag, libraryDb);
+            }
+
+            //remove unused tags
+            List<string> unusedTags =
+            await libraryDb.Tags
+            .Where(t => removedTagsDbModels.Select(t => t.Name).Contains(t.Name))
+            .Where(t => t.Documents.Count == 0)//same as using &&, No performance diffrence
+            .Select(t => t.Name)
+            .ToListAsync();
+
+            await libraryDb.Tags
+            .Where(t => removedTagsDbModels.Select(t => t.Name).Contains(t.Name))
+            .Where(t => t.Documents.Count == 0)
+            .ExecuteDeleteAsync();
+
+            //seed removed unused
+            foreach (string unusedTag in unusedTags)
+            {
+                libraryProcess.Delete_TagDirectory(unusedTag);
+            }
+
+
+            return Ok(documentDbModel.Tags.Select(t => t.Name).ToArray());
+        }
+        return BadRequest(ModelState);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTagsList([FromQuery][StringLength(32, MinimumLength = 3)] string partialName)
+    {
+        string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+        foreach (char c in partialName)
+        {
+            if (!allowedCharacters.Contains(c))
+            {
+                ModelState.AddModelError(partialName, $"No tag name contains the character '{c}'!");
+                return BadRequest(ModelState);
+            }
+        }
+
+        string[] tags = await libraryDb.Tags
+        .Where(t => t.Name.Contains(partialName))
+        .Select(t => t.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
 
 }

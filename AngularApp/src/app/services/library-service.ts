@@ -486,6 +486,23 @@ export class LibraryService {
     );
   }
 
+  requestTagsList(partialName:string){
+    let httpParams = new HttpParams().set("partialName", partialName);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetTagsList", {params:httpParams}
+    )
+  }
+  requestEditDocumentTags(tags:string[], documentGuid:string){
+    const formData = new FormData();
+    formData.append("DocumentGuid", documentGuid);
+    tags.forEach((value,index)=>{
+      formData.append(`Tags[${index}]`, value);
+    });
+    return this.httpClient.post<string[]>(
+      "/api/Library/EditDocumentTags", formData
+    )
+  }
+
 
 }
 

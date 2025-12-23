@@ -235,12 +235,31 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   }
 
   editTags(){
-    const dialogRef = this.dialog.open(EditTags);
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        //this.documentService.updateDocumentTags(result);
-      }
-    });
+    if(this.documentGuid()){
+      const dialogRef = this.dialog.open(EditTags, {data:{
+        tags:this.documentPageService.documentPageModel()?.tags
+      }});
+      dialogRef.afterClosed().subscribe((result?:string[])=>{
+        if(result){
+          this.libraryService.requestEditDocumentTags(result, this.documentGuid()!).subscribe({
+            next: res =>{
+              if(res){
+                this.documentPageService.documentPageModel.update(dpm=>{
+                  dpm!.tags = res;
+                  return new DocumentPageModel(dpm!);
+                });
+                this.documentPageService.unchangedDocumentPageModel.set(
+                  new DocumentPageModel(this.documentPageService.documentPageModel()!)
+                );
+              }
+            },
+            error: err => {
+              console.log(JSON.stringify(err));
+            },
+          });
+        }
+      });
+    }
   }
 
   goToElement(guid:string){

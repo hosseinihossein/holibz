@@ -16,9 +16,8 @@ public class MaxStringArrayLengthAttribute : ValidationAttribute
     {
         if (value is not null)
         {
-            if (value.GetType().IsArray)
+            if (value is string[] stringArray)
             {
-                string[] stringArray = (string[])value;
                 if (stringArray.Length > maxArrayLength)
                 {
                     return new ValidationResult($"The array cannot contain more than {maxArrayLength} items!");
@@ -29,7 +28,7 @@ public class MaxStringArrayLengthAttribute : ValidationAttribute
                 }
                 return ValidationResult.Success;
             }
-            return new ValidationResult("The value is not an array!");
+            return new ValidationResult("The value is not a string array!");
         }
         return ValidationResult.Success;
     }

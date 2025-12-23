@@ -2,8 +2,8 @@
     <mat-form-field>
         <mat-label>Tags</mat-label>
         <mat-chip-grid #chipGrid>
-            @for(tag of tags(); track tag){
-            <mat-chip-row (removed)="removeTag(tag)">
+            @for(tag of selectedTags(); track tag){
+            <mat-chip-row (removed)="removeTag(tag)" class="smallTags">
                 {{tag}}
                 <button matChipRemove>
                     <mat-icon>cancel</mat-icon>
@@ -11,17 +11,26 @@
             </mat-chip-row>
             }
         </mat-chip-grid>
-        <input placeholder="search tag.." #tagInput [matChipInputFor]="chipGrid" [matAutocomplete]="autoComplete" />
-        <mat-autocomplete #autoComplete (optionSelected)="selectTag($event);tagInput.value=''">
-            @for(tag of documentService.allTags(); track tag){
-            @if(!tags().includes(tag)){
+        <input placeholder="search tag.." #tagInput [matChipInputFor]="chipGrid" [matAutocomplete]="autoComplete"
+            (input)="onInput()" (keyup.enter)="onEnter()" />
+        <mat-autocomplete #autoComplete (optionSelected)="selectTag($event);tagInput.value='';">
+            @for(tag of suggestedTags(); track tag){
+            @if(!selectedTags().includes(tag)){
             <mat-option [value]="tag">{{tag}}</mat-option>
             }
             }
         </mat-autocomplete>
+        @if(displayErrorText()){
+        <mat-hint style="color: var(--mat-sys-error);">
+            Only allowed characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+        </mat-hint>
+        }
+        @else {
+        <mat-hint>Only allowed characters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"</mat-hint>
+        }
     </mat-form-field>
     <mat-dialog-actions>
         <button matButton mat-dialog-close>Cancel</button>
-        <button matButton="filled" [mat-dialog-close]="tags()">Save</button>
+        <button matButton="filled" [mat-dialog-close]="selectedTags()">Save</button>
     </mat-dialog-actions>
 </mat-dialog-content>

@@ -180,7 +180,7 @@
             </h3>
             <mat-chip-set>
                 @for(tag of documentPageService.documentPageModel()?.tags; track tag){
-                <mat-chip>{{tag}}</mat-chip>
+                <mat-chip class="smallTags">{{tag}}</mat-chip>
                 }
             </mat-chip-set>
         </div>

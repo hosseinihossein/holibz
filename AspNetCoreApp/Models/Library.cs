@@ -1813,3 +1813,12 @@ public class Library_FavoriteModel
     public Library_OwnerModel Owner { get; set; } = null!;
 }
 
+public class Library_EditTagsFormModel
+{
+    [StringLength(32)]
+    public string DocumentGuid { get; set; } = null!;
+
+    [MaxStringArrayLength(32, 32)]
+    [TagCharactersValidator]
+    public string[] Tags { get; set; } = [];
+}

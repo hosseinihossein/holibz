@@ -2,13 +2,13 @@
 - test edition and deletion of default library and shelf
 - enable choosing heading for adding new element
 - set review as lazy loading by defer
-- launch notifications
 - how to get more replies
 - change downloading file and images of documents to use httpClient to have more control over it
 - set angular app to show access denied message instead of application error
 - use ExecuteDelete to delete from Dbs
-- add notif to navbar
-- 
+- tag, version, navbar menu, library shelf and documents filter, library shelf and documents paginator, 
+create different size images, 
+-  
 
 
 - set changedetection onpush and do some other performance updates like ssr
@@ -20,4 +20,6 @@ and reacting to their document.
 - create images with different sizes for each uploaded images
 - upgrade to Angular v21
 - add Async to the end of the name of async methods in models process class
+- the for loop in templates reinitiates alot of times with each event like scrolling the page, 
+how to prevent it for the sake of performance
 - 

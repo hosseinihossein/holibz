@@ -6,7 +6,7 @@
 - change downloading file and images of documents to use httpClient to have more control over it
 - set angular app to show access denied message instead of application error
 - use ExecuteDelete to delete from Dbs
-- tag, version, navbar menu, library shelf and documents filter, library shelf and documents paginator, 
+- version, navbar menu, library shelf and documents filter, library shelf and documents paginator, 
 create different size images, 
 -  
 

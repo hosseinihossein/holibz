@@ -1992,4 +1992,315 @@ public class LibraryController : ControllerBase
         return Ok(tags);
     }
 
+
+
+
+
+    //************************* version *************************
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditDocumentVersionName([FromQuery][StringLength(32)] string documentGuid,
+    [FromQuery][StringLength(32)] string versionName)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .Include(doc => doc.Owner)
+        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+
+        if (documentDbModel is null)
+        {
+            ModelState.AddModelError("documentGuid", "there's no document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        if (myGuid != documentDbModel.Owner.Guid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner can edit document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        documentDbModel.Version = versionName;
+        await libraryDb.SaveChangesAsync();
+
+        return Ok(documentDbModel.Version);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateNewDocumentVersion([FromQuery][StringLength(32)] string baseDocumentGuid,
+    [FromQuery][StringLength(32)] string newVersionName)
+    {
+        Library_DocumentDbModel? baseDocumentDbModel = await libraryDb.Documents
+        .Include(doc => doc.Owner)
+        .Include(doc => doc.Elements)
+        .Include(doc => doc.ParentShelves)
+        .Include(doc => doc.RelatedVersions)
+        .Include(doc => doc.Tags)
+        .AsSplitQuery()
+        .FirstOrDefaultAsync(doc => doc.Guid == baseDocumentGuid);
+
+        if (baseDocumentDbModel is null)
+        {
+            ModelState.AddModelError("baseDocumentGuid", "there's no base document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        var me = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => new { u.UserGuid, u.UserName })
+        .FirstAsync();
+
+        if (me.UserGuid != baseDocumentDbModel.Owner.Guid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner of the base document can create a new version of it!");
+            return BadRequest(ModelState);
+        }
+
+        baseDocumentDbModel.RelatedVersions ??= new();
+
+        List<Library_ElementDbModel> newElements = baseDocumentDbModel.Elements
+        .Select(el => new Library_ElementDbModel()
+        {
+            FileName = el.FileName,
+            Order = el.Order,
+            Owner = baseDocumentDbModel.Owner,
+            Title = el.Title,
+            Type = el.Type,
+            Value = el.Value,
+        })
+        .ToList();
+
+        Library_DocumentDbModel newDocument = new()
+        {
+            Description = baseDocumentDbModel.Description,
+            Elements = newElements,
+            HasImage = baseDocumentDbModel.HasImage,
+            Owner = baseDocumentDbModel.Owner,
+            ParentShelves = baseDocumentDbModel.ParentShelves,
+            RelatedVersions = baseDocumentDbModel.RelatedVersions,
+            Tags = baseDocumentDbModel.Tags,
+            Title = baseDocumentDbModel.Title,
+            Version = newVersionName,
+        };
+
+        await libraryDb.Documents.AddAsync(newDocument);
+        await libraryDb.SaveChangesAsync();
+
+        //seed
+        await libraryProcess.Update_DocumentSeed(baseDocumentDbModel.Guid, libraryDb);
+        await libraryProcess.Update_DocumentSeed(newDocument.Guid, libraryDb);
+        foreach (Library_ElementDbModel element in newElements)
+        {
+            await libraryProcess.Update_ElementSeed(element.Guid, libraryDb);
+        }
+        await libraryProcess.Update_RelatedVersionsSeed(baseDocumentDbModel.RelatedVersions.Guid, libraryDb);
+
+        //copy element files and images to the new directory
+        List<Library_ElementDbModel> fileElements = baseDocumentDbModel.Elements
+        .Where(el => el.FileName != null).ToList();
+        foreach (Library_ElementDbModel fileElement in fileElements)
+        {
+            string baseElementFilePath = Path.Combine(Storage_Elements.FullName, fileElement.Guid, fileElement.FileName!);
+
+            Library_ElementDbModel newCorespondElement = newElements
+            .Single(el => el.FileName == fileElement.FileName &&
+            el.Order == fileElement.Order &&
+            el.Type == fileElement.Type);
+
+            Directory.CreateDirectory(Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid));
+            string newElementFilePath = Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid, newCorespondElement.FileName!);
+
+            System.IO.File.Copy(baseElementFilePath, newElementFilePath);
+            //if the file is image create different size files of it
+        }
+
+
+
+        Library_DocumentPageModel newDocumentPageModel = new()
+        {
+            CreatedAt = newDocument.CreatedAt,
+            Description = newDocument.Description,
+            Elements = newDocument.Elements.Select(el => new Library_ElementModel()
+            {
+                Guid = el.Guid,
+                Order = el.Order,
+                OwnerGuid = el.Owner.Guid,
+                Title = el.Title,
+                Type = el.Type,
+                UpdatedAt = el.UpdatedAt,
+                Value = el.Value ??
+                    $"/api/Library/ElementFile?elementGuid={el.Guid}&elementFileName={el.FileName}",
+            }).ToArray(),
+            Guid = newDocument.Guid,
+            HasImage = newDocument.HasImage,
+            IntegrityVersion = newDocument.IntegrityVersion,
+            Owner = new() { UserGuid = me.UserGuid, UserName = me.UserName! },
+            RelatedVersions = [],
+            Shelves = newDocument.ParentShelves.Select(shelf => new Library_ShelfBrief()
+            {
+                Documents = [],
+                Guid = shelf.Guid,
+                Libraries = [],
+                Title = shelf.Title,
+            }).ToArray(),
+            Tags = newDocument.Tags.Select(t => t.Name).ToArray(),
+            Title = newDocument.Title,
+            Version = newDocument.Version,
+        };
+
+        //newDocumentPageModel.RelatedVersions
+        newDocumentPageModel.RelatedVersions = await libraryDb.RelatedVersions
+        .Where(rv => rv.Guid == newDocument.RelatedVersions.Guid)
+        .Include(rv => rv.Documents)
+        .SelectMany(rv => rv.Documents)
+        .Select(doc => new Library_VersionBrief()
+        {
+            DocumentGuid = doc.Guid,
+            VersionName = doc.Version,
+        })
+        .ToArrayAsync();
+
+        //newDocumentPageModel.Shelves
+        List<string> parentShelfGuids = newDocument.ParentShelves.Select(shelf => shelf.Guid).ToList();
+        newDocumentPageModel.Shelves = await libraryDb.Shelves
+        .Where(shelf => parentShelfGuids.Contains(shelf.Guid))
+        .Include(shelf => shelf.Documents)
+        .Include(shelf => shelf.ParentLibraries)
+        .Select(shelf => new Library_ShelfBrief()
+        {
+            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
+            {
+                Guid = doc.Guid,
+                Title = doc.Title,
+            }).ToArray(),
+            Guid = shelf.Guid,
+            Libraries = shelf.ParentLibraries.Select(lib => new Library_LibraryBrief()
+            {
+                Guid = lib.Guid,
+                Title = lib.Title,
+            }).ToArray(),
+            Title = shelf.Title,
+        })
+        .AsSplitQuery()
+        .ToArrayAsync();
+
+
+        return Ok(newDocumentPageModel);
+
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddVersionRelationship([FromQuery][StringLength(32)] string baseDocumentGuid,
+    [FromQuery][StringLength(32)] string newRelatedDocumentGuid)
+    {
+        Library_DocumentDbModel? baseDocumentDbModel = await libraryDb.Documents
+        .Include(doc => doc.Owner)
+        .Include(doc => doc.RelatedVersions)
+        .AsSplitQuery()
+        .FirstOrDefaultAsync(doc => doc.Guid == baseDocumentGuid);
+
+        if (baseDocumentDbModel is null)
+        {
+            ModelState.AddModelError("baseDocumentGuid", "there's no document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Library_DocumentDbModel? newRelatedDocumentDbModel = await libraryDb.Documents
+        .Include(doc => doc.Owner)
+        .Include(doc => doc.RelatedVersions)
+        .AsSplitQuery()
+        .FirstOrDefaultAsync(doc => doc.Guid == newRelatedDocumentGuid);
+
+        if (newRelatedDocumentDbModel is null)
+        {
+            ModelState.AddModelError("newRelatedDocumentGuid", "there's no document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        if (myGuid != baseDocumentDbModel.Owner.Guid || myGuid != newRelatedDocumentDbModel.Owner.Guid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner of the specified documents can create relate then!");
+            return BadRequest(ModelState);
+        }
+
+        baseDocumentDbModel.RelatedVersions ??= new();
+        newRelatedDocumentDbModel.RelatedVersions = baseDocumentDbModel.RelatedVersions;
+
+        await libraryDb.SaveChangesAsync();
+
+        //seed
+        await libraryProcess.Update_RelatedVersionsSeed(baseDocumentDbModel.RelatedVersions.Guid, libraryDb);
+
+        Library_VersionBrief[] versionBriefs = await libraryDb.RelatedVersions
+        .Where(rv => rv.Guid == baseDocumentDbModel.RelatedVersions.Guid)
+        .Include(rv => rv.Documents)
+        .SelectMany(rv => rv.Documents)
+        .Select(doc => new Library_VersionBrief()
+        {
+            DocumentGuid = doc.Guid,
+            VersionName = doc.Version,
+        })
+        .ToArrayAsync();
+
+        return Ok(versionBriefs);
+
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteVersionRelationship([FromQuery][StringLength(32)] string documentGuid)
+    {
+        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
+        .Include(doc => doc.Owner)
+        .Include(doc => doc.RelatedVersions)
+        .AsSplitQuery()
+        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+
+        if (documentDbModel is null)
+        {
+            ModelState.AddModelError("documentGuid", "there's no document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        if (myGuid != documentDbModel.Owner.Guid)
+        {
+            ModelState.AddModelError("Authorization", "Only the owner of the document can edit it!");
+            return BadRequest(ModelState);
+        }
+
+        string? relatedVersionGuid = documentDbModel.RelatedVersions?.Guid;
+
+        documentDbModel.RelatedVersions = null;
+        await libraryDb.SaveChangesAsync();
+
+        //seed
+        if (relatedVersionGuid is not null)
+        {
+            await libraryProcess.Update_RelatedVersionsSeed(relatedVersionGuid, libraryDb);
+        }
+
+        return Ok(new { success = true });
+    }
+
+
+
 }

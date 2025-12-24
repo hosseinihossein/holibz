@@ -15,13 +15,14 @@ import { SingletonModes } from '../../services/singleton-modes';
 })
 export class EditInput {
   //readonly dialogRef = inject(MatDialogRef<EditInput>);
-  readonly data = inject<{label:string, value:string, enableDelete?:boolean}>(MAT_DIALOG_DATA);
+  readonly data = inject<{label:string, value:string, maxLength?:number, minLength?:number, enableDelete?:boolean}>(MAT_DIALOG_DATA);
   readonly singletonModes = inject(SingletonModes);
 
   myInput = new FormControl(this.data.value,{
     nonNullable:true,
-    validators:[Validators.required, Validators.maxLength(this.singletonModes.elementTitleMaxLength()),
-      Validators.minLength(this.singletonModes.elementTitleMinLength()),
+    validators:[Validators.required, 
+      Validators.maxLength(this.data.maxLength || this.singletonModes.elementTitleMaxLength()),
+      Validators.minLength(this.data.minLength || this.singletonModes.elementTitleMinLength()),
     ],
   });
 }

@@ -2122,7 +2122,7 @@ public class LibraryController : ControllerBase
 
 
 
-        Library_DocumentPageModel newDocumentPageModel = new()
+        /*Library_DocumentPageModel newDocumentPageModel = new()
         {
             CreatedAt = newDocument.CreatedAt,
             Description = newDocument.Description,
@@ -2191,7 +2191,8 @@ public class LibraryController : ControllerBase
         .ToArrayAsync();
 
 
-        return Ok(newDocumentPageModel);
+        return Ok(newDocumentPageModel);*/
+        return Ok(newDocument.Guid);
 
     }
 
@@ -2259,7 +2260,7 @@ public class LibraryController : ControllerBase
 
     }
 
-    [HttpPost]
+    [HttpDelete]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteVersionRelationship([FromQuery][StringLength(32)] string documentGuid)

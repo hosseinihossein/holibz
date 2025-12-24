@@ -69,6 +69,11 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
       if(a.order > b.order)return 1;else return -1;
     })
   );
+  sortedVersions = computed(()=> 
+    this.documentPageService.documentPageModel()?.relatedVersions.sort((a,b)=>{
+      if(a.versionName > b.versionName)return 1;else return -1;
+    })
+  );
 
   introductionImage = computed(()=>this.libraryService.getDocumentImageAddress(this.documentPageService.documentPageModel()));
 
@@ -251,6 +256,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
                 this.documentPageService.unchangedDocumentPageModel.set(
                   new DocumentPageModel(this.documentPageService.documentPageModel()!)
                 );
+                this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
               }
             },
             error: err => {
@@ -557,6 +563,97 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
             return new DocumentPageModel(dpm!);
           });
           this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+        }
+      });
+    }
+  }
+
+  addRelatedVersion(){
+    if(this.documentGuid()){
+      this.dialog.open(EditInput, {data:{
+        label:"Document Fingerprint",
+        value: "",
+        maxLength: 32,
+        minLength: 32,
+      }}).afterClosed().subscribe((result:string)=>{
+        if(result){
+          this.libraryService.requestAddVersionRelationship(this.documentGuid()!, result).subscribe({
+            next: res => {
+              if(res){
+                this.documentPageService.documentPageModel.update(dpm=>{
+                  dpm!.relatedVersions = res;
+                  return new DocumentPageModel(dpm!);
+                });
+                this.documentPageService.unchangedDocumentPageModel.set(
+                  new DocumentPageModel(this.documentPageService.documentPageModel()!)
+                );
+                this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+              }
+            },
+          });
+        }
+      });
+    }
+  }
+  editVersionName(){
+    if(this.documentPageService.documentPageModel()){
+      this.dialog.open(EditInput,{data:{
+        label:"Edit Document's Version Name",
+        value: this.documentPageService.documentPageModel()!.version,
+        maxLength: 32,
+        minLength: 1,
+      }}).afterClosed().subscribe((result:string)=>{
+        if(result){
+          this.libraryService.requestEditVersionName(this.documentGuid()!,result).subscribe({
+            next: res => {
+              if(res){
+                this.documentPageService.documentPageModel.update(dpm=>{
+                  dpm!.version = res;
+                  return new DocumentPageModel(dpm!);
+                });
+                this.documentPageService.unchangedDocumentPageModel.set(
+                  new DocumentPageModel(this.documentPageService.documentPageModel()!)
+                );
+                this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+              }
+            }
+          });
+        }
+      });
+    }
+  }
+  createNewVersionOfDocument(){
+    this.dialog.open(EditInput,{data:{
+      label:"New Version Name",
+      value:"",
+      maxLength: 32,
+      minLength: 1,
+    }}).afterClosed().subscribe((result:string)=>{
+      if(result){
+        this.libraryService.requestCreateNewDocumentVersion(this.documentGuid()!,result).subscribe({
+          next: res => {
+            if(res){
+              this.router.navigate(["/document",res]);
+            }
+          },
+        });
+      }
+    });
+  }
+  removeRelatedVersion(){
+    if(this.documentPageService.documentPageModel()){
+      this.libraryService.requestDeleteVersionRelationship(this.documentGuid()!).subscribe({
+        next: res => {
+          if(res && res.success){
+            this.documentPageService.documentPageModel.update(dpm=>{
+              dpm!.relatedVersions = [];
+              return new DocumentPageModel(dpm!);
+            });
+            this.documentPageService.unchangedDocumentPageModel.set(
+              new DocumentPageModel(this.documentPageService.documentPageModel()!)
+            );
+            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+          }
         }
       });
     }

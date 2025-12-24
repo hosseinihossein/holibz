@@ -503,6 +503,34 @@ export class LibraryService {
     )
   }
 
+  requestAddVersionRelationship(baseDocumentGuid:string, newRelatedDocumentGuid:string){
+    let httpParams = new HttpParams().set("baseDocumentGuid",baseDocumentGuid);
+    httpParams = httpParams.set("newRelatedDocumentGuid",newRelatedDocumentGuid);
+    return this.httpClient.post<{versionName:string, documentGuid:string}[]>(
+      "/api/Library/AddVersionRelationship",null,{params:httpParams}
+    );
+  }
+  requestEditVersionName(documentGuid:string, versionName:string){
+    let httpParams = new HttpParams().set("documentGuid",documentGuid);
+    httpParams = httpParams.set("versionName",versionName);
+    return this.httpClient.post<string>(
+      "/api/Library/EditDocumentVersionName",null,{params:httpParams}
+    );
+  }
+  requestCreateNewDocumentVersion(baseDocumentGuid:string, newVersionName:string){
+    let httpParams = new HttpParams().set("baseDocumentGuid",baseDocumentGuid);
+    httpParams = httpParams.set("newVersionName",newVersionName);
+    return this.httpClient.post<string>(
+      "/api/Library/CreateNewDocumentVersion",null,{params:httpParams}
+    );
+  }
+  requestDeleteVersionRelationship(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid",documentGuid);
+    return this.httpClient.delete<{ success:boolean }>(
+      "/api/Library/DeleteVersionRelationship",{params:httpParams}
+    );
+  }
+
 
 }
 

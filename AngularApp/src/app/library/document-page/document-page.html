@@ -89,7 +89,7 @@
                 <mat-icon>database_upload</mat-icon>
             </button>
             <button matButton="elevated" matTooltip="Exit edit mode" class="noPaddingBtn"
-                (click)="confirmExitEditModeWithoutSaving();">
+                (click)="confirmExitEditModeWithoutSaving()">
                 <mat-icon>edit_off</mat-icon>
             </button>
 
@@ -109,11 +109,23 @@
         <!--------------------- matmenu -------------------->
         <mat-menu #version>
             @if(documentPageService.editMode()){
-            <button mat-menu-item matTooltipPosition="left" matTooltip="Add a new version">
-                <mat-icon>difference</mat-icon> New
+            <button mat-menu-item matTooltipPosition="left" matTooltip="Edit version name" (click)="editVersionName()">
+                <mat-icon>edit</mat-icon> Edit Name
+            </button>
+            <button mat-menu-item matTooltipPosition="left" matTooltip="Create a new version based on this document"
+                (click)="createNewVersionOfDocument()">
+                <mat-icon>difference</mat-icon> Generate New
+            </button>
+            <button mat-menu-item matTooltipPosition="left" matTooltip="Add another document here as a new version"
+                (click)="addRelatedVersion()">
+                <mat-icon>format_list_bulleted_add</mat-icon> Add
+            </button>
+            <button mat-menu-item matTooltipPosition="left" matTooltip="Remove this document as a version from here"
+                (click)="removeRelatedVersion()">
+                <mat-icon>playlist_remove</mat-icon> Remove
             </button>
             }
-            @for(relatedVersion of documentPageService.documentPageModel()?.relatedVersions; track relatedVersion){
+            @for(relatedVersion of sortedVersions(); track relatedVersion){
             @if(relatedVersion.documentGuid === documentPageService.documentPageModel()?.guid){
             <button mat-menu-item>
                 {{documentPageService.documentPageModel()?.version}}

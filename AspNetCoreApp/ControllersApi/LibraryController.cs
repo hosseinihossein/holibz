@@ -68,6 +68,19 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<IActionResult> ListGuids([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        string[] userLibrariesGuids = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid)
+        .Include(o => o.Libraries)
+        .SelectMany(o => o.Libraries)
+        .Select(lib => lib.Guid)
+        .ToArrayAsync();
+
+        return Ok(userLibrariesGuids);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> LibraryModel([FromQuery][StringLength(32)] string libraryGuid)
     {
         Library_LibraryCardModel? libraryCardModel = await libraryDb.Libraries
@@ -1409,6 +1422,33 @@ public class LibraryController : ControllerBase
         return Ok(ownerModel);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetUserProfileInfo([FromQuery][StringLength(32)] string userGuid)
+    {
+        Library_UserProfileInfo? userProfileInfo = await libraryDb.Owners
+        .Where(o => o.Guid == userGuid)
+        .Select(o => new Library_UserProfileInfo()
+        {
+            NumberOfDocuments = o.Documents.Count(),
+            NumberOfFavoriteDocuments = o.FavoriteDocuments.Count,
+            NumberOfFavoriteLibraries = o.FavoriteLibraries.Count,
+            NumberOfFavoriteShelves = o.FavoriteShelves.Count,
+            NumberOfFollowers = o.Followers.Count,
+            NumberOfFollowings = o.Followings.Count,
+            NumberOfLibraries = o.Libraries.Count,
+            NumberOfShelves = o.Shelves.Count,
+        })
+        .FirstOrDefaultAsync();
+
+        if (userProfileInfo is null)
+        {
+            ModelState.AddModelError("userGuid", "Couldn't find any library owner with the specified userGuid!");
+            return BadRequest(ModelState);
+        }
+
+        return Ok(userProfileInfo);
+    }
+
 
 
 
@@ -1537,158 +1577,172 @@ public class LibraryController : ControllerBase
 
 
 
+    /*
+        [HttpGet]
+        public async Task<IActionResult> GetFavoriteLibraries([FromQuery][StringLength(32)] string ownerGuid)
+        {
+            Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
+            .Include(owner => owner.FavoriteLibraries)
+                .ThenInclude(lib => lib.Owner)
+            //.AsSplitQuery()
+            .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
+
+            if (ownerDbModel is null)
+            {
+                ModelState.AddModelError("user", "the specified owner Not found!");
+                return BadRequest(ModelState);
+            }
+
+            Library_FavoriteModel[] favoriteLibraries = ownerDbModel.FavoriteLibraries
+            .Select(lib => new Library_FavoriteModel()
+            {
+                Guid = lib.Guid,
+                HasImage = lib.HasImage,
+                IntegrityVersion = lib.IntegrityVersion,
+                Title = lib.Title,
+                Owner = new Library_OwnerModel()
+                {
+                    Guid = lib.Owner.Guid,
+                    Username = "_",
+                }
+            })
+            .ToArray();
+
+            List<string> favoriteLibrariesOwnersGuids = favoriteLibraries
+            .Select(fl => fl.Owner.Guid).ToList();
+
+            List<Identity_UserDbModel> favoriteLibrariesOwners = await userManager.Users
+            .Where(user => favoriteLibrariesOwnersGuids.Contains(user.UserGuid))
+            .ToListAsync();
+
+            foreach (var favLib in favoriteLibraries)
+            {
+                var userDbModel = favoriteLibrariesOwners
+                .FirstOrDefault(u => u.UserGuid == favLib.Owner.Guid);
+                if (userDbModel is not null)
+                {
+                    favLib.Owner.Username = userDbModel.UserName!;
+                    favLib.Owner.HasImage = userDbModel.HasImage!;
+                    favLib.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
+                }
+            }
+
+            return Ok(favoriteLibraries);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetFavoriteShelves([FromQuery][StringLength(32)] string ownerGuid)
+        {
+            Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
+            .Include(owner => owner.FavoriteShelves)
+                .ThenInclude(shelf => shelf.Owner)
+            //.AsSplitQuery()
+            .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
+
+            if (ownerDbModel is null)
+            {
+                ModelState.AddModelError("user", "the specified owner Not found!");
+                return BadRequest(ModelState);
+            }
+
+            Library_FavoriteModel[] favoriteShelves = ownerDbModel.FavoriteShelves
+            .Select(lib => new Library_FavoriteModel()
+            {
+                Guid = lib.Guid,
+                HasImage = lib.HasImage,
+                IntegrityVersion = lib.IntegrityVersion,
+                Title = lib.Title,
+                Owner = new Library_OwnerModel()
+                {
+                    Guid = lib.Owner.Guid,
+                    Username = "_",
+                }
+            })
+            .ToArray();
+
+            List<string> favoriteShelvesOwnersGuids = favoriteShelves
+            .Select(fl => fl.Owner.Guid).ToList();
+
+            List<Identity_UserDbModel> favoriteShelvesOwners = await userManager.Users
+            .Where(user => favoriteShelvesOwnersGuids.Contains(user.UserGuid))
+            .ToListAsync();
+
+            foreach (var fl in favoriteShelves)
+            {
+                var userDbModel = favoriteShelvesOwners
+                .FirstOrDefault(u => u.UserGuid == fl.Owner.Guid);
+                if (userDbModel is not null)
+                {
+                    fl.Owner.Username = userDbModel.UserName!;
+                    fl.Owner.HasImage = userDbModel.HasImage!;
+                    fl.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
+                }
+            }
+
+            return Ok(favoriteShelves);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetFavoriteDocuments([FromQuery][StringLength(32)] string ownerGuid)
+        {
+            Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
+            .Include(owner => owner.FavoriteDocuments)
+                .ThenInclude(doc => doc.Owner)
+            //.AsSplitQuery()
+            .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
+
+            if (ownerDbModel is null)
+            {
+                ModelState.AddModelError("user", "the specified owner Not found!");
+                return BadRequest(ModelState);
+            }
+
+            Library_FavoriteModel[] favoriteDocuments = ownerDbModel.FavoriteDocuments
+            .Select(lib => new Library_FavoriteModel()
+            {
+                Guid = lib.Guid,
+                HasImage = lib.HasImage,
+                IntegrityVersion = lib.IntegrityVersion,
+                Title = lib.Title,
+                Owner = new Library_OwnerModel()
+                {
+                    Guid = lib.Owner.Guid,
+                    Username = "_",
+                }
+            })
+            .ToArray();
+
+            List<string> favoriteDocumentsOwnersGuids = favoriteDocuments
+            .Select(fl => fl.Owner.Guid).ToList();
+
+            List<Identity_UserDbModel> favoriteDocumentsOwners = await userManager.Users
+            .Where(user => favoriteDocumentsOwnersGuids.Contains(user.UserGuid))
+            .ToListAsync();
+
+            foreach (var fl in favoriteDocuments)
+            {
+                var userDbModel = favoriteDocumentsOwners
+                .FirstOrDefault(u => u.UserGuid == fl.Owner.Guid);
+                if (userDbModel is not null)
+                {
+                    fl.Owner.Username = userDbModel.UserName!;
+                    fl.Owner.HasImage = userDbModel.HasImage!;
+                    fl.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
+                }
+            }
+
+            return Ok(favoriteDocuments);
+        }
+    */
     [HttpGet]
-    public async Task<IActionResult> GetFavoriteLibraries([FromQuery][StringLength(32)] string ownerGuid)
+    public async Task<IActionResult> GetFavoriteLibrariesGuids([FromQuery][StringLength(32)] string userGuid)
     {
-        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
-        .Include(owner => owner.FavoriteLibraries)
-            .ThenInclude(lib => lib.Owner)
-        //.AsSplitQuery()
-        .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
+        string[] favoriteLibrariesGuids = await libraryDb.Owners
+        .Where(o => o.Guid == userGuid)
+        .Include(o => o.FavoriteLibraries)
+        .SelectMany(o => o.FavoriteLibraries)
+        .Select(lib => lib.Guid)
+        .ToArrayAsync();
 
-        if (ownerDbModel is null)
-        {
-            ModelState.AddModelError("user", "the specified owner Not found!");
-            return BadRequest(ModelState);
-        }
-
-        Library_FavoriteModel[] favoriteLibraries = ownerDbModel.FavoriteLibraries
-        .Select(lib => new Library_FavoriteModel()
-        {
-            Guid = lib.Guid,
-            HasImage = lib.HasImage,
-            IntegrityVersion = lib.IntegrityVersion,
-            Title = lib.Title,
-            Owner = new Library_OwnerModel()
-            {
-                Guid = lib.Owner.Guid,
-                Username = "_",
-            }
-        })
-        .ToArray();
-
-        List<string> favoriteLibrariesOwnersGuids = favoriteLibraries
-        .Select(fl => fl.Owner.Guid).ToList();
-
-        List<Identity_UserDbModel> favoriteLibrariesOwners = await userManager.Users
-        .Where(user => favoriteLibrariesOwnersGuids.Contains(user.UserGuid))
-        .ToListAsync();
-
-        foreach (var favLib in favoriteLibraries)
-        {
-            var userDbModel = favoriteLibrariesOwners
-            .FirstOrDefault(u => u.UserGuid == favLib.Owner.Guid);
-            if (userDbModel is not null)
-            {
-                favLib.Owner.Username = userDbModel.UserName!;
-                favLib.Owner.HasImage = userDbModel.HasImage!;
-                favLib.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
-            }
-        }
-
-        return Ok(favoriteLibraries);
-    }
-    [HttpGet]
-    public async Task<IActionResult> GetFavoriteShelves([FromQuery][StringLength(32)] string ownerGuid)
-    {
-        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
-        .Include(owner => owner.FavoriteShelves)
-            .ThenInclude(shelf => shelf.Owner)
-        //.AsSplitQuery()
-        .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
-
-        if (ownerDbModel is null)
-        {
-            ModelState.AddModelError("user", "the specified owner Not found!");
-            return BadRequest(ModelState);
-        }
-
-        Library_FavoriteModel[] favoriteShelves = ownerDbModel.FavoriteShelves
-        .Select(lib => new Library_FavoriteModel()
-        {
-            Guid = lib.Guid,
-            HasImage = lib.HasImage,
-            IntegrityVersion = lib.IntegrityVersion,
-            Title = lib.Title,
-            Owner = new Library_OwnerModel()
-            {
-                Guid = lib.Owner.Guid,
-                Username = "_",
-            }
-        })
-        .ToArray();
-
-        List<string> favoriteShelvesOwnersGuids = favoriteShelves
-        .Select(fl => fl.Owner.Guid).ToList();
-
-        List<Identity_UserDbModel> favoriteShelvesOwners = await userManager.Users
-        .Where(user => favoriteShelvesOwnersGuids.Contains(user.UserGuid))
-        .ToListAsync();
-
-        foreach (var fl in favoriteShelves)
-        {
-            var userDbModel = favoriteShelvesOwners
-            .FirstOrDefault(u => u.UserGuid == fl.Owner.Guid);
-            if (userDbModel is not null)
-            {
-                fl.Owner.Username = userDbModel.UserName!;
-                fl.Owner.HasImage = userDbModel.HasImage!;
-                fl.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
-            }
-        }
-
-        return Ok(favoriteShelves);
-    }
-    [HttpGet]
-    public async Task<IActionResult> GetFavoriteDocuments([FromQuery][StringLength(32)] string ownerGuid)
-    {
-        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
-        .Include(owner => owner.FavoriteDocuments)
-            .ThenInclude(doc => doc.Owner)
-        //.AsSplitQuery()
-        .FirstOrDefaultAsync(owner => owner.Guid == ownerGuid);
-
-        if (ownerDbModel is null)
-        {
-            ModelState.AddModelError("user", "the specified owner Not found!");
-            return BadRequest(ModelState);
-        }
-
-        Library_FavoriteModel[] favoriteDocuments = ownerDbModel.FavoriteDocuments
-        .Select(lib => new Library_FavoriteModel()
-        {
-            Guid = lib.Guid,
-            HasImage = lib.HasImage,
-            IntegrityVersion = lib.IntegrityVersion,
-            Title = lib.Title,
-            Owner = new Library_OwnerModel()
-            {
-                Guid = lib.Owner.Guid,
-                Username = "_",
-            }
-        })
-        .ToArray();
-
-        List<string> favoriteDocumentsOwnersGuids = favoriteDocuments
-        .Select(fl => fl.Owner.Guid).ToList();
-
-        List<Identity_UserDbModel> favoriteDocumentsOwners = await userManager.Users
-        .Where(user => favoriteDocumentsOwnersGuids.Contains(user.UserGuid))
-        .ToListAsync();
-
-        foreach (var fl in favoriteDocuments)
-        {
-            var userDbModel = favoriteDocumentsOwners
-            .FirstOrDefault(u => u.UserGuid == fl.Owner.Guid);
-            if (userDbModel is not null)
-            {
-                fl.Owner.Username = userDbModel.UserName!;
-                fl.Owner.HasImage = userDbModel.HasImage!;
-                fl.Owner.IntegrityVersion = userDbModel.IntegrityVersion!;
-            }
-        }
-
-        return Ok(favoriteDocuments);
+        return Ok(favoriteLibrariesGuids);
     }
 
     [HttpGet]

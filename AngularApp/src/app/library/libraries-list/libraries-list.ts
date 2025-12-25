@@ -13,7 +13,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 
 @Component({
   selector: 'app-libraries-list',
-  imports: [LibraryCard, MatButton, MatIcon, MatBadge, MatTooltip, RouterLink,
+  imports: [LibraryCard, MatButton, MatIcon, RouterLink,
     MatSidenavModule
   ],
   templateUrl: './libraries-list.html',
@@ -21,6 +21,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 })
 export class LibrariesList {
   ownerGuid = signal<string|null>(null);
+  showFavorites = signal<boolean>(false);
 
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
@@ -29,10 +30,7 @@ export class LibrariesList {
   singleton = inject(SingletonModes);
 
   libraryModels = signal<LibraryCardModel[]>([]);
-  totalNumberOfUserDocuments = signal(0);
-  totalNumberOfUserShelves = signal(0);
-  //ownerModel = signal<OwnerModel|null>(null);
-  //ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
+  
   isMyLibraries = computed(()=>this.identityService.isAuthenticated() && 
   this.ownerGuid() === this.identityService.userModel()?.guid);
 
@@ -40,6 +38,12 @@ export class LibrariesList {
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("userGuid")){
         this.ownerGuid.set(params.get("userGuid"));
+      }
+    });
+
+    this.activatedRoute.queryParamMap.subscribe(params=>{
+      if(params.has("favorites")){
+        this.showFavorites.set(params.get("favorites") === "true");
       }
     });
 
@@ -53,38 +57,43 @@ export class LibrariesList {
     }
     
     effect(()=>{
-      if(this.ownerGuid()){
+      if(this.showFavorites()){
 
-        /*this.libraryService.requestOwnerModel(this.ownerGuid()!).subscribe({
-          next: res => {
-            this.ownerModel.set(res);
-          },
-        });*/
+        this.libraryService.requestFavotiteLibrariesGuids(this.ownerGuid()!).subscribe({
+          next: libGuids => {
+            if(libGuids && libGuids.length > 0){
+              for(let libGuid of libGuids){
+                this.libraryService.requestLibraryModel(libGuid).subscribe({
+                  next: libModel => {
+                    if(libModel){
+                      this.libraryModels.set([...this.libraryModels(), libModel]);
+                    }
+                  },
+                });
+              }
+            }
+          }
+        });
 
-        this.libraryService.requestLibraryList(this.ownerGuid()!).subscribe({
+      }
+      else{
+
+        this.libraryService.requestLibrariesGuids(this.ownerGuid()!).subscribe({
           next: res => {
             if(res){
-              this.libraryModels.set(res);
+              for(let libGuid of res){
+                this.libraryService.requestLibraryModel(libGuid).subscribe({
+                  next: libModel => {
+                    if(libModel){
+                      this.libraryModels.set([...this.libraryModels(), libModel]);
+                    }
+                  },
+                });
+              }
             }
           },
         });
   
-        this.libraryService.requestTotalNumberOfDocuments(this.ownerGuid()!).subscribe({
-          next: res => {
-            if(res){
-              this.totalNumberOfUserDocuments.set(res.totalNumberOfUserDocuments);
-            }
-          },
-        });
-        
-        this.libraryService.requestTotalNumberOfShelves(this.ownerGuid()!).subscribe({
-          next: res => {
-            if(res){
-              this.totalNumberOfUserShelves.set(res.totalNumberOfUserShelves);
-            }
-          },
-        });
-
       }
     });
   }

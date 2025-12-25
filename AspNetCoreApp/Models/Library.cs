@@ -1804,15 +1804,26 @@ public class Library_OwnerModel
     public int IntegrityVersion { get; set; } = 0;
     public bool HasImage { get; set; } = false;
 }
+public class Library_UserProfileInfo
+{
+    public int NumberOfLibraries { get; set; }
+    public int NumberOfShelves { get; set; }
+    public int NumberOfDocuments { get; set; }
+    public int NumberOfFollowers { get; set; }
+    public int NumberOfFollowings { get; set; }
+    public int NumberOfFavoriteLibraries { get; set; }
+    public int NumberOfFavoriteShelves { get; set; }
+    public int NumberOfFavoriteDocuments { get; set; }
+}
 
-public class Library_FavoriteModel
+/*public class Library_FavoriteModel
 {
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;
     public bool HasImage { get; set; } = false;
     public int IntegrityVersion { get; set; }
     public Library_OwnerModel Owner { get; set; } = null!;
-}
+}*/
 
 public class Library_EditTagsFormModel
 {

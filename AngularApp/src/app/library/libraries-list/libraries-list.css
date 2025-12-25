@@ -21,7 +21,7 @@ mat-sidenav-content{
     box-shadow: 0 1px 5px var(--mat-sys-outline-variant);
 }
 
-.top-box .icon-box{
+/*.top-box .icon-box{
     width: 56px;
     height: 56px;
     float: left;
@@ -31,7 +31,7 @@ mat-sidenav-content{
 
 .top-box .icon-box:hover{
     background-color: var(--mat-sys-primary-container);
-}
+}*/
 
 /*.top-box #library-icon{
     width: 56px;

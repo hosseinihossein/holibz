@@ -43,14 +43,24 @@
     </mat-card>
 
     <!-- default ng-content -->
-    <button matIconButton class="icon-box" [matBadge]="numberOfFollowers()" matTooltip="Followers">
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowers" matTooltip="Followers">
         <mat-icon>groups</mat-icon>
     </button>
-    <button matIconButton class="icon-box" [matBadge]="numberOfFollowings()" matTooltip="Followings">
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowings"
+        matTooltip="Followings">
         <mat-icon>group_search</mat-icon>
     </button>
-    <div class="icon-box" [matBadge]="totalNumberOfLikes()" matTooltip="number of likes">
+    <div class="icon-box" [matBadge]="userTotalLikes()" matTooltip="Number of likes">
         <mat-icon>favorite</mat-icon>
+    </div>
+    <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfLibraries" matTooltip="Number of libraries">
+        <mat-icon>account_balance</mat-icon>
+    </div>
+    <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfShelves" matTooltip="Number of shelves">
+        <mat-icon>shelves</mat-icon>
+    </div>
+    <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfDocuments" matTooltip="Number of documents">
+        <mat-icon>newsstand</mat-icon>
     </div>
 
 </app-libraries-list>

@@ -9,6 +9,7 @@ import { DocumentElementModel } from '../library/document-page/document-elements
 import { Observable, of, tap, throwError } from 'rxjs';
 import { ParentShelfModel } from '../library/new-document-form/new-document-form';
 import { SingletonModes } from './singleton-modes';
+import { UserProfileInfo } from '../user-account/profile/profile';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +38,12 @@ export class LibraryService {
           });
         }
       }),
+    );
+  }
+  requestLibrariesGuids(ownerGuid: string){
+    let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/ListGuids", {params:httpParams}
     );
   }
   requestShelfList(libraryGuid: string){
@@ -380,6 +387,12 @@ export class LibraryService {
       }),
     );
   }
+  requestUserProfileInfo(userGuid:string){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    return this.httpClient.get<UserProfileInfo>(
+      "/api/Library/GetUserProfileInfo",{params:httpParams}
+    );
+  }
 
   getLibraryImageAddress(libraryModel:{guid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
     //console.log(JSON.stringify(libraryModel));
@@ -429,7 +442,7 @@ export class LibraryService {
     );
   }
 
-  requestFavoriteLibraries(ownerGuid:string){
+  /*requestFavoriteLibraries(ownerGuid:string){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
     this.httpClient.get<FavoriteModel[]>(
       "/api/Library/GetFavoriteLibraries", {params:httpParams}
@@ -446,7 +459,7 @@ export class LibraryService {
     this.httpClient.get<FavoriteModel[]>(
       "/api/Library/GetFavoriteDocuments", {params:httpParams}
     );
-  }
+  }*/
 
   requestUsersInFavorOfLibrary(libraryGuid:string){
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
@@ -528,6 +541,13 @@ export class LibraryService {
     let httpParams = new HttpParams().set("documentGuid",documentGuid);
     return this.httpClient.delete<{ success:boolean }>(
       "/api/Library/DeleteVersionRelationship",{params:httpParams}
+    );
+  }
+
+  requestFavotiteLibrariesGuids(userGuid:string){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetFavoriteLibrariesGuids", {params:httpParams}
     );
   }
 
@@ -625,7 +645,7 @@ export class RuCache<T extends {guid:string}>{
   }
 }
 
-export class FavoriteModel{
+/*export class FavoriteModel{
   constructor(favoriteModel:FavoriteModel){
     this.guid = favoriteModel.guid;
     this.title = favoriteModel.title;
@@ -638,5 +658,5 @@ export class FavoriteModel{
   hasImage:boolean = false;
   integrityVersion:number = 0;
   owner:OwnerModel = null!;
-}
+}*/
 

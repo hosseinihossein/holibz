@@ -18,6 +18,8 @@ import { ChangePassword } from '../../dialogs/change-password/change-password';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LibrariesList } from "../../library/libraries-list/libraries-list";
 import { MatBadgeModule } from '@angular/material/badge';
+import { LibraryService, OwnerModel } from '../../services/library-service';
+import { ReviewService } from '../../review/review-service';
 
 @Component({
   selector: 'app-profile',
@@ -32,23 +34,22 @@ export class Profile {
   isMyProfile = computed(() => this.userGuid() === this.identityService.userModel()?.guid);
 
   singleton = inject(SingletonModes);
-  //dialog = inject(MatDialog);
   identityService = inject(IdentityService);
   activatedRoute = inject(ActivatedRoute);
   router = inject(Router);
+  libraryService = inject(LibraryService);
+  reviewService = inject(ReviewService);
 
-  userModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.userModel()));
-  username = computed(()=>this.userModel()?.username);
-  description = computed(()=>this.userModel()?.description);
-  email = computed(()=>this.userModel()?.email);
-  displayEmailPublicly = computed(()=>this.userModel()?.displayEmailPublicly);
+  identity_UserModel = signal<UserProfileModel|null>(null);
+  userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.identity_UserModel()));
+  username = computed(()=>this.identity_UserModel()?.username);
+  description = computed(()=>this.identity_UserModel()?.description);
+  email = computed(()=>this.identity_UserModel()?.email);
+  displayEmailPublicly = computed(()=>this.identity_UserModel()?.displayEmailPublicly);
 
-  numberOfFollowers = signal(0);
-  numberOfFollowings = signal(0);
-  totalNumberOfLikes = signal(0);
+  library_OwnerModel = signal<UserProfileInfo|null>(null);
+  userTotalLikes = signal<number>(0);
 
-  //errorResponse = signal("");
 
   constructor(){
     let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
@@ -61,145 +62,49 @@ export class Profile {
     else{
       this.router.navigate(['/login'],{queryParams:{returnUrl:'/profile'}});
     }
-
-    /*effect(() => {
-      if(this.isMyProfile()){
-        this.identityService.getCsrf().subscribe({
-          next: () => {
-            console.log("Csrf received successfully.");
-          },
-          error: err => {
-            console.error("Couldn't get Csrf!");
-            throw(err);
-          },
-        });
-      }
-    });*/
     
     effect(()=>{
-      if(!this.isMyProfile()){
-        this.identityService.requestUserModel(this.userGuid()!).subscribe({
-          next: res=>this.userModel.set(res),
-        });
+      if(this.isMyProfile()){
+        this.identity_UserModel.set(this.identityService.userModel());
       }
       else{
-        this.userModel.set(this.identityService.userModel());
-      }
-    });
-  }
-
-  /*openEditImageDialog(){
-    this.dialog.open(EditUserImage,
-    {data:{currentImgSrc: this.identityService.userModel()?.imageAddress}});
-  }
-
-  openEditUsernameDialog(){
-    const dialogRef = this.dialog.open(EditInput,
-      {data:{label: 'Username', value: this.identityService.userModel()?.username}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        this.identityService.submitUserName(result).subscribe({
-          next: res=>{
-            if(res.success){
-              let newUserModel = new UserProfileModel(this.userModel());
-              newUserModel.username = result;
-              this.identityService.updateUserModel(newUserModel);
-            }
-          },
-          error: err => {
-            if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
-              if(err.error.Username || err.error.errors?.Username){
-                this.errorResponse.set("*Error: "+ (err.error.Username || err.error.errors?.Username));
-              }
-              else if(err.error.errors){
-                console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
-                throw(err);
-              }
-              else{
-                console.error("err.error: "+JSON.stringify(err.error));
-                throw(err);
-              }
-            }
-          }
+        this.identityService.requestUserModel(this.userGuid()!).subscribe({
+          next: res=>this.identity_UserModel.set(res),
         });
       }
     });
-  }
-  
-  openEditEmailDialog(){
-    this.dialog.open(SendLinkToEmail, {data:{purpose: 'changeEmail'}});
-  }
-  
-  openEditDescriptionDialog(){
-    const dialogRef = this.dialog.open(EditTextarea,
-      {data:{label: 'About Me', value: this.identityService.userModel()?.description}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        this.identityService.submitDescription(result).subscribe({
-          next: res=>{
-            if(res.success){
-              let newUserModel = new UserProfileModel(this.userModel());
-              newUserModel.description = result;
-              this.identityService.updateUserModel(newUserModel);
-            }
-          },
-          error: err => {
-            if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
-              if(err.error.Description || err.error.errors?.Description){
-                this.errorResponse.set("*Error: "+err.error.errors?.Description);
-              }
-              else if(err.error.errors){
-                console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
-                throw(err);
-              }
-              else{
-                console.error("err.error: "+JSON.stringify(err.error));
-                throw(err);
-              }
-            }
+
+    effect(()=>{
+      this.libraryService.requestUserProfileInfo(this.userGuid()!).subscribe({
+        next: res => {
+          if(res){
+            this.library_OwnerModel.set(res);
           }
-        });
-      }
+        },
+      });
+    });
+
+    effect(()=>{
+      this.reviewService.requestUserTotalLikes(this.userGuid()!).subscribe({
+        next: res => {
+          if(res){
+            this.userTotalLikes.set(res.totalNumberOfLikes);
+          }
+        },
+      });
     });
   }
 
-  editDisplayEmailPublicly(){
-    let displayPubliclyEditedTo = !this.displayEmailPublicly();
-    let changeMessage = displayPubliclyEditedTo ? "Display your email publicly" : "NOT display your email publicly";
-    const dialogRef = this.dialog.open(ConfirmChange,
-      {data:{change: changeMessage}});
-    dialogRef.afterClosed().subscribe(result=>{
-      if(result){
-        this.identityService.submitDisplayEmailPublicly(displayPubliclyEditedTo).subscribe({
-          next: res=>{
-            if(res.success){
-              let newUserModel = new UserProfileModel(this.userModel());
-              newUserModel.displayEmailPublicly = displayPubliclyEditedTo;
-              this.identityService.updateUserModel(newUserModel);
-            }
-          },
-          error: err => {
-            if(err instanceof HttpErrorResponse && err.status == HttpStatusCode.BadRequest){
-              if(err.error.DisplayEmailPublicly || err.error.errors?.DisplayEmailPublicly){
-                this.errorResponse.set("*Error: "+err.error.errors?.DisplayEmailPublicly);
-              }
-              else if(err.error.errors){
-                console.error("err.error?.errors: "+JSON.stringify(err.error.errors));
-                throw(err);
-              }
-              else{
-                console.error("err.error: "+JSON.stringify(err.error));
-                throw(err);
-              }
-            }
-          }
-        });
-      }
-    });
-  }
+}
 
-  openChangePasswordDialog(){
-    this.dialog.open(ChangePassword);
-  }*/
-
+export class UserProfileInfo{
+  guid:string = null!;
+  numberOfLibraries:number = 0;
+  numberOfShelves:number = 0;
+  numberOfDocuments:number = 0;
+  numberOfFollowers:number = 0;
+  numberOfFollowings:number = 0;
+  numberOfFavoriteLibraries:number = 0;
+  numberOfFavoriteShelves:number = 0;
+  numberOfFavoriteDocuments:number = 0;
 }

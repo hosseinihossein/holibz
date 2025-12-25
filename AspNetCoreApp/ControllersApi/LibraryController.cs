@@ -207,6 +207,7 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
                 HasImage = doc.HasImage,
                 IntegrityVersion = doc.IntegrityVersion,
+                VersionName = doc.Version == "Default" ? null : doc.Version,
             }).ToArray(),
             Guid = shelf.Guid,
             Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
@@ -283,6 +284,7 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
                 HasImage = doc.HasImage,
                 IntegrityVersion = doc.IntegrityVersion,
+                VersionName = doc.Version == "Default" ? null : doc.Version,
             }).ToArray(),
             Guid = shelf.Guid,
             Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
@@ -411,6 +413,7 @@ public class LibraryController : ControllerBase
             Title = doc.Title,
             HasImage = doc.HasImage,
             IntegrityVersion = doc.IntegrityVersion,
+            VersionName = doc.Version == "Default" ? null : doc.Version,
         })
         .AsSplitQuery()
         .ToArrayAsync();
@@ -434,6 +437,7 @@ public class LibraryController : ControllerBase
             Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
             HasImage = doc.HasImage,
             IntegrityVersion = doc.IntegrityVersion,
+            VersionName = doc.Version == "Default" ? null : doc.Version,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -2027,14 +2031,18 @@ public class LibraryController : ControllerBase
         documentDbModel.Version = versionName;
         await libraryDb.SaveChangesAsync();
 
-        return Ok(documentDbModel.Version);
+        //seed
+        await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+
+        return Ok(new { version = documentDbModel.Version });
     }
 
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateNewDocumentVersion([FromQuery][StringLength(32)] string baseDocumentGuid,
-    [FromQuery][StringLength(32)] string newVersionName)
+    [FromQuery][StringLength(32)] string newVersionName, [FromServices] Review_DbContext reviewDb,
+    [FromServices] Review_Process reviewProcess)
     {
         Library_DocumentDbModel? baseDocumentDbModel = await libraryDb.Documents
         .Include(doc => doc.Owner)
@@ -2076,7 +2084,7 @@ public class LibraryController : ControllerBase
         })
         .ToList();
 
-        Library_DocumentDbModel newDocument = new()
+        Library_DocumentDbModel newDocumentDbModel = new()
         {
             Description = baseDocumentDbModel.Description,
             Elements = newElements,
@@ -2089,17 +2097,25 @@ public class LibraryController : ControllerBase
             Version = newVersionName,
         };
 
-        await libraryDb.Documents.AddAsync(newDocument);
+        await libraryDb.Documents.AddAsync(newDocumentDbModel);
         await libraryDb.SaveChangesAsync();
 
-        //seed
+        //seed library
         await libraryProcess.Update_DocumentSeed(baseDocumentDbModel.Guid, libraryDb);
-        await libraryProcess.Update_DocumentSeed(newDocument.Guid, libraryDb);
+        await libraryProcess.Update_DocumentSeed(newDocumentDbModel.Guid, libraryDb);
         foreach (Library_ElementDbModel element in newElements)
         {
             await libraryProcess.Update_ElementSeed(element.Guid, libraryDb);
         }
         await libraryProcess.Update_RelatedVersionsSeed(baseDocumentDbModel.RelatedVersions.Guid, libraryDb);
+
+        //copy introduction image to the new directory
+        if (baseDocumentDbModel.HasImage)
+        {
+            string baseDocumentImagePath = Path.Combine(Storage_Documents.FullName, baseDocumentDbModel.Guid, "image");
+            string newDocumentImagePath = Path.Combine(Storage_Documents.FullName, newDocumentDbModel.Guid, "image");
+            System.IO.File.Copy(baseDocumentImagePath, newDocumentImagePath);
+        }
 
         //copy element files and images to the new directory
         List<Library_ElementDbModel> fileElements = baseDocumentDbModel.Elements
@@ -2120,79 +2136,12 @@ public class LibraryController : ControllerBase
             //if the file is image create different size files of it
         }
 
+        //review
+        await reviewProcess.CreateNewReview(reviewDb, newDocumentDbModel.Guid, me.UserGuid);
 
 
-        /*Library_DocumentPageModel newDocumentPageModel = new()
-        {
-            CreatedAt = newDocument.CreatedAt,
-            Description = newDocument.Description,
-            Elements = newDocument.Elements.Select(el => new Library_ElementModel()
-            {
-                Guid = el.Guid,
-                Order = el.Order,
-                OwnerGuid = el.Owner.Guid,
-                Title = el.Title,
-                Type = el.Type,
-                UpdatedAt = el.UpdatedAt,
-                Value = el.Value ??
-                    $"/api/Library/ElementFile?elementGuid={el.Guid}&elementFileName={el.FileName}",
-            }).ToArray(),
-            Guid = newDocument.Guid,
-            HasImage = newDocument.HasImage,
-            IntegrityVersion = newDocument.IntegrityVersion,
-            Owner = new() { UserGuid = me.UserGuid, UserName = me.UserName! },
-            RelatedVersions = [],
-            Shelves = newDocument.ParentShelves.Select(shelf => new Library_ShelfBrief()
-            {
-                Documents = [],
-                Guid = shelf.Guid,
-                Libraries = [],
-                Title = shelf.Title,
-            }).ToArray(),
-            Tags = newDocument.Tags.Select(t => t.Name).ToArray(),
-            Title = newDocument.Title,
-            Version = newDocument.Version,
-        };
 
-        //newDocumentPageModel.RelatedVersions
-        newDocumentPageModel.RelatedVersions = await libraryDb.RelatedVersions
-        .Where(rv => rv.Guid == newDocument.RelatedVersions.Guid)
-        .Include(rv => rv.Documents)
-        .SelectMany(rv => rv.Documents)
-        .Select(doc => new Library_VersionBrief()
-        {
-            DocumentGuid = doc.Guid,
-            VersionName = doc.Version,
-        })
-        .ToArrayAsync();
-
-        //newDocumentPageModel.Shelves
-        List<string> parentShelfGuids = newDocument.ParentShelves.Select(shelf => shelf.Guid).ToList();
-        newDocumentPageModel.Shelves = await libraryDb.Shelves
-        .Where(shelf => parentShelfGuids.Contains(shelf.Guid))
-        .Include(shelf => shelf.Documents)
-        .Include(shelf => shelf.ParentLibraries)
-        .Select(shelf => new Library_ShelfBrief()
-        {
-            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
-            {
-                Guid = doc.Guid,
-                Title = doc.Title,
-            }).ToArray(),
-            Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries.Select(lib => new Library_LibraryBrief()
-            {
-                Guid = lib.Guid,
-                Title = lib.Title,
-            }).ToArray(),
-            Title = shelf.Title,
-        })
-        .AsSplitQuery()
-        .ToArrayAsync();
-
-
-        return Ok(newDocumentPageModel);*/
-        return Ok(newDocument.Guid);
+        return Ok(new { newVersionGuid = newDocumentDbModel.Guid });
 
     }
 

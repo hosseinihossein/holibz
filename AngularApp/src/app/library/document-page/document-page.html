@@ -102,6 +102,19 @@
             <button matButton="elevated" matTooltip="Enter edit mode" class="noPaddingBtn" (click)="enterEditMode()">
                 <mat-icon>edit</mat-icon>
             </button>
+            <div style="float: right;display: flex;align-items: center;">
+                <button matIconButton matTooltip="Copy document's link" matTooltipPosition="above"
+                    (click)="copyDocumentLink()">
+                    <mat-icon>link</mat-icon>
+                </button>
+                <button matIconButton matTooltip="Copy document's fingerprint" matTooltipPosition="above"
+                    (click)="copyDocumentGuid()">
+                    <mat-icon>fingerprint</mat-icon>
+                </button>
+                <!--span id="full-spacer"></span-->
+                <span id="createdAt-span">Created At: {{documentPageService.documentPageModel()?.createdAt|
+                    date}}</span>
+            </div>
             }
             }
         </div>
@@ -109,18 +122,18 @@
         <!--------------------- matmenu -------------------->
         <mat-menu #version>
             @if(documentPageService.editMode()){
-            <button mat-menu-item matTooltipPosition="left" matTooltip="Edit version name" (click)="editVersionName()">
+            <button mat-menu-item matTooltipPosition="right" matTooltip="Edit version name" (click)="editVersionName()">
                 <mat-icon>edit</mat-icon> Edit Name
             </button>
-            <button mat-menu-item matTooltipPosition="left" matTooltip="Create a new version based on this document"
+            <button mat-menu-item matTooltipPosition="right" matTooltip="Create a new version based on this document"
                 (click)="createNewVersionOfDocument()">
                 <mat-icon>difference</mat-icon> Generate New
             </button>
-            <button mat-menu-item matTooltipPosition="left" matTooltip="Add another document here as a new version"
+            <button mat-menu-item matTooltipPosition="right" matTooltip="Add another document here as a new version"
                 (click)="addRelatedVersion()">
                 <mat-icon>format_list_bulleted_add</mat-icon> Add
             </button>
-            <button mat-menu-item matTooltipPosition="left" matTooltip="Remove this document as a version from here"
+            <button mat-menu-item matTooltipPosition="right" matTooltip="Remove this document as a version from here"
                 (click)="removeRelatedVersion()">
                 <mat-icon>playlist_remove</mat-icon> Remove
             </button>

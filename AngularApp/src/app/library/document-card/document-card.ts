@@ -77,4 +77,5 @@ export class DocumentCardModel{
   hasImage:boolean = false;
   integrityVersion:number = 0;
   ownerGuid:string = null!;
+  versionName?:string;
 }

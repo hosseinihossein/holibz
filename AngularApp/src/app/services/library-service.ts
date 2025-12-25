@@ -513,14 +513,14 @@ export class LibraryService {
   requestEditVersionName(documentGuid:string, versionName:string){
     let httpParams = new HttpParams().set("documentGuid",documentGuid);
     httpParams = httpParams.set("versionName",versionName);
-    return this.httpClient.post<string>(
+    return this.httpClient.post<{version:string}>(
       "/api/Library/EditDocumentVersionName",null,{params:httpParams}
     );
   }
   requestCreateNewDocumentVersion(baseDocumentGuid:string, newVersionName:string){
     let httpParams = new HttpParams().set("baseDocumentGuid",baseDocumentGuid);
     httpParams = httpParams.set("newVersionName",newVersionName);
-    return this.httpClient.post<string>(
+    return this.httpClient.post<{newVersionGuid:string}>(
       "/api/Library/CreateNewDocumentVersion",null,{params:httpParams}
     );
   }

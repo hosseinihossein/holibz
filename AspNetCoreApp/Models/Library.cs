@@ -1638,6 +1638,7 @@ public class Library_DocumentCardModel
     public bool HasImage { get; set; }
     public int IntegrityVersion { get; set; }
     public string OwnerGuid { get; set; } = null!;
+    public string? VersionName { get; set; } = null;
 }
 public class Library_DocumentPageModel
 {

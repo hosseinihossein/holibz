@@ -1,5 +1,5 @@
 import { AfterViewChecked, AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal, viewChild, viewChildren } from '@angular/core';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -19,7 +19,7 @@ import { EditElementFormModel, LibraryService, NewElementFormModel, OwnerModel }
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { DocumentCardModel } from '../document-card/document-card';
 import { ShelfCardModel } from '../shelf-card/shelf-card';
-import { NgOptimizedImage, ViewportScroller } from '@angular/common';
+import { DatePipe, NgOptimizedImage, ViewportScroller } from '@angular/common';
 import { Result } from '../../dialogs/result/result';
 import { EditHeader } from '../../dialogs/edit-header/edit-header';
 import { EditCode } from '../../dialogs/edit-code/edit-code';
@@ -44,7 +44,7 @@ import { Review } from '../../review/review';
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
     MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip, RouterLink,
-    NgOptimizedImage, MatBadge, MatProgressSpinner, Review],
+    NgOptimizedImage, MatBadge, MatProgressSpinner, Review, DatePipe,MatIconButton],
   templateUrl: './document-page.html',
   styleUrl: './document-page.css',
   providers: [DocumentPageService]
@@ -61,6 +61,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   router = inject(Router);
   documentPageService = inject(DocumentPageService);
   viewportScroller = inject(ViewportScroller);
+  clipboard = inject(Clipboard);
 
   documentGuid = signal<string|null>(null);
   requestedCommentGuid = signal<string|null>(null);
@@ -103,6 +104,19 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
       }
     });
     return uniqueParentLibraries.map(upl=>upl.guid);
+  });
+
+  documentLink = computed(()=>{
+    let href = this.windowService.nativeWindow.location.href;
+    if(href.includes("?")){
+      let queryParamsIndex = href.indexOf("?");
+      href = href.substring(0,queryParamsIndex);
+    }
+    if(href.includes("#")){
+      let fragmentIndex = href.indexOf("#");
+      href = href.substring(0,fragmentIndex);
+    }
+    return href;
   });
   
   constructor(){
@@ -577,6 +591,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         minLength: 32,
       }}).afterClosed().subscribe((result:string)=>{
         if(result){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestAddVersionRelationship(this.documentGuid()!, result).subscribe({
             next: res => {
               if(res){
@@ -588,6 +603,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
                   new DocumentPageModel(this.documentPageService.documentPageModel()!)
                 );
                 this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+                this.displaySubmitSpinner.set(false);
               }
             },
           });
@@ -604,17 +620,19 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         minLength: 1,
       }}).afterClosed().subscribe((result:string)=>{
         if(result){
+          this.displaySubmitSpinner.set(true);
           this.libraryService.requestEditVersionName(this.documentGuid()!,result).subscribe({
             next: res => {
               if(res){
                 this.documentPageService.documentPageModel.update(dpm=>{
-                  dpm!.version = res;
+                  dpm!.version = res.version;
                   return new DocumentPageModel(dpm!);
                 });
                 this.documentPageService.unchangedDocumentPageModel.set(
                   new DocumentPageModel(this.documentPageService.documentPageModel()!)
                 );
                 this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+                this.displaySubmitSpinner.set(false);
               }
             }
           });
@@ -630,10 +648,12 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
       minLength: 1,
     }}).afterClosed().subscribe((result:string)=>{
       if(result){
+        this.displaySubmitSpinner.set(true);
         this.libraryService.requestCreateNewDocumentVersion(this.documentGuid()!,result).subscribe({
           next: res => {
             if(res){
-              this.router.navigate(["/document",res]);
+              this.displaySubmitSpinner.set(false);
+              this.router.navigate(["/document",res.newVersionGuid]);
             }
           },
         });
@@ -642,6 +662,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   }
   removeRelatedVersion(){
     if(this.documentPageService.documentPageModel()){
+      this.displaySubmitSpinner.set(true);
       this.libraryService.requestDeleteVersionRelationship(this.documentGuid()!).subscribe({
         next: res => {
           if(res && res.success){
@@ -653,9 +674,21 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
               new DocumentPageModel(this.documentPageService.documentPageModel()!)
             );
             this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+            this.displaySubmitSpinner.set(false);
           }
         }
       });
+    }
+  }
+
+  copyDocumentLink(){
+    if(this.documentGuid()){
+      this.clipboard.copy(this.documentLink());
+    }
+  }
+  copyDocumentGuid(){
+    if(this.documentGuid()){
+      this.clipboard.copy(this.documentGuid()!);
     }
   }
   

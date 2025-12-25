@@ -14,7 +14,10 @@
             <mat-icon style="font-size: 50px;width: 50px;height: 50px;" class="owner-avatar">account_circle</mat-icon>
             }
         </a>
-        <mat-card-title>{{documentCardModel().title}}</mat-card-title>
+        <mat-card-title>
+            {{documentCardModel().title}}
+            <span style="font-size: 12px;">({{documentCardModel().versionName}})</span>
+        </mat-card-title>
         <mat-card-subtitle>
             <a [routerLink]="['/profile', ownerModel()?.guid]">
                 {{ownerModel()?.username}}

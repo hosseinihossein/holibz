@@ -43,16 +43,6 @@
     </mat-card>
 
     <!-- default ng-content -->
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowers" matTooltip="Followers">
-        <mat-icon>groups</mat-icon>
-    </button>
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowings"
-        matTooltip="Followings">
-        <mat-icon>group_search</mat-icon>
-    </button>
-    <div class="icon-box" [matBadge]="userTotalLikes()" matTooltip="Number of likes">
-        <mat-icon>favorite</mat-icon>
-    </div>
     <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfLibraries" matTooltip="Number of libraries">
         <mat-icon>account_balance</mat-icon>
     </div>
@@ -62,5 +52,34 @@
     <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfDocuments" matTooltip="Number of documents">
         <mat-icon>newsstand</mat-icon>
     </div>
+
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowers" matTooltip="Followers"
+        (click)="displayFollowersList()">
+        <mat-icon>groups</mat-icon>
+    </button>
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowings" matTooltip="Followings"
+        (click)="displayFollowingsList()">
+        <mat-icon>group_search</mat-icon>
+    </button>
+
+    <div class="icon-box" [matBadge]="userTotalLikes()" matTooltip="Number of likes">
+        <mat-icon>favorite</mat-icon>
+    </div>
+
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteLibraries"
+        matTooltip="Favorite libraries">
+        <mat-icon>groups</mat-icon>
+    </button>
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteShelves"
+        matTooltip="Favorite shelves">
+        <mat-icon>group_search</mat-icon>
+    </button>
+    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteDocuments"
+        matTooltip="Favorite documents">
+        <mat-icon>group_search</mat-icon>
+    </button>
+
+
+
 
 </app-libraries-list>

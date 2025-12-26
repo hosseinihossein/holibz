@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogContent, MatDialogModule } from "@angular/material/dialog";
-import { OwnerModel } from '../../services/library-service';
+import { LibraryService, OwnerModel } from '../../services/library-service';
 import { NgOptimizedImage } from "@angular/common";
 import { SingletonModes } from '../../services/singleton-modes';
 import { MatIcon } from '@angular/material/icon';
@@ -29,11 +29,12 @@ export class BriefUsersList implements AfterViewInit {
     label?:string, 
     subjectGuid:string, 
     totalNumberOfItems:number,
-    type:"Like"|"ThumbsUp"|"ThumbsDown",
+    type:"Like"|"ThumbsUp"|"ThumbsDown"|"Follower"|"Following",
   }>(MAT_DIALOG_DATA);
 
   readonly singleton = inject(SingletonModes);
   reviewService = inject(ReviewService);
+  libraryService = inject(LibraryService);
 
   users = signal<OwnerModel[]>([]);
   displayMore = computed(()=>this.users().length < this.data.totalNumberOfItems);
@@ -65,12 +66,6 @@ export class BriefUsersList implements AfterViewInit {
     this.requestUsers();
   }
 
-  /*onUsernameFilter(){
-    this.displaySubmitSpinner.set(true);
-    this.bunchIndex.set(0);
-    this.requestUsers();
-  }*/
-
   requestUsers(){
     const callBacks = {
       next: (res:OwnerModel[]) => {
@@ -96,6 +91,12 @@ export class BriefUsersList implements AfterViewInit {
       }
       else if(this.data.type === "ThumbsDown"){
         this.reviewService.requestThumbsDownUserList(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "Follower"){
+        this.libraryService.requestFollowers(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "Following"){
+        this.libraryService.requestFollowings(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
       }
     }
   }

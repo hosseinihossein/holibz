@@ -1338,8 +1338,8 @@ public class ReviewController : ControllerBase
             .ToListAsync();
         }
 
-        List<string> myFollowingsThumbsDownsGuids = [];
-        List<string> othersThumbsDownsGuids = [];
+        List<string> thumbsDownsGuids_MutualsWithMyFollowings = [];
+        List<string> thumbsDownsGuids_Others = [];
         if (myGuid is not null)
         {
             List<string> myFollowingsGuids = await libraryDb.Owners
@@ -1349,7 +1349,7 @@ public class ReviewController : ControllerBase
             .Select(f => f.Guid)
             .ToListAsync();
 
-            myFollowingsThumbsDownsGuids = thumbsDownByGuids
+            thumbsDownsGuids_MutualsWithMyFollowings = thumbsDownByGuids
             .Intersect(myFollowingsGuids)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
@@ -1357,10 +1357,10 @@ public class ReviewController : ControllerBase
 
             if (thumbsDownByGuids.Contains(myGuid))
             {
-                myFollowingsThumbsDownsGuids = [myGuid, .. myFollowingsThumbsDownsGuids];
+                thumbsDownsGuids_MutualsWithMyFollowings = [myGuid, .. thumbsDownsGuids_MutualsWithMyFollowings];
             }
 
-            if (myFollowingsThumbsDownsGuids.Count < bunchSize)
+            if (thumbsDownsGuids_MutualsWithMyFollowings.Count < bunchSize)
             {
                 int totalNumberOfMyFollowingsThumbsDowns = thumbsDownByGuids
                 .Intersect(myFollowingsGuids)
@@ -1368,10 +1368,10 @@ public class ReviewController : ControllerBase
                 int numberOfSkipOthersThumbsDowns = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsThumbsDowns;
                 if (numberOfSkipOthersThumbsDowns < 0) numberOfSkipOthersThumbsDowns = 0;
 
-                int numberOfNeededOthersThumbsDowns = bunchSize - myFollowingsThumbsDownsGuids.Count;
+                int numberOfNeededOthersThumbsDowns = bunchSize - thumbsDownsGuids_MutualsWithMyFollowings.Count;
 
-                othersThumbsDownsGuids = thumbsDownByGuids
-                .Where(lg => !myFollowingsThumbsDownsGuids.Contains(lg))
+                thumbsDownsGuids_Others = thumbsDownByGuids
+                .Where(lg => !thumbsDownsGuids_MutualsWithMyFollowings.Contains(lg))
                 .Skip(numberOfSkipOthersThumbsDowns)
                 .Take(numberOfNeededOthersThumbsDowns)
                 .ToList();
@@ -1379,13 +1379,13 @@ public class ReviewController : ControllerBase
         }
         else
         {
-            othersThumbsDownsGuids = thumbsDownByGuids
+            thumbsDownsGuids_Others = thumbsDownByGuids
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
             .ToList();
         }
 
-        List<string> thumbsDownsUserGuids = [.. myFollowingsThumbsDownsGuids, .. othersThumbsDownsGuids];
+        List<string> thumbsDownsUserGuids = [.. thumbsDownsGuids_MutualsWithMyFollowings, .. thumbsDownsGuids_Others];
 
         Library_OwnerModel[] thumbsUpsOwnerModels = await userManager.Users
         .Where(u => thumbsDownsUserGuids.Contains(u.UserGuid))

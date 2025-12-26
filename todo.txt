@@ -8,7 +8,19 @@
 - use ExecuteDelete to delete from Dbs
 - navbar menu, library shelf and documents filter, library shelf and documents paginator, 
 create different size images, 
--  
+- reduce the allowed minimum length of username to 3
+- Use AsNoTracking() for Read-Only Queries
+- 
+
+
+
+
+******* efficient ways for efcore query *********
+- Use AsNoTracking() for Read-Only Queries
+- edit efcore queries to not query large bunch of data
+- user bunch by bunch process to query very large (10 millions) of data
+- EF.CompileQuery
+*************************************************
 
 
 - set changedetection onpush and do some other performance updates like ssr

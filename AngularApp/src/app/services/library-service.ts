@@ -429,15 +429,23 @@ export class LibraryService {
     );
   }
 
-  requestFollowers(ownerGuid:string){
+  requestFollowers(ownerGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.get<OwnerModel[]>(
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
+    if(filter?.trim()){
+      httpParams = httpParams.set("filter", filter.trim());
+    }
+    return this.httpClient.get<OwnerModel[]>(
       "/api/Library/GetFollowers", {params:httpParams}
     );
   }
-  requestFollowings(ownerGuid:string){
+  requestFollowings(ownerGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.get<OwnerModel[]>(
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
+    if(filter?.trim()){
+      httpParams = httpParams.set("filter", filter.trim());
+    }
+    return this.httpClient.get<OwnerModel[]>(
       "/api/Library/GetFollowings", {params:httpParams}
     );
   }

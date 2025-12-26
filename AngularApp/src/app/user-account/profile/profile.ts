@@ -20,6 +20,7 @@ import { LibrariesList } from "../../library/libraries-list/libraries-list";
 import { MatBadgeModule } from '@angular/material/badge';
 import { LibraryService, OwnerModel } from '../../services/library-service';
 import { ReviewService } from '../../review/review-service';
+import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
 
 @Component({
   selector: 'app-profile',
@@ -39,6 +40,7 @@ export class Profile {
   router = inject(Router);
   libraryService = inject(LibraryService);
   reviewService = inject(ReviewService);
+  dialog = inject(MatDialog);
 
   identity_UserModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.identity_UserModel()));
@@ -93,6 +95,27 @@ export class Profile {
         },
       });
     });
+  }
+
+  displayFollowersList(){
+    if(this.userGuid()){
+      this.dialog.open(BriefUsersList,{data:{
+        label: "Followers",
+        subjectGuid: this.userGuid(),
+        totalNumberOfItems: this.library_OwnerModel()?.numberOfFollowers,
+        type: "Follower",
+      }});
+    }
+  }
+  displayFollowingsList(){
+    if(this.userGuid()){
+      this.dialog.open(BriefUsersList,{data:{
+        label: "Followings",
+        subjectGuid: this.userGuid(),
+        totalNumberOfItems: this.library_OwnerModel()?.numberOfFollowings,
+        type: "Following",
+      }});
+    }
   }
 
 }

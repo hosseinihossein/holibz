@@ -15,6 +15,7 @@ public class Library_OwnerDbModel
 {
     public int Id { get; set; }
     public string Guid { get; set; } = null!;
+    public string NormalizedUserName { get; set; } = null!;
     public List<Library_LibraryDbModel> Libraries { get; set; } = [];
     public List<Library_ShelfDbModel> Shelves { get; set; } = [];
     public List<Library_DocumentDbModel> Documents { get; set; } = [];

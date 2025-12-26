@@ -9,6 +9,7 @@ public class Review_UserDbModel
 {
     public int Id { get; set; }
     public string Guid { get; set; } = null!;
+    //public string NormalizedUserName { get; set; } = null!;
     public List<Review_ReviewDbModel> Reviews { get; set; } = [];
     public List<Review_CommentDbModel> Comments { get; set; } = [];
     public List<Review_ReviewDbModel> Likes { get; set; } = [];

@@ -5,7 +5,7 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-        <ng-content />
+        <ng-content select="mat-card" />
 
         @for(documentCardModel of documentCardModels(); track documentCardModel.guid){
         <app-document-card [documentCardModel]="documentCardModel"></app-document-card>

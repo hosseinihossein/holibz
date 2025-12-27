@@ -68,11 +68,10 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> ListGuids([FromQuery][StringLength(32)] string ownerGuid)
+    public async Task<IActionResult> LibrariesGuids([FromQuery][StringLength(32)] string ownerGuid)
     {
         string[] userLibrariesGuids = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
-        .Include(o => o.Libraries)
         .SelectMany(o => o.Libraries)
         .Select(lib => lib.Guid)
         .ToArrayAsync();
@@ -239,6 +238,18 @@ public class LibraryController : ControllerBase
         .ToArrayAsync();
 
         return Ok(shelfCardModels);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ShelvesGuids([FromQuery][StringLength(32)] string libraryGuid)
+    {
+        string[] shelfGuids = await libraryDb.Libraries
+        .Where(lib => lib.Guid == libraryGuid)
+        .SelectMany(lib => lib.Shelves)
+        .Select(shelf => shelf.Guid)
+        .ToArrayAsync();
+
+        return Ok(shelfGuids);
     }
 
     [HttpGet]
@@ -432,6 +443,18 @@ public class LibraryController : ControllerBase
         .ToArrayAsync();
 
         return Ok(documentCardModels);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DocumentsGuids([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        string[] documentsGuids = await libraryDb.Shelves
+        .Where(shelf => shelf.Guid == shelfGuid)
+        .SelectMany(shelf => shelf.Documents)
+        .Select(doc => doc.Guid)
+        .ToArrayAsync();
+
+        return Ok(documentsGuids);
     }
 
     [HttpGet]
@@ -1542,6 +1565,7 @@ public class LibraryController : ControllerBase
             .ToListAsync();
         }
 
+
         List<string> followersGuids = [.. followersGuids_MutualsWithMyFollowings, .. followersGuids_Others];
 
         Library_OwnerModel[] followers_OwnerModel = await userManager.Users
@@ -1588,7 +1612,7 @@ public class LibraryController : ControllerBase
         }
         else
         {
-            filter = filter.Trim();
+            filter = userManager.NormalizeName(filter.Trim());
         }
 
         List<string> followingsGuids_MutualsWithMyFollowings = [];

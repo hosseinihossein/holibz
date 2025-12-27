@@ -5,7 +5,7 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-        <ng-content />
+        <ng-content select="mat-card" />
 
         <mat-accordion multi>
             @for(shelfModel of shelfModels(); track shelfModel.guid){

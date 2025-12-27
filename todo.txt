@@ -10,8 +10,10 @@
 create different size images, 
 - reduce the allowed minimum length of username to 3
 - Use AsNoTracking() for Read-Only Queries
+- search component is a mat-card like profile component
+- update review_UserdbModel and library_ownerDbModel seeds
+- remoe redundant Includes from queries
 - 
-
 
 
 

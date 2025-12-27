@@ -17,9 +17,6 @@
 
         <mat-card-actions align="end">
             @if(isMyLibrary()){
-            @if(libraryGuid() !== "DefaultLibrary"){
-
-            }
             <a matButton="elevated" [routerLink]="['/shelf','new', libraryGuid()]">
                 <mat-icon>shelves</mat-icon>
                 Add a new Shelf

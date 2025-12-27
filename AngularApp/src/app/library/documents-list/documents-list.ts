@@ -15,7 +15,6 @@ import { SingletonModes } from '../../services/singleton-modes';
 })
 export class DocumentsList {
   shelfGuid = input.required<string>();
-  //ownerGuid = input.required<string>();
 
   libraryService = inject(LibraryService);
   activatedRoute = inject(ActivatedRoute);
@@ -23,10 +22,6 @@ export class DocumentsList {
   singleton = inject(SingletonModes);
 
   documentCardModels = signal<DocumentCardModel[]>([]);
-  //ownerModel = signal<OwnerModel|null>(null);
-  //userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
-  /*isMyDocumentList = computed(() => this.identityService.isAuthenticated() && 
-  this.identityService.userModel()?.userGuid === this.ownerModel()?.userGuid);*/
 
   constructor(){
     
@@ -41,16 +36,6 @@ export class DocumentsList {
         });
       }
     });
-    
-    /*effect(() => {
-      if(this.ownerGuid()){
-        this.libraryService.requestOwnerModel(this.ownerGuid()).subscribe({
-          next: res => {
-            this.ownerModel.set(res);
-          },
-        });
-      }
-    });*/
 
   }
 }

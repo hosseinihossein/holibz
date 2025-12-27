@@ -118,6 +118,12 @@ export class Profile {
     }
   }
 
+  favoriteLibraries(){
+
+  }
+  favoriteShelves(){}
+  favoriteDocuments(){}
+
 }
 
 export class UserProfileInfo{

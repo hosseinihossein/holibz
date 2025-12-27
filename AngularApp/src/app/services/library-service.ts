@@ -43,7 +43,7 @@ export class LibraryService {
   requestLibrariesGuids(ownerGuid: string){
     let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
     return this.httpClient.get<string[]>(
-      "/api/Library/ListGuids", {params:httpParams}
+      "/api/Library/LibrariesGuids", {params:httpParams}
     );
   }
   requestShelfList(libraryGuid: string){
@@ -60,6 +60,12 @@ export class LibraryService {
           });
         }
       }),
+    );
+  }
+  requestShelvesGuids(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid",libraryGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/ShelvesGuids", {params:httpParams}
     );
   }
   requestUserShelfList(ownerGuid: string){
@@ -82,6 +88,12 @@ export class LibraryService {
           });
         }
       }),
+    );
+  }
+  requestDocumentsGuids(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid",shelfGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/DocumentsGuids", {params:httpParams}
     );
   }
 

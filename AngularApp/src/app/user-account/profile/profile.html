@@ -67,15 +67,15 @@
     </div>
 
     <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteLibraries"
-        matTooltip="Favorite libraries">
+        matTooltip="Favorite libraries" (click)="favoriteLibraries()">
         <mat-icon>groups</mat-icon>
     </button>
     <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteShelves"
-        matTooltip="Favorite shelves">
+        matTooltip="Favorite shelves" (click)="favoriteShelves()">
         <mat-icon>group_search</mat-icon>
     </button>
     <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteDocuments"
-        matTooltip="Favorite documents">
+        matTooltip="Favorite documents" (click)="favoriteDocuments()">
         <mat-icon>group_search</mat-icon>
     </button>
 

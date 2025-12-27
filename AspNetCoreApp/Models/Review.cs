@@ -9,19 +9,21 @@ public class Review_UserDbModel
 {
     public int Id { get; set; }
     public string Guid { get; set; } = null!;
-    //public string NormalizedUserName { get; set; } = null!;
-    public List<Review_ReviewDbModel> Reviews { get; set; } = [];
-    public List<Review_CommentDbModel> Comments { get; set; } = [];
-    public List<Review_ReviewDbModel> Likes { get; set; } = [];
-    public List<Review_CommentDbModel> ThumbsUps { get; set; } = [];
-    public List<Review_CommentDbModel> ThumbsDowns { get; set; } = [];
+    public string NormalizedUserName { get; set; } = null!;
+    public List<Review_UserDbModel> Followers { get; set; } = [];
+    public List<Review_UserDbModel> Followings { get; set; } = [];
+    public List<Review_ReviewDbModel> GotReviews { get; set; } = [];
+    public List<Review_CommentDbModel> GiveComments { get; set; } = [];
+    public List<Review_ReviewDbModel> GiveLikes { get; set; } = [];
+    public List<Review_CommentDbModel> GiveThumbsUps { get; set; } = [];
+    public List<Review_CommentDbModel> GiveThumbsDowns { get; set; } = [];
 }
 public class Review_ReviewDbModel
 {
     public int Id { get; set; }
     public string SubjectGuid { get; set; } = null!;
     public Review_UserDbModel Owner { get; set; } = null!;
-    public List<Review_UserDbModel> Likes { get; set; } = [];
+    public List<Review_UserDbModel> LikedBy { get; set; } = [];
     public List<Review_CommentDbModel> Comments { get; set; } = [];
 }
 public class Review_CommentDbModel
@@ -53,29 +55,29 @@ public class Review_DbContext : DbContext
         //************* Review_UserDbModel *************
         //************* One-to-Many User-to-Review *************
         modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.Reviews)
+        .HasMany(u => u.GotReviews)
         .WithOne(r => r.Owner)
         .IsRequired(true);
 
         //************* One-to-Many User-to-Review *************
         modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.Comments)
+        .HasMany(u => u.GiveComments)
         .WithOne(r => r.Writer)
         .IsRequired(true);
 
         //************* Many-to-Many User-to-Review_Likes *************
         modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.Likes)
-        .WithMany(r => r.Likes);
+        .HasMany(u => u.GiveLikes)
+        .WithMany(r => r.LikedBy);
 
         //************* Many-to-Many User-to-Comment_ThumbsUp *************
         modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.ThumbsUps)
+        .HasMany(u => u.GiveThumbsUps)
         .WithMany(r => r.ThumbsUps);
 
         //************* Many-to-Many User-to-Comment_ThumbsDown *************
         modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.ThumbsDowns)
+        .HasMany(u => u.GiveThumbsDowns)
         .WithMany(r => r.ThumbsDowns);
 
         //************* Review_ReviewDbModel *************
@@ -497,10 +499,10 @@ public class Review_ReviewSeedModel
         Review_ReviewSeedModel? seedModel = await reviewDb.Reviews
         .Where(r => r.SubjectGuid == subjectGuid)
         .Include(r => r.Owner)
-        .Include(r => r.Likes)
+        .Include(r => r.LikedBy)
         .Select(r => new Review_ReviewSeedModel()
         {
-            LikedByGuids = r.Likes.Select(u => u.Guid).ToArray(),
+            LikedByGuids = r.LikedBy.Select(u => u.Guid).ToArray(),
             SubjectGuid = r.SubjectGuid,
             OwnerGuid = r.Owner.Guid,
         })
@@ -524,7 +526,7 @@ public class Review_ReviewSeedModel
         }
         Review_ReviewDbModel reviewDbModel = new()
         {
-            Likes = likes,
+            LikedBy = likes,
             SubjectGuid = SubjectGuid,
             Owner = owner,
         };

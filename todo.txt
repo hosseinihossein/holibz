@@ -12,7 +12,9 @@ create different size images,
 - Use AsNoTracking() for Read-Only Queries
 - search component is a mat-card like profile component
 - update review_UserdbModel and library_ownerDbModel seeds
-- remoe redundant Includes from queries
+- remove redundant Includes from queries
+- cancel seed processes to backup
+- revise db queries and use attach when needed
 - 
 
 

@@ -80,6 +80,11 @@ public class Review_DbContext : DbContext
         .HasMany(u => u.GiveThumbsDowns)
         .WithMany(r => r.ThumbsDowns);
 
+        //************* Many-to-Many Followers-to-Followings *************
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasMany(u => u.Followers)
+        .WithMany(u => u.Followings);
+
         //************* Review_ReviewDbModel *************
         //************* One-to-Many Review-to-Comments *************
         modelBuilder.Entity<Review_ReviewDbModel>()
@@ -99,6 +104,9 @@ public class Review_DbContext : DbContext
         //************* Review_ReviewDbModel *************
         modelBuilder.Entity<Review_UserDbModel>()
         .HasIndex(u => u.Guid)
+        .IsUnique(true);
+        modelBuilder.Entity<Review_UserDbModel>()
+        .HasIndex(u => u.NormalizedUserName)
         .IsUnique(true);
 
         //************* Review_ReviewDbModel *************
@@ -171,12 +179,18 @@ public class Review_Process
         Storage_Comments = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Comments"));
     }
 
-    public async Task CreateNewUser(Review_DbContext reviewDb, string userGuid)
+    public async Task CreateNewUser(Review_DbContext reviewDb, string userGuid,
+    string normalizedUserName)
     {
         Review_UserDbModel? userDbModel = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == userGuid);
         if (userDbModel is not null) return;
+
         //here userDbModel is null
-        userDbModel = new() { Guid = userGuid };
+        userDbModel = new()
+        {
+            Guid = userGuid,
+            NormalizedUserName = normalizedUserName
+        };
         await reviewDb.Users.AddAsync(userDbModel);
         await reviewDb.SaveChangesAsync();
 
@@ -261,7 +275,7 @@ public class Review_Process
     //************************************ seed User data **********************************
     public async Task Update_UserSeed(string userGuid, Review_DbContext reviewDb)
     {
-        Review_UserSeedModel? seedModel = Review_UserSeedModel.Factory(userGuid);
+        Review_UserSeedModel? seedModel = await Review_UserSeedModel.Factory(userGuid, reviewDb);
         if (seedModel is null) return;
 
         string json = JsonSerializer.Serialize(seedModel);
@@ -470,10 +484,19 @@ public class Review_Process
 public class Review_UserSeedModel
 {
     public string Guid { get; set; } = null!;
+    public string NormalizedUserName { get; set; } = null!;
 
-    public static Review_UserSeedModel Factory(string userGuid)
+    public static async Task<Review_UserSeedModel?> Factory(string userGuid, Review_DbContext reviewDb)
     {
-        Review_UserSeedModel seedModel = new() { Guid = userGuid };
+        Review_UserSeedModel? seedModel = await reviewDb.Users
+        .Where(u => u.Guid == userGuid)
+        .Select(u => new Review_UserSeedModel()
+        {
+            Guid = u.Guid,
+            NormalizedUserName = u.NormalizedUserName,
+        })
+        .FirstOrDefaultAsync();
+
         return seedModel;
     }
 
@@ -482,6 +505,7 @@ public class Review_UserSeedModel
         Review_UserDbModel reviewDbModel = new()
         {
             Guid = Guid,
+            NormalizedUserName = NormalizedUserName,
         };
 
         return reviewDbModel;

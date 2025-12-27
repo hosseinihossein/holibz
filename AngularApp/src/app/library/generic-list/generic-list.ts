@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -53,24 +53,72 @@ export class GenericList {
         }
         else if(this.listType() === "Shelf"){
           if(this.isFavorite()){
-
+            this.libraryService.requestFavotiteShelvesGuids(this.parentGuid()!).subscribe({
+              next: shelfGuids => {
+                this.getShelfModels(shelfGuids);
+              }
+            });
           }
           else{
-            
+            this.libraryService.requestShelvesGuids(this.parentGuid()!).subscribe({
+              next: shelfGuids => {
+                if(shelfGuids){
+                  this.getShelfModels(shelfGuids);
+                }
+              },
+            });
           }
         }
         else if(this.listType() === "Document"){
-          
+          if(this.isFavorite()){
+            this.libraryService.requestFavotiteDocumentsGuids(this.parentGuid()!).subscribe({
+              next: docGuids => {
+                this.getDocumentModels(docGuids);
+              }
+            });
+          }
+          else{
+            this.libraryService.requestDocumentsGuids(this.parentGuid()!).subscribe({
+              next: docGuids => {
+                if(docGuids){
+                  this.getDocumentModels(docGuids);
+                }
+              },
+            });
+          }
         }
       }
     });
   }
+  
   getLibraryModels(libGuids:string[]){
     libGuids.forEach(libGuid=>{
       this.libraryService.requestLibraryModel(libGuid).subscribe({
         next: libModel => {
           if(libModel){
             this.libraryModels.set([...this.libraryModels(), libModel]);
+          }
+        },
+      });
+    });
+  }
+  getShelfModels(shelfGuids:string[]){
+    shelfGuids.forEach(shelfGuid=>{
+      this.libraryService.requestShelfModel(shelfGuid).subscribe({
+        next: shelfModel => {
+          if(shelfModel){
+            this.shelfModels.set([...this.shelfModels(), shelfModel]);
+          }
+        },
+      });
+    });
+  }
+  getDocumentModels(docGuids:string[]){
+    docGuids.forEach(docGuid=>{
+      this.libraryService.requestDocumentCardModel(docGuid).subscribe({
+        next: docModel => {
+          if(docModel){
+            this.documentCardModels.set([...this.documentCardModels(), docModel]);
           }
         },
       });

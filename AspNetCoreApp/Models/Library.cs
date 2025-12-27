@@ -223,6 +223,9 @@ public class Library_DbContext : DbContext
         modelBuilder.Entity<Library_OwnerDbModel>()
         .HasIndex(o => o.Guid)
         .IsUnique(true);
+        modelBuilder.Entity<Library_OwnerDbModel>()
+        .HasIndex(o => o.NormalizedUserName)
+        .IsUnique(true);
 
         modelBuilder.Entity<Library_LibraryDbModel>()
         .HasIndex(lib => lib.Guid)
@@ -301,7 +304,8 @@ public class Library_Process //singleton service
         return null;
     }
 
-    public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, string ownerGuid)
+    public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, string ownerGuid,
+    string normalizedUserName)
     {
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
@@ -321,6 +325,7 @@ public class Library_Process //singleton service
             ownerDbModel = new()
             {
                 Guid = ownerGuid,
+                NormalizedUserName = normalizedUserName,
                 DefaultLibraryGuid = defaultLibrary.Guid,
                 DefaultShelfGuid = defaultShelf.Guid,
                 Libraries = [defaultLibrary],
@@ -1154,6 +1159,7 @@ public class Library_ProcessResult
 public class Library_OwnerSeedModel
 {
     public string Guid { get; set; } = null!;
+    public string NormalizedUserName { get; set; } = null!;
     public string DefaultLibraryGuid { get; set; } = null!;
     public string DefaultShelfGuid { get; set; } = null!;
     public string[] FollowersGuids { get; set; } = [];
@@ -1173,6 +1179,7 @@ public class Library_OwnerSeedModel
             DefaultShelfGuid = o.DefaultShelfGuid,
             FollowersGuids = o.Followers.Select(f => f.Guid).ToArray(),
             FollowingsGuids = o.Followings.Select(f => f.Guid).ToArray(),
+            NormalizedUserName = o.NormalizedUserName,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -1205,6 +1212,7 @@ public class Library_OwnerSeedModel
             Guid = Guid,
             Followers = followers,
             Followings = followings,
+            NormalizedUserName = NormalizedUserName,
         };
 
         return ownerDbModel;

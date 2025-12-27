@@ -327,7 +327,7 @@ public class ReviewController : ControllerBase
             {
                 myCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
@@ -336,7 +336,7 @@ public class ReviewController : ControllerBase
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.ThumbsDowns)
                 .Include(r => r.Comments)
-                    .ThenInclude(c => c.ThumbsUps)
+                    .ThenInclude(c => c.ThumbsUps)*/
                 .SelectMany(r => r.Comments)
                 .Where(c => c.Writer.Guid == myGuid && c.ReplyTo == null)
                 .OrderBy(c => c.Id)
@@ -389,7 +389,7 @@ public class ReviewController : ControllerBase
 
                     othersCommentsModels = await reviewDb.Reviews
                     .Where(r => r.SubjectGuid == subjectGuid)
-                    .Include(r => r.Comments)
+                    /*.Include(r => r.Comments)
                         .ThenInclude(c => c.ReplyTo)
                     .Include(r => r.Comments)
                         .ThenInclude(c => c.Replies)
@@ -398,7 +398,7 @@ public class ReviewController : ControllerBase
                     .Include(r => r.Comments)
                         .ThenInclude(c => c.ThumbsDowns)
                     .Include(r => r.Comments)
-                        .ThenInclude(c => c.ThumbsUps)
+                        .ThenInclude(c => c.ThumbsUps)*/
                     .SelectMany(r => r.Comments)
                     .Where(c => c.Writer.Guid != myGuid && c.ReplyTo == null)
                     .OrderBy(c => c.Id)
@@ -428,7 +428,7 @@ public class ReviewController : ControllerBase
             {
                 othersCommentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
@@ -437,7 +437,7 @@ public class ReviewController : ControllerBase
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.ThumbsDowns)
                 .Include(r => r.Comments)
-                    .ThenInclude(c => c.ThumbsUps)
+                    .ThenInclude(c => c.ThumbsUps)*/
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
                 .OrderBy(c => c.Id)
@@ -472,7 +472,7 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
@@ -481,7 +481,7 @@ public class ReviewController : ControllerBase
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.ThumbsDowns)
                 .Include(r => r.Comments)
-                    .ThenInclude(c => c.ThumbsUps)
+                    .ThenInclude(c => c.ThumbsUps)*/
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
                 .OrderByDescending(c => c.CreatedAt)
@@ -513,7 +513,7 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
@@ -522,7 +522,7 @@ public class ReviewController : ControllerBase
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.ThumbsDowns)
                 .Include(r => r.Comments)
-                    .ThenInclude(c => c.ThumbsUps)
+                    .ThenInclude(c => c.ThumbsUps)*/
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
                 .OrderBy(c => c.CreatedAt)
@@ -554,7 +554,7 @@ public class ReviewController : ControllerBase
             {
                 Review_CommentModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
+                /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.Replies)
@@ -563,7 +563,7 @@ public class ReviewController : ControllerBase
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.ThumbsDowns)
                 .Include(r => r.Comments)
-                    .ThenInclude(c => c.ThumbsUps)
+                    .ThenInclude(c => c.ThumbsUps)*/
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
                 .OrderByDescending(c => c.ThumbsUps.Count)
@@ -630,14 +630,14 @@ public class ReviewController : ControllerBase
         {
             myRepliesModels = await reviewDb.Comments
             .Where(c => c.Guid == commentGuid)
-            .Include(c => c.Replies)
+            /*.Include(c => c.Replies)
                 .ThenInclude(rep => rep.Replies)
             .Include(c => c.Replies)
                 .ThenInclude(rep => rep.Writer)
             .Include(c => c.Replies)
                 .ThenInclude(rep => rep.ThumbsDowns)
             .Include(c => c.Replies)
-                .ThenInclude(rep => rep.ThumbsUps)
+                .ThenInclude(rep => rep.ThumbsUps)*/
             .SelectMany(c => c.Replies)
             .Where(rep => rep.Writer.Guid == myGuid)
             .OrderBy(rep => rep.Id)
@@ -687,14 +687,14 @@ public class ReviewController : ControllerBase
 
                 othersRepliesModels = await reviewDb.Comments
                 .Where(c => c.Guid == commentGuid)
-                .Include(c => c.Replies)
+                /*.Include(c => c.Replies)
                     .ThenInclude(rep => rep.Replies)
                 .Include(c => c.Replies)
                     .ThenInclude(rep => rep.Writer)
                 .Include(c => c.Replies)
                     .ThenInclude(rep => rep.ThumbsDowns)
                 .Include(c => c.Replies)
-                    .ThenInclude(rep => rep.ThumbsUps)
+                    .ThenInclude(rep => rep.ThumbsUps)*/
                 .SelectMany(c => c.Replies)
                 .Where(rep => rep.Writer.Guid != myGuid)
                 .OrderBy(rep => rep.Id)
@@ -724,14 +724,14 @@ public class ReviewController : ControllerBase
         {
             othersRepliesModels = await reviewDb.Comments
             .Where(c => c.Guid == commentGuid)
-            .Include(c => c.Replies)
+            /*.Include(c => c.Replies)
                 .ThenInclude(rep => rep.Replies)
             .Include(c => c.Replies)
                 .ThenInclude(rep => rep.Writer)
             .Include(c => c.Replies)
                 .ThenInclude(rep => rep.ThumbsDowns)
             .Include(c => c.Replies)
-                .ThenInclude(rep => rep.ThumbsUps)
+                .ThenInclude(rep => rep.ThumbsUps)*/
             .SelectMany(c => c.Replies)
             .OrderBy(c => c.Id)
             .Skip(bunchIndex.Value * 10)
@@ -1119,6 +1119,7 @@ public class ReviewController : ControllerBase
                 u.Followers.Any(f => f.Guid == myGuid) &&
                 u.GiveLikes.Any(r => r.SubjectGuid == subjectGuid)
             )
+            .OrderBy(u => u.Id)
             .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
@@ -1154,6 +1155,7 @@ public class ReviewController : ControllerBase
                     !u.Followers.Any(f => f.Guid == myGuid) &&
                     u.GiveLikes.Any(r => r.SubjectGuid == subjectGuid)
                 )
+                .OrderBy(u => u.Id)
                 .Select(u => u.Guid)
                 .Skip(numberOfSkipOthersLikes)
                 .Take(numberOfNeededOthersLikes)
@@ -1167,6 +1169,7 @@ public class ReviewController : ControllerBase
             .Where(r => r.SubjectGuid == subjectGuid)
             .SelectMany(r => r.LikedBy)
             .Where(u => filter == null || u.NormalizedUserName.Contains(filter))
+            .OrderBy(u => u.Id)
             .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
@@ -1232,6 +1235,7 @@ public class ReviewController : ControllerBase
                 u.Followers.Any(f => f.Guid == myGuid) &&
                 u.GiveThumbsUps.Any(c => c.Guid == commentGuid)
             )
+            .OrderBy(u => u.Id)
             .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
@@ -1267,6 +1271,7 @@ public class ReviewController : ControllerBase
                     !u.Followers.Any(f => f.Guid == myGuid) &&
                     u.GiveThumbsUps.Any(c => c.Guid == commentGuid)
                 )
+                .OrderBy(u => u.Id)
                 .Select(u => u.Guid)
                 .Skip(numberOfSkipOthersThumbsUps)
                 .Take(numberOfNeededOthersThumbsUps)
@@ -1279,6 +1284,7 @@ public class ReviewController : ControllerBase
             .Where(c => c.Guid == commentGuid)
             .SelectMany(c => c.ThumbsUps)
             .Where(u => filter == null || u.NormalizedUserName.Contains(filter))
+            .OrderBy(u => u.Id)
             .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
@@ -1344,6 +1350,7 @@ public class ReviewController : ControllerBase
                 u.Followers.Any(f => f.Guid == myGuid) &&
                 u.GiveThumbsDowns.Any(c => c.Guid == commentGuid)
             )
+            .OrderBy(u => u.Id)
             .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
@@ -1379,6 +1386,7 @@ public class ReviewController : ControllerBase
                     !u.Followers.Any(f => f.Guid == myGuid) &&
                     u.GiveThumbsDowns.Any(c => c.Guid == commentGuid)
                 )
+                .OrderBy(u => u.Id)
                 .Select(u => u.Guid)
                 .Skip(numberOfSkipOthersThumbsDowns)
                 .Take(numberOfNeededOthersThumbsDowns)
@@ -1391,6 +1399,7 @@ public class ReviewController : ControllerBase
             .Where(c => c.Guid == commentGuid)
             .SelectMany(c => c.ThumbsDowns)
             .Where(u => filter == null || u.NormalizedUserName.Contains(filter))
+            .OrderBy(u => u.Id)
             .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)

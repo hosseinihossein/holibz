@@ -570,6 +570,18 @@ export class LibraryService {
       "/api/Library/GetFavoriteLibrariesGuids", {params:httpParams}
     );
   }
+  requestFavotiteShelvesGuids(userGuid:string){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetFavoriteShelvesGuids", {params:httpParams}
+    );
+  }
+  requestFavotiteDocumentsGuids(userGuid:string){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetFavoriteDocumentsGuids", {params:httpParams}
+    );
+  }
 
 
 }

@@ -29,15 +29,20 @@ export class SingletonModes {
   editMode = signal(false);
   darkMode = signal(false);
 
-  elementValueMaxLength = signal(1000);// 1000 chars
-  elementTitleMaxLength = signal(60);// 60 chars
-  elementTitleMinLength = signal(3);//  3 chars
-  elementFileMaxSize = signal(500);// 500 KB
-  introductionTitleMaxLength = signal(60);// 60 chars
-  introductionTitleMinLength = signal(3);// 3 chars
-  introductionDescriptionMaxLength = signal(500);// 500 chars
-  documentIntroductionImageMaxSize = signal(500);// 500 KB
-  libraryShelfIntroductionImageMaxSize = signal(120);// 120 KB
+  elementStringValue_MaxLength = signal(4000);// 1000 chars
+  elementTitle_MaxLength = signal(60);// 60 chars
+  elementTitle_MinLength = signal(3);//  3 chars
+  elementType_MaxLength = signal(20);
+  elementFile_MaxSize = signal(500);// 500 KB
+  maxNumberOfElementsInDocument = signal(255);
+  introductionTitle_MaxLength = signal(60);// 60 chars
+  introductionTitle_MinLength = signal(3);// 3 chars
+  introductionDescription_MaxLength = signal(500);// 500 chars
+  documentIntroductionImage_MaxSize = signal(500);// 500 KB
+  libraryShelfIntroductionImage_MaxSize = signal(120);// 120 KB
+  username_MaxLength = signal(60);
+  version_MaxLength = signal(30);
+  tagName_MaxLength = signal(30);
 
   
 

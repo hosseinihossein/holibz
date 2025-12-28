@@ -29,16 +29,16 @@ export class EditImageTitle {
   //previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
 
   titleControl = new FormControl(this.data.title,{nonNullable:true,validators:[Validators.required,
-    Validators.maxLength(this.singletonModes.elementTitleMaxLength()), 
-    Validators.minLength(this.singletonModes.elementTitleMinLength())
+    Validators.maxLength(this.singletonModes.elementTitle_MaxLength()), 
+    Validators.minLength(this.singletonModes.elementTitle_MinLength())
   ]})
 
   onSelectImage(event:Event){
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      if(input.files[0].size > (this.singletonModes.elementFileMaxSize() * 1024)){
+      if(input.files[0].size > (this.singletonModes.elementFile_MaxSize() * 1024)){
         this.imageSizeError.set(
-          `The size of the choosen image cannot be more than ${this.singletonModes.elementFileMaxSize()} KB!`
+          `The size of the choosen image cannot be more than ${this.singletonModes.elementFile_MaxSize()} KB!`
         );
       }
       else{

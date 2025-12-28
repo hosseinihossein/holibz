@@ -15,7 +15,8 @@ create different size images,
 - remove redundant Includes from queries
 - cancel seed processes to backup
 - revise db queries and use attach when needed
-- 
+- revise db models and contexts, remove seed,
+-  
 
 
 

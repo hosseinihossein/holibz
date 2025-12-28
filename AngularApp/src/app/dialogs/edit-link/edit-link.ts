@@ -19,11 +19,11 @@ export class EditLink {
   readonly singletonModes = inject(SingletonModes);
 
   valueControl = new FormControl(this.data.value,{nonNullable:true,validators:[Validators.required,
-    Validators.maxLength(this.singletonModes.elementValueMaxLength()),
-    Validators.minLength(this.singletonModes.elementTitleMinLength())
+    Validators.maxLength(this.singletonModes.elementStringValue_MaxLength()),
+    Validators.minLength(this.singletonModes.elementTitle_MinLength())
   ]});
   titleControl = new FormControl(this.data.title,{nonNullable:true,validators:[Validators.required,
-    Validators.maxLength(this.singletonModes.elementTitleMaxLength()),
-    Validators.minLength(this.singletonModes.elementTitleMinLength())
+    Validators.maxLength(this.singletonModes.elementTitle_MaxLength()),
+    Validators.minLength(this.singletonModes.elementTitle_MinLength())
   ]});
 }

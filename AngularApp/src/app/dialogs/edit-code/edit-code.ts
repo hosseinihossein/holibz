@@ -21,6 +21,6 @@ export class EditCode {
   readonly singletonModes = inject(SingletonModes);
 
   inputControl = new FormControl(this.data.value,{nonNullable:true, validators:[Validators.required,
-    Validators.maxLength(this.singletonModes.elementValueMaxLength())
+    Validators.maxLength(this.singletonModes.elementStringValue_MaxLength())
   ]})
 }

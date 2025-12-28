@@ -20,6 +20,6 @@ export class EditTextarea {
 
   myText = new FormControl(this.data.value,{
     nonNullable:true,
-    validators:[Validators.required, Validators.maxLength(this.singletonModes.elementValueMaxLength())],
+    validators:[Validators.required, Validators.maxLength(this.singletonModes.elementStringValue_MaxLength())],
   });
 }

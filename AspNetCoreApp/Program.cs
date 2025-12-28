@@ -333,7 +333,7 @@ public class Program
         }*/
 
         //***** Create Default Library and Shelf for everyone *****
-        List<string> AllConfirmedUsersGuidsExceptAdmin =
+        /*List<string> AllConfirmedUsersGuidsExceptAdmin =
         await userManager.Users
         .Where(u => u.EmailConfirmed && u.UserGuid != "admin")
         .Select(u => u.UserGuid)
@@ -344,24 +344,7 @@ public class Program
         foreach (string userGuid in AllConfirmedUsersGuidsExceptAdmin)
         {
             var ownerCreationResult = await libraryProcess.CreateNewOwner(libraryDb, userGuid);
-            /*string defaultLibraryGuid = ((Library_OwnerDbModel)ownerCreationResult.ResultObject!).DefaultLibraryGuid;
-            //string defaultShelfGuid = ((Library_OwnerDbModel) ownerCreationResult.ResultObject!).DefaultShelfGuid;
-            var nonParentShelves = await libraryDb.Shelves
-            .Include(shelf => shelf.ParentLibraries)
-            .Include(shelf => shelf.Owner)
-            .ThenInclude(owner => owner.Libraries)
-            .Where(shelf => shelf.Owner.Guid == userGuid && shelf.ParentLibraries.Count == 0)
-            .ToListAsync();
-            if (nonParentShelves.Count > 0)
-            {
-                var defaultLibrary = (await libraryDb.Libraries
-                .FirstOrDefaultAsync(lib => lib.Guid == defaultLibraryGuid))!;
-                foreach (var shelf in nonParentShelves)
-                {
-                    shelf.ParentLibraries = [defaultLibrary];
-                }
-            }*/
-        }
+        }*/
         //await libraryDb.SaveChangesAsync();
 
 

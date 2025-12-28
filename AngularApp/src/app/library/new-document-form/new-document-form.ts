@@ -38,10 +38,10 @@ export class NewDocumentForm {
   newDocumentForm = new FormGroup({
     shelfGuids: new FormControl(["DefaultShelf"], {nonNullable:true, validators: [Validators.required]}),
     title: new FormControl("", {nonNullable:true, validators: [Validators.required, 
-      Validators.maxLength(this.singleton.introductionTitleMaxLength()),
-      Validators.minLength(this.singleton.introductionTitleMinLength())]}),
+      Validators.maxLength(this.singleton.introductionTitle_MaxLength()),
+      Validators.minLength(this.singleton.introductionTitle_MinLength())]}),
     description: new FormControl("", {nonNullable:true, validators: 
-      Validators.maxLength(this.singleton.introductionDescriptionMaxLength())}),
+      Validators.maxLength(this.singleton.introductionDescription_MaxLength())}),
     image: new FormControl<File|null>(null),
   });
   shelfGuids = this.newDocumentForm.get("shelfGuids");

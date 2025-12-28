@@ -1178,9 +1178,9 @@ public class ReviewController : ControllerBase
 
         List<string> likesUserGuids = [.. likesGuids_MutualsWithMyFollowings, .. likesGuids_Others];
 
-        Library_OwnerModel[] likesOwnerModels = await userManager.Users
+        Library_Owner_ViewModel[] likesOwnerModels = await userManager.Users
         .Where(u => likesUserGuids.Contains(u.UserGuid))
-        .Select(u => new Library_OwnerModel()
+        .Select(u => new Library_Owner_ViewModel()
         {
             Guid = u.UserGuid,
             HasImage = u.HasImage,
@@ -1293,9 +1293,9 @@ public class ReviewController : ControllerBase
 
         List<string> thumbsUpsUserGuids = [.. thumbsUpsGuids_MutualsWithMyFollowings, .. thumbsUpsGuids_Others];
 
-        Library_OwnerModel[] thumbsUpsOwnerModels = await userManager.Users
+        Library_Owner_ViewModel[] thumbsUpsOwnerModels = await userManager.Users
         .Where(u => thumbsUpsUserGuids.Contains(u.UserGuid))
-        .Select(u => new Library_OwnerModel()
+        .Select(u => new Library_Owner_ViewModel()
         {
             Guid = u.UserGuid,
             HasImage = u.HasImage,
@@ -1408,9 +1408,9 @@ public class ReviewController : ControllerBase
 
         List<string> thumbsDownsUserGuids = [.. thumbsDownsGuids_MutualsWithMyFollowings, .. thumbsDownsGuids_Others];
 
-        Library_OwnerModel[] thumbsUpsOwnerModels = await userManager.Users
+        Library_Owner_ViewModel[] thumbsUpsOwnerModels = await userManager.Users
         .Where(u => thumbsDownsUserGuids.Contains(u.UserGuid))
-        .Select(u => new Library_OwnerModel()
+        .Select(u => new Library_Owner_ViewModel()
         {
             Guid = u.UserGuid,
             HasImage = u.HasImage,

@@ -20,6 +20,6 @@ export class EditParagraph {
   readonly singletonModes = inject(SingletonModes);
 
   valueControl = new FormControl(this.data.value,{nonNullable:true,validators:[Validators.required,
-    Validators.maxLength(this.singletonModes.elementValueMaxLength())
+    Validators.maxLength(this.singletonModes.elementStringValue_MaxLength())
   ]})
 }

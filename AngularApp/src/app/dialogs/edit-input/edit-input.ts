@@ -21,8 +21,8 @@ export class EditInput {
   myInput = new FormControl(this.data.value,{
     nonNullable:true,
     validators:[Validators.required, 
-      Validators.maxLength(this.data.maxLength || this.singletonModes.elementTitleMaxLength()),
-      Validators.minLength(this.data.minLength || this.singletonModes.elementTitleMinLength()),
+      Validators.maxLength(this.data.maxLength || this.singletonModes.elementTitle_MaxLength()),
+      Validators.minLength(this.data.minLength || this.singletonModes.elementTitle_MinLength()),
     ],
   });
 }

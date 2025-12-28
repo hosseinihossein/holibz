@@ -26,16 +26,16 @@ export class EditFile {
   fileName = viewChild<ElementRef<HTMLImageElement>>("fileName");
 
   titleControl = new FormControl(this.data.title,{nonNullable:true, validators:[Validators.required, 
-    Validators.maxLength(this.singletoneModes.elementTitleMaxLength()), 
-    Validators.minLength(this.singletoneModes.elementTitleMinLength())
+    Validators.maxLength(this.singletoneModes.elementTitle_MaxLength()), 
+    Validators.minLength(this.singletoneModes.elementTitle_MinLength())
   ]})
 
   onSelectFile(event:Event){
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      if(input.files[0].size > (this.singletoneModes.elementFileMaxSize() * 1024)){
+      if(input.files[0].size > (this.singletoneModes.elementFile_MaxSize() * 1024)){
         this.fileSizeError.set(
-          `The size of choosen file cannot be more than ${this.singletoneModes.elementFileMaxSize()} KB!`
+          `The size of choosen file cannot be more than ${this.singletoneModes.elementFile_MaxSize()} KB!`
         );
       }
       else{

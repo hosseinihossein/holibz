@@ -44,12 +44,12 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List([FromQuery][StringLength(32)] string ownerGuid)
     {
-        Library_LibraryCardModel[] libraryCardModels = await libraryDb.Owners
+        Library_LibraryCard_ViewModel[] libraryCardModels = await libraryDb.Owners
         .Where(owner => owner.Guid == ownerGuid)
         .Include(owner => owner.Libraries)
         .ThenInclude(lib => lib.Shelves)
         .SelectMany(owner => owner.Libraries)
-        .Select(lib => new Library_LibraryCardModel()
+        .Select(lib => new Library_LibraryCard_ViewModel()
         {
             Guid = lib.Guid,
             Title = lib.Title,
@@ -82,11 +82,11 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> LibraryModel([FromQuery][StringLength(32)] string libraryGuid)
     {
-        Library_LibraryCardModel? libraryCardModel = await libraryDb.Libraries
+        Library_LibraryCard_ViewModel? libraryCardModel = await libraryDb.Libraries
         .Include(lib => lib.Shelves)
         .Include(lib => lib.Owner)
         .Where(lib => lib.Guid == libraryGuid)
-        .Select(lib => new Library_LibraryCardModel()
+        .Select(lib => new Library_LibraryCard_ViewModel()
         {
             Guid = lib.Guid,
             Title = lib.Title,
@@ -196,21 +196,21 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid)
     {
-        Library_ShelfCardModel[] shelfCardModels = await libraryDb.Libraries
+        Library_ShelfCard_ViewModel[] shelfCardModels = await libraryDb.Libraries
         .Include(lib => lib.Owner)
         .Include(lib => lib.Shelves)
             .ThenInclude(shelf => shelf.Documents)
                 .ThenInclude(doc => doc.Elements)
         .Where(lib => lib.Guid == libraryGuid)
         .SelectMany(lib => lib.Shelves)
-        .Select(shelf => new Library_ShelfCardModel()
+        .Select(shelf => new Library_ShelfCard_ViewModel()
         {
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
             DocumentCardModels = shelf.Documents
             .OrderBy(doc => doc.Id)
             .Take(10)
-            .Select(doc => new Library_DocumentCardModel()
+            .Select(doc => new Library_DocumentCard_ViewModel()
             {
                 Description = doc.Description,
                 Guid = doc.Guid,
@@ -222,7 +222,7 @@ public class LibraryController : ControllerBase
                 VersionName = doc.Version == "Default" ? null : doc.Version,
             }).ToArray(),
             Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
+            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
             {
                 Guid = shelfLib.Guid,
                 Title = shelfLib.Title,
@@ -266,12 +266,12 @@ public class LibraryController : ControllerBase
         {
             shelf.Guid,
             shelf.Title,
-            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
+            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
             {
                 Guid = shelfLib.Guid,
                 Title = shelfLib.Title,
             }).ToArray(),
-            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
+            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief_ViewModel()
             {
                 Guid = doc.Guid,
                 Title = doc.Title,
@@ -286,20 +286,20 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfModel([FromQuery][StringLength(32)] string shelfGuid)
     {
-        Library_ShelfCardModel? shelfCardModel = await libraryDb.Shelves
+        Library_ShelfCard_ViewModel? shelfCardModel = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
         .Include(shelf => shelf.ParentLibraries)
         .Include(shelf => shelf.Documents)
             .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Guid == shelfGuid)
-        .Select(shelf => new Library_ShelfCardModel()
+        .Select(shelf => new Library_ShelfCard_ViewModel()
         {
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
             DocumentCardModels = shelf.Documents
             .OrderBy(doc => doc.Id)
             .Take(10)
-            .Select(doc => new Library_DocumentCardModel()
+            .Select(doc => new Library_DocumentCard_ViewModel()
             {
                 Description = doc.Description,
                 Guid = doc.Guid,
@@ -311,7 +311,7 @@ public class LibraryController : ControllerBase
                 VersionName = doc.Version == "Default" ? null : doc.Version,
             }).ToArray(),
             Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
+            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
             {
                 Guid = shelfLib.Guid,
                 Title = shelfLib.Title,
@@ -422,13 +422,13 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
     {
-        Library_DocumentCardModel[] documentCardModels = await libraryDb.Shelves
+        Library_DocumentCard_ViewModel[] documentCardModels = await libraryDb.Shelves
         .Include(shelf => shelf.Owner)
         .Include(shelf => shelf.Documents)
             .ThenInclude(doc => doc.Elements)
         .Where(shelf => shelf.Guid == shelfGuid)
         .SelectMany(shelf => shelf.Documents)
-        .Select(doc => new Library_DocumentCardModel()
+        .Select(doc => new Library_DocumentCard_ViewModel()
         {
             Description = doc.Description,
             Guid = doc.Guid,
@@ -460,11 +460,11 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentCardModel([FromQuery][StringLength(32)] string documentGuid)
     {
-        Library_DocumentCardModel? documentCardModel = await libraryDb.Documents
+        Library_DocumentCard_ViewModel? documentCardModel = await libraryDb.Documents
         .Include(doc => doc.Owner)
         .Include(doc => doc.Elements)
         .Where(doc => doc.Guid == documentGuid)
-        .Select(doc => new Library_DocumentCardModel()
+        .Select(doc => new Library_DocumentCard_ViewModel()
         {
             Guid = doc.Guid,
             Description = doc.Description,
@@ -500,7 +500,7 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentPageModel([FromQuery][StringLength(32)] string documentGuid)
     {
-        Library_DocumentPageModel? documentPageModel = await libraryDb.Documents
+        Library_DocumentPage_ViewModel? documentPageModel = await libraryDb.Documents
         .Include(doc => doc.Owner)
         .Include(doc => doc.Tags)
         .Include(doc => doc.Elements)
@@ -511,7 +511,7 @@ public class LibraryController : ControllerBase
         .Include(doc => doc.ParentShelves)
             .ThenInclude(shelf => shelf.ParentLibraries)
         .Where(doc => doc.Guid == documentGuid)
-        .Select(doc => new Library_DocumentPageModel()
+        .Select(doc => new Library_DocumentPage_ViewModel()
         {
             CreatedAt = doc.CreatedAt,
             Description = doc.Description,
@@ -520,12 +520,12 @@ public class LibraryController : ControllerBase
             Tags = doc.Tags.Select(tag => tag.Name).ToArray(),
             Title = doc.Title,
             Version = doc.Version,
-            Owner = new Library_OwnerBrief()
+            Owner = new Library_OwnerBrief_ViewModel()
             {
                 UserGuid = doc.Owner.Guid,
                 UserName = "_",
             },
-            Elements = doc.Elements.Select(el => new Library_ElementModel()
+            Elements = doc.Elements.Select(el => new Library_Element_ViewModel()
             {
                 Guid = el.Guid,
                 Order = el.Order,
@@ -537,21 +537,21 @@ public class LibraryController : ControllerBase
                     $"/api/Library/ElementFile?elementGuid={el.Guid}&elementFileName={el.FileName}",
             }).ToArray(),
             RelatedVersions = doc.RelatedVersions == null ?
-            new Library_VersionBrief[0] :
-            doc.RelatedVersions!.Documents.Select(rvDoc => new Library_VersionBrief()
+            new Library_VersionBrief_ViewModel[0] :
+            doc.RelatedVersions!.Documents.Select(rvDoc => new Library_VersionBrief_ViewModel()
             {
                 DocumentGuid = rvDoc.Guid,
                 VersionName = rvDoc.Version,
             }).ToArray(),
-            Shelves = doc.ParentShelves.Select(shelf => new Library_ShelfBrief()
+            Shelves = doc.ParentShelves.Select(shelf => new Library_ShelfBrief_ViewModel()
             {
-                Documents = shelf.Documents.Select(shelfDoc => new Library_DocumentBrief()
+                Documents = shelf.Documents.Select(shelfDoc => new Library_DocumentBrief_ViewModel()
                 {
                     Guid = shelfDoc.Guid,
                     Title = shelfDoc.Title,
                 }).ToArray(),
                 Guid = shelf.Guid,
-                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
+                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
                 {
                     Guid = shelfLib.Guid,
                     Title = shelfLib.Title,
@@ -663,7 +663,7 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditElements([FromBody] Library_EditElementFormModel[] formModels)
+    public async Task<IActionResult> EditElements([FromBody] Library_EditElement_FormModel[] formModels)
     {
         if (ModelState.IsValid)
         {
@@ -742,8 +742,8 @@ public class LibraryController : ControllerBase
             }
 
             //create response
-            Library_ElementModel[] elementModelArray = elementDbModels
-            .Select(elementDbModel => new Library_ElementModel()
+            Library_Element_ViewModel[] elementModelArray = elementDbModels
+            .Select(elementDbModel => new Library_Element_ViewModel()
             {
                 Guid = elementDbModel.Guid,
                 Order = elementDbModel.Order,
@@ -798,7 +798,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateNewLibrary(Library_NewLibraryFormModel formModel)
+    public async Task<IActionResult> CreateNewLibrary(Library_NewLibrary_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -825,7 +825,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateNewShelf(Library_NewShelfFormModel formModel)
+    public async Task<IActionResult> CreateNewShelf(Library_NewShelf_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -852,7 +852,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateNewDocument(Library_NewDocumentFormModel formModel,
+    public async Task<IActionResult> CreateNewDocument(Library_NewDocument_FormModel formModel,
     [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb)
     {
         if (ModelState.IsValid)
@@ -890,7 +890,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateNewElement(Library_NewElementFormModel formModel)
+    public async Task<IActionResult> CreateNewElement(Library_NewElement_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -904,7 +904,7 @@ public class LibraryController : ControllerBase
             {
                 Library_ElementDbModel elementDbModel = (Library_ElementDbModel)result.ResultObject;
 
-                var elementModel = new Library_ElementModel()
+                var elementModel = new Library_Element_ViewModel()
                 {
                     Guid = elementDbModel.Guid,
                     Order = elementDbModel.Order,
@@ -934,7 +934,7 @@ public class LibraryController : ControllerBase
     [RequestSizeLimit(512 * 1024)]//512 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditDocumentIntroduction(
-        [FromForm] Library_EditIntroductionFormModel formModel)
+        [FromForm] Library_EditIntroduction_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -999,7 +999,7 @@ public class LibraryController : ControllerBase
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditLibraryIntroduction(
-        [FromForm] Library_EditIntroductionFormModel formModel)
+        [FromForm] Library_EditIntroduction_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -1073,7 +1073,7 @@ public class LibraryController : ControllerBase
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditShelfIntroduction(
-        [FromForm] Library_EditIntroductionFormModel formModel)
+        [FromForm] Library_EditIntroduction_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -1301,7 +1301,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditDocumentParentShelves([FromBody]
-    Library_DocumentParentShelvesFormModel formModel)
+    Library_DocumentParentShelves_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -1347,12 +1347,12 @@ public class LibraryController : ControllerBase
             {
                 shelf.Guid,
                 shelf.Title,
-                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief()
+                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
                 {
                     Guid = shelfLib.Guid,
                     Title = shelfLib.Title,
                 }).ToArray(),
-                Documents = shelf.Documents.Select(doc => new Library_DocumentBrief()
+                Documents = shelf.Documents.Select(doc => new Library_DocumentBrief_ViewModel()
                 {
                     Guid = doc.Guid,
                     Title = doc.Title,
@@ -1369,7 +1369,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditShelfParentLibraries([FromBody]
-    Library_ShelfParentLibrariesFormModel formModel)
+    Library_ShelfParentLibraries_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -1425,9 +1425,9 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetOwnerModel([FromQuery][StringLength(32)] string ownerGuid)
     {
-        Library_OwnerModel? ownerModel = await userManager.Users
+        Library_Owner_ViewModel? ownerModel = await userManager.Users
         .Where(u => u.UserGuid == ownerGuid)
-        .Select(user => new Library_OwnerModel()
+        .Select(user => new Library_Owner_ViewModel()
         {
             HasImage = user.HasImage,
             IntegrityVersion = user.IntegrityVersion,
@@ -1448,9 +1448,9 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUserProfileInfo([FromQuery][StringLength(32)] string userGuid)
     {
-        Library_UserProfileInfo? userProfileInfo = await libraryDb.Owners
+        Library_OwnerProfileStatics_ViewModel? userProfileInfo = await libraryDb.Owners
         .Where(o => o.Guid == userGuid)
-        .Select(o => new Library_UserProfileInfo()
+        .Select(o => new Library_OwnerProfileStatics_ViewModel()
         {
             NumberOfDocuments = o.Documents.Count(),
             NumberOfFavoriteDocuments = o.FavoriteDocuments.Count,
@@ -1571,9 +1571,9 @@ public class LibraryController : ControllerBase
 
         List<string> followersGuids = [.. followersGuids_MutualsWithMyFollowings, .. followersGuids_Others];
 
-        Library_OwnerModel[] followers_OwnerModel = await userManager.Users
+        Library_Owner_ViewModel[] followers_OwnerModel = await userManager.Users
         .Where(user => followersGuids.Contains(user.UserGuid))
-        .Select(user => new Library_OwnerModel()
+        .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
             HasImage = user.HasImage,
@@ -1677,9 +1677,9 @@ public class LibraryController : ControllerBase
 
         List<string> followingsGuids = [.. followingsGuids_MutualsWithMyFollowings, .. followingsGuids_Others];
 
-        Library_OwnerModel[] followings_OwnerModel = await userManager.Users
+        Library_Owner_ViewModel[] followings_OwnerModel = await userManager.Users
         .Where(user => followingsGuids.Contains(user.UserGuid))
-        .Select(user => new Library_OwnerModel()
+        .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
             HasImage = user.HasImage,
@@ -1814,8 +1814,8 @@ public class LibraryController : ControllerBase
         .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
         .ToListAsync();
 
-        Library_OwnerModel[] usersInFavorOf = usersInFavorOf_DbModels
-        .Select(user => new Library_OwnerModel()
+        Library_Owner_ViewModel[] usersInFavorOf = usersInFavorOf_DbModels
+        .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
             HasImage = user.HasImage,
@@ -1845,8 +1845,8 @@ public class LibraryController : ControllerBase
         .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
         .ToListAsync();
 
-        Library_OwnerModel[] usersInFavorOf = usersInFavorOf_DbModels
-        .Select(user => new Library_OwnerModel()
+        Library_Owner_ViewModel[] usersInFavorOf = usersInFavorOf_DbModels
+        .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
             HasImage = user.HasImage,
@@ -1876,8 +1876,8 @@ public class LibraryController : ControllerBase
         .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
         .ToListAsync();
 
-        Library_OwnerModel[] usersInFavorOf = usersInFavorOf_DbModels
-        .Select(user => new Library_OwnerModel()
+        Library_Owner_ViewModel[] usersInFavorOf = usersInFavorOf_DbModels
+        .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
             HasImage = user.HasImage,
@@ -1997,7 +1997,7 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditDocumentTags([FromForm] Library_EditTagsFormModel formModel)
+    public async Task<IActionResult> EditDocumentTags([FromForm] Library_EditTags_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
@@ -2298,11 +2298,11 @@ public class LibraryController : ControllerBase
         //seed
         await libraryProcess.Update_RelatedVersionsSeed(baseDocumentDbModel.RelatedVersions.Guid, libraryDb);
 
-        Library_VersionBrief[] versionBriefs = await libraryDb.RelatedVersions
+        Library_VersionBrief_ViewModel[] versionBriefs = await libraryDb.RelatedVersions
         .Where(rv => rv.Guid == baseDocumentDbModel.RelatedVersions.Guid)
         .Include(rv => rv.Documents)
         .SelectMany(rv => rv.Documents)
-        .Select(doc => new Library_VersionBrief()
+        .Select(doc => new Library_VersionBrief_ViewModel()
         {
             DocumentGuid = doc.Guid,
             VersionName = doc.Version,

@@ -30,9 +30,9 @@ export class EditIntroduction {
 
   introductionForm = new FormGroup({
     title: new FormControl(this.data.title, {nonNullable:true, validators: [Validators.required, 
-      Validators.maxLength(this.singletonModes.introductionTitleMaxLength()),
-      Validators.minLength(this.singletonModes.introductionTitleMinLength())]}),
-    description: new FormControl(this.data.description, {nonNullable:true,validators: Validators.maxLength(this.singletonModes.introductionDescriptionMaxLength())}),
+      Validators.maxLength(this.singletonModes.introductionTitle_MaxLength()),
+      Validators.minLength(this.singletonModes.introductionTitle_MinLength())]}),
+    description: new FormControl(this.data.description, {nonNullable:true,validators: Validators.maxLength(this.singletonModes.introductionDescription_MaxLength())}),
     image: new FormControl<File|null>(null),
   });
   title = this.introductionForm.get("title");
@@ -48,11 +48,11 @@ export class EditIntroduction {
 
   constructor(){
     if(this.data.introductionOf === "document"){
-      this.imageMaxSize.set(this.singletonModes.documentIntroductionImageMaxSize())
+      this.imageMaxSize.set(this.singletonModes.documentIntroductionImage_MaxSize())
     }
     else if(this.data.introductionOf === "library" ||
       this.data.introductionOf === "shelf"){
-        this.imageMaxSize.set(this.singletonModes.libraryShelfIntroductionImageMaxSize())
+        this.imageMaxSize.set(this.singletonModes.libraryShelfIntroductionImage_MaxSize())
     }
     effect(() => {
       if(this.identityService.userModel()){

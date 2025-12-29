@@ -292,7 +292,7 @@ public class Library_DbContext : DbContext
 //*********************************** Processes **********************************
 public class Library_Process //singleton service
 {
-    //readonly DirectoryInfo Storage_Owners;
+    readonly DirectoryInfo Storage_Owners;
     public readonly DirectoryInfo Storage_Libraries;
     public readonly DirectoryInfo Storage_Shelves;
     public readonly DirectoryInfo Storage_Documents;
@@ -306,7 +306,7 @@ public class Library_Process //singleton service
     IConfiguration config*/)
     {
         //SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
-        //Storage_Owners = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Owners"));
+        Storage_Owners = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Owners"));
         Storage_Libraries = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
         Storage_Shelves = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
         Storage_Documents = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Documents"));
@@ -607,20 +607,11 @@ public class Library_Process //singleton service
         List<Library_ShelfDbModel> parentShelves = [];
         if (formModel.ShelfGuids is not null && formModel.ShelfGuids.Length > 0)
         {
-            List<Guid> shelfGuids = [];
-            foreach (string shelfStringGuid in formModel.ShelfGuids)
-            {
-                if (Guid.TryParseExact(shelfStringGuid, "N", out Guid shelfGuid))
-                {
-                    shelfGuids.Add(shelfGuid);
-                }
-            }
-
             parentShelves = await libraryDb.Owners
             .AsNoTracking()//not necessary, yet harmless
             .Where(o => o.Id == ownerInfo.Id)
             .SelectMany(o => o.Shelves)
-            .Where(shelf => shelfGuids.Contains(shelf.Guid))
+            .Where(shelf => formModel.ShelfGuids.Contains(shelf.Guid))
             .Select(shelf => new Library_ShelfDbModel()
             {
                 Id = shelf.Id,
@@ -686,17 +677,8 @@ public class Library_Process //singleton service
             return processResult;
         }
 
-        if (!Guid.TryParseExact(formModel.DocumentGuid, "N", out Guid documentGuid))
-        {
-            return new Library_ProcessResult()
-            {
-                ErrorTitle = "Guid Parse",
-                ErrorDescription = "Couldn't parse string to guid",
-            };
-        }
-
         var documentId = await libraryDb.Documents
-        .Where(doc => doc.Guid == documentGuid)
+        .Where(doc => doc.Guid == formModel.DocumentGuid)
         .Select(doc => new { doc.Id })
         .FirstOrDefaultAsync();
         if (documentId is null)
@@ -732,7 +714,7 @@ public class Library_Process //singleton service
             await libraryDb.SaveChangesAsync();
 
             //reorder elements
-            await ReorderElements(libraryDb, documentGuid);
+            await ReorderElements(libraryDb, formModel.DocumentGuid);
 
             //seed
             //await Update_ElementSeed(elementDbmodel.Guid, libraryDb);
@@ -773,7 +755,7 @@ public class Library_Process //singleton service
             }
 
             //reorder elements
-            await ReorderElements(libraryDb, documentGuid);
+            await ReorderElements(libraryDb, formModel.DocumentGuid);
 
             //seed
             //await Update_ElementSeed(elementDbmodel.Guid, libraryDb);
@@ -829,6 +811,89 @@ public class Library_Process //singleton service
             Success = true,
             ResultObject = elementsDbModels,
         };
+    }
+
+
+    //************************************ storage **********************************
+    public void Delete_OwnerDirectory(string dbModelGuid)
+    {
+        string directoryPath = Path.Combine(Storage_Owners.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+            }
+        }
+    }
+    public void Delete_LibraryDirectory(string dbModelGuid)
+    {
+        string directoryPath = Path.Combine(Storage_Libraries.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+            }
+        }
+    }
+    public void Delete_ShelfDirectory(string dbModelGuid)
+    {
+        string directoryPath = Path.Combine(Storage_Shelves.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+            }
+        }
+    }
+    public void Delete_DocumentDirectory(string dbModelGuid)
+    {
+        string directoryPath = Path.Combine(Storage_Documents.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+            }
+        }
+    }
+    public void Delete_ElementDirectory(string dbModelGuid)
+    {
+        string directoryPath = Path.Combine(Storage_Elements.FullName, dbModelGuid);
+        if (Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** {e.Message} *****");
+            }
+        }
     }
 
 
@@ -1330,8 +1395,8 @@ public class Library_Process //singleton service
             }
         }
 
-
         //************************************ seed DB **********************************
+    
         public async Task SeedLibraryDb(Library_DbContext libraryDb)
         {
             await Seed_OwnersToDb(libraryDb);
@@ -1810,7 +1875,7 @@ public class Library_TagSeedModel
 //************************************ View Models ********************************
 public class Library_Owner_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Username { get; set; } = null!;
     public int IntegrityVersion { get; set; } = 0;
     public bool HasImage { get; set; } = false;
@@ -1828,22 +1893,22 @@ public class Library_OwnerProfileStatics_ViewModel
 }
 public class Library_LibraryCard_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string[] ShelvesTitles { get; set; } = [];
     public bool HasImage { get; set; } = false;
     public int IntegrityVersion { get; set; }
     //public string OwnerUsername { get; set; } = null!;
-    public string OwnerGuid { get; set; } = null!;
+    public Guid OwnerGuid { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsDefault { get; set; }
 
 }
 public class Library_ShelfCard_ViewModel
 {
-    public string Guid { get; set; } = null!;
-    public string OwnerGuid { get; set; } = null!;
+    public Guid Guid { get; set; }
+    public Guid OwnerGuid { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
     public Library_LibraryBrief_ViewModel[] Libraries { get; set; } = [];
@@ -1856,18 +1921,18 @@ public class Library_ShelfCard_ViewModel
 }
 public class Library_DocumentCard_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!;
     public string[] Headers { get; set; } = [];
     public bool HasImage { get; set; }
     public int IntegrityVersion { get; set; }
-    public string OwnerGuid { get; set; } = null!;
+    public Guid OwnerGuid { get; set; }
     public string? VersionName { get; set; } = null;
 }
 public class Library_DocumentPage_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public Library_OwnerBrief_ViewModel Owner { get; set; } = null!;
     //public Library_LibraryBrief Library { get; set; } = null!;//could be 
     public string Title { get; set; } = null!;
@@ -1883,8 +1948,8 @@ public class Library_DocumentPage_ViewModel
 }
 public class Library_Element_ViewModel
 {
-    public string Guid { get; set; } = null!;
-    public string OwnerGuid { get; set; } = null!;
+    public Guid Guid { get; set; }
+    public Guid OwnerGuid { get; set; }
     public string Type { get; set; } = null!;
     public string Value { get; set; } = null!;
     public string? Title { get; set; }
@@ -1893,7 +1958,7 @@ public class Library_Element_ViewModel
 }
 public class Library_ShelfBrief_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Title { get; set; } = null!;
     public Library_LibraryBrief_ViewModel[] Libraries { get; set; } = [];
     //public Library_OwnerBrief Owner { get; set; } = null!;
@@ -1901,22 +1966,22 @@ public class Library_ShelfBrief_ViewModel
 }
 public class Library_DocumentBrief_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Title { get; set; } = null!;
 }
 public class Library_VersionBrief_ViewModel
 {
-    public string DocumentGuid { get; set; } = null!;
+    public Guid DocumentGuid { get; set; }
     public string VersionName { get; set; } = null!;
 }
 public class Library_OwnerBrief_ViewModel
 {
-    public string UserGuid { get; set; } = null!;
+    public Guid UserGuid { get; set; }
     public string UserName { get; set; } = "_";
 }
 public class Library_LibraryBrief_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Title { get; set; } = null!;
 }
 
@@ -1953,8 +2018,9 @@ public class Library_NewDocument_FormModel
     [StringLength(500)]
     public string Description { get; set; } = null!;
 
-    [MaxStringArrayLength(100, 32)]
-    public string[]? ShelfGuids { get; set; } = null;
+    //[MaxStringArrayLength(100, 32)]
+    [MaxLength(100)]
+    public Guid[]? ShelfGuids { get; set; } = null;
 
     public IFormFile? Image { get; set; }
 }
@@ -1971,16 +2037,16 @@ public class Library_NewElement_FormModel
 
     public int Order { get; set; }
 
-    [StringLength(32)]
-    public string DocumentGuid { get; set; } = null!;
+    //[StringLength(32)]
+    public Guid DocumentGuid { get; set; }
 
     public IFormFile? File { get; set; }
 }
 
 public class Library_EditElement_FormModel
 {
-    [StringLength(32)]
-    public string Guid { get; set; } = null!;
+    //[StringLength(32)]
+    public Guid Guid { get; set; }
 
     [StringLength(1000)]
     public string? Value { get; set; } = null!;
@@ -1995,8 +2061,8 @@ public class Library_EditElement_FormModel
 
 public class Library_EditIntroduction_FormModel
 {
-    [StringLength(32)]
-    public string Guid { get; set; } = null!;
+    //[StringLength(32)]
+    public Guid Guid { get; set; }
 
     [StringLength(60, MinimumLength = 3)]
     public string Title { get; set; } = null!;
@@ -2009,25 +2075,27 @@ public class Library_EditIntroduction_FormModel
 
 public class Library_DocumentParentShelves_FormModel
 {
-    [StringLength(32)]
-    public string DocumentGuid { get; set; } = null!;
+    //[StringLength(32)]
+    public Guid DocumentGuid { get; set; }
 
-    [MaxStringArrayLength(100, 32)]
-    public string[] ShelfGuids { get; set; } = [];
+    //[MaxStringArrayLength(100, 32)]
+    [MaxLength(100)]
+    public Guid[] ShelfGuids { get; set; } = [];
 }
 public class Library_ShelfParentLibraries_FormModel
 {
-    [StringLength(32)]
-    public string ShelfGuid { get; set; } = null!;
+    //[StringLength(32)]
+    public Guid ShelfGuid { get; set; }
 
-    [MaxStringArrayLength(100, 32)]
-    public string[] LibraryGuids { get; set; } = [];
+    //[MaxStringArrayLength(100, 32)]
+    [MaxLength(100)]
+    public Guid[] LibraryGuids { get; set; } = [];
 }
 
 public class Library_EditTags_FormModel
 {
-    [StringLength(32)]
-    public string DocumentGuid { get; set; } = null!;
+    //[StringLength(32)]
+    public Guid DocumentGuid { get; set; }
 
     [MaxStringArrayLength(32, 32)]
     [TagCharactersValidator]

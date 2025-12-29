@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using AspNetCoreApp.Models;
+using AspNetCoreApp.Filters;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -228,10 +229,18 @@ public class Program
         builder.Services.AddControllersWithViews(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
+        })
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new GuidJsonConverter());
         });
         builder.Services.AddControllers(options =>
         {
             options.Filters.Add(new RequireHttpsAttribute());
+        })
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new GuidJsonConverter());
         });
 
         //******************* IHttpClientFactory *******************

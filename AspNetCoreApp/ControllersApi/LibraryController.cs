@@ -44,10 +44,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List([FromQuery][StringLength(32)] string ownerGuid)
     {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_LibraryCard_ViewModel[] libraryCardModels = await libraryDb.Owners
-        .Where(owner => owner.Guid == ownerGuid)
-        .Include(owner => owner.Libraries)
-        .ThenInclude(lib => lib.Shelves)
+        .Where(owner => owner.Guid == ownerGuid_Guid)
         .SelectMany(owner => owner.Libraries)
         .Select(lib => new Library_LibraryCard_ViewModel()
         {
@@ -61,7 +65,6 @@ public class LibraryController : ControllerBase
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
-        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(libraryCardModels);
@@ -70,8 +73,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> LibrariesGuids([FromQuery][StringLength(32)] string ownerGuid)
     {
-        string[] userLibrariesGuids = await libraryDb.Owners
-        .Where(o => o.Guid == ownerGuid)
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] userLibrariesGuids = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
         .SelectMany(o => o.Libraries)
         .Select(lib => lib.Guid)
         .ToArrayAsync();
@@ -82,10 +91,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> LibraryModel([FromQuery][StringLength(32)] string libraryGuid)
     {
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_LibraryCard_ViewModel? libraryCardModel = await libraryDb.Libraries
-        .Include(lib => lib.Shelves)
-        .Include(lib => lib.Owner)
-        .Where(lib => lib.Guid == libraryGuid)
+        .Where(lib => lib.Guid == libraryGuid_Guid)
         .Select(lib => new Library_LibraryCard_ViewModel()
         {
             Guid = lib.Guid,
@@ -98,7 +111,6 @@ public class LibraryController : ControllerBase
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
-        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (libraryCardModel is null)
@@ -125,66 +137,86 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
-        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
-        .Include(lib => lib.Owner)
-        .ThenInclude(owner => owner.Libraries)
-        .Include(lib => lib.Shelves)
-        .ThenInclude(shelf => shelf.ParentLibraries)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
-        if (libraryDbModel is null)
+        var libraryInfo = await libraryDb.Libraries
+        .Where(lib => lib.Guid == libraryGuid_Guid)
+        .Select(lib => new
+        {
+            id = lib.Id,
+            ownerGuid = lib.Owner.Guid,
+            isDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
+            ownerDefaultLibraryId = lib.Owner.Libraries
+                .Where(ownerLibs => ownerLibs.Guid == lib.Owner.DefaultLibraryGuid)
+                .Select(ownerLibs => ownerLibs.Id)
+                .First(),
+            shelvesInfo = lib.Shelves
+                .Select(shelf => new
+                {
+                    id = shelf.Id,
+                    numberOfParentLibs = shelf.ParentLibraries.Count,
+                })
+                .ToArray(),
+        })
+        .FirstOrDefaultAsync();
+
+        if (libraryInfo is null)
         {
             ModelState.AddModelError("Guid", $"Couldn't find any library with guid '{libraryGuid}'!");
             return BadRequest(ModelState);
         }
 
-        string userGuid = (await userManager.Users
+        Guid myGuid = (await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstOrDefaultAsync())!;
-        if (userGuid != libraryDbModel.Owner.Guid)
+
+        if (myGuid != libraryInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner can delete the library!");
             return BadRequest(ModelState);
         }
 
-        if (libraryDbModel.Guid == libraryDbModel.Owner.DefaultLibraryGuid)
+        if (libraryInfo.isDefault)
         {
             ModelState.AddModelError("Default Library", $"Cannot Delete default library");
             return BadRequest(ModelState);
         }
 
-        //default library
-        var defaultLibrary = libraryDbModel.Owner.Libraries
-        .FirstOrDefault(lib => lib.Guid == libraryDbModel.Owner.DefaultLibraryGuid)!;
+        //delete library
+        await libraryDb.Libraries.Where(lib => lib.Id == libraryInfo.id).ExecuteDeleteAsync();
 
-        //remove the library
-        libraryDb.Libraries.Remove(libraryDbModel);
-        await libraryDb.SaveChangesAsync();
+        //delete from storage
+        libraryProcess.Delete_LibraryDirectory(libraryGuid);
 
-        //seed
-        libraryProcess.Delete_LibraryDirectory(libraryDbModel.Guid);
+        //create default library
+        Library_LibraryDbModel defaultLibrary = new() { Id = libraryInfo.ownerDefaultLibraryId };
 
-        //set the delault library as the parent of its non-parent shelves
-        foreach (var shelf in libraryDbModel.Shelves)
+        //attach default library
+        libraryDb.Libraries.Attach(defaultLibrary);
+
+        //set the delault library as the parent of the non-parent shelves
+        foreach (var shelfInfo in libraryInfo.shelvesInfo)
         {
-            if (shelf.ParentLibraries.Count == 0)
+            if (shelfInfo.numberOfParentLibs == 1)
             {
-                shelf.ParentLibraries = [defaultLibrary];
+                //create
+                Library_ShelfDbModel shelfDbModel = new() { Id = shelfInfo.id };
+                //attach
+                libraryDb.Shelves.Attach(shelfDbModel);
+                //edit
+                shelfDbModel.ParentLibraries.Add(defaultLibrary);
+                //modified
+                libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf.ParentLibraries).IsModified = true;
             }
         }
+        libraryDb.Libraries.Entry(defaultLibrary).Property(lib => lib.Shelves).IsModified = true;
+        //save
         await libraryDb.SaveChangesAsync();
-
-        //seed
-        string[] shelvesGuids = libraryDbModel.Shelves.Select(sh => sh.Guid).ToArray();
-        await libraryProcess.Update_ShelvesSeeds(shelvesGuids, libraryDb);
-
-        DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Libraries.FullName, libraryDbModel.Guid));
-        if (libraryDirectoryInfo.Exists)
-        {
-            libraryDirectoryInfo.Delete(true);
-        }
 
         return Ok(new { success = true });
     }
@@ -196,12 +228,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfList([FromQuery][StringLength(32)] string libraryGuid)
     {
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_ShelfCard_ViewModel[] shelfCardModels = await libraryDb.Libraries
-        .Include(lib => lib.Owner)
-        .Include(lib => lib.Shelves)
-            .ThenInclude(shelf => shelf.Documents)
-                .ThenInclude(doc => doc.Elements)
-        .Where(lib => lib.Guid == libraryGuid)
+        .Where(lib => lib.Guid == libraryGuid_Guid)
         .SelectMany(lib => lib.Shelves)
         .Select(shelf => new Library_ShelfCard_ViewModel()
         {
@@ -234,7 +268,6 @@ public class LibraryController : ControllerBase
             IntegrityVersion = shelf.IntegrityVersion,
             IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
         })
-        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(shelfCardModels);
@@ -243,8 +276,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelvesGuids([FromQuery][StringLength(32)] string libraryGuid)
     {
-        string[] shelfGuids = await libraryDb.Libraries
-        .Where(lib => lib.Guid == libraryGuid)
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] shelfGuids = await libraryDb.Libraries
+        .Where(lib => lib.Guid == libraryGuid_Guid)
         .SelectMany(lib => lib.Shelves)
         .Select(shelf => shelf.Guid)
         .ToArrayAsync();
@@ -255,12 +294,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> UserShelfList([FromQuery][StringLength(32)] string ownerGuid)
     {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         var userShelfModels = await libraryDb.Owners
-        .Include(owner => owner.Shelves)
-            .ThenInclude(shelf => shelf.ParentLibraries)
-        .Include(owner => owner.Shelves)
-            .ThenInclude(shelf => shelf.Documents)
-        .Where(owner => owner.Guid == ownerGuid)
+        .Where(owner => owner.Guid == ownerGuid_Guid)
         .SelectMany(owner => owner.Shelves)
         .Select(shelf => new
         {
@@ -277,7 +318,6 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
             }).ToArray(),
         })
-        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(userShelfModels);
@@ -286,12 +326,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfModel([FromQuery][StringLength(32)] string shelfGuid)
     {
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_ShelfCard_ViewModel? shelfCardModel = await libraryDb.Shelves
-        .Include(shelf => shelf.Owner)
-        .Include(shelf => shelf.ParentLibraries)
-        .Include(shelf => shelf.Documents)
-            .ThenInclude(doc => doc.Elements)
-        .Where(shelf => shelf.Guid == shelfGuid)
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .Select(shelf => new Library_ShelfCard_ViewModel()
         {
             CreatedAt = shelf.CreatedAt,
@@ -323,7 +365,6 @@ public class LibraryController : ControllerBase
             IntegrityVersion = shelf.IntegrityVersion,
             IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
         })
-        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
 
@@ -351,73 +392,90 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
-        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
-        .Include(shelf => shelf.Owner)
-            .ThenInclude(owner => owner.Shelves)
-        .Include(shelf => shelf.Documents)
-            .ThenInclude(doc => doc.ParentShelves)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
-        if (shelfDbModel is null)
+        var shelfDbInfo = await libraryDb.Shelves
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
+        .Select(shelf => new
+        {
+            id = shelf.Id,
+            ownerGuid = shelf.Owner.Guid,
+            isDefaultShelf = shelf.Guid == shelf.Owner.DefaultShelfGuid,
+            ownerDefaultShelfId = shelf.Owner.Shelves
+                .Where(sh => sh.Guid == shelf.Owner.DefaultShelfGuid)
+                .Select(sh => sh.Id)
+                .First(),
+            documentsInfo = shelf.Documents.Select(doc => new
+            {
+                id = doc.Id,
+                numberOfParentShelves = doc.ParentShelves.Count,
+            }),
+        })
+        .FirstOrDefaultAsync();
+
+        if (shelfDbInfo is null)
         {
             ModelState.AddModelError("Guid", "Couldn't find the specified shelf!");
             return BadRequest(ModelState);
         }
 
-        string userGuid = (await userManager.Users
+        Guid userGuid = (await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstOrDefaultAsync())!;
-        if (userGuid != shelfDbModel.Owner.Guid)
+        if (userGuid != shelfDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner can delete the shelf!");
             return BadRequest(ModelState);
         }
 
-        if (shelfDbModel.Guid == shelfDbModel.Owner.DefaultShelfGuid)
+        if (shelfDbInfo.isDefaultShelf)
         {
             ModelState.AddModelError("Default Shelf", "Cannot delete the default shelf!");
             return BadRequest(ModelState);
         }
 
-        //default shelf
-        var defaultShelf = shelfDbModel.Owner.Shelves
-        .FirstOrDefault(shelf => shelf.Guid == shelfDbModel.Owner.DefaultShelfGuid)!;
-
         //remove the shelf
-        libraryDb.Shelves.Remove(shelfDbModel);
-        await libraryDb.SaveChangesAsync();
+        await libraryDb.Shelves.Where(shelf => shelf.Id == shelfDbInfo.id).ExecuteDeleteAsync();
 
-        //seed
-        libraryProcess.Delete_ShelfDirectory(shelfDbModel.Guid);
+        //remove fromstorage
+        libraryProcess.Delete_ShelfDirectory(shelfGuid);
+
+        //create
+        Library_ShelfDbModel defaultShelf = new() { Id = shelfDbInfo.ownerDefaultShelfId };
+
+        //attach
+        libraryDb.Shelves.Attach(defaultShelf);
 
         //set the default shelf as the parent of its non-parent documents
-        foreach (var doc in shelfDbModel.Documents)
+        foreach (var docInfo in shelfDbInfo.documentsInfo)
         {
-            if (doc.ParentShelves.Count == 0)
+            if (docInfo.numberOfParentShelves == 1)
             {
-                doc.ParentShelves = [defaultShelf];
+                //create
+                Library_DocumentDbModel documentDbModel = new() { Id = docInfo.id };
+                //attach
+                libraryDb.Documents.Attach(documentDbModel);
+                //edit
+                documentDbModel.ParentShelves.Add(defaultShelf);
+                //modified
+                libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.ParentShelves).IsModified = true;
             }
         }
+        libraryDb.Shelves.Entry(defaultShelf).Property(shelf => shelf.Documents).IsModified = true;
+        //save
         await libraryDb.SaveChangesAsync();
-
-        //seed
-        string[] documentsGuids = shelfDbModel.Documents.Select(doc => doc.Guid).ToArray();
-        await libraryProcess.Update_DocumentsSeeds(documentsGuids, libraryDb);
-
-        DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(Path.Combine(Storage_Shelves.FullName, shelfDbModel.Guid));
-        if (shelfDirectoryInfo.Exists)
-        {
-            shelfDirectoryInfo.Delete(true);
-        }
 
         return Ok(new { success = true });
     }
 
 
 
-
+    //******************** done till here *************
 
     [HttpGet]
     public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)

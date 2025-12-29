@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace UploadLargeFormFile.Filters;
+namespace AspNetCoreApp.Filters;
 
 public class GenerateAntiforgeryTokenCookieAttribute : ResultFilterAttribute
 {

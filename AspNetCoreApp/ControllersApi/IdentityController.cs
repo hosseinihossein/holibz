@@ -140,11 +140,11 @@ public class IdentityController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUserModel([FromQuery][StringLength(32)] string userStringGuid)
+    public async Task<IActionResult> GetUserModel([FromQuery][StringLength(32)] string userGuid)
     {
         if (ModelState.IsValid)
         {
-            if (!Guid.TryParseExact(userStringGuid, "N", out Guid userGuid))
+            if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
             {
                 ModelState.AddModelError("Try Parse Guid", "Couldn't parse the specified string guid!");
                 return BadRequest(ModelState);
@@ -152,7 +152,7 @@ public class IdentityController : ControllerBase
 
             Identity_UserProfile_ViewModel? userProfile_ViewModel =
             await userManager.Users
-            .Where(u => u.UserGuid == userGuid)
+            .Where(u => u.UserGuid == userGuid_Guid)
             .Select(u => new Identity_UserProfile_ViewModel()
             {
                 Guid = u.UserGuid.ToString("N"),

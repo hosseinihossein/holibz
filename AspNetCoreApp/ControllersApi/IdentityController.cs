@@ -20,8 +20,8 @@ public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
-    //readonly DirectoryInfo usersImagesDirectoryInfo;
-    readonly Identity_Process identityProcess;
+    readonly Identity_DbContext identityDb;
+    //readonly Identity_Process identityProcess;
     readonly DirectoryInfo Storage_Users;
 
 
@@ -29,14 +29,14 @@ public class IdentityController : ControllerBase
 
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager,
-    UserManager<Identity_UserDbModel> userManager, Identity_Process identityProcess)
+    UserManager<Identity_UserDbModel> userManager, Identity_Process identityProcess,
+    Identity_DbContext identityDb)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
-        this.identityProcess = identityProcess;
+        //this.identityProcess = identityProcess;
         Storage_Users = identityProcess.Storage_Users;
-        //usersImagesDirectoryInfo =
-        //Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Storage", "Identity", "UsersImages"));
+        this.identityDb = identityDb;
     }
 
 
@@ -110,9 +110,9 @@ public class IdentityController : ControllerBase
                             {
                                 token,
                                 expiresInHours = jwtSettings["DurationInHours"] ?? "10",
-                                user = new Identity_UserProfileModel()
+                                user = new Identity_UserProfile_ViewModel()
                                 {
-                                    Guid = user.UserGuid,
+                                    Guid = user.UserGuid.ToString("N"),
                                     Username = user.UserName!,
                                     Description = user.Description,
                                     Email = user.Email!,
@@ -140,40 +140,37 @@ public class IdentityController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUserModel([FromQuery][StringLength(32)] string userGuid)
+    public async Task<IActionResult> GetUserModel([FromQuery][StringLength(32)] string userStringGuid)
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel? user =
-            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
-            if (user is null)
+            if (!Guid.TryParseExact(userStringGuid, "N", out Guid userGuid))
+            {
+                ModelState.AddModelError("Try Parse Guid", "Couldn't parse the specified string guid!");
+                return BadRequest(ModelState);
+            }
+
+            Identity_UserProfile_ViewModel? userProfile_ViewModel =
+            await userManager.Users
+            .Where(u => u.UserGuid == userGuid)
+            .Select(u => new Identity_UserProfile_ViewModel()
+            {
+                Guid = u.UserGuid.ToString("N"),
+                Username = u.UserName!,
+                Description = u.Description,
+                Email = u.DisplayEmailPublicly ? u.Email! : null,
+                HasImage = u.HasImage,
+                IntegrityVersion = u.IntegrityVersion,
+            })
+            .FirstOrDefaultAsync();
+
+            if (userProfile_ViewModel is null)
             {
                 ModelState.AddModelError("user", "the specified user Not found!");
                 return BadRequest(ModelState);
             }
-            if (user.DisplayEmailPublicly)
-            {
-                return Ok(new Identity_UserProfileModel()
-                {
-                    Guid = user.UserGuid,
-                    Username = user.UserName!,
-                    Description = user.Description,
-                    Email = user.Email!,
-                    HasImage = user.HasImage,
-                    IntegrityVersion = user.IntegrityVersion,
-                });
-            }
-            else
-            {
-                return Ok(new Identity_UserProfileModel()
-                {
-                    Guid = user.UserGuid,
-                    Username = user.UserName!,
-                    Description = user.Description,
-                    HasImage = user.HasImage,
-                    IntegrityVersion = user.IntegrityVersion,
-                });
-            }
+
+            return Ok(userProfile_ViewModel);
         }
         return BadRequest(ModelState);
     }
@@ -216,7 +213,7 @@ public class IdentityController : ControllerBase
                 IdentityResult result = await userManager.CreateAsync(user, signupModel.Password);
                 if (result.Succeeded)
                 {
-                    _ = SendEmailValidationLink(user, emailSender);// commented out for development 
+                    _ = SendEmailValidationLink(user, emailSender);
 
                     return Ok(new { success = true });
                 }
@@ -232,7 +229,8 @@ public class IdentityController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> CheckUsername([FromQuery][StringLength(60)] string username)
     {
-        bool userExist = await userManager.Users.AnyAsync(u => u.NormalizedUserName == userManager.NormalizeName(username));
+        bool userExist = await userManager.Users
+        .AnyAsync(u => u.NormalizedUserName == userManager.NormalizeName(username));
         return Ok(new { isTaken = userExist });
     }
 
@@ -301,7 +299,18 @@ public class IdentityController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+            //fetch and create
+            Identity_UserDbModel user = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => new Identity_UserDbModel()
+            {
+                Id = u.Id,
+            })
+            .FirstAsync();
+
+            //attach
+            identityDb.Users.Attach(user);
+
             var result = await userManager.SetUserNameAsync(user, model.Username);
             if (result.Succeeded)
             {
@@ -319,7 +328,7 @@ public class IdentityController : ControllerBase
     }
     public class UsernameModel
     {
-        [StringLength(60, MinimumLength = 8)]
+        [StringLength(60, MinimumLength = 3)]
         public string Username { get; set; } = string.Empty;
     }
 
@@ -389,36 +398,7 @@ public class IdentityController : ControllerBase
 
 
 
-    /*
-        private async Task<string?> GetUserImageAddress(string userGuid)
-        {
-            Identity_UserDbModel? user = await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
-            if (user is null)
-            {
-                return null;
-            }
 
-            string userImagePath =
-            Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
-            if (System.IO.File.Exists(userImagePath))
-            {
-                return $"/api/Identity/UserImage?userGuid={user.UserGuid}&v={user.IntegrityVersion}";
-            }
-
-            return null;
-        }
-        private string? GetUserImageAddressWithVersion(string userGuid, int version)
-        {
-            string userImagePath =
-            Path.Combine(Storage_Users.FullName, userGuid, "image");
-            if (System.IO.File.Exists(userImagePath))
-            {
-                return $"/api/Identity/UserImage?userGuid={userGuid}&v={version}";
-            }
-
-            return null;
-        }
-    */
     [HttpGet]
     public IActionResult UserImage([FromQuery][StringLength(32)] string userGuid)
     {
@@ -436,26 +416,46 @@ public class IdentityController : ControllerBase
     [Authorize]
     [RequestSizeLimit(128 * 1024)]//128 KB
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitUserImage(UserImageFileModel model)
+    public async Task<IActionResult> SubmitUserImage([FromForm] UserImageFile_FormModel formModel)
     {
         if (ModelState.IsValid)
         {
-            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+            //fetch and create
+            Identity_UserDbModel user = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+            .Select(u => new Identity_UserDbModel()
+            {
+                Id = u.Id,
+                UserGuid = u.UserGuid,
+            })
+            .FirstAsync();
+
             string userImagePath =
-            Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
+            Path.Combine(Storage_Users.FullName, user.UserGuid.ToString("N"), "image");
             using (FileStream fs = System.IO.File.Create(userImagePath))
             {
-                await model.UserImageFile.CopyToAsync(fs);
+                await formModel.UserImageFile.CopyToAsync(fs);
             }
+
+            //attach user
+            identityDb.Users.Attach(user);
+
+            //edit user
             user.HasImage = true;
             user.IntegrityVersion++;
-            await userManager.UpdateAsync(user);
+
+            //set user hasImage and _integrityVersion as modified
+            identityDb.Users.Entry(user).Property(u => u.HasImage).IsModified = true;
+            identityDb.Users.Entry(user).Property(u => u._integrityVersion).IsModified = true;
+
+            //save
+            await identityDb.SaveChangesAsync();
 
             return Ok(new { success = true, user.HasImage, user.IntegrityVersion });
         }
         return BadRequest(ModelState);
     }
-    public class UserImageFileModel
+    public class UserImageFile_FormModel
     {
         public IFormFile UserImageFile { get; set; } = null!;
     }
@@ -465,16 +465,35 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteUserImage()
     {
-        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        //fetch and create
+        Identity_UserDbModel user = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(u => new Identity_UserDbModel()
+        {
+            Id = u.Id,
+            UserGuid = u.UserGuid,
+        })
+        .FirstAsync();
+
         string userImagePath =
-        Path.Combine(Storage_Users.FullName, user.UserGuid, "image");
+        Path.Combine(Storage_Users.FullName, user.UserGuid.ToString("N"), "image");
 
         if (System.IO.File.Exists(userImagePath))
         {
             System.IO.File.Delete(userImagePath);
+
+            //attach user
+            identityDb.Users.Attach(user);
+
+            //edit user
             user.HasImage = false;
             user.IntegrityVersion = 0;
-            await userManager.UpdateAsync(user);
+
+            //set user hasImage and _integrityVersion as modified
+            identityDb.Users.Entry(user).Property(u => u.HasImage).IsModified = true;
+            identityDb.Users.Entry(user).Property(u => u._integrityVersion).IsModified = true;
+
+            await identityDb.SaveChangesAsync();
         }
 
         return Ok(new { success = true });
@@ -489,9 +508,30 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitDescription([FromBody] DescriptionModel model)
     {
-        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        //fetch and create
+        Identity_UserDbModel user = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => new Identity_UserDbModel()
+        {
+            Id = u.Id,
+        })
+        .FirstAsync();
+
+        //attach
+        identityDb.Users.Attach(user);
+
+        //edit
         user.Description = model.Description;
-        var result = await userManager.UpdateAsync(user);
+
+        //modified
+        identityDb.Users.Entry(user).Property(u => u.Description).IsModified = true;
+
+        //save
+        await identityDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+
+        /*var result = await userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
             // user seed
@@ -502,7 +542,7 @@ public class IdentityController : ControllerBase
         {
             ModelState.AddModelError("", error.Description);
         }
-        return BadRequest(ModelState);
+        return BadRequest(ModelState);*/
     }
     public class DescriptionModel
     {
@@ -596,9 +636,30 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitDisplayEmailPublicly([FromBody] DisplayEmailPubliclyModel model)
     {
-        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
+        //fetch and create
+        Identity_UserDbModel user = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => new Identity_UserDbModel()
+        {
+            Id = u.Id,
+        })
+        .FirstAsync();
+
+        //attach
+        identityDb.Users.Attach(user);
+
+        //edit
         user.DisplayEmailPublicly = model.DisplayEmailPublicly;
-        var result = await userManager.UpdateAsync(user);
+
+        //modified
+        identityDb.Users.Entry(user).Property(u => u.DisplayEmailPublicly).IsModified = true;
+
+        //save
+        await identityDb.SaveChangesAsync();
+
+        return Ok(new { success = true });
+
+        /*var result = await userManager.UpdateAsync(user);
         if (result.Succeeded)
         {
             // user seed
@@ -609,7 +670,7 @@ public class IdentityController : ControllerBase
         {
             ModelState.AddModelError("", error.Description);
         }
-        return BadRequest(ModelState);
+        return BadRequest(ModelState);*/
     }
     public class DisplayEmailPubliclyModel
     {
@@ -623,7 +684,7 @@ public class IdentityController : ControllerBase
     //********************************* admin ********************************
     [HttpGet]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Identity_Admins")]
-    public async Task<IActionResult> UsersList([FromQuery] UsersListFilterModel? filter)
+    public async Task<IActionResult> UsersList([FromQuery] UsersListFilter_FormModel? filter)
     {
         filter ??= new();
 
@@ -654,7 +715,7 @@ public class IdentityController : ControllerBase
 
         //Console.WriteLine($"\n***** filter json: {JsonSerializer.Serialize(filter)}");
 
-        List<UsersListModel> allFilteredUsers = [];
+        List<UsersList_ViewModel> allFilteredUsers = [];
         if (filter.SortDirection == "asc")
         {
             if (filter.SortProperty == "CreatedAt")
@@ -671,11 +732,11 @@ public class IdentityController : ControllerBase
                 .OrderBy(user => user.CreatedAt)
                 .Skip(filter.Page!.Value * filter.PageSize!.Value)
                 .Take(filter.PageSize!.Value)
-                .Select(user => new UsersListModel()
+                .Select(user => new UsersList_ViewModel()
                 {
                     CreatedAt = user.CreatedAt,
                     UserName = user.UserName!,
-                    UserGuid = user.UserGuid,
+                    UserGuid = user.UserGuid.ToString("N"),
                     Email = user.Email!,
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
@@ -703,11 +764,11 @@ public class IdentityController : ControllerBase
                 .OrderByDescending(user => user.CreatedAt)
                 .Skip(filter.Page!.Value * filter.PageSize!.Value)
                 .Take(filter.PageSize!.Value)
-                .Select(user => new UsersListModel()
+                .Select(user => new UsersList_ViewModel()
                 {
                     CreatedAt = user.CreatedAt,
                     UserName = user.UserName!,
-                    UserGuid = user.UserGuid,
+                    UserGuid = user.UserGuid.ToString("N"),
                     Email = user.Email!,
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
@@ -731,11 +792,11 @@ public class IdentityController : ControllerBase
                 .OrderByDescending(user => user.CreatedAt)
                 .Skip(filter.Page!.Value * filter.PageSize!.Value)
                 .Take(filter.PageSize!.Value)
-                .Select(user => new UsersListModel()
+                .Select(user => new UsersList_ViewModel()
                 {
                     CreatedAt = user.CreatedAt,
                     UserName = user.UserName!,
-                    UserGuid = user.UserGuid,
+                    UserGuid = user.UserGuid.ToString("N"),
                     Email = user.Email!,
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,

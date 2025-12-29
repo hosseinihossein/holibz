@@ -32,7 +32,8 @@ public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identi
 
 public class Identity_UserDbModel : IdentityUser<int>
 {
-    public string UserGuid { get; set; } = Guid.NewGuid().ToString().Replace("-", "");
+    public Guid UserGuid { get; set; }
+    [MaxLength(500)]
     public string? Description { get; set; }
     public bool DisplayEmailPublicly { get; set; } = false;
     public byte _integrityVersion { get; set; } = 0;
@@ -51,11 +52,12 @@ public class Identity_RoleDbModel : IdentityRole<int>
 {
     public Identity_RoleDbModel() : base() { }
     public Identity_RoleDbModel(string roleName) : base(roleName) { }
+    [MaxLength(120)]
     public string Description { get; set; } = string.Empty;
 }
 
 //*********************************** data models ************************************
-public class Identity_UserProfileModel
+public class Identity_UserProfile_ViewModel
 {
     public string Guid { get; set; } = null!;
     public string Username { get; set; } = null!;
@@ -136,7 +138,7 @@ public class Identity_ResetPasswordFormModel
     public string RepeatNewPassword { get; set; } = string.Empty;
 }
 
-public class UsersListFilterModel
+public class UsersListFilter_FormModel
 {
     [StringLength(60)]
     public string? UserName { get; set; } = null;
@@ -165,7 +167,7 @@ public class UsersListFilterModel
     public string? SortDirection { get; set; } = null;
 }
 
-public class UsersListModel
+public class UsersList_ViewModel
 {
     //public string? ImageAddress { get; set; } = null;
     public bool HasImage { get; set; }
@@ -201,8 +203,9 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.UserGuid),
-            new Claim("AspNet.Identity.SecurityStamp", await userManager.GetSecurityStampAsync(user))
+            //ClaimTypes.NameIdentifier
+            new Claim("UserGuid", user.UserGuid.ToString("N")),
+            new Claim("SecurityStamp", await userManager.GetSecurityStampAsync(user))
         };
 
         var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings["Key"]!));
@@ -257,13 +260,15 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
             jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase) &&
             principal is not null)
         {
-            string? userGuid = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userGuid is null || user.UserGuid != userGuid)
+            string? userStringGuid = principal.FindFirst("UserGuid")?.Value;
+            if (userStringGuid is null ||
+            !Guid.TryParseExact(userStringGuid, "N", out Guid userGuid) ||
+            user.UserGuid != userGuid)
             {
                 return false;
             }
 
-            string? securityStamp = principal?.FindFirst("AspNet.Identity.SecurityStamp")?.Value;
+            string? securityStamp = principal.FindFirst("SecurityStamp")?.Value;
             if (securityStamp is null || user.SecurityStamp != securityStamp)
             {
                 return false;
@@ -283,14 +288,15 @@ public class CustomTokenProvider : DataProtectorTokenProvider<Identity_UserDbMod
 public class Identity_Process
 {
     public readonly DirectoryInfo Storage_Users;
-    readonly string SeedFileName;
-    public Identity_Process(IWebHostEnvironment _env, IConfiguration config)
+    //readonly string SeedFileName;
+    public Identity_Process(IWebHostEnvironment _env/*, IConfiguration config*/)
     {
-        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
+        //SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
         Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Identity", "Users"));
     }
 
     //************************************ seed User data **********************************
+    /*
     public async Task Update_UserSeed(Identity_UserDbModel user,
     UserManager<Identity_UserDbModel> userManager)
     {
@@ -366,10 +372,11 @@ public class Identity_Process
             }
         }
     }
-
+    */
 }
 
 //************************* Seed Models *************************
+/*
 public class Identity_UserSeedModel
 {
     public string UserName { get; set; } = string.Empty;
@@ -423,6 +430,6 @@ public class Identity_UserSeedModel
         return userDbModel;
     }
 }
-
+*/
 
 

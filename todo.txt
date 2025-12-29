@@ -8,7 +8,7 @@
 - use ExecuteDelete to delete from Dbs
 - navbar menu, library shelf and documents filter, library shelf and documents paginator, 
 create different size images, 
-- reduce the allowed minimum length of username to 3
+- reduce the allowed minimum length of username to 3(done in backend action)
 - Use AsNoTracking() for Read-Only Queries
 - search component is a mat-card like profile component
 - update review_UserdbModel and library_ownerDbModel seeds
@@ -16,7 +16,9 @@ create different size images,
 - cancel seed processes to backup
 - revise db queries and use attach when needed
 - revise db models and contexts, remove seed,
--  
+- set backup model to backup from storage
+- search about asp.net core Identity, how to use it at best performance and fetch data efficiently
+- 
 
 
 

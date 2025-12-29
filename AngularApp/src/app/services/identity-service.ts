@@ -118,7 +118,7 @@ export class IdentityService {
 
   submitUserImage(file: File){
     const formData = new FormData();
-    formData.append('UserImageFile', file);
+    formData.append('userImageFile', file);
     return this.httpClient.post<{success: boolean, hasImage: boolean, integrityVersion:number}>(
       "/api/Identity/SubmitUserImage", formData
     );

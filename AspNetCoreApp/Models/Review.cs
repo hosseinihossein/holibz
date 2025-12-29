@@ -7,46 +7,51 @@ namespace AspNetCoreApp.Models;
 
 public class Review_UserDbModel
 {
+    [Key]
     public int Id { get; set; }
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
+    [MaxLength(60)]
     public string NormalizedUserName { get; set; } = null!;
-    public List<Review_UserDbModel> Followers { get; set; } = [];
-    public List<Review_UserDbModel> Followings { get; set; } = [];
-    public List<Review_ReviewDbModel> GotReviews { get; set; } = [];
-    public List<Review_CommentDbModel> GiveComments { get; set; } = [];
-    public List<Review_ReviewDbModel> GiveLikes { get; set; } = [];
-    public List<Review_CommentDbModel> GiveThumbsUps { get; set; } = [];
-    public List<Review_CommentDbModel> GiveThumbsDowns { get; set; } = [];
+    public ICollection<Review_UserDbModel> Followers { get; set; } = [];
+    public ICollection<Review_UserDbModel> Followings { get; set; } = [];
+    public ICollection<Review_ReviewDbModel> GotReviews { get; set; } = [];
+    public ICollection<Review_CommentDbModel> GiveComments { get; set; } = [];
+    public ICollection<Review_ReviewDbModel> GiveLikes { get; set; } = [];
+    public ICollection<Review_CommentDbModel> GiveThumbsUps { get; set; } = [];
+    public ICollection<Review_CommentDbModel> GiveThumbsDowns { get; set; } = [];
 }
 public class Review_ReviewDbModel
 {
+    [Key]
     public int Id { get; set; }
-    public string SubjectGuid { get; set; } = null!;
+    public Guid SubjectGuid { get; set; }
     public Review_UserDbModel Owner { get; set; } = null!;
-    public List<Review_UserDbModel> LikedBy { get; set; } = [];
-    public List<Review_CommentDbModel> Comments { get; set; } = [];
+    public ICollection<Review_UserDbModel> LikedBy { get; set; } = [];
+    public ICollection<Review_CommentDbModel> Comments { get; set; } = [];
 }
 public class Review_CommentDbModel
 {
+    [Key]
     public int Id { get; set; }
-    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
+    public Guid Guid { get; set; }
     public Review_ReviewDbModel ParentReview { get; set; } = null!;
     public Review_UserDbModel Writer { get; set; } = null!;
+    [MaxLength(500)]
     public string Text { get; set; } = string.Empty;
-    public List<Review_UserDbModel> ThumbsUps { get; set; } = [];
-    public List<Review_UserDbModel> ThumbsDowns { get; set; } = [];
+    public ICollection<Review_UserDbModel> ThumbsUps { get; set; } = [];
+    public ICollection<Review_UserDbModel> ThumbsDowns { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Review_CommentDbModel? ReplyTo { get; set; } = null;
-    public List<Review_CommentDbModel> Replies { get; set; } = [];
+    public ICollection<Review_CommentDbModel> Replies { get; set; } = [];
 }
 
 public class Review_DbContext : DbContext
 {
     public Review_DbContext(DbContextOptions<Review_DbContext> options) : base(options) { }
 
-    public DbSet<Review_UserDbModel> Users { get; set; } = null!;
-    public DbSet<Review_ReviewDbModel> Reviews { get; set; } = null!;
-    public DbSet<Review_CommentDbModel> Comments { get; set; } = null!;
+    public DbSet<Review_UserDbModel> Users { get; set; } //= null!;
+    public DbSet<Review_ReviewDbModel> Reviews { get; set; } //= null!;
+    public DbSet<Review_CommentDbModel> Comments { get; set; } //= null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -118,11 +123,13 @@ public class Review_DbContext : DbContext
         modelBuilder.Entity<Review_CommentDbModel>()
         .HasIndex(c => c.Guid)
         .IsUnique(true);
+        modelBuilder.Entity<Review_CommentDbModel>()
+        .HasIndex(c => c.CreatedAt);
     }
 }
 
 //*********************** Data Models **************************
-public class Review_NewCommentFormModel
+public class Review_NewComment_FormModel
 {
     [StringLength(32)]
     public string ParentSubjectGuid { get; set; } = null!;
@@ -130,7 +137,7 @@ public class Review_NewCommentFormModel
     [StringLength(1000)]
     public string Text { get; set; } = null!;
 }
-public class Review_NewReplyFormModel
+public class Review_NewReply_FormModel
 {
     [StringLength(32)]
     public string ParentCommentGuid { get; set; } = null!;
@@ -138,7 +145,7 @@ public class Review_NewReplyFormModel
     [StringLength(1000)]
     public string Text { get; set; } = null!;
 }
-public class Review_CommentModel
+public class Review_Comment_ViewModel
 {
     public string Guid { get; set; } = null!;
     public string WriterGuid { get; set; } = null!;
@@ -154,333 +161,348 @@ public class Review_CommentModel
     public int NumberOfReplies { get; set; } = 0;
     public DateTime CreatedAt { get; set; }
 }
-public class Review_ReviewModel
+public class Review_Review_ViewModel
 {
     public bool AmILiked { get; set; } = false;
     public int NumberOfLikes { get; set; } = 0;
     public int TotalNumberOfComments { get; set; } = 0;
-    public Review_CommentModel[] Comments { get; set; } = [];
+    public Review_Comment_ViewModel[] Comments { get; set; } = [];
 }
 
 
 //*********************** Process **************************
 public class Review_Process
 {
-    readonly DirectoryInfo Storage_Users;
-    readonly DirectoryInfo Storage_Reviews;
-    readonly DirectoryInfo Storage_Comments;
-    readonly string SeedFileName;
+    /*
+        //readonly DirectoryInfo Storage_Users;
+        //readonly DirectoryInfo Storage_Reviews;
+        //readonly DirectoryInfo Storage_Comments;
+        //readonly string SeedFileName;
 
-    public Review_Process(IWebHostEnvironment _env, IConfiguration config)
-    {
-        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
-        Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Users"));
-        Storage_Reviews = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Reviews"));
-        Storage_Comments = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Comments"));
-    }
-
-    public async Task CreateNewUser(Review_DbContext reviewDb, string userGuid,
+        public Review_Process(IWebHostEnvironment _env, IConfiguration config)
+        {
+            //SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
+            //Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Users"));
+            //Storage_Reviews = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Reviews"));
+            //Storage_Comments = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Review", "Comments"));
+        }
+    */
+    public async Task CreateNewUser(Review_DbContext reviewDb, Guid userGuid,
     string normalizedUserName)
     {
-        Review_UserDbModel? userDbModel = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == userGuid);
-        if (userDbModel is not null) return;
+        bool userExist = await reviewDb.Users.AnyAsync(u => u.Guid == userGuid);
+        if (userExist) return;
 
-        //here userDbModel is null
-        userDbModel = new()
+        //here user doesn't exist
+        Review_UserDbModel userDbModel = new()
         {
             Guid = userGuid,
             NormalizedUserName = normalizedUserName
         };
-        await reviewDb.Users.AddAsync(userDbModel);
+        reviewDb.Users.Add(userDbModel);
         await reviewDb.SaveChangesAsync();
 
         //seed
-        await Update_UserSeed(userGuid, reviewDb);
+        //await Update_UserSeed(userGuid, reviewDb);
     }
-    public async Task CreateNewReview(Review_DbContext reviewDb, string subjectGuid,
-    string ownerGuid)
+    public async Task CreateNewReview(Review_DbContext reviewDb, Guid subjectGuid,
+    Guid ownerGuid)
     {
-        Review_ReviewDbModel? reviewDbModel =
-        await reviewDb.Reviews.FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
-        if (reviewDbModel is not null) return;
-        //here reviewDbModel is null
-        Review_UserDbModel? ownerDbModel = await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == ownerGuid);
+        bool reviewExist = await reviewDb.Reviews.AnyAsync(r => r.SubjectGuid == subjectGuid);
+        if (reviewExist) return;
+
+        //here review does not exist
+        Review_UserDbModel? ownerDbModel = await reviewDb.Users
+        .Where(u => u.Guid == ownerGuid)
+        .Select(u => new Review_UserDbModel()
+        {
+            Id = u.Id,
+        })
+        .FirstOrDefaultAsync();
         if (ownerDbModel is null)
         {
             //log
             Console.WriteLine($"\n     ***** Couldn't find Review_UserDbModel with guid {ownerGuid} *****");
             return;
         }
-        reviewDbModel = new()
+
+        //begin tracking
+        reviewDb.Users.Attach(ownerDbModel);
+
+        Review_ReviewDbModel reviewDbModel = new()
         {
             SubjectGuid = subjectGuid,
             Owner = ownerDbModel,
         };
 
-        await reviewDb.Reviews.AddAsync(reviewDbModel);
+        reviewDb.Reviews.Add(reviewDbModel);
         await reviewDb.SaveChangesAsync();
 
         //seed
-        await Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
+        //await Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
     }
 
-    //public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }
-    public async Task DeleteReviewAndCommentsDirectories(Review_DbContext reviewDb, string subjectGuid,
-    Notification_Process notifProcess, Notification_DbContext notifDb)
-    {
-        List<string> commentsGuids = await reviewDb.Reviews
-        .Where(r => r.SubjectGuid == subjectGuid)
-        .Include(r => r.Comments)
-        .SelectMany(r => r.Comments)
-        .Select(c => c.Guid)
-        .ToListAsync();
 
-        foreach (string commentGuid in commentsGuids)
+    /*
+        //public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }
+        public async Task DeleteReviewAndCommentsDirectories(Review_DbContext reviewDb, string subjectGuid,
+        Notification_Process notifProcess, Notification_DbContext notifDb)
         {
-            await DeleteCommentsDirectoriesRecursively(reviewDb, commentGuid, notifProcess, notifDb);
-        }
+            List<string> commentsGuids = await reviewDb.Reviews
+            .Where(r => r.SubjectGuid == subjectGuid)
+            .Include(r => r.Comments)
+            .SelectMany(r => r.Comments)
+            .Select(c => c.Guid)
+            .ToListAsync();
 
-        Delete_ReviewDirectory(subjectGuid);
-    }
-    public async Task DeleteCommentsDirectoriesRecursively(Review_DbContext reviewDb,
-    string parentCommentGuid, Notification_Process notifProcess, Notification_DbContext notifDb)
-    {
-        List<string> deleteList = [parentCommentGuid];
-        for (int i = 0; i < deleteList.Count; i++)
+            foreach (string commentGuid in commentsGuids)
+            {
+                await DeleteCommentsDirectoriesRecursively(reviewDb, commentGuid, notifProcess, notifDb);
+            }
+
+            Delete_ReviewDirectory(subjectGuid);
+        }
+        public async Task DeleteCommentsDirectoriesRecursively(Review_DbContext reviewDb,
+        string parentCommentGuid, Notification_Process notifProcess, Notification_DbContext notifDb)
         {
-            string commentGuid = deleteList[i];
-            deleteList.AddRange(await GetRepliesGuids(reviewDb, commentGuid));
-        }
+            List<string> deleteList = [parentCommentGuid];
+            for (int i = 0; i < deleteList.Count; i++)
+            {
+                string commentGuid = deleteList[i];
+                deleteList.AddRange(await GetRepliesGuids(reviewDb, commentGuid));
+            }
 
-        foreach (string commentGuid in deleteList)
+            foreach (string commentGuid in deleteList)
+            {
+                Delete_CommentDirectory(commentGuid);
+                await notifProcess.DeleteNotification(notifDb, commentGuid);
+            }
+        }
+        private async Task<List<string>> GetRepliesGuids(Review_DbContext reviewDb,
+        string parentCommentGuid)
         {
-            Delete_CommentDirectory(commentGuid);
-            await notifProcess.DeleteNotification(notifDb, commentGuid);
+            List<string> repliesGuids = await reviewDb.Comments
+            .Where(c => c.Guid == parentCommentGuid)
+            .Include(c => c.Replies)
+            .SelectMany(c => c.Replies)
+            .Select(r => r.Guid)
+            .ToListAsync();
+
+            return repliesGuids;
         }
-    }
-    private async Task<List<string>> GetRepliesGuids(Review_DbContext reviewDb,
-    string parentCommentGuid)
-    {
-        List<string> repliesGuids = await reviewDb.Comments
-        .Where(c => c.Guid == parentCommentGuid)
-        .Include(c => c.Replies)
-        .SelectMany(c => c.Replies)
-        .Select(r => r.Guid)
-        .ToListAsync();
-
-        return repliesGuids;
-    }
-
+    */
 
     //************************************ seed User data **********************************
-    public async Task Update_UserSeed(string userGuid, Review_DbContext reviewDb)
-    {
-        Review_UserSeedModel? seedModel = await Review_UserSeedModel.Factory(userGuid, reviewDb);
-        if (seedModel is null) return;
-
-        string json = JsonSerializer.Serialize(seedModel);
-        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, userGuid));
-        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
-        await File.WriteAllTextAsync(seedPath, json);
-    }
-    public void Delete_UserDirectory(string userGuid)
-    {
-        string directoryPath = Path.Combine(Storage_Users.FullName, userGuid);
-        if (Directory.Exists(directoryPath))
+    /*
+        public async Task Update_UserSeed(string userGuid, Review_DbContext reviewDb)
         {
-            try
-            {
-                Directory.Delete(directoryPath, true);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-            }
+            Review_UserSeedModel? seedModel = await Review_UserSeedModel.Factory(userGuid, reviewDb);
+            if (seedModel is null) return;
+
+            string json = JsonSerializer.Serialize(seedModel);
+            DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, userGuid));
+            string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+            await File.WriteAllTextAsync(seedPath, json);
         }
-    }
-    public async Task Seed_UserToDb(Review_DbContext reviewDb)
-    {
-        foreach (var seedDirectory in Storage_Users.EnumerateDirectories())
+        public void Delete_UserDirectory(string userGuid)
         {
-            var dbModelExist = await reviewDb.Users
-            .AnyAsync(o => o.Guid == seedDirectory.Name);
-            if (dbModelExist)
+            string directoryPath = Path.Combine(Storage_Users.FullName, userGuid);
+            if (Directory.Exists(directoryPath))
             {
-                continue;
-            }
-
-            string seedPath = Path.Combine(Storage_Users.FullName, seedDirectory.Name, SeedFileName);
-            if (!File.Exists(seedPath))
-            {
-                continue;
-            }
-
-            string json = await File.ReadAllTextAsync(seedPath);
-            Review_UserSeedModel? seedModel;
-            try
-            {
-                seedModel = JsonSerializer.Deserialize<Review_UserSeedModel>(json);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-                continue;
-            }
-            if (seedModel is not null)
-            {
-                Review_UserDbModel dbModel = seedModel.GetDbModel();
-                if (dbModel is not null)
+                try
                 {
-                    await reviewDb.Users.AddAsync(dbModel);
-                    await reviewDb.SaveChangesAsync();
+                    Directory.Delete(directoryPath, true);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
                 }
             }
         }
-    }
-
-    //************************************ seed Review data **********************************
-    public async Task Update_ReviewSeed(string subjectGuid, Review_DbContext reviewDb)
-    {
-        Review_ReviewSeedModel? seedModel = await Review_ReviewSeedModel.Factory(subjectGuid, reviewDb);
-        if (seedModel is null) return;
-
-        string json = JsonSerializer.Serialize(seedModel);
-        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Reviews.FullName, subjectGuid));
-        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
-        await File.WriteAllTextAsync(seedPath, json);
-    }
-    public void Delete_ReviewDirectory(string subjectGuid)
-    {
-        string directoryPath = Path.Combine(Storage_Reviews.FullName, subjectGuid);
-        if (Directory.Exists(directoryPath))
+        public async Task Seed_UserToDb(Review_DbContext reviewDb)
         {
-            try
+            foreach (var seedDirectory in Storage_Users.EnumerateDirectories())
             {
-                Directory.Delete(directoryPath, true);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-            }
-        }
-    }
-    public async Task Seed_ReviewsToDb(Review_DbContext reviewDb)
-    {
-        foreach (var seedDirectory in Storage_Reviews.EnumerateDirectories())
-        {
-            var dbModelExist = await reviewDb.Reviews
-            .AnyAsync(o => o.SubjectGuid == seedDirectory.Name);
-            if (dbModelExist)
-            {
-                continue;
-            }
-
-            string seedPath = Path.Combine(Storage_Reviews.FullName, seedDirectory.Name, SeedFileName);
-            if (!File.Exists(seedPath))
-            {
-                continue;
-            }
-
-            string json = await File.ReadAllTextAsync(seedPath);
-            Review_ReviewSeedModel? seedModel;
-            try
-            {
-                seedModel = JsonSerializer.Deserialize<Review_ReviewSeedModel>(json);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** an exception occured during deserializing Review seed data! guid: '{seedDirectory.Name}'");
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-                continue;
-            }
-            if (seedModel is not null)
-            {
-                Review_ReviewDbModel? dbModel = await seedModel.GetDbModel(reviewDb);
-                if (dbModel is not null)
+                var dbModelExist = await reviewDb.Users
+                .AnyAsync(o => o.Guid == seedDirectory.Name);
+                if (dbModelExist)
                 {
-                    await reviewDb.Reviews.AddAsync(dbModel);
-                    await reviewDb.SaveChangesAsync();
+                    continue;
+                }
+
+                string seedPath = Path.Combine(Storage_Users.FullName, seedDirectory.Name, SeedFileName);
+                if (!File.Exists(seedPath))
+                {
+                    continue;
+                }
+
+                string json = await File.ReadAllTextAsync(seedPath);
+                Review_UserSeedModel? seedModel;
+                try
+                {
+                    seedModel = JsonSerializer.Deserialize<Review_UserSeedModel>(json);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                    continue;
+                }
+                if (seedModel is not null)
+                {
+                    Review_UserDbModel dbModel = seedModel.GetDbModel();
+                    if (dbModel is not null)
+                    {
+                        await reviewDb.Users.AddAsync(dbModel);
+                        await reviewDb.SaveChangesAsync();
+                    }
                 }
             }
         }
-    }
 
-    //************************************ seed Comment data **********************************
-    public async Task Update_CommentSeed(string dbModelGuid, Review_DbContext reviewDb)
-    {
-        Review_CommentSeedModel? seedModel = await Review_CommentSeedModel.Factory(dbModelGuid, reviewDb);
-        if (seedModel is null) return;
-
-        string json = JsonSerializer.Serialize(seedModel);
-        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Comments.FullName, dbModelGuid));
-        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
-        await File.WriteAllTextAsync(seedPath, json);
-    }
-    public void Delete_CommentDirectory(string dbModelGuid)
-    {
-        string directoryPath = Path.Combine(Storage_Comments.FullName, dbModelGuid);
-        if (Directory.Exists(directoryPath))
+        //************************************ seed Review data **********************************
+        public async Task Update_ReviewSeed(string subjectGuid, Review_DbContext reviewDb)
         {
-            try
-            {
-                Directory.Delete(directoryPath, true);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-            }
+            Review_ReviewSeedModel? seedModel = await Review_ReviewSeedModel.Factory(subjectGuid, reviewDb);
+            if (seedModel is null) return;
+
+            string json = JsonSerializer.Serialize(seedModel);
+            DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Reviews.FullName, subjectGuid));
+            string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+            await File.WriteAllTextAsync(seedPath, json);
         }
-    }
-    public async Task Seed_CommentsToDb(Review_DbContext reviewDb)
-    {
-        foreach (var seedDirectory in Storage_Comments.EnumerateDirectories())
+        public void Delete_ReviewDirectory(string subjectGuid)
         {
-            var dbModelExist = await reviewDb.Comments
-            .AnyAsync(o => o.Guid == seedDirectory.Name);
-            if (dbModelExist)
+            string directoryPath = Path.Combine(Storage_Reviews.FullName, subjectGuid);
+            if (Directory.Exists(directoryPath))
             {
-                continue;
-            }
-
-            string seedPath = Path.Combine(Storage_Comments.FullName, seedDirectory.Name, SeedFileName);
-            if (!File.Exists(seedPath))
-            {
-                continue;
-            }
-
-            string json = await File.ReadAllTextAsync(seedPath);
-            Review_CommentSeedModel? seedModel;
-            try
-            {
-                seedModel = JsonSerializer.Deserialize<Review_CommentSeedModel>(json);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** an exception occured during deserializing Comment seed data! guid: '{seedDirectory.Name}'");
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-                continue;
-            }
-            if (seedModel is not null)
-            {
-                Review_CommentDbModel? dbModel = await seedModel.GetDbModel(reviewDb);
-                if (dbModel is not null)
+                try
                 {
-                    await reviewDb.Comments.AddAsync(dbModel);
-                    await reviewDb.SaveChangesAsync();
+                    Directory.Delete(directoryPath, true);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
                 }
             }
         }
-    }
+        public async Task Seed_ReviewsToDb(Review_DbContext reviewDb)
+        {
+            foreach (var seedDirectory in Storage_Reviews.EnumerateDirectories())
+            {
+                var dbModelExist = await reviewDb.Reviews
+                .AnyAsync(o => o.SubjectGuid == seedDirectory.Name);
+                if (dbModelExist)
+                {
+                    continue;
+                }
 
+                string seedPath = Path.Combine(Storage_Reviews.FullName, seedDirectory.Name, SeedFileName);
+                if (!File.Exists(seedPath))
+                {
+                    continue;
+                }
+
+                string json = await File.ReadAllTextAsync(seedPath);
+                Review_ReviewSeedModel? seedModel;
+                try
+                {
+                    seedModel = JsonSerializer.Deserialize<Review_ReviewSeedModel>(json);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** an exception occured during deserializing Review seed data! guid: '{seedDirectory.Name}'");
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                    continue;
+                }
+                if (seedModel is not null)
+                {
+                    Review_ReviewDbModel? dbModel = await seedModel.GetDbModel(reviewDb);
+                    if (dbModel is not null)
+                    {
+                        await reviewDb.Reviews.AddAsync(dbModel);
+                        await reviewDb.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+
+        //************************************ seed Comment data **********************************
+        public async Task Update_CommentSeed(string dbModelGuid, Review_DbContext reviewDb)
+        {
+            Review_CommentSeedModel? seedModel = await Review_CommentSeedModel.Factory(dbModelGuid, reviewDb);
+            if (seedModel is null) return;
+
+            string json = JsonSerializer.Serialize(seedModel);
+            DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Comments.FullName, dbModelGuid));
+            string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+            await File.WriteAllTextAsync(seedPath, json);
+        }
+        public void Delete_CommentDirectory(string dbModelGuid)
+        {
+            string directoryPath = Path.Combine(Storage_Comments.FullName, dbModelGuid);
+            if (Directory.Exists(directoryPath))
+            {
+                try
+                {
+                    Directory.Delete(directoryPath, true);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                }
+            }
+        }
+        public async Task Seed_CommentsToDb(Review_DbContext reviewDb)
+        {
+            foreach (var seedDirectory in Storage_Comments.EnumerateDirectories())
+            {
+                var dbModelExist = await reviewDb.Comments
+                .AnyAsync(o => o.Guid == seedDirectory.Name);
+                if (dbModelExist)
+                {
+                    continue;
+                }
+
+                string seedPath = Path.Combine(Storage_Comments.FullName, seedDirectory.Name, SeedFileName);
+                if (!File.Exists(seedPath))
+                {
+                    continue;
+                }
+
+                string json = await File.ReadAllTextAsync(seedPath);
+                Review_CommentSeedModel? seedModel;
+                try
+                {
+                    seedModel = JsonSerializer.Deserialize<Review_CommentSeedModel>(json);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** an exception occured during deserializing Comment seed data! guid: '{seedDirectory.Name}'");
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                    continue;
+                }
+                if (seedModel is not null)
+                {
+                    Review_CommentDbModel? dbModel = await seedModel.GetDbModel(reviewDb);
+                    if (dbModel is not null)
+                    {
+                        await reviewDb.Comments.AddAsync(dbModel);
+                        await reviewDb.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+    */
 }
 //*********************** Seed Models **************************
+/*
 public class Review_UserSeedModel
 {
     public string Guid { get; set; } = null!;
@@ -661,4 +683,4 @@ public class Review_CommentSeedModel
         return commentDbModel;
     }
 }
-
+*/

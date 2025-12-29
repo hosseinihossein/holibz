@@ -181,22 +181,30 @@ public class Program
                     var signinManager = context.HttpContext.RequestServices
                         .GetRequiredService<SignInManager<Identity_UserDbModel>>();
 
-                    string? userGuid = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (userGuid is null)
+                    string? userStringGuid = context.Principal?.FindFirst("UserGuid")?.Value;
+                    if (userStringGuid is null ||
+                    !Guid.TryParseExact(userStringGuid, "N", out Guid userGuid))
                     {
                         context.Fail("couldn't find user id in the token!");
                         return;
                     }
 
-                    string? securityStamp = context.Principal?.FindFirst("AspNet.Identity.SecurityStamp")?.Value;
+                    string? securityStamp = context.Principal?.FindFirst("SecurityStamp")?.Value;
                     if (securityStamp is null)
                     {
                         context.Fail("couldn't find security stamp in the token!");
                         return;
                     }
 
-                    Identity_UserDbModel? user =
-                        await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+                    Identity_UserDbModel? user = await userManager.Users
+                    .Where(u => u.UserGuid == userGuid)
+                    .Select(u => new Identity_UserDbModel()
+                    {
+                        Id = u.Id,
+                        UserGuid = u.UserGuid,
+                        SecurityStamp = u.SecurityStamp,
+                    })
+                    .FirstOrDefaultAsync();
                     if (user is null || user.SecurityStamp != securityStamp)
                     {
                         //Console.WriteLine("\n***** token is invalid!");
@@ -294,7 +302,7 @@ public class Program
             admin = new Identity_UserDbModel
             {
                 UserName = "admin",
-                UserGuid = "admin",
+                //UserGuid = "admin",
                 Email = "admin@yourdomain.com",
                 EmailConfirmed = true,
                 Description = "This identity belongs to the admin of the website."

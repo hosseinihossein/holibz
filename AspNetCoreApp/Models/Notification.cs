@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
@@ -5,19 +6,24 @@ namespace AspNetCoreApp.Models;
 
 public class Notification_UserDbModel
 {
+    [Key]
     public int Id { get; set; }
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public List<Notification_NotificationDbModel> Notifications { get; set; } = [];
     //public bool EnableForComments = true;
 }
 public class Notification_NotificationDbModel
 {
+    [Key]
     public int Id { get; set; }
-    public string Guid { get; set; } = System.Guid.NewGuid().ToString().Replace("-", "");
-    public string? SubjectGuid { get; set; } = null;
+    public Guid Guid { get; set; }
+    public Guid? SubjectGuid { get; set; } = null;
     public Notification_UserDbModel Owner { get; set; } = null!;
+    [MaxLength(60)]
     public string Title { get; set; } = null!;
+    [MaxLength(500)]
     public string[] Description { get; set; } = [];
+    [MaxLength(500)]
     public string? Link { get; set; } = null;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -26,8 +32,8 @@ public class Notification_DbContext : DbContext
 {
     public Notification_DbContext(DbContextOptions<Notification_DbContext> options) : base(options) { }
 
-    public DbSet<Notification_UserDbModel> Users { get; set; } = null!;
-    public DbSet<Notification_NotificationDbModel> Notifications { get; set; } = null!;
+    public DbSet<Notification_UserDbModel> Users { get; set; } //= null!;
+    public DbSet<Notification_NotificationDbModel> Notifications { get; set; } //= null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,34 +54,39 @@ public class Notification_DbContext : DbContext
         .HasIndex(notif => notif.Guid)
         .IsUnique(true);
         modelBuilder.Entity<Notification_NotificationDbModel>()
-        .HasIndex(notif => notif.SubjectGuid)
-        .IsUnique(false);
+        .HasIndex(notif => notif.SubjectGuid);
+        /*modelBuilder.Entity<Notification_NotificationDbModel>()
+        .HasIndex(notif => notif.CreatedAt);*/
     }
 }
 
 public class Notification_Process
 {
-    readonly string SeedFileName;
-    readonly DirectoryInfo Storage_Users;
-    readonly DirectoryInfo Storage_Notifications;
+    /*
+        readonly string SeedFileName;
+        readonly DirectoryInfo Storage_Users;
+        readonly DirectoryInfo Storage_Notifications;
 
-    public Notification_Process(IWebHostEnvironment _env, IConfiguration config)
+        public Notification_Process(IWebHostEnvironment _env, IConfiguration config)
+        {
+            SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
+            Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Users"));
+            Storage_Notifications = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Notifications"));
+        }
+    */
+    public async Task CreateNewUser(Notification_DbContext notifDb, Guid userGuid)
     {
-        SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
-        Storage_Users = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Users"));
-        Storage_Notifications = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Notifications"));
-    }
+        bool userExist = await notifDb.Users.AnyAsync(u => u.Guid == userGuid);
+        if (userExist) return;
 
-    public async Task CreateNewUser(Notification_DbContext notifDb, string userGuid)
-    {
         Notification_UserDbModel userDbModel = new() { Guid = userGuid };
-        await notifDb.Users.AddAsync(userDbModel);
+        notifDb.Users.Add(userDbModel);
         await notifDb.SaveChangesAsync();
 
         //seed
-        await Update_UserSeed(userDbModel.Guid);
+        //await Update_UserSeed(userDbModel.Guid);
 
-        Notification_NotifCreationModel newNotifModel = new()
+        Notification_NotifCreation_FormModel welcomeNotifModel = new()
         {
             Title = "Welcome to HoLibz",
             Description = [
@@ -85,23 +96,32 @@ public class Notification_Process
             OwnerGuid = userDbModel.Guid,
         };
 
-        await CreateNewNotification(notifDb, newNotifModel);
+        await CreateNewNotification(notifDb, welcomeNotifModel);
     }
-    public async Task CreateNewNotification(Notification_DbContext notifDb, Notification_NotifCreationModel newNotifModel)
+    public async Task CreateNewNotification(Notification_DbContext notifDb, Notification_NotifCreation_FormModel newNotifModel)
     {
-        if (string.IsNullOrWhiteSpace(newNotifModel.OwnerGuid))
+        Notification_UserDbModel? owner = await notifDb.Users
+        .Where(u => u.Guid == newNotifModel.OwnerGuid)
+        .Select(u => new Notification_UserDbModel()
         {
-            return;
-        }
-
-        Notification_UserDbModel? owner =
-        await notifDb.Users.FirstOrDefaultAsync(u => u.Guid == newNotifModel.OwnerGuid);
+            Id = u.Id,
+        })
+        .FirstOrDefaultAsync();
         if (owner is null)
         {
-            //return;
             await CreateNewUser(notifDb, newNotifModel.OwnerGuid);
-            owner = await notifDb.Users.FirstAsync(u => u.Guid == newNotifModel.OwnerGuid);
+
+            owner = await notifDb.Users
+            .Where(u => u.Guid == newNotifModel.OwnerGuid)
+            .Select(u => new Notification_UserDbModel()
+            {
+                Id = u.Id,
+            })
+            .FirstAsync();
         }
+
+        //begin tracking
+        notifDb.Users.Attach(owner);
 
         Notification_NotificationDbModel notifDbModel = new()
         {
@@ -112,15 +132,15 @@ public class Notification_Process
             Title = newNotifModel.Title,
         };
 
-        await notifDb.Notifications.AddAsync(notifDbModel);
+        notifDb.Notifications.Add(notifDbModel);
         await notifDb.SaveChangesAsync();
 
         //seed
-        await Update_NotificationSeed(notifDbModel.Guid, notifDb);
+        //await Update_NotificationSeed(notifDbModel.Guid, notifDb);
     }
-    public async Task DeleteNotification(Notification_DbContext notifDb, string subjectGuid)
+    public async Task DeleteNotification(Notification_DbContext notifDb, Guid subjectGuid)
     {
-        List<string> notifsGuids =
+        /*List<Guid> notifsGuids =
         await notifDb.Notifications
         .Include(n => n.Owner)
         .Where(n => n.SubjectGuid == subjectGuid)
@@ -130,161 +150,162 @@ public class Notification_Process
         if (notifsGuids.Count == 0)
         {
             return;
-        }
+        }*/
 
         await notifDb.Notifications
-        .Include(n => n.Owner)
         .Where(n => n.SubjectGuid == subjectGuid)
         .ExecuteDeleteAsync();
 
         //seed
-        foreach (string notifGuid in notifsGuids)
+        /*foreach (string notifGuid in notifsGuids)
         {
             Delete_NotificationDirectory(notifGuid);
-        }
+        }*/
     }
 
 
     //************************************ seed User data **********************************
-    public async Task Update_UserSeed(string dbModelGuid)
-    {
-        Notification_UserSeedModel? seedModel = Notification_UserSeedModel.Factory(dbModelGuid);
-        if (seedModel is null) return;
-
-        string json = JsonSerializer.Serialize(seedModel);
-        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, dbModelGuid));
-        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
-        await File.WriteAllTextAsync(seedPath, json);
-    }
-    public void Delete_UserDirectory(string dbModelGuid)
-    {
-        string directoryPath = Path.Combine(Storage_Users.FullName, dbModelGuid);
-        if (Directory.Exists(directoryPath))
+    /*
+        public async Task Update_UserSeed(string dbModelGuid)
         {
-            try
-            {
-                Directory.Delete(directoryPath, true);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-            }
+            Notification_UserSeedModel? seedModel = Notification_UserSeedModel.Factory(dbModelGuid);
+            if (seedModel is null) return;
+
+            string json = JsonSerializer.Serialize(seedModel);
+            DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Users.FullName, dbModelGuid));
+            string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+            await File.WriteAllTextAsync(seedPath, json);
         }
-    }
-    public async Task Seed_UsersToDb(Notification_DbContext libraryDb)
-    {
-        foreach (var seedDirectory in Storage_Users.EnumerateDirectories())
+        public void Delete_UserDirectory(string dbModelGuid)
         {
-            var dbModelExist = await libraryDb.Users
-            .AnyAsync(o => o.Guid == seedDirectory.Name);
-            if (dbModelExist)
+            string directoryPath = Path.Combine(Storage_Users.FullName, dbModelGuid);
+            if (Directory.Exists(directoryPath))
             {
-                continue;
-            }
-
-            string seedPath = Path.Combine(Storage_Users.FullName, seedDirectory.Name, SeedFileName);
-            if (!File.Exists(seedPath))
-            {
-                continue;
-            }
-
-            string json = await File.ReadAllTextAsync(seedPath);
-            Notification_UserSeedModel? seedModel;
-            try
-            {
-                seedModel = JsonSerializer.Deserialize<Notification_UserSeedModel>(json);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-                continue;
-            }
-            if (seedModel is not null)
-            {
-                Notification_UserDbModel? dbModel = seedModel.GetDbModel();
-                if (dbModel is not null)
+                try
                 {
-                    await libraryDb.Users.AddAsync(dbModel);
-                    await libraryDb.SaveChangesAsync();
+                    Directory.Delete(directoryPath, true);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
                 }
             }
         }
-    }
-
-    //************************************ seed Notification data **********************************
-    public async Task Update_NotificationSeed(string dbModelGuid, Notification_DbContext notifDb)
-    {
-        Notification_NotificationSeedModel? seedModel = await Notification_NotificationSeedModel.Factory(dbModelGuid, notifDb);
-        if (seedModel is null) return;
-
-        string json = JsonSerializer.Serialize(seedModel);
-        DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Notifications.FullName, dbModelGuid));
-        string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
-        await File.WriteAllTextAsync(seedPath, json);
-    }
-    public void Delete_NotificationDirectory(string dbModelGuid)
-    {
-        string directoryPath = Path.Combine(Storage_Notifications.FullName, dbModelGuid);
-        if (Directory.Exists(directoryPath))
+        public async Task Seed_UsersToDb(Notification_DbContext libraryDb)
         {
-            try
+            foreach (var seedDirectory in Storage_Users.EnumerateDirectories())
             {
-                Directory.Delete(directoryPath, true);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-            }
-        }
-    }
-    public async Task Seed_NotificationsToDb(Notification_DbContext notifDb)
-    {
-        foreach (var seedDirectory in Storage_Notifications.EnumerateDirectories())
-        {
-            var dbModelExist = await notifDb.Notifications
-            .AnyAsync(o => o.Guid == seedDirectory.Name);
-            if (dbModelExist)
-            {
-                continue;
-            }
-
-            string seedPath = Path.Combine(Storage_Notifications.FullName, seedDirectory.Name, SeedFileName);
-            if (!File.Exists(seedPath))
-            {
-                continue;
-            }
-
-            string json = await File.ReadAllTextAsync(seedPath);
-            Notification_NotificationSeedModel? seedModel;
-            try
-            {
-                seedModel = JsonSerializer.Deserialize<Notification_NotificationSeedModel>(json);
-            }
-            catch (Exception e)
-            {
-                //log
-                Console.WriteLine($"\n     ***** an exception occured during deserializing Notification seed data! guid: '{seedDirectory.Name}'");
-                Console.WriteLine($"\n     ***** {e.Message} *****");
-                continue;
-            }
-            if (seedModel is not null)
-            {
-                Notification_NotificationDbModel? dbModel = await seedModel.GetDbModel(notifDb);
-                if (dbModel is not null)
+                var dbModelExist = await libraryDb.Users
+                .AnyAsync(o => o.Guid == seedDirectory.Name);
+                if (dbModelExist)
                 {
-                    await notifDb.Notifications.AddAsync(dbModel);
-                    await notifDb.SaveChangesAsync();
+                    continue;
+                }
+
+                string seedPath = Path.Combine(Storage_Users.FullName, seedDirectory.Name, SeedFileName);
+                if (!File.Exists(seedPath))
+                {
+                    continue;
+                }
+
+                string json = await File.ReadAllTextAsync(seedPath);
+                Notification_UserSeedModel? seedModel;
+                try
+                {
+                    seedModel = JsonSerializer.Deserialize<Notification_UserSeedModel>(json);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** an exception occured during deserializing User seed data! guid: '{seedDirectory.Name}'");
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                    continue;
+                }
+                if (seedModel is not null)
+                {
+                    Notification_UserDbModel? dbModel = seedModel.GetDbModel();
+                    if (dbModel is not null)
+                    {
+                        await libraryDb.Users.AddAsync(dbModel);
+                        await libraryDb.SaveChangesAsync();
+                    }
                 }
             }
         }
-    }
 
+        //************************************ seed Notification data **********************************
+        public async Task Update_NotificationSeed(string dbModelGuid, Notification_DbContext notifDb)
+        {
+            Notification_NotificationSeedModel? seedModel = await Notification_NotificationSeedModel.Factory(dbModelGuid, notifDb);
+            if (seedModel is null) return;
+
+            string json = JsonSerializer.Serialize(seedModel);
+            DirectoryInfo seedDirectory = Directory.CreateDirectory(Path.Combine(Storage_Notifications.FullName, dbModelGuid));
+            string seedPath = Path.Combine(seedDirectory.FullName, SeedFileName);
+            await File.WriteAllTextAsync(seedPath, json);
+        }
+        public void Delete_NotificationDirectory(string dbModelGuid)
+        {
+            string directoryPath = Path.Combine(Storage_Notifications.FullName, dbModelGuid);
+            if (Directory.Exists(directoryPath))
+            {
+                try
+                {
+                    Directory.Delete(directoryPath, true);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                }
+            }
+        }
+        public async Task Seed_NotificationsToDb(Notification_DbContext notifDb)
+        {
+            foreach (var seedDirectory in Storage_Notifications.EnumerateDirectories())
+            {
+                var dbModelExist = await notifDb.Notifications
+                .AnyAsync(o => o.Guid == seedDirectory.Name);
+                if (dbModelExist)
+                {
+                    continue;
+                }
+
+                string seedPath = Path.Combine(Storage_Notifications.FullName, seedDirectory.Name, SeedFileName);
+                if (!File.Exists(seedPath))
+                {
+                    continue;
+                }
+
+                string json = await File.ReadAllTextAsync(seedPath);
+                Notification_NotificationSeedModel? seedModel;
+                try
+                {
+                    seedModel = JsonSerializer.Deserialize<Notification_NotificationSeedModel>(json);
+                }
+                catch (Exception e)
+                {
+                    //log
+                    Console.WriteLine($"\n     ***** an exception occured during deserializing Notification seed data! guid: '{seedDirectory.Name}'");
+                    Console.WriteLine($"\n     ***** {e.Message} *****");
+                    continue;
+                }
+                if (seedModel is not null)
+                {
+                    Notification_NotificationDbModel? dbModel = await seedModel.GetDbModel(notifDb);
+                    if (dbModel is not null)
+                    {
+                        await notifDb.Notifications.AddAsync(dbModel);
+                        await notifDb.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+    */
 }
 //************************************ Seed Models ********************************
+/*
 public class Notification_UserSeedModel
 {
     public string Guid { get; set; } = null!;
@@ -367,17 +388,19 @@ public class Notification_NotificationSeedModel
         return notificationDbModel;
     }
 }
-
-//********************* data models *************
-public class Notification_NotifCreationModel
+*/
+//********************* Form models *************
+public class Notification_NotifCreation_FormModel
 {
-    public string? SubjectGuid { get; set; } = null;
-    public string OwnerGuid { get; set; } = null!;
+    public Guid? SubjectGuid { get; set; } = null;
+    public Guid OwnerGuid { get; set; }
     public string Title { get; set; } = null!;
     public string[] Description { get; set; } = [];
     public string? Link { get; set; } = null;
 }
-public class Notification_NotifClientModel
+
+//********************* View models *************
+public class Notification_NotifClient_ViewModel
 {
     public string Guid { get; set; } = null!;
     public string Title { get; set; } = null!;

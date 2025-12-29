@@ -43,6 +43,8 @@ export class SingletonModes {
   username_MaxLength = signal(60);
   version_MaxLength = signal(30);
   tagName_MaxLength = signal(30);
+  userProfileDescription_MaxLength = signal(500);
+  comment_MaxLength = signal(500);
 
   
 

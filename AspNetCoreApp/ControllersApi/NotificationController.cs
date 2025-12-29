@@ -60,14 +60,14 @@ public class NotificationController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        Notification_NotifClientModel[] notifs = await notifDb.Users
+        Notification_NotifClient_ViewModel[] notifs = await notifDb.Users
         .Where(u => u.Guid == myGuid)
         .Include(u => u.Notifications)
         .SelectMany(u => u.Notifications)
         .OrderByDescending(n => n.CreatedAt)
         .Skip(pageIndex.Value * pageSize.Value)
         .Take(pageSize.Value)
-        .Select(n => new Notification_NotifClientModel()
+        .Select(n => new Notification_NotifClient_ViewModel()
         {
             CreatedAt = n.CreatedAt,
             Description = n.Description,

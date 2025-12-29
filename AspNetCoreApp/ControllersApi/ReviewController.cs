@@ -77,11 +77,11 @@ public class ReviewController : ControllerBase
         .Where(c => c.ReplyTo == null)
         .CountAsync();
 
-        Review_CommentModel[] requestedCommentWithParentsModels = [];
+        Review_Comment_ViewModel[] requestedCommentWithParentsModels = [];
         string? mainParentCommentGuid = null;
         while (!string.IsNullOrWhiteSpace(commentGuid))
         {
-            Review_CommentModel? requestedCommentModel = await GetRequestedComment(commentGuid);
+            Review_Comment_ViewModel? requestedCommentModel = await GetRequestedComment(commentGuid);
             if (requestedCommentModel is not null)
             {
                 requestedCommentWithParentsModels = [requestedCommentModel, .. requestedCommentWithParentsModels];
@@ -99,8 +99,8 @@ public class ReviewController : ControllerBase
         }
 
         int commentTakeNumber = 10;
-        Review_CommentModel[] myCommentsModels = [];
-        Review_CommentModel[] othersCommentsModels = [];
+        Review_Comment_ViewModel[] myCommentsModels = [];
+        Review_Comment_ViewModel[] othersCommentsModels = [];
         if (myGuid is not null)
         {
             myCommentsModels = await reviewDb.Reviews
@@ -119,7 +119,7 @@ public class ReviewController : ControllerBase
             .Where(c => c.Writer.Guid == myGuid && c.ReplyTo == null && c.Guid != mainParentCommentGuid)
             .OrderBy(c => c.Id)
             .Take(commentTakeNumber)
-            .Select(c => new Review_CommentModel()
+            .Select(c => new Review_Comment_ViewModel()
             {
                 AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                 AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -158,7 +158,7 @@ public class ReviewController : ControllerBase
                 .Where(c => c.Writer.Guid != myGuid && c.ReplyTo == null && c.Guid != mainParentCommentGuid)
                 .OrderBy(c => c.Id)
                 .Take(numberOfNeededOthersComments)
-                .Select(c => new Review_CommentModel()
+                .Select(c => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                     AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -196,7 +196,7 @@ public class ReviewController : ControllerBase
             .Where(c => c.ReplyTo == null && c.Guid != mainParentCommentGuid)
             .OrderBy(c => c.Id)
             .Take(commentTakeNumber)
-            .Select(c => new Review_CommentModel()
+            .Select(c => new Review_Comment_ViewModel()
             {
                 AmIThumbsDown = false,
                 AmIThumbsUp = false,
@@ -216,10 +216,10 @@ public class ReviewController : ControllerBase
             .ToArrayAsync();
         }
 
-        Review_CommentModel[] comments =
+        Review_Comment_ViewModel[] comments =
         [.. requestedCommentWithParentsModels, .. myCommentsModels, .. othersCommentsModels];
 
-        Review_ReviewModel reviewModel = new()
+        Review_Review_ViewModel reviewModel = new()
         {
             AmILiked = myGuid is not null && reviewDbModel.LikedBy.Select(u => u.Guid).Contains(myGuid),
             Comments = comments,
@@ -229,7 +229,7 @@ public class ReviewController : ControllerBase
 
         return Ok(reviewModel);
     }
-    private async Task<Review_CommentModel?> GetRequestedComment(string commentGuid)
+    private async Task<Review_Comment_ViewModel?> GetRequestedComment(string commentGuid)
     {
         string? myGuid = null;
         if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
@@ -240,14 +240,14 @@ public class ReviewController : ControllerBase
             .FirstAsync();
         }
 
-        Review_CommentModel? requestedCommentModel = await reviewDb.Comments
+        Review_Comment_ViewModel? requestedCommentModel = await reviewDb.Comments
         .Where(c => c.Guid == commentGuid)
         .Include(c => c.ReplyTo)
         .Include(c => c.Replies)
         .Include(c => c.ThumbsDowns)
         .Include(c => c.ThumbsUps)
         .Include(c => c.Writer)
-        .Select(c => new Review_CommentModel()
+        .Select(c => new Review_Comment_ViewModel()
         {
             AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
             AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -307,7 +307,7 @@ public class ReviewController : ControllerBase
 
         if (pageIndex.Value > 0 && (pageIndex.Value * pageSize) >= totalNumberOfComments)
         {
-            return Ok(Array.Empty<Review_CommentModel>());
+            return Ok(Array.Empty<Review_Comment_ViewModel>());
         }
 
         string? myGuid = null;
@@ -321,8 +321,8 @@ public class ReviewController : ControllerBase
 
         if (orderBy is null)
         {
-            Review_CommentModel[] myCommentsModels = [];
-            Review_CommentModel[] othersCommentsModels = [];
+            Review_Comment_ViewModel[] myCommentsModels = [];
+            Review_Comment_ViewModel[] othersCommentsModels = [];
             if (myGuid is not null)
             {
                 myCommentsModels = await reviewDb.Reviews
@@ -342,7 +342,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(c => c.Id)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_CommentModel()
+                .Select(c => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                     AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -404,7 +404,7 @@ public class ReviewController : ControllerBase
                     .OrderBy(c => c.Id)
                     .Skip(numberOfSkipOthersComments)
                     .Take(numberOfNeededOthersComments)
-                    .Select(c => new Review_CommentModel()
+                    .Select(c => new Review_Comment_ViewModel()
                     {
                         AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                         AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -443,7 +443,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(c => c.Id)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_CommentModel()
+                .Select(c => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = false,
                     AmIThumbsUp = false,
@@ -463,14 +463,14 @@ public class ReviewController : ControllerBase
                 .ToArrayAsync();
             }
 
-            Review_CommentModel[] selectedComments = [.. myCommentsModels, .. othersCommentsModels];
+            Review_Comment_ViewModel[] selectedComments = [.. myCommentsModels, .. othersCommentsModels];
             return Ok(selectedComments);
         }
         else//orderBy
         {
             if (orderBy == "Newest")
             {
-                Review_CommentModel[] commentsModels = await reviewDb.Reviews
+                Review_Comment_ViewModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
                 /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
@@ -487,7 +487,7 @@ public class ReviewController : ControllerBase
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_CommentModel()
+                .Select(c => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                     AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -511,7 +511,7 @@ public class ReviewController : ControllerBase
 
             if (orderBy == "Oldest")
             {
-                Review_CommentModel[] commentsModels = await reviewDb.Reviews
+                Review_Comment_ViewModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
                 /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
@@ -528,7 +528,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_CommentModel()
+                .Select(c => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                     AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -552,7 +552,7 @@ public class ReviewController : ControllerBase
 
             if (orderBy == "Most Agreed")
             {
-                Review_CommentModel[] commentsModels = await reviewDb.Reviews
+                Review_Comment_ViewModel[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid)
                 /*.Include(r => r.Comments)
                     .ThenInclude(c => c.ReplyTo)
@@ -569,7 +569,7 @@ public class ReviewController : ControllerBase
                 .OrderByDescending(c => c.ThumbsUps.Count)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_CommentModel()
+                .Select(c => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                     AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -591,7 +591,7 @@ public class ReviewController : ControllerBase
                 return Ok(commentsModels);
             }
 
-            return Ok(Array.Empty<Review_CommentModel>());
+            return Ok(Array.Empty<Review_Comment_ViewModel>());
         }
     }
 
@@ -624,8 +624,8 @@ public class ReviewController : ControllerBase
 
         bunchIndex ??= 0;
 
-        Review_CommentModel[] myRepliesModels = [];
-        Review_CommentModel[] othersRepliesModels = [];
+        Review_Comment_ViewModel[] myRepliesModels = [];
+        Review_Comment_ViewModel[] othersRepliesModels = [];
         if (myGuid is not null)
         {
             myRepliesModels = await reviewDb.Comments
@@ -643,7 +643,7 @@ public class ReviewController : ControllerBase
             .OrderBy(rep => rep.Id)
             .Skip(bunchIndex.Value * 10)
             .Take(10)
-            .Select(rep => new Review_CommentModel()
+            .Select(rep => new Review_Comment_ViewModel()
             {
                 AmIThumbsDown = rep.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                 AmIThumbsUp = rep.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -700,7 +700,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(rep => rep.Id)
                 .Skip(numberOfSkipOthersReplies)
                 .Take(numberOfNeededOthersReplies)
-                .Select(rep => new Review_CommentModel()
+                .Select(rep => new Review_Comment_ViewModel()
                 {
                     AmIThumbsDown = rep.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
                     AmIThumbsUp = rep.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
@@ -736,7 +736,7 @@ public class ReviewController : ControllerBase
             .OrderBy(c => c.Id)
             .Skip(bunchIndex.Value * 10)
             .Take(10)
-            .Select(rep => new Review_CommentModel()
+            .Select(rep => new Review_Comment_ViewModel()
             {
                 AmIThumbsDown = false,
                 AmIThumbsUp = false,
@@ -756,14 +756,14 @@ public class ReviewController : ControllerBase
             .ToArrayAsync();
         }
 
-        Review_CommentModel[] repliesModels = [.. myRepliesModels, .. othersRepliesModels];
+        Review_Comment_ViewModel[] repliesModels = [.. myRepliesModels, .. othersRepliesModels];
         return Ok(repliesModels);
     }
 
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewCommentFormModel formModel,
+    public async Task<IActionResult> SubmitNewComment([FromForm] Review_NewComment_FormModel formModel,
     [FromServices] Review_Process reviewProcess, [FromServices] Notification_DbContext notifDb,
     [FromServices] Notification_Process notifProcess, [FromServices] Library_DbContext libraryDb)
     {
@@ -804,7 +804,7 @@ public class ReviewController : ControllerBase
             .Where(doc => doc.Guid == parentReviewDbModel.SubjectGuid)
             .Select(doc => doc.Title)
             .FirstAsync();
-            Notification_NotifCreationModel notifModel = new()
+            Notification_NotifCreation_FormModel notifModel = new()
             {
                 OwnerGuid = parentReviewDbModel.Owner.Guid,
                 SubjectGuid = comment.Guid,
@@ -817,7 +817,7 @@ public class ReviewController : ControllerBase
             };
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 
-            Review_CommentModel commentModel = new()
+            Review_Comment_ViewModel commentModel = new()
             {
                 CreatedAt = comment.CreatedAt,
                 Guid = comment.Guid,
@@ -834,7 +834,7 @@ public class ReviewController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReplyFormModel formModel,
+    public async Task<IActionResult> SubmitNewReply([FromForm] Review_NewReply_FormModel formModel,
     [FromServices] Review_Process reviewProcess, [FromServices] Notification_DbContext notifDb,
     [FromServices] Notification_Process notifProcess, [FromServices] Library_DbContext libraryDb)
     {
@@ -884,7 +884,7 @@ public class ReviewController : ControllerBase
             .Where(doc => doc.Guid == parentReviewDbModel.SubjectGuid)
             .Select(doc => doc.Title)
             .FirstAsync();
-            Notification_NotifCreationModel notifModel = new()
+            Notification_NotifCreation_FormModel notifModel = new()
             {
                 OwnerGuid = parentCommentDbModel.Writer.Guid,
                 SubjectGuid = parentCommentDbModel.Guid,
@@ -898,7 +898,7 @@ public class ReviewController : ControllerBase
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 
             int briefLength = parentCommentDbModel.Text.Length > 128 ? 128 : parentCommentDbModel.Text.Length;
-            Review_CommentModel replyModel = new()
+            Review_Comment_ViewModel replyModel = new()
             {
                 CreatedAt = reply.CreatedAt,
                 Guid = reply.Guid,

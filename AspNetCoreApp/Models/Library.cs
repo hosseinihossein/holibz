@@ -24,11 +24,11 @@ public class Library_OwnerDbModel
     public ICollection<Library_ElementDbModel> Elements { get; set; } = [];
     public Guid DefaultLibraryGuid { get; set; }
     public Guid DefaultShelfGuid { get; set; }
-    public ICollection<Library_OwnerDbModel> Followers { get; set; } = [];
-    public ICollection<Library_OwnerDbModel> Followings { get; set; } = [];
-    public ICollection<Library_LibraryDbModel> FavoriteLibraries { get; set; } = [];
-    public ICollection<Library_ShelfDbModel> FavoriteShelves { get; set; } = [];
-    public ICollection<Library_DocumentDbModel> FavoriteDocuments { get; set; } = [];
+    public ICollection<Library_FollowerFollowing_DbModel> Followers { get; set; } = [];
+    public ICollection<Library_FollowerFollowing_DbModel> Followings { get; set; } = [];
+    public ICollection<Library_UserFavoriteLibrary_DbModel> FavoriteLibraries { get; set; } = [];
+    public ICollection<Library_UserFavoriteShelf_DbModel> FavoriteShelves { get; set; } = [];
+    public ICollection<Library_UserFavoriteDocument_DbModel> FavoriteDocuments { get; set; } = [];
 }
 public class Library_LibraryDbModel
 {
@@ -40,7 +40,7 @@ public class Library_LibraryDbModel
     public string Title { get; set; } = null!;
     [MaxLength(500)]
     public string? Description { get; set; } = null;
-    public ICollection<Library_ShelfDbModel> Shelves { get; set; } = [];
+    public ICollection<Library_LibraryShelf_DbModel> Shelves { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public byte _integrityVersion { get; set; } = 0;
     [NotMapped]
@@ -50,7 +50,7 @@ public class Library_LibraryDbModel
         set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     public bool HasImage { get; set; } = false;
-    public ICollection<Library_OwnerDbModel> InFavorOf { get; set; } = [];
+    public ICollection<Library_UserFavoriteLibrary_DbModel> InFavorOf { get; set; } = [];
 }
 public class Library_ShelfDbModel
 {
@@ -62,8 +62,8 @@ public class Library_ShelfDbModel
     public string Title { get; set; } = null!;
     [MaxLength(500)]
     public string? Description { get; set; } = null;
-    public ICollection<Library_LibraryDbModel> ParentLibraries { get; set; } = [];
-    public ICollection<Library_DocumentDbModel> Documents { get; set; } = [];
+    public ICollection<Library_LibraryShelf_DbModel> ParentLibraries { get; set; } = [];
+    public ICollection<Library_ShelfDocument_DbModel> Documents { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public byte _integrityVersion { get; set; } = 0;
     [NotMapped]
@@ -73,7 +73,7 @@ public class Library_ShelfDbModel
         set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     public bool HasImage { get; set; } = false;
-    public ICollection<Library_OwnerDbModel> InFavorOf { get; set; } = [];
+    public ICollection<Library_UserFavoriteShelf_DbModel> InFavorOf { get; set; } = [];
 }
 public class Library_DocumentDbModel
 {
@@ -88,9 +88,9 @@ public class Library_DocumentDbModel
     [MaxLength(30)]
     public string Version { get; set; } = "Default";
     public Library_RelatedVersionsDbModel? RelatedVersions { get; set; }
-    public ICollection<Library_ShelfDbModel> ParentShelves { get; set; } = [];
+    public ICollection<Library_ShelfDocument_DbModel> ParentShelves { get; set; } = [];
     public ICollection<Library_ElementDbModel> Elements { get; set; } = [];
-    public ICollection<Library_TagDbModel> Tags { get; set; } = [];
+    public ICollection<Library_DocumentTag_DbModel> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public byte _integrityVersion { get; set; } = 0;
     [NotMapped]
@@ -100,7 +100,7 @@ public class Library_DocumentDbModel
         set => _integrityVersion = value > 255 || value < 0 ? (byte)0 : (byte)value;
     }
     public bool HasImage { get; set; } = false;
-    public ICollection<Library_OwnerDbModel> InFavorOf { get; set; } = [];
+    public ICollection<Library_UserFavoriteDocument_DbModel> InFavorOf { get; set; } = [];
 }
 public class Library_RelatedVersionsDbModel
 {
@@ -139,7 +139,80 @@ public class Library_TagDbModel
     public int Id { get; set; }
     [MaxLength(30)]
     public string Name { get; set; } = null!;
-    public ICollection<Library_DocumentDbModel> Documents { get; set; } = [];
+    public ICollection<Library_DocumentTag_DbModel> Documents { get; set; } = [];
+}
+
+//************** join tables *************
+public class Library_FollowerFollowing_DbModel
+{
+    public int FollowerId { get; set; }
+    public Library_OwnerDbModel Follower { get; set; } = null!;
+
+    public int FollowingId { get; set; }
+    public Library_OwnerDbModel Following { get; set; } = null!;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+public class Library_UserFavoriteLibrary_DbModel
+{
+    public int UserId { get; set; }
+    public Library_OwnerDbModel User { get; set; } = null!;
+
+    public int LibraryId { get; set; }
+    public Library_LibraryDbModel Library { get; set; } = null!;
+
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+}
+public class Library_UserFavoriteShelf_DbModel
+{
+    public int UserId { get; set; }
+    public Library_OwnerDbModel User { get; set; } = null!;
+
+    public int ShelfId { get; set; }
+    public Library_ShelfDbModel Shelf { get; set; } = null!;
+
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+}
+public class Library_UserFavoriteDocument_DbModel
+{
+    public int UserId { get; set; }
+    public Library_OwnerDbModel User { get; set; } = null!;
+
+    public int DocumentId { get; set; }
+    public Library_DocumentDbModel Document { get; set; } = null!;
+
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+}
+
+public class Library_LibraryShelf_DbModel
+{
+    public int LibraryId { get; set; }
+    public Library_LibraryDbModel Library { get; set; } = null!;
+
+    public int ShelfId { get; set; }
+    public Library_ShelfDbModel Shelf { get; set; } = null!;
+
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+}
+public class Library_ShelfDocument_DbModel
+{
+    public int ShelfId { get; set; }
+    public Library_ShelfDbModel Shelf { get; set; } = null!;
+
+    public int DocumentId { get; set; }
+    public Library_DocumentDbModel Document { get; set; } = null!;
+
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+}
+public class Library_DocumentTag_DbModel
+{
+    public int DocumentId { get; set; }
+    public Library_DocumentDbModel Document { get; set; } = null!;
+
+    public int TagId { get; set; }
+    public Library_TagDbModel Tag { get; set; } = null!;
+
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 
 
@@ -147,13 +220,22 @@ public class Library_DbContext : DbContext
 {
     public Library_DbContext(DbContextOptions<Library_DbContext> options) : base(options) { }
 
-    public DbSet<Library_OwnerDbModel> Owners { get; set; } = null!;
-    public DbSet<Library_LibraryDbModel> Libraries { get; set; } = null!;
-    public DbSet<Library_ShelfDbModel> Shelves { get; set; } = null!;
-    public DbSet<Library_DocumentDbModel> Documents { get; set; } = null!;
-    public DbSet<Library_RelatedVersionsDbModel> RelatedVersions { get; set; } = null!;
-    public DbSet<Library_ElementDbModel> Elements { get; set; } = null!;
-    public DbSet<Library_TagDbModel> Tags { get; set; } = null!;
+    public DbSet<Library_OwnerDbModel> Owners { get; set; } //= null!;
+    public DbSet<Library_LibraryDbModel> Libraries { get; set; } //= null!;
+    public DbSet<Library_ShelfDbModel> Shelves { get; set; } //= null!;
+    public DbSet<Library_DocumentDbModel> Documents { get; set; } //= null!;
+    public DbSet<Library_RelatedVersionsDbModel> RelatedVersions { get; set; } //= null!;
+    public DbSet<Library_ElementDbModel> Elements { get; set; } //= null!;
+    public DbSet<Library_TagDbModel> Tags { get; set; } //= null!;
+
+    //*********** join tables ***********
+    public DbSet<Library_FollowerFollowing_DbModel> FollowerFollowings { get; set; }
+    public DbSet<Library_UserFavoriteLibrary_DbModel> UserFavoriteLibraries { get; set; }
+    public DbSet<Library_UserFavoriteShelf_DbModel> UserFavoriteShelves { get; set; }
+    public DbSet<Library_UserFavoriteDocument_DbModel> UserFavoriteDocuments { get; set; }
+    public DbSet<Library_LibraryShelf_DbModel> LibraryShelves { get; set; }
+    public DbSet<Library_ShelfDocument_DbModel> ShelfDocuments { get; set; }
+    public DbSet<Library_DocumentTag_DbModel> DocumentTags { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -186,38 +268,92 @@ public class Library_DbContext : DbContext
         .IsRequired(true);
 
         //*********** Followers-Followings Many-To-Many *********
-        modelBuilder.Entity<Library_OwnerDbModel>()
-        .HasMany(o => o.Followers)
-        .WithMany(o => o.Followings);
+        modelBuilder.Entity<Library_FollowerFollowing_DbModel>()
+        .HasKey(ff => new { ff.FollowerId, ff.FollowingId });
+
+        modelBuilder.Entity<Library_FollowerFollowing_DbModel>()
+        .HasOne(ff => ff.Follower)
+        .WithMany(u => u.Followers)
+        .HasForeignKey(ff => ff.FollowerId);
+
+        modelBuilder.Entity<Library_FollowerFollowing_DbModel>()
+        .HasOne(ff => ff.Following)
+        .WithMany(u => u.Followings)
+        .HasForeignKey(ff => ff.FollowingId);
 
         //*********** Users-FavoriteLibraries Many-To-Many *********
-        modelBuilder.Entity<Library_OwnerDbModel>()
-        .HasMany(o => o.FavoriteLibraries)
-        .WithMany(l => l.InFavorOf);
+        modelBuilder.Entity<Library_UserFavoriteLibrary_DbModel>()
+        .HasKey(ul => new { ul.UserId, ul.LibraryId });
+
+        modelBuilder.Entity<Library_UserFavoriteLibrary_DbModel>()
+        .HasOne(ul => ul.User)
+        .WithMany(o => o.FavoriteLibraries)
+        .HasForeignKey(ul => ul.UserId);
+
+        modelBuilder.Entity<Library_UserFavoriteLibrary_DbModel>()
+        .HasOne(ul => ul.Library)
+        .WithMany(lib => lib.InFavorOf)
+        .HasForeignKey(ul => ul.LibraryId);
 
         //*********** Users-FavoriteShelves Many-To-Many *********
-        modelBuilder.Entity<Library_OwnerDbModel>()
-        .HasMany(o => o.FavoriteShelves)
-        .WithMany(sh => sh.InFavorOf);
+        modelBuilder.Entity<Library_UserFavoriteShelf_DbModel>()
+        .HasKey(ul => new { ul.UserId, ul.ShelfId });
+
+        modelBuilder.Entity<Library_UserFavoriteShelf_DbModel>()
+        .HasOne(ul => ul.User)
+        .WithMany(o => o.FavoriteShelves)
+        .HasForeignKey(ul => ul.UserId);
+
+        modelBuilder.Entity<Library_UserFavoriteShelf_DbModel>()
+        .HasOne(ul => ul.Shelf)
+        .WithMany(lib => lib.InFavorOf)
+        .HasForeignKey(ul => ul.ShelfId);
 
         //*********** Users-FavoriteDocuments Many-To-Many *********
-        modelBuilder.Entity<Library_OwnerDbModel>()
-        .HasMany(o => o.FavoriteDocuments)
-        .WithMany(doc => doc.InFavorOf);
+        modelBuilder.Entity<Library_UserFavoriteDocument_DbModel>()
+        .HasKey(ul => new { ul.UserId, ul.DocumentId });
+
+        modelBuilder.Entity<Library_UserFavoriteDocument_DbModel>()
+        .HasOne(ul => ul.User)
+        .WithMany(o => o.FavoriteDocuments)
+        .HasForeignKey(ul => ul.UserId);
+
+        modelBuilder.Entity<Library_UserFavoriteDocument_DbModel>()
+        .HasOne(ul => ul.Document)
+        .WithMany(lib => lib.InFavorOf)
+        .HasForeignKey(ul => ul.DocumentId);
 
 
         //********************************** Library ***********************************
         //*********** Libraries-Shelves Many-To-Many *********
-        modelBuilder.Entity<Library_LibraryDbModel>()
-        .HasMany(l => l.Shelves)
-        .WithMany(sh => sh.ParentLibraries);
+        modelBuilder.Entity<Library_LibraryShelf_DbModel>()
+        .HasKey(ls => new { ls.LibraryId, ls.ShelfId });
+
+        modelBuilder.Entity<Library_LibraryShelf_DbModel>()
+        .HasOne(ls => ls.Library)
+        .WithMany(lib => lib.Shelves)
+        .HasForeignKey(ls => ls.LibraryId);
+
+        modelBuilder.Entity<Library_LibraryShelf_DbModel>()
+        .HasOne(ls => ls.Shelf)
+        .WithMany(shelf => shelf.ParentLibraries)
+        .HasForeignKey(ls => ls.ShelfId);
 
 
         //********************************** Shelf ***********************************
         //*********** Shelves-Documents Many-To-Many *********
-        modelBuilder.Entity<Library_ShelfDbModel>()
-        .HasMany(sh => sh.Documents)
-        .WithMany(d => d.ParentShelves);
+        modelBuilder.Entity<Library_ShelfDocument_DbModel>()
+        .HasKey(ls => new { ls.ShelfId, ls.DocumentId });
+
+        modelBuilder.Entity<Library_ShelfDocument_DbModel>()
+        .HasOne(ls => ls.Shelf)
+        .WithMany(shelf => shelf.Documents)
+        .HasForeignKey(ls => ls.ShelfId);
+
+        modelBuilder.Entity<Library_ShelfDocument_DbModel>()
+        .HasOne(ls => ls.Document)
+        .WithMany(doc => doc.ParentShelves)
+        .HasForeignKey(ls => ls.DocumentId);
 
 
         //********************************** RelatedVersions ***********************************
@@ -239,9 +375,18 @@ public class Library_DbContext : DbContext
 
         //********************************** Tag ***********************************
         //*********** Tags-Documents Many-To-Many *********
-        modelBuilder.Entity<Library_DocumentDbModel>()
-        .HasMany(d => d.Tags)
-        .WithMany(t => t.Documents);
+        modelBuilder.Entity<Library_DocumentTag_DbModel>()
+        .HasKey(ls => new { ls.DocumentId, ls.TagId });
+
+        modelBuilder.Entity<Library_DocumentTag_DbModel>()
+        .HasOne(dt => dt.Document)
+        .WithMany(doc => doc.Tags)
+        .HasForeignKey(dt => dt.DocumentId);
+
+        modelBuilder.Entity<Library_DocumentTag_DbModel>()
+        .HasOne(dt => dt.Tag)
+        .WithMany(tag => tag.Documents)
+        .HasForeignKey(dt => dt.TagId);
 
 
         //***************************************************************************
@@ -355,8 +500,14 @@ public class Library_Process //singleton service
             {
                 Description = "Containing all shelves that doesn't belong to anyother libraries.",
                 Title = "Default Library",
-                Shelves = [defaultShelf],
             };
+            Library_LibraryShelf_DbModel libraryShelf = new()
+            {
+                Library = defaultLibrary,
+                Shelf = defaultShelf,
+            };
+            libraryDb.LibraryShelves.Add(libraryShelf);
+
             ownerDbModel = new()
             {
                 Guid = ownerGuid,
@@ -472,50 +623,49 @@ public class Library_Process //singleton service
         }
 
         libraryDb.Shelves.Add(shelfDbModel);
-        await libraryDb.SaveChangesAsync();
+        //await libraryDb.SaveChangesAsync();
 
         List<Library_LibraryDbModel> parentLibraries = [];
         if (formModel.LibraryGuids is not null && formModel.LibraryGuids.Length > 0)
         {
-            List<Guid> libraryGuids = [];
-            foreach (string libStringGuid in formModel.LibraryGuids)
-            {
-                if (Guid.TryParseExact(libStringGuid, "N", out Guid libGuid))
-                {
-                    libraryGuids.Add(libGuid);
-                }
-            }
-
+            //fetch and create
             parentLibraries = await libraryDb.Owners
             .Where(o => o.Id == ownerInfo.Id)
             .SelectMany(o => o.Libraries)
-            .Where(lib => libraryGuids.Contains(lib.Guid))
+            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
             .Select(lib => new Library_LibraryDbModel()
             {
                 Id = lib.Id,
             })
-            .AsNoTracking()//not necessary, yet harmless
             .ToListAsync();
         }
 
         if (parentLibraries.Count == 0)
         {
-            var defaultLibrary = await libraryDb.Libraries
+            //fetch and create
+            Library_LibraryDbModel defaultLibrary = await libraryDb.Libraries
             .Where(lib => lib.Guid == ownerInfo.DefaultLibraryGuid)
             .Select(lib => new Library_LibraryDbModel()
             {
                 Id = lib.Id,
             })
-            .AsNoTracking()//not necessary, yet harmless
             .FirstAsync();
             parentLibraries.Add(defaultLibrary);
         }
 
+        //attach
         libraryDb.Libraries.AttachRange(parentLibraries);
 
+        //edit
         foreach (Library_LibraryDbModel parentLib in parentLibraries)
         {
-            shelfDbModel.ParentLibraries.Add(parentLib);
+            Library_LibraryShelf_DbModel libShelf = new()
+            {
+                Library = parentLib,
+                Shelf = shelfDbModel,
+            };
+            //shelfDbModel.ParentLibraries.Add(libShelf);
+            libraryDb.LibraryShelves.Add(libShelf);
         }
 
         await libraryDb.SaveChangesAsync();
@@ -566,13 +716,12 @@ public class Library_Process //singleton service
         }
 
         libraryDb.Documents.Add(documentDbModel);
-        await libraryDb.SaveChangesAsync();
+        //await libraryDb.SaveChangesAsync();
 
         List<Library_ShelfDbModel> parentShelves = [];
         if (formModel.ShelfGuids is not null && formModel.ShelfGuids.Length > 0)
         {
             parentShelves = await libraryDb.Owners
-            .AsNoTracking()//not necessary, yet harmless
             .Where(o => o.Id == ownerInfo.Id)
             .SelectMany(o => o.Shelves)
             .Where(shelf => formModel.ShelfGuids.Contains(shelf.Guid))
@@ -586,7 +735,6 @@ public class Library_Process //singleton service
         if (parentShelves.Count == 0)
         {
             var defaultShelf = await libraryDb.Shelves
-            .AsNoTracking()//not necessary, yet harmless
             .Where(shelf => shelf.Guid == ownerInfo.DefaultShelfGuid)
             .Select(lib => new Library_ShelfDbModel()
             {
@@ -600,7 +748,12 @@ public class Library_Process //singleton service
 
         foreach (Library_ShelfDbModel parentShelf in parentShelves)
         {
-            documentDbModel.ParentShelves.Add(parentShelf);
+            Library_ShelfDocument_DbModel shelfDocument = new()
+            {
+                Shelf = parentShelf,
+                Document = documentDbModel,
+            };
+            libraryDb.ShelfDocuments.Add(shelfDocument);
         }
 
         await libraryDb.SaveChangesAsync();
@@ -1955,7 +2108,7 @@ public class Library_NewShelf_FormModel
     public string? Description { get; set; } = null;
 
     [MaxStringArrayLength(100, 32)]
-    public string[]? LibraryGuids { get; set; } = [];
+    public Guid[]? LibraryGuids { get; set; } = [];
 
     public IFormFile? Image { get; set; }
 }

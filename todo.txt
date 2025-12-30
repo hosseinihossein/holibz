@@ -18,8 +18,8 @@ create different size images,
 - revise db models and contexts, remove seed,
 - set backup model to backup from storage
 - search about asp.net core Identity, how to use it at best performance and fetch data efficiently
+- define explicit join-table for many-to-many relationships
 - 
-
 
 
 ******* efficient ways for efcore query *********

@@ -15,7 +15,7 @@ public class Library_OwnerDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     [MaxLength(60)]
     public string NormalizedUserName { get; set; } = null!;
     public ICollection<Library_LibraryDbModel> Libraries { get; set; } = [];
@@ -34,7 +34,7 @@ public class Library_LibraryDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Library_OwnerDbModel Owner { get; set; } = null!;
     [MaxLength(60)]
     public string Title { get; set; } = null!;
@@ -56,7 +56,7 @@ public class Library_ShelfDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Library_OwnerDbModel Owner { get; set; } = null!;
     [MaxLength(60)]
     public string Title { get; set; } = null!;
@@ -79,7 +79,7 @@ public class Library_DocumentDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Library_OwnerDbModel Owner { get; set; } = null!;
     [MaxLength(60)]
     public string Title { get; set; } = null!;
@@ -106,14 +106,14 @@ public class Library_RelatedVersionsDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public ICollection<Library_DocumentDbModel> Documents { get; set; } = [];
 }
 public class Library_ElementDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Library_OwnerDbModel Owner { get; set; } = null!;
     [MaxLength(20)]
     public string Type { get; set; } = null!;
@@ -338,18 +338,9 @@ public class Library_Process //singleton service
         return null;
     }*/
 
-    public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, string ownerStringGuid,
+    public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, Guid ownerGuid,
     string normalizedUserName)
     {
-        if (!Guid.TryParseExact(ownerStringGuid, "N", out Guid ownerGuid))
-        {
-            return new Library_ProcessResult()
-            {
-                ErrorTitle = "Guid Parse",
-                ErrorDescription = "Couldn't parse string to guid",
-            };
-        }
-
         Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .AsNoTracking()
         .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
@@ -389,18 +380,9 @@ public class Library_Process //singleton service
             ResultObject = ownerDbModel,
         };
     }
-    public async Task<Library_ProcessResult> CreateNewLibrary(Library_DbContext libraryDb, string ownerStringGuid,
+    public async Task<Library_ProcessResult> CreateNewLibrary(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewLibrary_FormModel formModel)
     {
-        if (!Guid.TryParseExact(ownerStringGuid, "N", out Guid ownerGuid))
-        {
-            return new Library_ProcessResult()
-            {
-                ErrorTitle = "Guid Parse",
-                ErrorDescription = "Couldn't parse string to guid",
-            };
-        }
-
         var ownerId = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
         .Select(o => new { o.Id })
@@ -410,7 +392,7 @@ public class Library_Process //singleton service
             Library_ProcessResult processResult = new()
             {
                 ErrorTitle = "OwnerGuid",
-                ErrorDescription = $"Couldn't find any owner with guid '{ownerStringGuid}'!",
+                ErrorDescription = $"Couldn't find any owner with guid '{ownerGuid.ToString("N")}'!",
                 Success = false,
             };
             return processResult;
@@ -447,18 +429,9 @@ public class Library_Process //singleton service
 
         return new Library_ProcessResult() { Success = true, ResultObject = libraryDbModel };
     }
-    public async Task<Library_ProcessResult> CreateNewShelf(Library_DbContext libraryDb, string ownerStringGuid,
+    public async Task<Library_ProcessResult> CreateNewShelf(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewShelf_FormModel formModel)
     {
-        if (!Guid.TryParseExact(ownerStringGuid, "N", out Guid ownerGuid))
-        {
-            return new Library_ProcessResult()
-            {
-                ErrorTitle = "Guid Parse",
-                ErrorDescription = "Couldn't parse string to guid",
-            };
-        }
-
         var ownerInfo = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
         .Select(o => new { o.Id, o.DefaultLibraryGuid })
@@ -468,7 +441,7 @@ public class Library_Process //singleton service
             Library_ProcessResult processResult = new()
             {
                 ErrorTitle = "OwnerGuid",
-                ErrorDescription = $"Couldn't find any owner with guid '{ownerStringGuid}'!",
+                ErrorDescription = $"Couldn't find any owner with guid '{ownerGuid.ToString("N")}'!",
                 Success = false,
             };
             return processResult;
@@ -552,18 +525,9 @@ public class Library_Process //singleton service
 
         return new Library_ProcessResult() { Success = true, ResultObject = shelfDbModel };
     }
-    public async Task<Library_ProcessResult> CreateNewDocument(Library_DbContext libraryDb, string ownerStringGuid,
+    public async Task<Library_ProcessResult> CreateNewDocument(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewDocument_FormModel formModel)
     {
-        if (!Guid.TryParseExact(ownerStringGuid, "N", out Guid ownerGuid))
-        {
-            return new Library_ProcessResult()
-            {
-                ErrorTitle = "Guid Parse",
-                ErrorDescription = "Couldn't parse string to guid",
-            };
-        }
-
         var ownerInfo = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
         .Select(o => new { o.Id, o.DefaultShelfGuid })
@@ -573,7 +537,7 @@ public class Library_Process //singleton service
             Library_ProcessResult processResult = new()
             {
                 ErrorTitle = "OwnerGuid",
-                ErrorDescription = $"Couldn't find any owner with guid '{ownerStringGuid}'!",
+                ErrorDescription = $"Couldn't find any owner with guid '{ownerGuid.ToString("N")}'!",
                 Success = false,
             };
             return processResult;
@@ -650,18 +614,9 @@ public class Library_Process //singleton service
             ResultObject = documentDbModel,
         };
     }
-    public async Task<Library_ProcessResult> CreateNewElement(Library_DbContext libraryDb, string ownerStringGuid,
+    public async Task<Library_ProcessResult> CreateNewElement(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewElement_FormModel formModel)
     {
-        if (!Guid.TryParseExact(ownerStringGuid, "N", out Guid ownerGuid))
-        {
-            return new Library_ProcessResult()
-            {
-                ErrorTitle = "Guid Parse",
-                ErrorDescription = "Couldn't parse string to guid",
-            };
-        }
-
         var ownerId = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
         .Select(o => new { o.Id })
@@ -671,7 +626,7 @@ public class Library_Process //singleton service
             Library_ProcessResult processResult = new()
             {
                 ErrorTitle = "OwnerGuid",
-                ErrorDescription = $"Couldn't find any owner with guid '{ownerStringGuid}'!",
+                ErrorDescription = $"Couldn't find any owner with guid '{ownerGuid.ToString("N")}'!",
                 Success = false,
             };
             return processResult;

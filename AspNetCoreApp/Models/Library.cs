@@ -774,7 +774,7 @@ public class Library_Process //singleton service
             ErrorDescription = $"The element Type is unknown! Element type: '{formModel.Type}'",
         };
     }
-    public async Task<Library_ProcessResult> ReorderElements(Library_DbContext libraryDb, Guid parentDocumentGuid)
+    public async Task ReorderElements(Library_DbContext libraryDb, Guid parentDocumentGuid)
     {
         List<Library_ElementDbModel> elementsDbModels = (await libraryDb.Documents
         .Where(doc => doc.Guid == parentDocumentGuid)
@@ -805,12 +805,6 @@ public class Library_Process //singleton service
 
         //save
         await libraryDb.SaveChangesAsync();
-
-        return new Library_ProcessResult()
-        {
-            Success = true,
-            ResultObject = elementsDbModels,
-        };
     }
 
 

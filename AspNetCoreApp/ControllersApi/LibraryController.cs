@@ -475,16 +475,19 @@ public class LibraryController : ControllerBase
 
 
 
-    //******************** done till here *************
+
 
     [HttpGet]
     public async Task<IActionResult> DocumentCardList([FromQuery][StringLength(32)] string shelfGuid)
     {
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_DocumentCard_ViewModel[] documentCardModels = await libraryDb.Shelves
-        .Include(shelf => shelf.Owner)
-        .Include(shelf => shelf.Documents)
-            .ThenInclude(doc => doc.Elements)
-        .Where(shelf => shelf.Guid == shelfGuid)
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .SelectMany(shelf => shelf.Documents)
         .Select(doc => new Library_DocumentCard_ViewModel()
         {
@@ -497,7 +500,6 @@ public class LibraryController : ControllerBase
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
         })
-        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(documentCardModels);
@@ -506,8 +508,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentsGuids([FromQuery][StringLength(32)] string shelfGuid)
     {
-        string[] documentsGuids = await libraryDb.Shelves
-        .Where(shelf => shelf.Guid == shelfGuid)
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] documentsGuids = await libraryDb.Shelves
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .SelectMany(shelf => shelf.Documents)
         .Select(doc => doc.Guid)
         .ToArrayAsync();
@@ -518,10 +526,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentCardModel([FromQuery][StringLength(32)] string documentGuid)
     {
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_DocumentCard_ViewModel? documentCardModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .Include(doc => doc.Elements)
-        .Where(doc => doc.Guid == documentGuid)
+        .Where(doc => doc.Guid == documentGuid_Guid)
         .Select(doc => new Library_DocumentCard_ViewModel()
         {
             Guid = doc.Guid,
@@ -533,7 +545,6 @@ public class LibraryController : ControllerBase
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
         })
-        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentCardModel is null)
@@ -558,17 +569,14 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DocumentPageModel([FromQuery][StringLength(32)] string documentGuid)
     {
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_DocumentPage_ViewModel? documentPageModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .Include(doc => doc.Tags)
-        .Include(doc => doc.Elements)
-        .Include(doc => doc.RelatedVersions)
-            .ThenInclude(rv => rv!.Documents)
-        .Include(doc => doc.ParentShelves)
-            .ThenInclude(shelf => shelf.Documents)
-        .Include(doc => doc.ParentShelves)
-            .ThenInclude(shelf => shelf.ParentLibraries)
-        .Where(doc => doc.Guid == documentGuid)
+        .Where(doc => doc.Guid == documentGuid_Guid)
         .Select(doc => new Library_DocumentPage_ViewModel()
         {
             CreatedAt = doc.CreatedAt,
@@ -581,7 +589,7 @@ public class LibraryController : ControllerBase
             Owner = new Library_OwnerBrief_ViewModel()
             {
                 UserGuid = doc.Owner.Guid,
-                UserName = "_",
+                UserName = doc.Owner.NormalizedUserName,//instead of "_"
             },
             Elements = doc.Elements.Select(el => new Library_Element_ViewModel()
             {
@@ -618,7 +626,6 @@ public class LibraryController : ControllerBase
             }).ToArray(),
             IntegrityVersion = doc.IntegrityVersion,
         })
-        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentPageModel is null)
@@ -628,10 +635,11 @@ public class LibraryController : ControllerBase
         }
 
 
-        documentPageModel.Owner.UserName = (await userManager.Users
+        /*documentPageModel.Owner.UserName = (await userManager.Users
         .Where(u => u.UserGuid == documentPageModel.Owner.UserGuid)
         .Select(u => u.UserName)
-        .FirstOrDefaultAsync())!;
+        .FirstOrDefaultAsync())!;*/
+        documentPageModel.Owner.UserName = documentPageModel.Owner.UserName.ToLower();
 
         return Ok(documentPageModel);
     }
@@ -643,48 +651,51 @@ public class LibraryController : ControllerBase
     [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb,
     [FromServices] Notification_DbContext notifDb, [FromServices] Notification_Process notifProcess)
     {
-        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .Include(doc => doc.Elements)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
-        if (documentDbModel is null)
+        var documentDbInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid)
+        .Select(doc => new
+        {
+            doc.Id,
+            ownerGuid = doc.Owner.Guid,
+            elementsGuids = doc.Elements.Select(el => el.Guid),
+        })
+        .FirstOrDefaultAsync();
+
+        if (documentDbInfo is null)
         {
             return NotFound($"There's no document with guid '{documentGuid}'!");
         }
 
-        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
-        if (user.UserGuid != documentDbModel.Owner.Guid)
+        Guid myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        if (myGuid != documentDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the author of the document is allowed to delete it!");
             return BadRequest(ModelState);
         }
 
         //remove from Db
-        libraryDb.Documents.Remove(documentDbModel);
-        await libraryDb.SaveChangesAsync();
+        await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id).ExecuteDeleteAsync();
 
-        //seed
-        libraryProcess.Delete_DocumentDirectory(documentDbModel.Guid);
+        //storage
+        libraryProcess.Delete_DocumentDirectory(documentGuid);
         //delete directory path of elements from storage
-        foreach (string elementGuid in documentDbModel.Elements.Select(el => el.Guid))
+        foreach (Guid elementGuid in documentDbInfo.elementsGuids)
         {
-            libraryProcess.Delete_ElementDirectory(elementGuid);
+            libraryProcess.Delete_ElementDirectory(elementGuid.ToString("N"));
         }
 
         //delete review
-        Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
-        .FirstOrDefaultAsync(r => r.SubjectGuid == documentDbModel.Guid);
-        if (reviewDbModel is not null)
-        {
-            //first delete directories and notifs
-            await reviewProcess.DeleteReviewAndCommentsDirectories(reviewDb, documentDbModel.Guid,
-            notifProcess, notifDb);
-            //then remove from db
-            reviewDb.Reviews.Remove(reviewDbModel);
-            await reviewDb.SaveChangesAsync();
-        }
+        await reviewDb.Reviews.Where(r => r.SubjectGuid == documentGuid_Guid).ExecuteDeleteAsync();
 
         return Ok(new { success = true });
     }
@@ -695,12 +706,18 @@ public class LibraryController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> ElementFile([FromQuery][StringLength(32)] string elementGuid,
-    [FromQuery][StringLength(50)] string? elementFileName)
+    [FromQuery][StringLength(60)] string? elementFileName)
     {
+        if (!Guid.TryParseExact(elementGuid, "N", out Guid elementGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         if (string.IsNullOrWhiteSpace(elementFileName))
         {
             elementFileName = await libraryDb.Elements
-            .Where(el => el.Guid == elementGuid)
+            .Where(el => el.Guid == elementGuid_Guid)
             .Select(el => el.FileName)
             .FirstOrDefaultAsync();
 
@@ -725,82 +742,116 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            IEnumerable<string> elementGuids = formModels.Select(m => m.Guid);
+            IEnumerable<Guid> elementGuids = formModels.Select(m => m.Guid);
 
-            /*List<Library_ElementDbModel>*/
-            var elementDbModels = await libraryDb.Elements
-            .Include(el => el.Owner)
-            .Include(el => el.ParentDocument)
+            var elementsDbInfo = await libraryDb.Elements
             .Where(el => elementGuids.Contains(el.Guid))
-            .AsSplitQuery()
+            .Select(el => new
+            {
+                el.Id,
+                el.Guid,
+                parentDocumentGuid = el.ParentDocument.Guid,
+                ownerGuid = el.Owner.Guid,
+            })
             .ToListAsync();
 
             //make sure all edited elements belong to the same document
-            IEnumerable<string> parentDocumentGuids = elementDbModels.Select(el => el.ParentDocument.Guid).Distinct();
-            if (parentDocumentGuids.Count() > 1)
+            IEnumerable<Guid> parentDocumentGuids = elementsDbInfo.Select(el => el.parentDocumentGuid).Distinct();
+            IEnumerable<Guid> ownerGuids = elementsDbInfo.Select(el => el.ownerGuid).Distinct();
+            if (parentDocumentGuids.Count() > 1 || ownerGuids.Count() > 1)
             {
-                ModelState.AddModelError("ParentDocument", "The edited elements don't belong to the same parent document!");
+                ModelState.AddModelError("ParentDocument or owner", "The edited elements don't belong to the same parent document or owner!");
                 return BadRequest(ModelState);
             }
 
-            string ownerGuid = (await userManager.Users
+            Guid myGuid = (await userManager.Users
             .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(user => user.UserGuid)
             .FirstOrDefaultAsync())!;
 
-            foreach (var elementDbModel in elementDbModels)
+            if (ownerGuids.Single() != myGuid)
             {
-                if (elementDbModel.Owner.Guid != ownerGuid)
-                {
-                    ModelState.AddModelError("Owner", "You are Not the owner of all of the edited elements!");
-                    return BadRequest(ModelState);
-                }
+                ModelState.AddModelError("Owner", "You are Not the owner of all of the edited elements!");
+                return BadRequest(ModelState);
             }
 
+            //************* delete *************
             bool needToReorder = false;
-            foreach (var elementDbModel in elementDbModels)
+
+            IEnumerable<Library_EditElement_FormModel> deletedFormModels =
+            formModels.Where(fm => fm.Delete ?? false);
+
+            IEnumerable<Guid> deletedElementsGuids = deletedFormModels
+            .Select(fm => fm.Guid);
+
+            IEnumerable<int> deletedElementsIds = elementsDbInfo
+            .Where(el => deletedElementsGuids.Contains(el.Guid))
+            .Select(el => el.Id);
+
+            int numberOfDeletes = await libraryDb.Elements
+            .Where(el => deletedElementsIds.Contains(el.Id))
+            .ExecuteDeleteAsync();
+
+            if (numberOfDeletes > 0)
             {
-                var formModel = formModels.First(fm => fm.Guid == elementDbModel.Guid);
-                if (formModel.Delete ?? false)
+                //storage
+                foreach (Guid deletedGuid in deletedElementsGuids)
                 {
-                    libraryDb.Elements.Remove(elementDbModel);
-                    needToReorder = true;
+                    libraryProcess.Delete_ElementDirectory(deletedGuid.ToString("N"));
                 }
-                else
-                {
-                    elementDbModel.Order = formModel.Order ?? elementDbModel.Order;
-                    elementDbModel.Title = formModel.Title ?? elementDbModel.Title;
-                    elementDbModel.Value = formModel.Value ?? elementDbModel.Value;
-                }
+                needToReorder = true;
             }
 
+
+            //*********** edit ***********
+            IEnumerable<Library_EditElement_FormModel> editedFormModels =
+            formModels.Except(deletedFormModels);
+
+            IEnumerable<Guid> editedElementsGuids = editedFormModels
+            .Select(fm => fm.Guid);
+
+            //create
+            IEnumerable<Library_ElementDbModel> editedElementDbs = elementsDbInfo
+            .Where(el => editedElementsGuids.Contains(el.Guid))
+            .Select(el => new Library_ElementDbModel()
+            {
+                Id = el.Id,
+                Guid = el.Guid,
+            });
+            //attach
+            libraryDb.Elements.AttachRange(editedElementDbs);
+            //edit
+            foreach (Library_ElementDbModel elementDbModel in editedElementDbs)
+            {
+                var formModel = editedFormModels.First(fm => fm.Guid == elementDbModel.Guid);
+                if (formModel.Order is not null && formModel.Order.HasValue)
+                {
+                    elementDbModel.Order = formModel.Order.Value;
+                    libraryDb.Elements.Entry(elementDbModel).Property(el => el._order).IsModified = true;
+                }
+                if (formModel.Title is not null)
+                {
+                    elementDbModel.Title = formModel.Title;
+                    libraryDb.Elements.Entry(elementDbModel).Property(el => el.Title).IsModified = true;
+                }
+                if (formModel.Value is not null)
+                {
+                    elementDbModel.Value = formModel.Value;
+                    libraryDb.Elements.Entry(elementDbModel).Property(el => el.Value).IsModified = true;
+                }
+            }
+            //save
             await libraryDb.SaveChangesAsync();
 
             if (needToReorder)
             {
-                var result = await libraryProcess.ReorderElements(libraryDb, parentDocumentGuids.Single());
-                if (result.Success && result.ResultObject is not null)
-                {
-                    elementDbModels = (List<Library_ElementDbModel>)result.ResultObject;
-                }
-            }
-
-            //seed
-            foreach (var elementDbModel in elementDbModels)
-            {
-                var formModel = formModels.First(fm => fm.Guid == elementDbModel.Guid);
-                if (formModel.Delete ?? false)
-                {
-                    libraryProcess.Delete_ElementDirectory(elementDbModel.Guid);
-                }
-                else
-                {
-                    await libraryProcess.Update_ElementSeed(elementDbModel.Guid, libraryDb);
-                }
+                await libraryProcess.ReorderElements(libraryDb, parentDocumentGuids.Single());
             }
 
             //create response
-            Library_Element_ViewModel[] elementModelArray = elementDbModels
+            Library_Element_ViewModel[] elementModelArray = await libraryDb.Documents
+            .Where(doc => doc.Guid == ownerGuids.Single())
+            .SelectMany(doc => doc.Elements)
             .Select(elementDbModel => new Library_Element_ViewModel()
             {
                 Guid = elementDbModel.Guid,
@@ -812,7 +863,7 @@ public class LibraryController : ControllerBase
                 Value = elementDbModel.Value ??
                     $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
             })
-            .ToArray();
+            .ToArrayAsync();
 
             return Ok(new { success = true, elements = elementModelArray });
         }
@@ -822,7 +873,7 @@ public class LibraryController : ControllerBase
 
 
 
-
+    //************* till here **********
 
     [HttpGet]
     public async Task<IActionResult> TotalNumberOfDocuments([FromQuery][StringLength(32)] string ownerGuid)

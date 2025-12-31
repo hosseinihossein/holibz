@@ -12,13 +12,13 @@ public class Review_UserDbModel
     public Guid Guid { get; set; }
     [MaxLength(60)]
     public string NormalizedUserName { get; set; } = null!;
-    public ICollection<Review_UserDbModel> Followers { get; set; } = [];
-    public ICollection<Review_UserDbModel> Followings { get; set; } = [];
+    public ICollection<Review_FollowerFollowing_DbModel> Followers { get; set; } = [];
+    public ICollection<Review_FollowerFollowing_DbModel> Followings { get; set; } = [];
     public ICollection<Review_ReviewDbModel> GotReviews { get; set; } = [];
     public ICollection<Review_CommentDbModel> GiveComments { get; set; } = [];
-    public ICollection<Review_ReviewDbModel> GiveLikes { get; set; } = [];
-    public ICollection<Review_CommentDbModel> GiveThumbsUps { get; set; } = [];
-    public ICollection<Review_CommentDbModel> GiveThumbsDowns { get; set; } = [];
+    public ICollection<Review_UserLike_DbModel> GiveLikes { get; set; } = [];
+    public ICollection<Review_UserThumbsUp_DbModel> GiveThumbsUps { get; set; } = [];
+    public ICollection<Review_UserThumbsDown_DbModel> GiveThumbsDowns { get; set; } = [];
 }
 public class Review_ReviewDbModel
 {
@@ -26,7 +26,7 @@ public class Review_ReviewDbModel
     public int Id { get; set; }
     public Guid SubjectGuid { get; set; }
     public Review_UserDbModel Owner { get; set; } = null!;
-    public ICollection<Review_UserDbModel> LikedBy { get; set; } = [];
+    public ICollection<Review_UserLike_DbModel> LikedBy { get; set; } = [];
     public ICollection<Review_CommentDbModel> Comments { get; set; } = [];
 }
 public class Review_CommentDbModel
@@ -38,20 +38,60 @@ public class Review_CommentDbModel
     public Review_UserDbModel Writer { get; set; } = null!;
     [MaxLength(500)]
     public string Text { get; set; } = string.Empty;
-    public ICollection<Review_UserDbModel> ThumbsUps { get; set; } = [];
-    public ICollection<Review_UserDbModel> ThumbsDowns { get; set; } = [];
+    public ICollection<Review_UserThumbsUp_DbModel> ThumbsUpsBy { get; set; } = [];
+    public ICollection<Review_UserThumbsDown_DbModel> ThumbsDownsBy { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Review_CommentDbModel? ReplyTo { get; set; } = null;
     public ICollection<Review_CommentDbModel> Replies { get; set; } = [];
+}
+
+//***************** join tables ****************
+public class Review_FollowerFollowing_DbModel
+{
+    public int FollowerId { get; set; }
+    public Review_UserDbModel Follower { get; set; } = null!;
+
+    public int FollowingId { get; set; }
+    public Review_UserDbModel Following { get; set; } = null!;
+}
+public class Review_UserLike_DbModel
+{
+    public int UserId { get; set; }
+    public Review_UserDbModel User { get; set; } = null!;
+
+    public int ReviewId { get; set; }
+    public Review_ReviewDbModel Review { get; set; } = null!;
+}
+public class Review_UserThumbsUp_DbModel
+{
+    public int UserId { get; set; }
+    public Review_UserDbModel User { get; set; } = null!;
+
+    public int CommentId { get; set; }
+    public Review_CommentDbModel Comment { get; set; } = null!;
+}
+public class Review_UserThumbsDown_DbModel
+{
+    public int UserId { get; set; }
+    public Review_UserDbModel User { get; set; } = null!;
+
+    public int CommentId { get; set; }
+    public Review_CommentDbModel Comment { get; set; } = null!;
 }
 
 public class Review_DbContext : DbContext
 {
     public Review_DbContext(DbContextOptions<Review_DbContext> options) : base(options) { }
 
-    public DbSet<Review_UserDbModel> Users { get; set; } //= null!;
-    public DbSet<Review_ReviewDbModel> Reviews { get; set; } //= null!;
-    public DbSet<Review_CommentDbModel> Comments { get; set; } //= null!;
+    public DbSet<Review_UserDbModel> Users { get; set; }
+    public DbSet<Review_ReviewDbModel> Reviews { get; set; }
+    public DbSet<Review_CommentDbModel> Comments { get; set; }
+
+    //*************** join tables **************
+    public DbSet<Review_FollowerFollowing_DbModel> FollowerFollowings { get; set; }
+    public DbSet<Review_UserLike_DbModel> UserLikes { get; set; }
+    public DbSet<Review_UserThumbsUp_DbModel> UserThumbsUp { get; set; }
+    public DbSet<Review_UserThumbsDown_DbModel> UserThumbsDown { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,24 +111,60 @@ public class Review_DbContext : DbContext
         .IsRequired(true);
 
         //************* Many-to-Many User-to-Review_Likes *************
-        modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.GiveLikes)
-        .WithMany(r => r.LikedBy);
+        modelBuilder.Entity<Review_UserLike_DbModel>()
+        .HasKey(ul => new { ul.UserId, ul.ReviewId });
+
+        modelBuilder.Entity<Review_UserLike_DbModel>()
+        .HasOne(ul => ul.User)
+        .WithMany(u => u.GiveLikes)
+        .HasForeignKey(ul => ul.UserId);
+
+        modelBuilder.Entity<Review_UserLike_DbModel>()
+        .HasOne(ul => ul.Review)
+        .WithMany(r => r.LikedBy)
+        .HasForeignKey(ul => ul.ReviewId);
 
         //************* Many-to-Many User-to-Comment_ThumbsUp *************
-        modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.GiveThumbsUps)
-        .WithMany(r => r.ThumbsUps);
+        modelBuilder.Entity<Review_UserThumbsUp_DbModel>()
+        .HasKey(uup => new { uup.UserId, uup.CommentId });
+
+        modelBuilder.Entity<Review_UserThumbsUp_DbModel>()
+        .HasOne(uup => uup.User)
+        .WithMany(u => u.GiveThumbsUps)
+        .HasForeignKey(uup => uup.UserId);
+
+        modelBuilder.Entity<Review_UserThumbsUp_DbModel>()
+        .HasOne(uup => uup.Comment)
+        .WithMany(c => c.ThumbsUpsBy)
+        .HasForeignKey(uup => uup.CommentId);
 
         //************* Many-to-Many User-to-Comment_ThumbsDown *************
-        modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.GiveThumbsDowns)
-        .WithMany(r => r.ThumbsDowns);
+        modelBuilder.Entity<Review_UserThumbsDown_DbModel>()
+        .HasKey(udn => new { udn.UserId, udn.CommentId });
+
+        modelBuilder.Entity<Review_UserThumbsDown_DbModel>()
+        .HasOne(udn => udn.User)
+        .WithMany(u => u.GiveThumbsDowns)
+        .HasForeignKey(udn => udn.UserId);
+
+        modelBuilder.Entity<Review_UserThumbsDown_DbModel>()
+        .HasOne(udn => udn.Comment)
+        .WithMany(c => c.ThumbsDownsBy)
+        .HasForeignKey(udn => udn.CommentId);
 
         //************* Many-to-Many Followers-to-Followings *************
-        modelBuilder.Entity<Review_UserDbModel>()
-        .HasMany(u => u.Followers)
-        .WithMany(u => u.Followings);
+        modelBuilder.Entity<Review_FollowerFollowing_DbModel>()
+        .HasKey(ff => new { ff.FollowerId, ff.FollowingId });
+
+        modelBuilder.Entity<Review_FollowerFollowing_DbModel>()
+        .HasOne(ff => ff.Follower)
+        .WithMany(u => u.Followers)
+        .HasForeignKey(ff => ff.FollowerId);
+
+        modelBuilder.Entity<Review_FollowerFollowing_DbModel>()
+        .HasOne(ff => ff.Following)
+        .WithMany(u => u.Followings)
+        .HasForeignKey(ff => ff.FollowingId);
 
         //************* Review_ReviewDbModel *************
         //************* One-to-Many Review-to-Comments *************

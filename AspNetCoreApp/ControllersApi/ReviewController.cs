@@ -1001,8 +1001,8 @@ public class ReviewController : ControllerBase
     [FromServices] Review_Process reviewProcess)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
-        .Include(c => c.ThumbsDowns)
-        .Include(c => c.ThumbsUps)
+        .Include(c => c.ThumbsDownsBy)
+        .Include(c => c.ThumbsUpsBy)
         .AsSplitQuery()
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
@@ -1019,10 +1019,10 @@ public class ReviewController : ControllerBase
         Review_UserDbModel myDbModel =
         (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
 
-        if (!commentDbModel.ThumbsUps.Remove(myDbModel))
+        if (!commentDbModel.ThumbsUpsBy.Remove(myDbModel))
         {
-            commentDbModel.ThumbsUps.Add(myDbModel);
-            commentDbModel.ThumbsDowns.Remove(myDbModel);
+            commentDbModel.ThumbsUpsBy.Add(myDbModel);
+            commentDbModel.ThumbsDownsBy.Remove(myDbModel);
         }
 
         await reviewDb.SaveChangesAsync();
@@ -1030,7 +1030,7 @@ public class ReviewController : ControllerBase
         //seed
         await reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
-        return Ok(new { numberOfThumbUps = commentDbModel.ThumbsUps.Count });
+        return Ok(new { numberOfThumbUps = commentDbModel.ThumbsUpsBy.Count });
     }
 
     [HttpPost]
@@ -1040,8 +1040,8 @@ public class ReviewController : ControllerBase
     [FromServices] Review_Process reviewProcess)
     {
         Review_CommentDbModel? commentDbModel = await reviewDb.Comments
-        .Include(c => c.ThumbsDowns)
-        .Include(c => c.ThumbsUps)
+        .Include(c => c.ThumbsDownsBy)
+        .Include(c => c.ThumbsUpsBy)
         .AsSingleQuery()
         .FirstOrDefaultAsync(c => c.Guid == commentGuid);
         if (commentDbModel is null)
@@ -1058,10 +1058,10 @@ public class ReviewController : ControllerBase
         Review_UserDbModel myDbModel =
         (await reviewDb.Users.FirstOrDefaultAsync(u => u.Guid == myGuid))!;
 
-        if (!commentDbModel.ThumbsDowns.Remove(myDbModel))
+        if (!commentDbModel.ThumbsDownsBy.Remove(myDbModel))
         {
-            commentDbModel.ThumbsDowns.Add(myDbModel);
-            commentDbModel.ThumbsUps.Remove(myDbModel);
+            commentDbModel.ThumbsDownsBy.Add(myDbModel);
+            commentDbModel.ThumbsUpsBy.Remove(myDbModel);
         }
 
         await reviewDb.SaveChangesAsync();
@@ -1069,7 +1069,7 @@ public class ReviewController : ControllerBase
         //seed
         await reviewProcess.Update_CommentSeed(commentDbModel.Guid, reviewDb);
 
-        return Ok(new { numberOfThumbDowns = commentDbModel.ThumbsDowns.Count });
+        return Ok(new { numberOfThumbDowns = commentDbModel.ThumbsDownsBy.Count });
     }
 
 

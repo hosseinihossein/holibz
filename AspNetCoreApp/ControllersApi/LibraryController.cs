@@ -2010,8 +2010,6 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> Follow([FromQuery][StringLength(32)] string ownerGuid,
     Review_DbContext reviewDb)
     {
-        //can't follow myself
-
         if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
@@ -2035,33 +2033,49 @@ public class LibraryController : ControllerBase
         .Select(user => user.UserGuid)
         .FirstAsync();
 
+        if (myGuid == ownerGuid_Guid)
+        {
+            ModelState.AddModelError("following", "You cannot follow yourself!");
+            return BadRequest(ModelState);
+        }
+
         //fetch and create
         Library_OwnerDbModel followerDbModel = await libraryDb.Owners
         .Where(owner => owner.Guid == myGuid)
         .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
         .FirstAsync();
 
-        //Attach
-        libraryDb.Owners.Attach(followerDbModel);
-        libraryDb.Owners.Attach(followingDbModel);
-        //loaded
-        libraryDb.Owners.Entry(followerDbModel).Collection(owner => owner.Followings).IsLoaded = true;
-        //edit
-        followerDbModel.Followings.Add(followingDbModel);
+        //create join table
+        Library_FollowerFollowing_DbModel followerFollowing = new()
+        {
+            FollowerId = followerDbModel.Id,
+            FollowingId = followingDbModel.Id,
+        };
+        //add
+        libraryDb.FollowerFollowings.Add(followerFollowing);
         //save
         await libraryDb.SaveChangesAsync();
 
         //***** review *****
-        //create
-        Review_UserDbModel followerDbModel_Review = new() { Id = followerDbModel.Id };
-        Review_UserDbModel followingDbModel_Review = new() { Id = followingDbModel.Id };
-        //attach
-        reviewDb.Users.Attach(followerDbModel_Review);
-        reviewDb.Users.Attach(followingDbModel_Review);
-        //loaded
-        reviewDb.Users.Entry(followerDbModel_Review).Collection(u => u.Followings).IsLoaded = true;
-        //edit
-        followerDbModel_Review.Followings.Add(followingDbModel_Review);
+        //fetch and create
+        Review_UserDbModel followerDbModel_Review = await reviewDb.Users
+        .Where(u => u.Guid == ownerGuid_Guid)
+        .Select(u => new Review_UserDbModel() { Id = u.Id })
+        .FirstAsync();
+
+        Review_UserDbModel followingDbModel_Review = await reviewDb.Users
+        .Where(u => u.Guid == myGuid)
+        .Select(u => new Review_UserDbModel() { Id = u.Id })
+        .FirstAsync();
+
+        //create join table
+        Review_FollowerFollowing_DbModel followerFollowing_Review = new()
+        {
+            FollowerId = followerDbModel_Review.Id,
+            FollowingId = followingDbModel_Review.Id,
+        };
+        //add
+        reviewDb.FollowerFollowings.Add(followerFollowing_Review);
         //save
         await reviewDb.SaveChangesAsync();
 
@@ -2070,29 +2084,66 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UnFollow([FromQuery][StringLength(32)] string ownerGuid)
+    public async Task<IActionResult> UnFollow([FromQuery][StringLength(32)] string ownerGuid,
+    Review_DbContext reviewDb)
     {
-        string followerGuid = (await userManager.Users
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        //fetch and create
+        Library_OwnerDbModel? followingDbModel = await libraryDb.Owners
+        .Where(owner => owner.Guid == ownerGuid_Guid)
+        .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
+        .FirstOrDefaultAsync();
+
+        if (followingDbModel is null)
+        {
+            ModelState.AddModelError("user", "the specified owner Not found!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
         .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
         .Select(user => user.UserGuid)
-        .FirstOrDefaultAsync())!;
+        .FirstAsync();
 
-        Library_OwnerDbModel followerDbModel = (await libraryDb.Owners
-        .Include(owner => owner.Followings)
-        .FirstOrDefaultAsync(owner => owner.Guid == followerGuid))!;
-
-        Library_OwnerDbModel? followingDbModel = followerDbModel.Followings
-        .FirstOrDefault(owner => owner.Guid == ownerGuid);
-
-        if (followingDbModel is not null)
+        if (myGuid == ownerGuid_Guid)
         {
-            followerDbModel.Followings.Remove(followingDbModel);
-            await libraryDb.SaveChangesAsync();
-
-            //seed
-            await libraryProcess.Update_OwnerSeed(followerDbModel.Guid, libraryDb);
-            await libraryProcess.Update_OwnerSeed(followingDbModel.Guid, libraryDb);
+            ModelState.AddModelError("unFollowing", "You cannot unFollow yourself!");
+            return BadRequest(ModelState);
         }
+
+        //fetch and create
+        Library_OwnerDbModel followerDbModel = await libraryDb.Owners
+        .Where(owner => owner.Guid == myGuid)
+        .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
+        .FirstAsync();
+
+        //delete join table
+        await libraryDb.FollowerFollowings
+        .Where(ff => ff.FollowerId == followerDbModel.Id && ff.FollowingId == followingDbModel.Id)
+        .ExecuteDeleteAsync();
+
+        //***** review *****
+        //fetch and create
+        Review_UserDbModel followerDbModel_Review = await reviewDb.Users
+        .Where(u => u.Guid == ownerGuid_Guid)
+        .Select(u => new Review_UserDbModel() { Id = u.Id })
+        .FirstAsync();
+
+        Review_UserDbModel followingDbModel_Review = await reviewDb.Users
+        .Where(u => u.Guid == myGuid)
+        .Select(u => new Review_UserDbModel() { Id = u.Id })
+        .FirstAsync();
+
+        //delete join table
+        await reviewDb.FollowerFollowings
+        .Where(ff => ff.FollowerId == followerDbModel_Review.Id &&
+        ff.FollowingId == followingDbModel_Review.Id)
+        .ExecuteDeleteAsync();
 
         return Ok(new { success = true });
     }
@@ -2104,10 +2155,16 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetFavoriteLibrariesGuids([FromQuery][StringLength(32)] string userGuid)
     {
-        string[] favoriteLibrariesGuids = await libraryDb.Owners
-        .Where(o => o.Guid == userGuid)
-        //.Include(o => o.FavoriteLibraries)
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] favoriteLibrariesGuids = await libraryDb.Owners
+        .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteLibraries)
+        .Select(ul => ul.Library)
         .Select(lib => lib.Guid)
         .ToArrayAsync();
 
@@ -2116,9 +2173,16 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetFavoriteShelvesGuids([FromQuery][StringLength(32)] string userGuid)
     {
-        string[] favoriteShelvesGuids = await libraryDb.Owners
-        .Where(o => o.Guid == userGuid)
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] favoriteShelvesGuids = await libraryDb.Owners
+        .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteShelves)
+        .Select(ush => ush.Shelf)
         .Select(shelf => shelf.Guid)
         .ToArrayAsync();
 
@@ -2127,9 +2191,16 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetFavoriteDocumentsGuids([FromQuery][StringLength(32)] string userGuid)
     {
-        string[] favoriteDocumentsGuids = await libraryDb.Owners
-        .Where(o => o.Guid == userGuid)
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] favoriteDocumentsGuids = await libraryDb.Owners
+        .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteDocuments)
+        .Select(ud => ud.Document)
         .Select(doc => doc.Guid)
         .ToArrayAsync();
 
@@ -2137,25 +2208,103 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsersInFavorOfLibrary([FromQuery][StringLength(32)] string libraryGuid)
+    public async Task<IActionResult> GetUsersInFavorOfLibrary([FromQuery][StringLength(32)] string libraryGuid,
+    [FromQuery] int? bunchIndex)
     {
-        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
-        .Include(lib => lib.InFavorOf)
-        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
-        if (libraryDbModel is null)
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        bool libraryExist = await libraryDb.Libraries
+        .AnyAsync(lib => lib.Guid == libraryGuid_Guid);
+
+        if (!libraryExist)
         {
             ModelState.AddModelError("library", "the specified library Not found!");
             return BadRequest(ModelState);
         }
 
-        List<string> usersInFavorOf_Guids = libraryDbModel.InFavorOf
-        .Select(user => user.Guid).ToList();
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
 
-        List<Identity_UserDbModel> usersInFavorOf_DbModels = await userManager.Users
-        .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
-        .ToListAsync();
+        bunchIndex ??= 0;
+        int bunchSize = 10;
 
-        Library_Owner_ViewModel[] usersInFavorOf = usersInFavorOf_DbModels
+        List<Guid> usersInFavorOfGuids_MutualsWithMyFollowings = [];
+        List<Guid> UsersInFavorOfGuids_Others = [];
+        if (myGuid is not null && myGuid.HasValue)
+        {
+            usersInFavorOfGuids_MutualsWithMyFollowings = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.InFavorOf)
+            .Select(ul => ul.User)
+            .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+            .OrderBy(u => u.Id)
+            .Select(u => u.Guid)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToListAsync();
+
+            //is my favorite
+            bool myFavorite = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.InFavorOf)
+            .AnyAsync(ul => ul.User.Guid == myGuid);
+            if (myFavorite)
+            {
+                usersInFavorOfGuids_MutualsWithMyFollowings = [myGuid.Value, .. usersInFavorOfGuids_MutualsWithMyFollowings];
+            }
+
+            if (usersInFavorOfGuids_MutualsWithMyFollowings.Count < bunchSize)
+            {
+                int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Libraries
+                .Where(lib => lib.Guid == libraryGuid_Guid)
+                .SelectMany(lib => lib.InFavorOf)
+                .Select(ul => ul.User)
+                .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .CountAsync();
+                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
+                if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
+
+                int numberOfNeededOthersFollowers = bunchSize - usersInFavorOfGuids_MutualsWithMyFollowings.Count;
+
+                UsersInFavorOfGuids_Others = await libraryDb.Libraries
+                .Where(lib => lib.Guid == libraryGuid_Guid)
+                .SelectMany(lib => lib.InFavorOf)
+                .Select(ul => ul.User)
+                .Where(u => !u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .OrderBy(u => u.Id)
+                .Select(u => u.Guid)
+                .Skip(numberOfSkipOthersFollowers)
+                .Take(numberOfNeededOthersFollowers)
+                .ToListAsync();
+            }
+        }
+        else
+        {
+            UsersInFavorOfGuids_Others = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.InFavorOf)
+            .Select(u => u.User)
+            .OrderBy(u => u.Id)
+            .Select(u => u.Guid)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToListAsync();
+        }
+
+        List<Guid> followingsGuids = [.. usersInFavorOfGuids_MutualsWithMyFollowings, .. UsersInFavorOfGuids_Others];
+
+        Library_Owner_ViewModel[] users_OwnerModel = await userManager.Users
+        .Where(user => followingsGuids.Contains(user.UserGuid))
         .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
@@ -2163,30 +2312,108 @@ public class LibraryController : ControllerBase
             IntegrityVersion = user.IntegrityVersion,
             Username = user.UserName!,
         })
-        .ToArray();
+        .ToArrayAsync();
 
-        return Ok(usersInFavorOf);
+        return Ok(users_OwnerModel);
     }
     [HttpGet]
-    public async Task<IActionResult> GetUsersInFavorOfShelf([FromQuery][StringLength(32)] string shelfGuid)
+    public async Task<IActionResult> GetUsersInFavorOfShelf([FromQuery][StringLength(32)] string shelfGuid,
+    [FromQuery] int? bunchIndex)
     {
-        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
-        .Include(shelf => shelf.InFavorOf)
-        .FirstOrDefaultAsync(lib => lib.Guid == shelfGuid);
-        if (shelfDbModel is null)
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        bool shelfExist = await libraryDb.Shelves
+        .AnyAsync(shelf => shelf.Guid == shelfGuid_Guid);
+
+        if (!shelfExist)
         {
             ModelState.AddModelError("shelf", "the specified shelf Not found!");
             return BadRequest(ModelState);
         }
 
-        List<string> usersInFavorOf_Guids = shelfDbModel.InFavorOf
-        .Select(user => user.Guid).ToList();
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
 
-        List<Identity_UserDbModel> usersInFavorOf_DbModels = await userManager.Users
-        .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
-        .ToListAsync();
+        bunchIndex ??= 0;
+        int bunchSize = 10;
 
-        Library_Owner_ViewModel[] usersInFavorOf = usersInFavorOf_DbModels
+        List<Guid> usersInFavorOfGuids_MutualsWithMyFollowings = [];
+        List<Guid> UsersInFavorOfGuids_Others = [];
+        if (myGuid is not null && myGuid.HasValue)
+        {
+            usersInFavorOfGuids_MutualsWithMyFollowings = await libraryDb.Shelves
+            .Where(shelf => shelf.Guid == shelfGuid_Guid)
+            .SelectMany(shelf => shelf.InFavorOf)
+            .Select(ul => ul.User)
+            .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+            .OrderBy(u => u.Id)
+            .Select(u => u.Guid)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToListAsync();
+
+            //is my favorite
+            bool myFavorite = await libraryDb.Shelves
+            .Where(shelf => shelf.Guid == shelfGuid_Guid)
+            .SelectMany(shelf => shelf.InFavorOf)
+            .AnyAsync(ul => ul.User.Guid == myGuid);
+            if (myFavorite)
+            {
+                usersInFavorOfGuids_MutualsWithMyFollowings = [myGuid.Value, .. usersInFavorOfGuids_MutualsWithMyFollowings];
+            }
+
+            if (usersInFavorOfGuids_MutualsWithMyFollowings.Count < bunchSize)
+            {
+                int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Shelves
+                .Where(shelf => shelf.Guid == shelfGuid_Guid)
+                .SelectMany(shelf => shelf.InFavorOf)
+                .Select(ul => ul.User)
+                .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .CountAsync();
+                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
+                if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
+
+                int numberOfNeededOthersFollowers = bunchSize - usersInFavorOfGuids_MutualsWithMyFollowings.Count;
+
+                UsersInFavorOfGuids_Others = await libraryDb.Shelves
+                .Where(shelf => shelf.Guid == shelfGuid_Guid)
+                .SelectMany(shelf => shelf.InFavorOf)
+                .Select(ul => ul.User)
+                .Where(u => !u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .OrderBy(u => u.Id)
+                .Select(u => u.Guid)
+                .Skip(numberOfSkipOthersFollowers)
+                .Take(numberOfNeededOthersFollowers)
+                .ToListAsync();
+            }
+        }
+        else
+        {
+            UsersInFavorOfGuids_Others = await libraryDb.Shelves
+            .Where(shelf => shelf.Guid == shelfGuid_Guid)
+            .SelectMany(shelf => shelf.InFavorOf)
+            .Select(u => u.User)
+            .OrderBy(u => u.Id)
+            .Select(u => u.Guid)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToListAsync();
+        }
+
+        List<Guid> followingsGuids = [.. usersInFavorOfGuids_MutualsWithMyFollowings, .. UsersInFavorOfGuids_Others];
+
+        Library_Owner_ViewModel[] users_OwnerModel = await userManager.Users
+        .Where(user => followingsGuids.Contains(user.UserGuid))
         .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
@@ -2194,30 +2421,108 @@ public class LibraryController : ControllerBase
             IntegrityVersion = user.IntegrityVersion,
             Username = user.UserName!,
         })
-        .ToArray();
+        .ToArrayAsync();
 
-        return Ok(usersInFavorOf);
+        return Ok(users_OwnerModel);
     }
     [HttpGet]
-    public async Task<IActionResult> GetUsersInFavorOfDocument([FromQuery][StringLength(32)] string documentGuid)
+    public async Task<IActionResult> GetUsersInFavorOfDocument([FromQuery][StringLength(32)] string documentGuid,
+    [FromQuery] int? bunchIndex)
     {
-        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
-        .Include(doc => doc.InFavorOf)
-        .FirstOrDefaultAsync(lib => lib.Guid == documentGuid);
-        if (documentDbModel is null)
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        bool documentExist = await libraryDb.Documents
+        .AnyAsync(doc => doc.Guid == documentGuid_Guid);
+
+        if (!documentExist)
         {
             ModelState.AddModelError("document", "the specified document Not found!");
             return BadRequest(ModelState);
         }
 
-        List<string> usersInFavorOf_Guids = documentDbModel.InFavorOf
-        .Select(user => user.Guid).ToList();
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
 
-        List<Identity_UserDbModel> usersInFavorOf_DbModels = await userManager.Users
-        .Where(user => usersInFavorOf_Guids.Contains(user.UserGuid))
-        .ToListAsync();
+        bunchIndex ??= 0;
+        int bunchSize = 10;
 
-        Library_Owner_ViewModel[] usersInFavorOf = usersInFavorOf_DbModels
+        List<Guid> usersInFavorOfGuids_MutualsWithMyFollowings = [];
+        List<Guid> UsersInFavorOfGuids_Others = [];
+        if (myGuid is not null && myGuid.HasValue)
+        {
+            usersInFavorOfGuids_MutualsWithMyFollowings = await libraryDb.Documents
+            .Where(doc => doc.Guid == documentGuid_Guid)
+            .SelectMany(doc => doc.InFavorOf)
+            .Select(ul => ul.User)
+            .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+            .OrderBy(u => u.Id)
+            .Select(u => u.Guid)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToListAsync();
+
+            //is my favorite
+            bool myFavorite = await libraryDb.Documents
+            .Where(doc => doc.Guid == documentGuid_Guid)
+            .SelectMany(doc => doc.InFavorOf)
+            .AnyAsync(ul => ul.User.Guid == myGuid);
+            if (myFavorite)
+            {
+                usersInFavorOfGuids_MutualsWithMyFollowings = [myGuid.Value, .. usersInFavorOfGuids_MutualsWithMyFollowings];
+            }
+
+            if (usersInFavorOfGuids_MutualsWithMyFollowings.Count < bunchSize)
+            {
+                int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Documents
+                .Where(doc => doc.Guid == documentGuid_Guid)
+                .SelectMany(doc => doc.InFavorOf)
+                .Select(ul => ul.User)
+                .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .CountAsync();
+                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
+                if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
+
+                int numberOfNeededOthersFollowers = bunchSize - usersInFavorOfGuids_MutualsWithMyFollowings.Count;
+
+                UsersInFavorOfGuids_Others = await libraryDb.Documents
+                .Where(doc => doc.Guid == documentGuid_Guid)
+                .SelectMany(doc => doc.InFavorOf)
+                .Select(ul => ul.User)
+                .Where(u => !u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .OrderBy(u => u.Id)
+                .Select(u => u.Guid)
+                .Skip(numberOfSkipOthersFollowers)
+                .Take(numberOfNeededOthersFollowers)
+                .ToListAsync();
+            }
+        }
+        else
+        {
+            UsersInFavorOfGuids_Others = await libraryDb.Documents
+            .Where(doc => doc.Guid == documentGuid_Guid)
+            .SelectMany(doc => doc.InFavorOf)
+            .Select(u => u.User)
+            .OrderBy(u => u.Id)
+            .Select(u => u.Guid)
+            .Skip(bunchIndex.Value * bunchSize)
+            .Take(bunchSize)
+            .ToListAsync();
+        }
+
+        List<Guid> followingsGuids = [.. usersInFavorOfGuids_MutualsWithMyFollowings, .. UsersInFavorOfGuids_Others];
+
+        Library_Owner_ViewModel[] users_OwnerModel = await userManager.Users
+        .Where(user => followingsGuids.Contains(user.UserGuid))
         .Select(user => new Library_Owner_ViewModel()
         {
             Guid = user.UserGuid,
@@ -2225,9 +2530,9 @@ public class LibraryController : ControllerBase
             IntegrityVersion = user.IntegrityVersion,
             Username = user.UserName!,
         })
-        .ToArray();
+        .ToArrayAsync();
 
-        return Ok(usersInFavorOf);
+        return Ok(users_OwnerModel);
     }
 
     [HttpPost]
@@ -2235,31 +2540,53 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleFavoriteLibrary([FromQuery][StringLength(32)] string libraryGuid)
     {
-        Library_LibraryDbModel? libraryDbModel = await libraryDb.Libraries
-        .FirstOrDefaultAsync(lib => lib.Guid == libraryGuid);
-        if (libraryDbModel is null)
+        Guid myGuid = await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstAsync();
+
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        var libInfo = await libraryDb.Libraries
+        .Where(lib => lib.Guid == libraryGuid_Guid)
+        .Select(lib => new
+        {
+            lib.Id,
+            isMyFavorite = lib.InFavorOf.Any(ulf => ulf.User.Guid == myGuid),
+            myId = lib.InFavorOf
+                .Where(ulf => ulf.User.Guid == myGuid)
+                .Select(ulf => ulf.User.Id)
+                .FirstOrDefault(),
+        })
+        .FirstOrDefaultAsync();
+
+        if (libInfo is null)
         {
             ModelState.AddModelError("library", "the specified library Not found!");
             return BadRequest(ModelState);
         }
 
-        string myGuid = (await userManager.Users
-        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
-        .Select(user => user.UserGuid)
-        .FirstOrDefaultAsync())!;
-
-        Library_OwnerDbModel myDbModel = (await libraryDb.Owners
-        .Include(owner => owner.FavoriteLibraries)
-        .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
-
-        if (!myDbModel.FavoriteLibraries.Remove(libraryDbModel))
+        if (libInfo.isMyFavorite)
         {
-            myDbModel.FavoriteLibraries.Add(libraryDbModel);
+            await libraryDb.UserFavoriteLibraries
+            .Where(ufl => ufl.UserId == libInfo.myId && ufl.LibraryId == libInfo.Id)
+            .ExecuteDeleteAsync();
         }
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        await libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+        else
+        {
+            int myId = await libraryDb.Owners.Where(o => o.Guid == myGuid).Select(o => o.Id).FirstAsync();
+            Library_UserFavoriteLibrary_DbModel userFavoriteLibrary = new()
+            {
+                UserId = myId,
+                LibraryId = libInfo.Id,
+            };
+            libraryDb.UserFavoriteLibraries.Add(userFavoriteLibrary);
+            await libraryDb.SaveChangesAsync();
+        }
 
         return Ok(new { success = true });
     }
@@ -2268,31 +2595,53 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleFavoriteShelf([FromQuery][StringLength(32)] string shelfGuid)
     {
-        Library_ShelfDbModel? shelfDbModel = await libraryDb.Shelves
-        .FirstOrDefaultAsync(shelf => shelf.Guid == shelfGuid);
-        if (shelfDbModel is null)
+        Guid myGuid = await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstAsync();
+
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        var shelfInfo = await libraryDb.Shelves
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
+        .Select(shelf => new
+        {
+            shelf.Id,
+            isMyFavorite = shelf.InFavorOf.Any(ulf => ulf.User.Guid == myGuid),
+            myId = shelf.InFavorOf
+                .Where(ulf => ulf.User.Guid == myGuid)
+                .Select(ulf => ulf.User.Id)
+                .FirstOrDefault(),
+        })
+        .FirstOrDefaultAsync();
+
+        if (shelfInfo is null)
         {
             ModelState.AddModelError("shelf", "the specified shelf Not found!");
             return BadRequest(ModelState);
         }
 
-        string myGuid = (await userManager.Users
-        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
-        .Select(user => user.UserGuid)
-        .FirstOrDefaultAsync())!;
-
-        Library_OwnerDbModel myDbModel = (await libraryDb.Owners
-        .Include(owner => owner.FavoriteShelves)
-        .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
-
-        if (!myDbModel.FavoriteShelves.Remove(shelfDbModel))
+        if (shelfInfo.isMyFavorite)
         {
-            myDbModel.FavoriteShelves.Add(shelfDbModel);
+            await libraryDb.UserFavoriteShelves
+            .Where(ufs => ufs.UserId == shelfInfo.myId && ufs.ShelfId == shelfInfo.Id)
+            .ExecuteDeleteAsync();
         }
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+        else
+        {
+            int myId = await libraryDb.Owners.Where(o => o.Guid == myGuid).Select(o => o.Id).FirstAsync();
+            Library_UserFavoriteShelf_DbModel userFavoriteShelf = new()
+            {
+                UserId = myId,
+                ShelfId = shelfInfo.Id,
+            };
+            libraryDb.UserFavoriteShelves.Add(userFavoriteShelf);
+            await libraryDb.SaveChangesAsync();
+        }
 
         return Ok(new { success = true });
     }
@@ -2301,31 +2650,53 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleFavoriteDocument([FromQuery][StringLength(32)] string documentGuid)
     {
-        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
-        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
-        if (documentDbModel is null)
+        Guid myGuid = await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstAsync();
+
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        var docInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid)
+        .Select(doc => new
+        {
+            doc.Id,
+            isMyFavorite = doc.InFavorOf.Any(ulf => ulf.User.Guid == myGuid),
+            myId = doc.InFavorOf
+                .Where(ufd => ufd.User.Guid == myGuid)
+                .Select(ufd => ufd.User.Id)
+                .FirstOrDefault(),
+        })
+        .FirstOrDefaultAsync();
+
+        if (docInfo is null)
         {
             ModelState.AddModelError("document", "the specified document Not found!");
             return BadRequest(ModelState);
         }
 
-        string myGuid = (await userManager.Users
-        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
-        .Select(user => user.UserGuid)
-        .FirstOrDefaultAsync())!;
-
-        Library_OwnerDbModel myDbModel = (await libraryDb.Owners
-        .Include(owner => owner.FavoriteDocuments)
-        .FirstOrDefaultAsync(owner => owner.Guid == myGuid))!;
-
-        if (!myDbModel.FavoriteDocuments.Remove(documentDbModel))
+        if (docInfo.isMyFavorite)
         {
-            myDbModel.FavoriteDocuments.Add(documentDbModel);
+            await libraryDb.UserFavoriteDocuments
+            .Where(ufd => ufd.UserId == docInfo.myId && ufd.DocumentId == docInfo.Id)
+            .ExecuteDeleteAsync();
         }
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        else
+        {
+            int myId = await libraryDb.Owners.Where(o => o.Guid == myGuid).Select(o => o.Id).FirstAsync();
+            Library_UserFavoriteDocument_DbModel userFavoriteDocument = new()
+            {
+                UserId = myId,
+                DocumentId = docInfo.Id,
+            };
+            libraryDb.UserFavoriteDocuments.Add(userFavoriteDocument);
+            await libraryDb.SaveChangesAsync();
+        }
 
         return Ok(new { success = true });
     }
@@ -2342,80 +2713,72 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
-            .Include(doc => doc.Owner)
-            .Include(doc => doc.Tags)
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(doc => doc.Guid == formModel.DocumentGuid);
+            var documentDbInfo = await libraryDb.Documents
+            .Where(doc => doc.Guid == formModel.DocumentGuid)
+            .Select(doc => new
+            {
+                doc.Id,
+                ownerGuid = doc.Owner.Guid,
+                //tags = doc.Tags.Select(dt => dt.Tag).Select(tag => new { tag.Id, tag.Name }),
+            })
+            .FirstOrDefaultAsync();
 
-            if (documentDbModel is null)
+            if (documentDbInfo is null)
             {
                 ModelState.AddModelError("documentGuid", $"couldn't find any document with the specified guid '{formModel.DocumentGuid}'");
                 return BadRequest(ModelState);
             }
 
-            string myGuid = await userManager.Users
+            Guid myGuid = await userManager.Users
             .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(u => u.UserGuid)
             .FirstAsync();
 
-            if (myGuid != documentDbModel.Owner.Guid)
+            if (myGuid != documentDbInfo.ownerGuid)
             {
                 ModelState.AddModelError("Authorize", $"Only the owner of the document can edit its tags!");
                 return BadRequest(ModelState);
             }
 
-            List<Library_TagDbModel> oldTags = [.. documentDbModel.Tags];
-
-            //remove not contained from the list
-            List<Library_TagDbModel> removedTagsDbModels =
-            documentDbModel.Tags.Where(t => !formModel.Tags.Contains(t.Name)).ToList();
-            foreach (var removedTagDbModel in removedTagsDbModels)
-            {
-                documentDbModel.Tags.Remove(removedTagDbModel);
-            }
-
-            List<string> newlyAddedTags = [];
-            foreach (string tag in formModel.Tags)
-            {
-                if (!documentDbModel.Tags.Select(t => t.Name).Contains(tag))
-                {
-                    Library_TagDbModel? tagDbModel =
-                    await libraryDb.Tags.FirstOrDefaultAsync(t => t.Name == tag);
-                    tagDbModel ??= new() { Name = tag };
-                    documentDbModel.Tags.Add(tagDbModel);
-                    newlyAddedTags.Add(tagDbModel.Name);
-                }
-            }
-            await libraryDb.SaveChangesAsync();
-
-            //seed added
-            foreach (string newlyAddedTag in newlyAddedTags)
-            {
-                await libraryProcess.Update_TagSeed(newlyAddedTag, libraryDb);
-            }
-
-            //remove unused tags
-            List<string> unusedTags =
-            await libraryDb.Tags
-            .Where(t => removedTagsDbModels.Select(t => t.Name).Contains(t.Name))
-            .Where(t => t.Documents.Count == 0)//same as using &&, No performance diffrence
-            .Select(t => t.Name)
+            List<Library_TagDbModel> existingTags = await libraryDb.Tags
+            .Where(tag => formModel.Tags.Contains(tag.Name))
             .ToListAsync();
 
-            await libraryDb.Tags
-            .Where(t => removedTagsDbModels.Select(t => t.Name).Contains(t.Name))
-            .Where(t => t.Documents.Count == 0)
-            .ExecuteDeleteAsync();
+            List<string> notExistingTagNames = formModel.Tags
+            .Except(existingTags.Select(tag => tag.Name))
+            .ToList();
 
-            //seed removed unused
-            foreach (string unusedTag in unusedTags)
+            foreach (string tagName in notExistingTagNames)
             {
-                libraryProcess.Delete_TagDirectory(unusedTag);
+                Library_TagDbModel tagDbModel = new() { Name = tagName };
+                libraryDb.Tags.Add(tagDbModel);
+                existingTags.Add(tagDbModel);
             }
 
+            //create documentDbModel
+            Library_DocumentDbModel documentDbModel = new()
+            {
+                Id = documentDbInfo.Id,
+            };
+            //Attach documentDbModel
+            libraryDb.Documents.Attach(documentDbModel);
+            //create join tables
+            foreach (Library_TagDbModel tagDbModel in existingTags)
+            {
+                Library_DocumentTag_DbModel documentTag = new()
+                {
+                    Document = documentDbModel,
+                    Tag = tagDbModel,
+                };
+                //edit
+                documentDbModel.Tags.Add(documentTag);
+            }
+            //modified
+            libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.Tags).IsModified = true;
+            //save
+            await libraryDb.SaveChangesAsync();
 
-            return Ok(documentDbModel.Tags.Select(t => t.Name).ToArray());
+            return Ok(documentDbModel.Tags.Select(dt => dt.Tag.Name).ToArray());
         }
         return BadRequest(ModelState);
     }
@@ -2452,32 +2815,51 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> EditDocumentVersionName([FromQuery][StringLength(32)] string documentGuid,
     [FromQuery][StringLength(32)] string versionName)
     {
-        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
-        if (documentDbModel is null)
+        var documentDbInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid)
+        .Select(doc => new
+        {
+            doc.Id,
+            ownerGuid = doc.Owner.Guid,
+        })
+        .FirstOrDefaultAsync();
+
+        if (documentDbInfo is null)
         {
             ModelState.AddModelError("documentGuid", "there's no document with the specified guid!");
             return BadRequest(ModelState);
         }
 
-        string myGuid = await userManager.Users
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (myGuid != documentDbModel.Owner.Guid)
+        if (myGuid != documentDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner can edit document with the specified guid!");
             return BadRequest(ModelState);
         }
 
+        //create
+        Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
+        //Attach
+        libraryDb.Documents.Attach(documentDbModel);
+        //edit
         documentDbModel.Version = versionName;
+        //modified
+        libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.Version).IsModified = true;
+        //save
         await libraryDb.SaveChangesAsync();
 
         //seed
-        await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        //await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
 
         return Ok(new { version = documentDbModel.Version });
     }
@@ -2489,14 +2871,23 @@ public class LibraryController : ControllerBase
     [FromQuery][StringLength(32)] string newVersionName, [FromServices] Review_DbContext reviewDb,
     [FromServices] Review_Process reviewProcess)
     {
+        if (!Guid.TryParseExact(baseDocumentGuid, "N", out Guid baseDocumentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         Library_DocumentDbModel? baseDocumentDbModel = await libraryDb.Documents
+        .AsSplitQuery()
+        .AsNoTracking()
         .Include(doc => doc.Owner)
         .Include(doc => doc.Elements)
         .Include(doc => doc.ParentShelves)
+            .ThenInclude(shelfDoc => shelfDoc.Shelf)
         .Include(doc => doc.RelatedVersions)
         .Include(doc => doc.Tags)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(doc => doc.Guid == baseDocumentGuid);
+            .ThenInclude(docTag => docTag.Tag)
+        .FirstOrDefaultAsync(doc => doc.Guid == baseDocumentGuid_Guid);
 
         if (baseDocumentDbModel is null)
         {
@@ -2535,30 +2926,40 @@ public class LibraryController : ControllerBase
             Elements = newElements,
             HasImage = baseDocumentDbModel.HasImage,
             Owner = baseDocumentDbModel.Owner,
-            ParentShelves = baseDocumentDbModel.ParentShelves,
             RelatedVersions = baseDocumentDbModel.RelatedVersions,
-            Tags = baseDocumentDbModel.Tags,
             Title = baseDocumentDbModel.Title,
             Version = newVersionName,
         };
+        libraryDb.Documents.Add(newDocumentDbModel);
 
-        await libraryDb.Documents.AddAsync(newDocumentDbModel);
-        await libraryDb.SaveChangesAsync();
-
-        //seed library
-        await libraryProcess.Update_DocumentSeed(baseDocumentDbModel.Guid, libraryDb);
-        await libraryProcess.Update_DocumentSeed(newDocumentDbModel.Guid, libraryDb);
-        foreach (Library_ElementDbModel element in newElements)
+        foreach (Library_TagDbModel tag in baseDocumentDbModel.Tags.Select(dt => dt.Tag))
         {
-            await libraryProcess.Update_ElementSeed(element.Guid, libraryDb);
+            Library_DocumentTag_DbModel documentTag = new()
+            {
+                Document = newDocumentDbModel,
+                Tag = tag,
+            };
+            libraryDb.DocumentTags.Add(documentTag);
         }
-        await libraryProcess.Update_RelatedVersionsSeed(baseDocumentDbModel.RelatedVersions.Guid, libraryDb);
+        foreach (Library_ShelfDbModel parentShelf in baseDocumentDbModel.ParentShelves.Select(sd => sd.Shelf))
+        {
+            Library_ShelfDocument_DbModel shelfDocument = new()
+            {
+                Shelf = parentShelf,
+                Document = newDocumentDbModel,
+            };
+            libraryDb.ShelfDocuments.Add(shelfDocument);
+        }
+
+        await libraryDb.SaveChangesAsync();
 
         //copy introduction image to the new directory
         if (baseDocumentDbModel.HasImage)
         {
-            string baseDocumentImagePath = Path.Combine(Storage_Documents.FullName, baseDocumentDbModel.Guid, "image");
-            string newDocumentImagePath = Path.Combine(Storage_Documents.FullName, newDocumentDbModel.Guid, "image");
+            string baseDocumentImagePath =
+            Path.Combine(Storage_Documents.FullName, baseDocumentDbModel.Guid.ToString("N"), "image");
+            string newDocumentImagePath =
+            Path.Combine(Storage_Documents.FullName, newDocumentDbModel.Guid.ToString("N"), "image");
             System.IO.File.Copy(baseDocumentImagePath, newDocumentImagePath);
         }
 
@@ -2567,15 +2968,20 @@ public class LibraryController : ControllerBase
         .Where(el => el.FileName != null).ToList();
         foreach (Library_ElementDbModel fileElement in fileElements)
         {
-            string baseElementFilePath = Path.Combine(Storage_Elements.FullName, fileElement.Guid, fileElement.FileName!);
+            string baseElementFilePath =
+            Path.Combine(Storage_Elements.FullName, fileElement.Guid.ToString("N"), fileElement.FileName!);
 
             Library_ElementDbModel newCorespondElement = newElements
             .Single(el => el.FileName == fileElement.FileName &&
             el.Order == fileElement.Order &&
             el.Type == fileElement.Type);
 
-            Directory.CreateDirectory(Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid));
-            string newElementFilePath = Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid, newCorespondElement.FileName!);
+            Directory.CreateDirectory(
+                Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid.ToString("N"))
+            );
+            string newElementFilePath =
+            Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid.ToString("N"),
+            newCorespondElement.FileName!);
 
             System.IO.File.Copy(baseElementFilePath, newElementFilePath);
             //if the file is image create different size files of it
@@ -2583,8 +2989,6 @@ public class LibraryController : ControllerBase
 
         //review
         await reviewProcess.CreateNewReview(reviewDb, newDocumentDbModel.Guid, me.UserGuid);
-
-
 
         return Ok(new { newVersionGuid = newDocumentDbModel.Guid });
 
@@ -2596,52 +3000,76 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> AddVersionRelationship([FromQuery][StringLength(32)] string baseDocumentGuid,
     [FromQuery][StringLength(32)] string newRelatedDocumentGuid)
     {
-        Library_DocumentDbModel? baseDocumentDbModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .Include(doc => doc.RelatedVersions)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(doc => doc.Guid == baseDocumentGuid);
+        if (!Guid.TryParseExact(baseDocumentGuid, "N", out Guid baseDocumentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+        if (!Guid.TryParseExact(newRelatedDocumentGuid, "N", out Guid newRelatedDocumentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
-        if (baseDocumentDbModel is null)
+        var baseDocumentDbInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == baseDocumentGuid_Guid)
+        .Select(doc => new
+        {
+            doc.Id,
+            ownerGuid = doc.Owner.Guid,
+            doc.RelatedVersions,
+        })
+        .FirstOrDefaultAsync();
+
+        if (baseDocumentDbInfo is null)
         {
             ModelState.AddModelError("baseDocumentGuid", "there's no document with the specified guid!");
             return BadRequest(ModelState);
         }
 
-        Library_DocumentDbModel? newRelatedDocumentDbModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .Include(doc => doc.RelatedVersions)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(doc => doc.Guid == newRelatedDocumentGuid);
+        var newRelatedDocumentDbInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == newRelatedDocumentGuid_Guid)
+        .Select(doc => new
+        {
+            doc.Id,
+            ownerGuid = doc.Owner.Guid,
+        })
+        .FirstOrDefaultAsync();
 
-        if (newRelatedDocumentDbModel is null)
+        if (newRelatedDocumentDbInfo is null)
         {
             ModelState.AddModelError("newRelatedDocumentGuid", "there's no document with the specified guid!");
             return BadRequest(ModelState);
         }
 
-        string myGuid = await userManager.Users
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (myGuid != baseDocumentDbModel.Owner.Guid || myGuid != newRelatedDocumentDbModel.Owner.Guid)
+        if (myGuid != baseDocumentDbInfo.ownerGuid || myGuid != newRelatedDocumentDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner of the specified documents can create relate then!");
             return BadRequest(ModelState);
         }
 
-        baseDocumentDbModel.RelatedVersions ??= new();
+        //create
+        Library_DocumentDbModel baseDocumentDbModel = new() { Id = baseDocumentDbInfo.Id };
+        Library_DocumentDbModel newRelatedDocumentDbModel = new() { Id = newRelatedDocumentDbInfo.Id };
+        //Attach
+        libraryDb.Documents.Attach(baseDocumentDbModel);
+        libraryDb.Documents.Attach(newRelatedDocumentDbModel);
+        //edit
+        baseDocumentDbModel.RelatedVersions = baseDocumentDbInfo.RelatedVersions ?? new();
         newRelatedDocumentDbModel.RelatedVersions = baseDocumentDbModel.RelatedVersions;
-
+        //modified
+        libraryDb.Documents.Entry(baseDocumentDbModel).Property(doc => doc.RelatedVersions).IsModified = true;
+        libraryDb.Documents.Entry(newRelatedDocumentDbModel).Property(doc => doc.RelatedVersions).IsModified = true;
+        //save
         await libraryDb.SaveChangesAsync();
-
-        //seed
-        await libraryProcess.Update_RelatedVersionsSeed(baseDocumentDbModel.RelatedVersions.Guid, libraryDb);
 
         Library_VersionBrief_ViewModel[] versionBriefs = await libraryDb.RelatedVersions
         .Where(rv => rv.Guid == baseDocumentDbModel.RelatedVersions.Guid)
-        .Include(rv => rv.Documents)
         .SelectMany(rv => rv.Documents)
         .Select(doc => new Library_VersionBrief_ViewModel()
         {
@@ -2659,39 +3087,48 @@ public class LibraryController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteVersionRelationship([FromQuery][StringLength(32)] string documentGuid)
     {
-        Library_DocumentDbModel? documentDbModel = await libraryDb.Documents
-        .Include(doc => doc.Owner)
-        .Include(doc => doc.RelatedVersions)
-        .AsSplitQuery()
-        .FirstOrDefaultAsync(doc => doc.Guid == documentGuid);
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
-        if (documentDbModel is null)
+        var documentDbInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid)
+        .Select(doc => new
+        {
+            doc.Id,
+            ownerGuid = doc.Owner.Guid,
+        })
+        .FirstOrDefaultAsync();
+
+        if (documentDbInfo is null)
         {
             ModelState.AddModelError("documentGuid", "there's no document with the specified guid!");
             return BadRequest(ModelState);
         }
 
-        string myGuid = await userManager.Users
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (myGuid != documentDbModel.Owner.Guid)
+        if (myGuid != documentDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner of the document can edit it!");
             return BadRequest(ModelState);
         }
 
-        string? relatedVersionGuid = documentDbModel.RelatedVersions?.Guid;
-
+        //create
+        Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
+        //Attach
+        libraryDb.Documents.Attach(documentDbModel);
+        //edit
         documentDbModel.RelatedVersions = null;
+        //modified
+        libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.RelatedVersions).IsModified = true;
+        //save
         await libraryDb.SaveChangesAsync();
-
-        //seed
-        if (relatedVersionGuid is not null)
-        {
-            await libraryProcess.Update_RelatedVersionsSeed(relatedVersionGuid, libraryDb);
-        }
 
         return Ok(new { success = true });
     }

@@ -58,7 +58,12 @@ public class LibraryController : ControllerBase
             Guid = lib.Guid,
             Title = lib.Title,
             Description = lib.Description,
-            ShelvesTitles = lib.Shelves.OrderBy(shelf => shelf.Id).Take(10).Select(shelf => shelf.Title).ToArray(),
+            ShelvesTitles = lib.Shelves.
+                Select(ls => ls.Shelf)
+                .OrderBy(shelf => shelf.Id)
+                .Take(10)
+                .Select(shelf => shelf.Title)
+                .ToArray(),
             CreatedAt = lib.CreatedAt,
             OwnerGuid = lib.Owner.Guid,
             IntegrityVersion = lib.IntegrityVersion,
@@ -104,7 +109,12 @@ public class LibraryController : ControllerBase
             Guid = lib.Guid,
             Title = lib.Title,
             Description = lib.Description,
-            ShelvesTitles = lib.Shelves.OrderBy(shelf => shelf.Id).Take(10).Select(shelf => shelf.Title).ToArray(),
+            ShelvesTitles = lib.Shelves
+                .Select(ls => ls.Shelf)
+                .OrderBy(shelf => shelf.Id)
+                .Take(10)
+                .Select(shelf => shelf.Title)
+                .ToArray(),
             OwnerGuid = lib.Owner.Guid,
             CreatedAt = lib.CreatedAt,
             IntegrityVersion = lib.IntegrityVersion,
@@ -155,6 +165,7 @@ public class LibraryController : ControllerBase
                 .Select(ownerLibs => ownerLibs.Id)
                 .First(),
             shelvesInfo = lib.Shelves
+                .Select(ls => ls.Shelf)
                 .Select(shelf => new
                 {
                     id = shelf.Id,
@@ -193,28 +204,19 @@ public class LibraryController : ControllerBase
         //delete from storage
         libraryProcess.Delete_LibraryDirectory(libraryGuid);
 
-        //create default library
-        Library_LibraryDbModel defaultLibrary = new() { Id = libraryInfo.ownerDefaultLibraryId };
-
-        //attach default library
-        libraryDb.Libraries.Attach(defaultLibrary);
-
         //set the delault library as the parent of the non-parent shelves
         foreach (var shelfInfo in libraryInfo.shelvesInfo)
         {
             if (shelfInfo.numberOfParentLibs == 1)
             {
-                //create
-                Library_ShelfDbModel shelfDbModel = new() { Id = shelfInfo.id };
-                //attach
-                libraryDb.Shelves.Attach(shelfDbModel);
-                //edit
-                shelfDbModel.ParentLibraries.Add(defaultLibrary);
-                //modified
-                libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf.ParentLibraries).IsModified = true;
+                Library_LibraryShelf_DbModel libShelf = new()
+                {
+                    LibraryId = libraryInfo.ownerDefaultLibraryId,
+                    ShelfId = shelfInfo.id,
+                };
+                libraryDb.LibraryShelves.Add(libShelf);
             }
         }
-        libraryDb.Libraries.Entry(defaultLibrary).Property(lib => lib.Shelves).IsModified = true;
         //save
         await libraryDb.SaveChangesAsync();
 
@@ -237,11 +239,13 @@ public class LibraryController : ControllerBase
         Library_ShelfCard_ViewModel[] shelfCardModels = await libraryDb.Libraries
         .Where(lib => lib.Guid == libraryGuid_Guid)
         .SelectMany(lib => lib.Shelves)
+        .Select(ls => ls.Shelf)
         .Select(shelf => new Library_ShelfCard_ViewModel()
         {
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
             DocumentCardModels = shelf.Documents
+            .Select(sd => sd.Document)
             .OrderBy(doc => doc.Id)
             .Take(10)
             .Select(doc => new Library_DocumentCard_ViewModel()
@@ -256,10 +260,12 @@ public class LibraryController : ControllerBase
                 VersionName = doc.Version == "Default" ? null : doc.Version,
             }).ToArray(),
             Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
+            Libraries = shelf.ParentLibraries
+            .Select(ls => ls.Library)
+            .Select(parentLib => new Library_LibraryBrief_ViewModel()
             {
-                Guid = shelfLib.Guid,
-                Title = shelfLib.Title,
+                Guid = parentLib.Guid,
+                Title = parentLib.Title,
             }).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.Owner.Guid,
@@ -285,6 +291,7 @@ public class LibraryController : ControllerBase
         Guid[] shelfGuids = await libraryDb.Libraries
         .Where(lib => lib.Guid == libraryGuid_Guid)
         .SelectMany(lib => lib.Shelves)
+        .Select(ls => ls.Shelf)
         .Select(shelf => shelf.Guid)
         .ToArrayAsync();
 
@@ -307,12 +314,16 @@ public class LibraryController : ControllerBase
         {
             shelf.Guid,
             shelf.Title,
-            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
+            Libraries = shelf.ParentLibraries
+            .Select(ls => ls.Shelf)
+            .Select(parentLib => new Library_LibraryBrief_ViewModel()
             {
-                Guid = shelfLib.Guid,
-                Title = shelfLib.Title,
+                Guid = parentLib.Guid,
+                Title = parentLib.Title,
             }).ToArray(),
-            Documents = shelf.Documents.Select(doc => new Library_DocumentBrief_ViewModel()
+            Documents = shelf.Documents
+            .Select(sd => sd.Document)
+            .Select(doc => new Library_DocumentBrief_ViewModel()
             {
                 Guid = doc.Guid,
                 Title = doc.Title,
@@ -339,6 +350,7 @@ public class LibraryController : ControllerBase
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
             DocumentCardModels = shelf.Documents
+            .Select(sd => sd.Document)
             .OrderBy(doc => doc.Id)
             .Take(10)
             .Select(doc => new Library_DocumentCard_ViewModel()
@@ -353,10 +365,12 @@ public class LibraryController : ControllerBase
                 VersionName = doc.Version == "Default" ? null : doc.Version,
             }).ToArray(),
             Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
+            Libraries = shelf.ParentLibraries
+            .Select(ls => ls.Shelf)
+            .Select(parentLib => new Library_LibraryBrief_ViewModel()
             {
-                Guid = shelfLib.Guid,
-                Title = shelfLib.Title,
+                Guid = parentLib.Guid,
+                Title = parentLib.Title,
             }).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.Owner.Guid,
@@ -409,7 +423,9 @@ public class LibraryController : ControllerBase
                 .Where(sh => sh.Guid == shelf.Owner.DefaultShelfGuid)
                 .Select(sh => sh.Id)
                 .First(),
-            documentsInfo = shelf.Documents.Select(doc => new
+            documentsInfo = shelf.Documents
+            .Select(sd => sd.Document)
+            .Select(doc => new
             {
                 id = doc.Id,
                 numberOfParentShelves = doc.ParentShelves.Count,
@@ -445,28 +461,19 @@ public class LibraryController : ControllerBase
         //remove fromstorage
         libraryProcess.Delete_ShelfDirectory(shelfGuid);
 
-        //create
-        Library_ShelfDbModel defaultShelf = new() { Id = shelfDbInfo.ownerDefaultShelfId };
-
-        //attach
-        libraryDb.Shelves.Attach(defaultShelf);
-
         //set the default shelf as the parent of its non-parent documents
         foreach (var docInfo in shelfDbInfo.documentsInfo)
         {
             if (docInfo.numberOfParentShelves == 1)
             {
-                //create
-                Library_DocumentDbModel documentDbModel = new() { Id = docInfo.id };
-                //attach
-                libraryDb.Documents.Attach(documentDbModel);
-                //edit
-                documentDbModel.ParentShelves.Add(defaultShelf);
-                //modified
-                libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.ParentShelves).IsModified = true;
+                Library_ShelfDocument_DbModel shelfDoc = new()
+                {
+                    ShelfId = shelfDbInfo.ownerDefaultShelfId,
+                    DocumentId = docInfo.id,
+                };
+                libraryDb.ShelfDocuments.Add(shelfDoc);
             }
         }
-        libraryDb.Shelves.Entry(defaultShelf).Property(shelf => shelf.Documents).IsModified = true;
         //save
         await libraryDb.SaveChangesAsync();
 
@@ -489,6 +496,7 @@ public class LibraryController : ControllerBase
         Library_DocumentCard_ViewModel[] documentCardModels = await libraryDb.Shelves
         .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .SelectMany(shelf => shelf.Documents)
+        .Select(sd => sd.Document)
         .Select(doc => new Library_DocumentCard_ViewModel()
         {
             Description = doc.Description,
@@ -517,6 +525,7 @@ public class LibraryController : ControllerBase
         Guid[] documentsGuids = await libraryDb.Shelves
         .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .SelectMany(shelf => shelf.Documents)
+        .Select(sd => sd.Document)
         .Select(doc => doc.Guid)
         .ToArrayAsync();
 
@@ -583,7 +592,9 @@ public class LibraryController : ControllerBase
             Description = doc.Description,
             Guid = doc.Guid,
             HasImage = doc.HasImage,
-            Tags = doc.Tags.Select(tag => tag.Name).ToArray(),
+            Tags = doc.Tags
+            .Select(dt => dt.Tag)
+            .Select(tag => tag.Name).ToArray(),
             Title = doc.Title,
             Version = doc.Version,
             Owner = new Library_OwnerBrief_ViewModel()
@@ -609,20 +620,26 @@ public class LibraryController : ControllerBase
                 DocumentGuid = rvDoc.Guid,
                 VersionName = rvDoc.Version,
             }).ToArray(),
-            Shelves = doc.ParentShelves.Select(shelf => new Library_ShelfBrief_ViewModel()
+            Shelves = doc.ParentShelves
+            .Select(sd => sd.Shelf)
+            .Select(parentshelf => new Library_ShelfBrief_ViewModel()
             {
-                Documents = shelf.Documents.Select(shelfDoc => new Library_DocumentBrief_ViewModel()
+                Documents = parentshelf.Documents
+                .Select(sd => sd.Document)
+                .Select(parentShelfDoc => new Library_DocumentBrief_ViewModel()
                 {
-                    Guid = shelfDoc.Guid,
-                    Title = shelfDoc.Title,
+                    Guid = parentShelfDoc.Guid,
+                    Title = parentShelfDoc.Title,
                 }).ToArray(),
-                Guid = shelf.Guid,
-                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
+                Guid = parentshelf.Guid,
+                Libraries = parentshelf.ParentLibraries
+                .Select(ls => ls.Library)
+                .Select(parentShelfParentLib => new Library_LibraryBrief_ViewModel()
                 {
-                    Guid = shelfLib.Guid,
-                    Title = shelfLib.Title,
+                    Guid = parentShelfParentLib.Guid,
+                    Title = parentShelfParentLib.Title,
                 }).ToArray(),
-                Title = shelf.Title,
+                Title = parentshelf.Title,
             }).ToArray(),
             IntegrityVersion = doc.IntegrityVersion,
         })
@@ -1524,23 +1541,28 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            //create
-            IEnumerable<Library_ShelfDbModel> parentShelfDbModels =
-            documentDbInfo.newParentShelfIds.Select(id => new Library_ShelfDbModel() { Id = id });
-            if (parentShelfDbModels.Count() == 0)
+            //create join tables
+            IEnumerable<Library_ShelfDocument_DbModel> shelfDocRels = documentDbInfo.newParentShelfIds
+            .Select(id => new Library_ShelfDocument_DbModel()
             {
-                Library_ShelfDbModel ownerDefaultShelf = new() { Id = documentDbInfo.ownerDefaultShelfId };
-                parentShelfDbModels = [ownerDefaultShelf];
+                ShelfId = id,
+                DocumentId = documentDbInfo.Id,
+            });
+            if (!shelfDocRels.Any())
+            {
+                Library_ShelfDocument_DbModel defaultShelfDocRel = new Library_ShelfDocument_DbModel()
+                {
+                    ShelfId = documentDbInfo.ownerDefaultShelfId,
+                    DocumentId = documentDbInfo.Id,
+                };
+                shelfDocRels = [defaultShelfDocRel];
             }
+            //create documentDbModel
             Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
             //attach
             libraryDb.Documents.Attach(documentDbModel);
-            libraryDb.Shelves.AttachRange(parentShelfDbModels);
             //edit
-            foreach (Library_ShelfDbModel parentShelf in parentShelfDbModels)
-            {
-                documentDbModel.ParentShelves.Add(parentShelf);
-            }
+            documentDbModel.ParentShelves = [.. shelfDocRels];
             //modified
             libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.ParentShelves).IsModified = true;
             //save
@@ -1555,12 +1577,16 @@ public class LibraryController : ControllerBase
             {
                 shelf.Guid,
                 shelf.Title,
-                Libraries = shelf.ParentLibraries.Select(shelfLib => new Library_LibraryBrief_ViewModel()
+                Libraries = shelf.ParentLibraries
+                .Select(ls => ls.Library)
+                .Select(parentLib => new Library_LibraryBrief_ViewModel()
                 {
-                    Guid = shelfLib.Guid,
-                    Title = shelfLib.Title,
+                    Guid = parentLib.Guid,
+                    Title = parentLib.Title,
                 }).ToArray(),
-                Documents = shelf.Documents.Select(doc => new Library_DocumentBrief_ViewModel()
+                Documents = shelf.Documents
+                .Select(sd => sd.Document)
+                .Select(doc => new Library_DocumentBrief_ViewModel()
                 {
                     Guid = doc.Guid,
                     Title = doc.Title,
@@ -1621,20 +1647,28 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            //create
-            IEnumerable<Library_LibraryDbModel> parentLibraryDbModels = shelfDbInfo.newParentLibrariesIds
-            .Select(id => new Library_LibraryDbModel() { Id = id });
-            if (parentLibraryDbModels.Count() == 0)
+            //create join tables
+            IEnumerable<Library_LibraryShelf_DbModel> libShelfRels = shelfDbInfo.newParentLibrariesIds
+            .Select(id => new Library_LibraryShelf_DbModel()
             {
-                Library_LibraryDbModel ownerDefaultLibrary = new() { Id = shelfDbInfo.ownerDefaultLibraryId };
-                parentLibraryDbModels = [ownerDefaultLibrary];
+                LibraryId = id,
+                ShelfId = shelfDbInfo.Id,
+            });
+            if (!libShelfRels.Any())
+            {
+                Library_LibraryShelf_DbModel defaultLibShelfRel = new()
+                {
+                    LibraryId = shelfDbInfo.ownerDefaultLibraryId,
+                    ShelfId = shelfDbInfo.Id,
+                };
+                libShelfRels = [defaultLibShelfRel];
             }
+            //create shelfDbModel
             Library_ShelfDbModel shelfDbModel = new() { Id = shelfDbInfo.Id };
             //attach
             libraryDb.Shelves.Attach(shelfDbModel);
-            libraryDb.Libraries.AttachRange(parentLibraryDbModels);
             //edit
-            shelfDbModel.ParentLibraries = [.. parentLibraryDbModels];
+            shelfDbModel.ParentLibraries = [.. libShelfRels];
             //modified
             libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf.ParentLibraries).IsModified = true;
             //save

@@ -150,8 +150,6 @@ public class Library_FollowerFollowing_DbModel
 
     public int FollowingId { get; set; }
     public Library_OwnerDbModel Following { get; set; } = null!;
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_UserFavoriteLibrary_DbModel
 {
@@ -160,8 +158,6 @@ public class Library_UserFavoriteLibrary_DbModel
 
     public int LibraryId { get; set; }
     public Library_LibraryDbModel Library { get; set; } = null!;
-
-    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_UserFavoriteShelf_DbModel
 {
@@ -170,8 +166,6 @@ public class Library_UserFavoriteShelf_DbModel
 
     public int ShelfId { get; set; }
     public Library_ShelfDbModel Shelf { get; set; } = null!;
-
-    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_UserFavoriteDocument_DbModel
 {
@@ -180,8 +174,6 @@ public class Library_UserFavoriteDocument_DbModel
 
     public int DocumentId { get; set; }
     public Library_DocumentDbModel Document { get; set; } = null!;
-
-    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 
 public class Library_LibraryShelf_DbModel
@@ -191,8 +183,6 @@ public class Library_LibraryShelf_DbModel
 
     public int ShelfId { get; set; }
     public Library_ShelfDbModel Shelf { get; set; } = null!;
-
-    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_ShelfDocument_DbModel
 {
@@ -201,8 +191,6 @@ public class Library_ShelfDocument_DbModel
 
     public int DocumentId { get; set; }
     public Library_DocumentDbModel Document { get; set; } = null!;
-
-    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 public class Library_DocumentTag_DbModel
 {
@@ -211,8 +199,6 @@ public class Library_DocumentTag_DbModel
 
     public int TagId { get; set; }
     public Library_TagDbModel Tag { get; set; } = null!;
-
-    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }
 
 

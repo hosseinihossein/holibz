@@ -19,6 +19,7 @@ create different size images,
 - set backup model to backup from storage
 - search about asp.net core Identity, how to use it at best performance and fetch data efficiently
 - define explicit join-table for many-to-many relationships
+- edit library controller from begining
 - 
 
 

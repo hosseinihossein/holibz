@@ -1796,39 +1796,52 @@ public class LibraryController : ControllerBase
 
         List<Guid> followersGuids_MutualsWithMyFollowings = [];
         List<Guid> followersGuids_Others = [];
-        if (myGuid is not null)
+        if (myGuid is not null && myGuid.HasValue)
         {
             followersGuids_MutualsWithMyFollowings = await libraryDb.Owners
-            .Where(o =>
-                (filter == null || o.NormalizedUserName.Contains(filter)) &&
-                o.Followings.Any(f => f.Guid == ownerGuid_Guid) &&
-                o.Followers.Any(f => f.Guid == myGuid)
-            )
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Followers)
+            .Select(ff => ff.Follower)
+            .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
+            .Where(fer => fer.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
             .OrderBy(o => o.Id)
             .Select(o => o.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
             .ToListAsync();
 
+            //am i a follower
+            bool iFollow = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Followers)
+            .AnyAsync(ff => ff.Follower.Guid == myGuid &&
+                (filter == null || ff.Follower.NormalizedUserName.Contains(filter))
+            );
+            if (iFollow)
+            {
+                followersGuids_MutualsWithMyFollowings = [myGuid.Value, .. followersGuids_MutualsWithMyFollowings];
+            }
+
             if (followersGuids_MutualsWithMyFollowings.Count < bunchSize)
             {
                 int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Owners
-                .CountAsync(o =>
-                    (filter == null || o.NormalizedUserName.Contains(filter)) &&
-                    o.Followings.Any(f => f.Guid == ownerGuid_Guid) &&
-                    o.Followers.Any(f => f.Guid == myGuid)
-                );
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Followers)
+                .Select(ff => ff.Follower)
+                .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
+                .Where(fer => fer.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
+                .CountAsync();
                 int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
 
                 int numberOfNeededOthersFollowers = bunchSize - followersGuids_MutualsWithMyFollowings.Count;
 
                 followersGuids_Others = await libraryDb.Owners
-                .Where(o =>
-                    (filter == null || o.NormalizedUserName.Contains(filter)) &&
-                    o.Followings.Any(f => f.Guid == ownerGuid_Guid) &&
-                    !o.Followers.Any(f => f.Guid == myGuid)
-                )
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Followers)
+                .Select(ff => ff.Follower)
+                .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
+                .Where(fer => !fer.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
                 .OrderBy(o => o.Id)
                 .Select(o => o.Guid)
                 .Skip(numberOfSkipOthersFollowers)
@@ -1841,7 +1854,8 @@ public class LibraryController : ControllerBase
             followersGuids_Others = await libraryDb.Owners
             .Where(o => o.Guid == ownerGuid_Guid)
             .SelectMany(o => o.Followers)
-            .Where(f => filter == null || f.NormalizedUserName.Contains(filter))
+            .Select(ff => ff.Follower)
+            .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
             .OrderBy(o => o.Id)
             .Select(f => f.Guid)
             .Skip(bunchIndex.Value * bunchSize)
@@ -1907,39 +1921,52 @@ public class LibraryController : ControllerBase
 
         List<Guid> followingsGuids_MutualsWithMyFollowings = [];
         List<Guid> followingsGuids_Others = [];
-        if (myGuid is not null && ownerGuid_Guid != myGuid)
+        if (myGuid is not null && myGuid.HasValue && ownerGuid_Guid != myGuid)
         {
             followingsGuids_MutualsWithMyFollowings = await libraryDb.Owners
-            .Where(o =>
-                (filter == null || o.NormalizedUserName.Contains(filter)) &&
-                o.Followers.Any(f => f.Guid == ownerGuid_Guid) &&
-                o.Followers.Any(f => f.Guid == myGuid)
-            )
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Followings)
+            .Select(ff => ff.Following)
+            .Where(fing => filter == null || fing.NormalizedUserName.Contains(filter))
+            .Where(fing => fing.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
             .OrderBy(o => o.Id)
             .Select(o => o.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
             .ToListAsync();
 
+            //am i followed
+            bool followedMe = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Followings)
+            .AnyAsync(ff => ff.Following.Guid == myGuid &&
+                (filter == null || ff.Following.NormalizedUserName.Contains(filter))
+            );
+            if (followedMe)
+            {
+                followingsGuids_MutualsWithMyFollowings = [myGuid.Value, .. followingsGuids_MutualsWithMyFollowings];
+            }
+
             if (followingsGuids_MutualsWithMyFollowings.Count < bunchSize)
             {
                 int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Owners
-                .CountAsync(o =>
-                    (filter == null || o.NormalizedUserName.Contains(filter)) &&
-                    o.Followers.Any(f => f.Guid == ownerGuid_Guid) &&
-                    o.Followers.Any(f => f.Guid == myGuid)
-                );
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Followings)
+                .Select(ff => ff.Following)
+                .Where(fing => filter == null || fing.NormalizedUserName.Contains(filter))
+                .Where(fing => fing.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
+                .CountAsync();
                 int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
 
                 int numberOfNeededOthersFollowers = bunchSize - followingsGuids_MutualsWithMyFollowings.Count;
 
                 followingsGuids_Others = await libraryDb.Owners
-                .Where(o =>
-                    (filter == null || o.NormalizedUserName.Contains(filter)) &&
-                    o.Followers.Any(f => f.Guid == ownerGuid_Guid) &&
-                    !o.Followers.Any(f => f.Guid == myGuid)
-                )
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Followings)
+                .Select(ff => ff.Following)
+                .Where(fing => filter == null || fing.NormalizedUserName.Contains(filter))
+                .Where(fing => !fing.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
                 .OrderBy(o => o.Id)
                 .Select(o => o.Guid)
                 .Skip(numberOfSkipOthersFollowers)
@@ -1952,6 +1979,7 @@ public class LibraryController : ControllerBase
             followingsGuids_Others = await libraryDb.Owners
             .Where(o => o.Guid == ownerGuid_Guid)
             .SelectMany(o => o.Followings)
+            .Select(ff => ff.Following)
             .Where(f => filter == null || f.NormalizedUserName.Contains(filter))
             .OrderBy(o => o.Id)
             .Select(f => f.Guid)
@@ -1982,6 +2010,8 @@ public class LibraryController : ControllerBase
     public async Task<IActionResult> Follow([FromQuery][StringLength(32)] string ownerGuid,
     Review_DbContext reviewDb)
     {
+        //can't follow myself
+
         if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");

@@ -9,14 +9,14 @@ public class Notification_UserDbModel
     [Key]
     public int Id { get; set; }
     public Guid Guid { get; set; }
-    public List<Notification_NotificationDbModel> Notifications { get; set; } = [];
+    public ICollection<Notification_NotificationDbModel> Notifications { get; set; } = [];
     //public bool EnableForComments = true;
 }
 public class Notification_NotificationDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Guid? SubjectGuid { get; set; } = null;
     public Notification_UserDbModel Owner { get; set; } = null!;
     [MaxLength(60)]
@@ -402,7 +402,7 @@ public class Notification_NotifCreation_FormModel
 //********************* View models *************
 public class Notification_NotifClient_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Title { get; set; } = null!;
     public string[] Description { get; set; } = [];
     public string? Link { get; set; } = null;

@@ -33,7 +33,7 @@ public class Review_CommentDbModel
 {
     [Key]
     public int Id { get; set; }
-    public Guid Guid { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Review_ReviewDbModel ParentReview { get; set; } = null!;
     public Review_UserDbModel Writer { get; set; } = null!;
     [MaxLength(500)]

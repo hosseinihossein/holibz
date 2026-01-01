@@ -21,6 +21,7 @@ create different size images,
 - define explicit join-table for many-to-many relationships
 - edit library controller from begining
 - edit replyToGuid,replyToUserName,replyToBrief to nullable in angular app
+- by default comment are NOT ordered by oldest
 - 
 
 

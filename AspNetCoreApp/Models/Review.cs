@@ -207,28 +207,26 @@ public class Review_DbContext : DbContext
 //*********************** Data Models **************************
 public class Review_NewComment_FormModel
 {
-    [StringLength(32)]
-    public string ParentSubjectGuid { get; set; } = null!;
+    public Guid ParentSubjectGuid { get; set; }
 
     [StringLength(1000)]
     public string Text { get; set; } = null!;
 }
 public class Review_NewReply_FormModel
 {
-    [StringLength(32)]
-    public string ParentCommentGuid { get; set; } = null!;
+    public Guid ParentCommentGuid { get; set; }
 
     [StringLength(1000)]
     public string Text { get; set; } = null!;
 }
 public class Review_Comment_ViewModel
 {
-    public string Guid { get; set; } = null!;
-    public string WriterGuid { get; set; } = null!;
+    public Guid Guid { get; set; }
+    public Guid WriterGuid { get; set; }
     public bool IsReply { get; set; } = false;
-    public string ReplyToGuid { get; set; } = "";
-    public string ReplyToBrief { get; set; } = "";
-    public string ReplyToUsername { get; set; } = "";
+    public Guid? ReplyToGuid { get; set; }
+    public string? ReplyToBrief { get; set; }
+    public string? ReplyToUsername { get; set; }
     public string Text { get; set; } = null!;
     public bool AmIThumbsUp { get; set; } = false;
     public bool AmIThumbsDown { get; set; } = false;

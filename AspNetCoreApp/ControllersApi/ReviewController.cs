@@ -32,8 +32,14 @@ public class ReviewController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUserTotalLikes([FromQuery][StringLength(32)] string userGuid)
     {
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
         int userTotalNumberOfLikes = await reviewDb.Users
-        .Where(u => u.Guid == userGuid)
+        .Where(u => u.Guid == userGuid_Guid)
         .Include(u => u.GotReviews)
         .ThenInclude(r => r.LikedBy)
         .SelectMany(u => u.GotReviews)
@@ -51,16 +57,13 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> GetReviewModel([FromQuery][StringLength(32)] string subjectGuid,
     [FromQuery][StringLength(32)] string? commentGuid)
     {
-        Review_ReviewDbModel? reviewDbModel = await reviewDb.Reviews
-        .Include(r => r.LikedBy)
-        .FirstOrDefaultAsync(r => r.SubjectGuid == subjectGuid);
-        if (reviewDbModel is null)
+        if (!Guid.TryParseExact(subjectGuid, "N", out Guid subjectGuid_Guid))
         {
-            ModelState.AddModelError("subjectGuid", "There's no review with the specified guid!");
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
-        string? myGuid = null;
+        Guid? myGuid = null;
         if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
         {
             myGuid = await userManager.Users
@@ -69,132 +72,151 @@ public class ReviewController : ControllerBase
             .FirstAsync();
         }
 
-        int totalNumberOfComments = await reviewDb.Reviews
-        .Where(r => r.SubjectGuid == subjectGuid)
-        .Include(r => r.Comments)
-        .ThenInclude(c => c.ReplyTo)
-        .SelectMany(r => r.Comments)
-        .Where(c => c.ReplyTo == null)
-        .CountAsync();
+        var reviewDbInfo = await reviewDb.Reviews
+        .Where(r => r.SubjectGuid == subjectGuid_Guid)
+        .Select(r => new
+        {
+            r.Id,
+            totalLikes = r.LikedBy.Count(),
+            iLiked = myGuid != null && r.LikedBy.Any(ur => ur.User.Guid == myGuid),
+            totalComments = r.Comments.Count(c => c.ReplyTo == null),
+        })
+        .FirstOrDefaultAsync();
+
+        if (reviewDbInfo is null)
+        {
+            ModelState.AddModelError("subjectGuid", "There's no review with the specified guid!");
+            return BadRequest(ModelState);
+        }
 
         Review_Comment_ViewModel[] requestedCommentWithParentsModels = [];
-        string? mainParentCommentGuid = null;
-        while (!string.IsNullOrWhiteSpace(commentGuid))
+        Guid? mainParentCommentGuid = null;
+        bool hasRequestedCommentGuid = Guid.TryParseExact(commentGuid, "N", out Guid commentGuid_Guid);
+        while (hasRequestedCommentGuid)
         {
-            Review_Comment_ViewModel? requestedCommentModel = await GetRequestedComment(commentGuid);
+            Review_Comment_ViewModel? requestedCommentModel =
+            await GetRequestedComment(commentGuid_Guid, myGuid);
+
             if (requestedCommentModel is not null)
             {
                 requestedCommentWithParentsModels = [requestedCommentModel, .. requestedCommentWithParentsModels];
-                if (requestedCommentModel.IsReply)
+                if (requestedCommentModel.IsReply && requestedCommentModel.ReplyToGuid.HasValue)
                 {
-                    commentGuid = requestedCommentModel.ReplyToGuid;
+                    commentGuid_Guid = requestedCommentModel.ReplyToGuid.Value;
                 }
                 else
                 {
-                    commentGuid = null;//breaks the loop
+                    hasRequestedCommentGuid = false;//breaks the loop
                     mainParentCommentGuid = requestedCommentModel.Guid;
                     break;
                 }
+            }
+            else
+            {
+                hasRequestedCommentGuid = false;//breaks the loop
+                break;
             }
         }
 
         int commentTakeNumber = 10;
         Review_Comment_ViewModel[] myCommentsModels = [];
+        Review_Comment_ViewModel[] mutualCommentsModels = [];
         Review_Comment_ViewModel[] othersCommentsModels = [];
         if (myGuid is not null)
         {
             myCommentsModels = await reviewDb.Reviews
-            .Where(r => r.SubjectGuid == subjectGuid)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.ReplyTo)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.Replies)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.Writer)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.ThumbsDowns)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.ThumbsUps)
+            .Where(r => r.SubjectGuid == subjectGuid_Guid)
             .SelectMany(r => r.Comments)
-            .Where(c => c.Writer.Guid == myGuid && c.ReplyTo == null && c.Guid != mainParentCommentGuid)
-            .OrderBy(c => c.Id)
+            .Where(c => c.ReplyTo == null &&
+                c.Writer.Guid == myGuid &&
+                (mainParentCommentGuid == null || c.Guid != mainParentCommentGuid)
+            )
+            .OrderBy(c => c.CreatedAt)
             .Take(commentTakeNumber)
             .Select(c => new Review_Comment_ViewModel()
             {
-                AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
-                AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
+                AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
+                AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
                 CreatedAt = c.CreatedAt,
                 Guid = c.Guid,
                 IsReply = false,
                 NumberOfReplies = c.Replies.Count,
-                NumberOfThumbsDowns = c.ThumbsDowns.Count,
-                NumberOfThumbsUps = c.ThumbsUps.Count,
-                ReplyToBrief = "",
-                ReplyToGuid = "",
-                ReplyToUsername = "",
+                NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
+                NumberOfThumbsUps = c.ThumbsUpsBy.Count,
                 Text = c.Text,
                 WriterGuid = c.Writer.Guid,
             })
-            .AsSplitQuery()
             .ToArrayAsync();
 
             if (myCommentsModels.Length < commentTakeNumber)
             {
-                int numberOfNeededOthersComments = commentTakeNumber - myCommentsModels.Length;
+                int numberOfNeededMutualComments = commentTakeNumber - myCommentsModels.Length;
 
-                othersCommentsModels = await reviewDb.Reviews
-                .Where(r => r.SubjectGuid == subjectGuid)
-                .Include(r => r.Comments)
-                .ThenInclude(c => c.ReplyTo)
-                .Include(r => r.Comments)
-                .ThenInclude(c => c.Replies)
-                .Include(r => r.Comments)
-                .ThenInclude(c => c.Writer)
-                .Include(r => r.Comments)
-                .ThenInclude(c => c.ThumbsDowns)
-                .Include(r => r.Comments)
-                .ThenInclude(c => c.ThumbsUps)
+                mutualCommentsModels = await reviewDb.Reviews
+                .Where(r => r.SubjectGuid == subjectGuid_Guid)
                 .SelectMany(r => r.Comments)
-                .Where(c => c.Writer.Guid != myGuid && c.ReplyTo == null && c.Guid != mainParentCommentGuid)
-                .OrderBy(c => c.Id)
-                .Take(numberOfNeededOthersComments)
+                .Where(c => c.ReplyTo == null &&
+                    c.Writer.Followers.Any(ff => ff.Follower.Guid == myGuid) &&
+                    (mainParentCommentGuid == null || c.Guid != mainParentCommentGuid)
+                )
+                .OrderBy(c => c.CreatedAt)
+                .Take(numberOfNeededMutualComments)
                 .Select(c => new Review_Comment_ViewModel()
                 {
-                    AmIThumbsDown = c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
-                    AmIThumbsUp = c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
+                    AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
+                    AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
                     CreatedAt = c.CreatedAt,
                     Guid = c.Guid,
                     IsReply = false,
                     NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDowns.Count,
-                    NumberOfThumbsUps = c.ThumbsUps.Count,
-                    ReplyToBrief = "",
-                    ReplyToGuid = "",
-                    ReplyToUsername = "",
+                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
+                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
-                .AsSplitQuery()
+                .ToArrayAsync();
+            }
+
+            if ((myCommentsModels.Length + mutualCommentsModels.Length) < commentTakeNumber)
+            {
+                int numberOfNeededOthersComments = commentTakeNumber -
+                (myCommentsModels.Length + mutualCommentsModels.Length);
+
+                othersCommentsModels = await reviewDb.Reviews
+                .Where(r => r.SubjectGuid == subjectGuid_Guid)
+                .SelectMany(r => r.Comments)
+                .Where(c => c.ReplyTo == null &&
+                    !c.Writer.Followers.Any(ff => ff.Follower.Guid == myGuid) &&
+                    c.Writer.Guid == myGuid &&
+                    (mainParentCommentGuid == null || c.Guid != mainParentCommentGuid)
+                )
+                .OrderBy(c => c.CreatedAt)
+                .Take(numberOfNeededOthersComments)
+                .Select(c => new Review_Comment_ViewModel()
+                {
+                    AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
+                    AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
+                    CreatedAt = c.CreatedAt,
+                    Guid = c.Guid,
+                    IsReply = false,
+                    NumberOfReplies = c.Replies.Count,
+                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
+                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
+                    Text = c.Text,
+                    WriterGuid = c.Writer.Guid,
+                })
                 .ToArrayAsync();
             }
         }
         else
         {
             othersCommentsModels = await reviewDb.Reviews
-            .Where(r => r.SubjectGuid == subjectGuid)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.ReplyTo)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.Replies)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.Writer)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.ThumbsDowns)
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.ThumbsUps)
+            .Where(r => r.SubjectGuid == subjectGuid_Guid)
             .SelectMany(r => r.Comments)
-            .Where(c => c.ReplyTo == null && c.Guid != mainParentCommentGuid)
-            .OrderBy(c => c.Id)
+            .Where(c => c.ReplyTo == null &&
+                (mainParentCommentGuid == null || c.Guid != mainParentCommentGuid)
+            )
+            .OrderBy(c => c.CreatedAt)
             .Take(commentTakeNumber)
             .Select(c => new Review_Comment_ViewModel()
             {
@@ -204,75 +226,61 @@ public class ReviewController : ControllerBase
                 Guid = c.Guid,
                 IsReply = false,
                 NumberOfReplies = c.Replies.Count,
-                NumberOfThumbsDowns = c.ThumbsDowns.Count,
-                NumberOfThumbsUps = c.ThumbsUps.Count,
-                ReplyToBrief = "",
-                ReplyToGuid = "",
-                ReplyToUsername = "",
+                NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
+                NumberOfThumbsUps = c.ThumbsUpsBy.Count,
                 Text = c.Text,
                 WriterGuid = c.Writer.Guid,
             })
-            .AsSplitQuery()
             .ToArrayAsync();
         }
 
         Review_Comment_ViewModel[] comments =
-        [.. requestedCommentWithParentsModels, .. myCommentsModels, .. othersCommentsModels];
+        [.. requestedCommentWithParentsModels, .. myCommentsModels,
+        .. mutualCommentsModels, .. othersCommentsModels];
 
         Review_Review_ViewModel reviewModel = new()
         {
-            AmILiked = myGuid is not null && reviewDbModel.LikedBy.Select(u => u.Guid).Contains(myGuid),
+            AmILiked = reviewDbInfo.iLiked,
             Comments = comments,
-            NumberOfLikes = reviewDbModel.LikedBy.Count,
-            TotalNumberOfComments = totalNumberOfComments,
+            NumberOfLikes = reviewDbInfo.totalLikes,
+            TotalNumberOfComments = reviewDbInfo.totalComments,
         };
 
         return Ok(reviewModel);
     }
-    private async Task<Review_Comment_ViewModel?> GetRequestedComment(string commentGuid)
+    private async Task<Review_Comment_ViewModel?> GetRequestedComment(Guid commentGuid,
+    Guid? myGuid)
     {
-        string? myGuid = null;
-        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
-        {
-            myGuid = await userManager.Users
-            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity.Name))
-            .Select(u => u.UserGuid)
-            .FirstAsync();
-        }
-
         Review_Comment_ViewModel? requestedCommentModel = await reviewDb.Comments
         .Where(c => c.Guid == commentGuid)
-        .Include(c => c.ReplyTo)
-        .Include(c => c.Replies)
-        .Include(c => c.ThumbsDowns)
-        .Include(c => c.ThumbsUps)
-        .Include(c => c.Writer)
         .Select(c => new Review_Comment_ViewModel()
         {
-            AmIThumbsDown = myGuid != null && c.ThumbsDowns.Select(u => u.Guid).Contains(myGuid),
-            AmIThumbsUp = myGuid != null && c.ThumbsUps.Select(u => u.Guid).Contains(myGuid),
+            AmIThumbsDown = myGuid != null && c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
+            AmIThumbsUp = myGuid != null && c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
             CreatedAt = c.CreatedAt,
             Guid = c.Guid,
             IsReply = c.ReplyTo != null,
             NumberOfReplies = c.Replies.Count,
-            NumberOfThumbsDowns = c.ThumbsDowns.Count,
-            NumberOfThumbsUps = c.ThumbsUps.Count,
-            ReplyToBrief = c.ReplyTo == null ? "" : c.ReplyTo.Text.Substring(0, c.ReplyTo.Text.Length > 128 ? 128 : c.ReplyTo.Text.Length),
-            ReplyToGuid = c.ReplyTo == null ? "" : c.ReplyTo.Guid,
-            ReplyToUsername = c.ReplyTo == null ? "" : c.ReplyTo.Writer.Guid,//UserGuid instead of UserName
+            NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
+            NumberOfThumbsUps = c.ThumbsUpsBy.Count,
+            ReplyToBrief = c.ReplyTo == null ? "" :
+                c.ReplyTo.Text.Substring(0, c.ReplyTo.Text.Length > 128 ? 128 : c.ReplyTo.Text.Length),
+            ReplyToGuid = c.ReplyTo == null ? null : c.ReplyTo.Guid,
+            ReplyToUsername = c.ReplyTo == null ? null : c.ReplyTo.Writer.NormalizedUserName,//UserGuid instead of UserName
             Text = c.Text,
             WriterGuid = c.Writer.Guid,
         })
-        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
-        if (requestedCommentModel is not null && requestedCommentModel.IsReply)
+        if (requestedCommentModel is not null && requestedCommentModel.IsReply &&
+        requestedCommentModel.ReplyToUsername is not null)
         {
-            string? replyToUserName = await userManager.Users
+            /*string? replyToUserName = await userManager.Users
             .Where(u => u.UserGuid == requestedCommentModel.ReplyToUsername)//use the UserGuid got instead of UserName
             .Select(u => u.UserName)
             .FirstOrDefaultAsync();
-            requestedCommentModel.ReplyToUsername = replyToUserName ?? "";// replace UserName by UserGuid
+            requestedCommentModel.ReplyToUsername = replyToUserName ?? "";*/// replace UserName by UserGuid
+            requestedCommentModel.ReplyToUsername = requestedCommentModel.ReplyToUsername.ToLower();
         }
 
         return requestedCommentModel;
@@ -280,7 +288,7 @@ public class ReviewController : ControllerBase
 
 
 
-
+    //********* here ************
 
     [HttpGet]
     public async Task<IActionResult> GetComments([FromQuery][StringLength(32)] string subjectGuid,
@@ -838,6 +846,8 @@ public class ReviewController : ControllerBase
     [FromServices] Review_Process reviewProcess, [FromServices] Notification_DbContext notifDb,
     [FromServices] Notification_Process notifProcess, [FromServices] Library_DbContext libraryDb)
     {
+        //can not reply to itself
+
         if (ModelState.IsValid)
         {
             Review_CommentDbModel? parentCommentDbModel = await reviewDb.Comments

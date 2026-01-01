@@ -21,7 +21,8 @@ namespace AspNetCore.Migrations.Review_Db
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Guid = table.Column<string>(type: "varchar(255)", nullable: false)
+                    Guid = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    NormalizedUserName = table.Column<string>(type: "varchar(60)", maxLength: 60, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -31,13 +32,37 @@ namespace AspNetCore.Migrations.Review_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "FollowerFollowings",
+                columns: table => new
+                {
+                    FollowerId = table.Column<int>(type: "int", nullable: false),
+                    FollowingId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FollowerFollowings", x => new { x.FollowerId, x.FollowingId });
+                    table.ForeignKey(
+                        name: "FK_FollowerFollowings_Users_FollowerId",
+                        column: x => x.FollowerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FollowerFollowings_Users_FollowingId",
+                        column: x => x.FollowingId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Reviews",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    SubjectGuid = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    SubjectGuid = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     OwnerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -58,11 +83,10 @@ namespace AspNetCore.Migrations.Review_Db
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Guid = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Guid = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     ParentReviewId = table.Column<int>(type: "int", nullable: false),
                     WriterId = table.Column<int>(type: "int", nullable: false),
-                    Text = table.Column<string>(type: "longtext", nullable: false)
+                    Text = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ReplyToId = table.Column<int>(type: "int", nullable: true)
@@ -92,24 +116,24 @@ namespace AspNetCore.Migrations.Review_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Review_ReviewDbModelReview_UserDbModel",
+                name: "UserLikes",
                 columns: table => new
                 {
-                    LikesId = table.Column<int>(type: "int", nullable: false),
-                    LikesId1 = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ReviewId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Review_ReviewDbModelReview_UserDbModel", x => new { x.LikesId, x.LikesId1 });
+                    table.PrimaryKey("PK_UserLikes", x => new { x.UserId, x.ReviewId });
                     table.ForeignKey(
-                        name: "FK_Review_ReviewDbModelReview_UserDbModel_Reviews_LikesId",
-                        column: x => x.LikesId,
+                        name: "FK_UserLikes_Reviews_ReviewId",
+                        column: x => x.ReviewId,
                         principalTable: "Reviews",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Review_ReviewDbModelReview_UserDbModel_Users_LikesId1",
-                        column: x => x.LikesId1,
+                        name: "FK_UserLikes_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -117,24 +141,24 @@ namespace AspNetCore.Migrations.Review_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Review_CommentDbModelReview_UserDbModel",
+                name: "UserThumbsDown",
                 columns: table => new
                 {
-                    ThumbsUpsId = table.Column<int>(type: "int", nullable: false),
-                    ThumbsUpsId1 = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CommentId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Review_CommentDbModelReview_UserDbModel", x => new { x.ThumbsUpsId, x.ThumbsUpsId1 });
+                    table.PrimaryKey("PK_UserThumbsDown", x => new { x.UserId, x.CommentId });
                     table.ForeignKey(
-                        name: "FK_Review_CommentDbModelReview_UserDbModel_Comments_ThumbsUpsId1",
-                        column: x => x.ThumbsUpsId1,
+                        name: "FK_UserThumbsDown_Comments_CommentId",
+                        column: x => x.CommentId,
                         principalTable: "Comments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Review_CommentDbModelReview_UserDbModel_Users_ThumbsUpsId",
-                        column: x => x.ThumbsUpsId,
+                        name: "FK_UserThumbsDown_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -142,29 +166,34 @@ namespace AspNetCore.Migrations.Review_Db
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Review_CommentDbModelReview_UserDbModel1",
+                name: "UserThumbsUp",
                 columns: table => new
                 {
-                    ThumbsDownsId = table.Column<int>(type: "int", nullable: false),
-                    ThumbsDownsId1 = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CommentId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Review_CommentDbModelReview_UserDbModel1", x => new { x.ThumbsDownsId, x.ThumbsDownsId1 });
+                    table.PrimaryKey("PK_UserThumbsUp", x => new { x.UserId, x.CommentId });
                     table.ForeignKey(
-                        name: "FK_Review_CommentDbModelReview_UserDbModel1_Comments_ThumbsDown~",
-                        column: x => x.ThumbsDownsId1,
+                        name: "FK_UserThumbsUp_Comments_CommentId",
+                        column: x => x.CommentId,
                         principalTable: "Comments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Review_CommentDbModelReview_UserDbModel1_Users_ThumbsDownsId",
-                        column: x => x.ThumbsDownsId,
+                        name: "FK_UserThumbsUp_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_CreatedAt",
+                table: "Comments",
+                column: "CreatedAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Comments_Guid",
@@ -188,19 +217,9 @@ namespace AspNetCore.Migrations.Review_Db
                 column: "WriterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Review_CommentDbModelReview_UserDbModel_ThumbsUpsId1",
-                table: "Review_CommentDbModelReview_UserDbModel",
-                column: "ThumbsUpsId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Review_CommentDbModelReview_UserDbModel1_ThumbsDownsId1",
-                table: "Review_CommentDbModelReview_UserDbModel1",
-                column: "ThumbsDownsId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Review_ReviewDbModelReview_UserDbModel_LikesId1",
-                table: "Review_ReviewDbModelReview_UserDbModel",
-                column: "LikesId1");
+                name: "IX_FollowerFollowings_FollowingId",
+                table: "FollowerFollowings",
+                column: "FollowingId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_OwnerId",
@@ -214,23 +233,47 @@ namespace AspNetCore.Migrations.Review_Db
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserLikes_ReviewId",
+                table: "UserLikes",
+                column: "ReviewId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_Guid",
                 table: "Users",
                 column: "Guid",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_NormalizedUserName",
+                table: "Users",
+                column: "NormalizedUserName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserThumbsDown_CommentId",
+                table: "UserThumbsDown",
+                column: "CommentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserThumbsUp_CommentId",
+                table: "UserThumbsUp",
+                column: "CommentId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Review_CommentDbModelReview_UserDbModel");
+                name: "FollowerFollowings");
 
             migrationBuilder.DropTable(
-                name: "Review_CommentDbModelReview_UserDbModel1");
+                name: "UserLikes");
 
             migrationBuilder.DropTable(
-                name: "Review_ReviewDbModelReview_UserDbModel");
+                name: "UserThumbsDown");
+
+            migrationBuilder.DropTable(
+                name: "UserThumbsUp");
 
             migrationBuilder.DropTable(
                 name: "Comments");

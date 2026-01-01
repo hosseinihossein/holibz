@@ -45,14 +45,11 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 // creating Library_OwnerDbModel and its default library and shelf
-                await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
+                await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid, user.NormalizedUserName!);
                 // creating Review_UserDbModel
-                await reviewProcess.CreateNewUser(reviewDb, user.UserGuid);
+                await reviewProcess.CreateNewUser(reviewDb, user.UserGuid, user.NormalizedUserName!);
                 // creating Notification_UserDbModel
                 await notifProcess.CreateNewUser(notifDb, user.UserGuid);
-
-                //seed
-                await identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Confirmed.</h2>";
                 ViewBag.ResultState = "success";
@@ -79,8 +76,15 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
+            if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+            {
+                object userNotFoundMessage = "<h2>Couldn't parse user guid!</h2>";
+                ViewBag.ResultState = "danger";
+                return View("Result", userNotFoundMessage);
+            }
+
             Identity_UserDbModel? user =
-            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid_Guid);
             if (user is null)
             {
                 object userNotFoundMessage = "<h2>User Not found!!</h2>";
@@ -101,14 +105,11 @@ public class IdentityController : Controller
             if (result.Succeeded)
             {
                 // creating Library_OwnerDbModel and its default library and shelf
-                await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid);
+                await libraryProcess.CreateNewOwner(libraryDb, user.UserGuid, user.NormalizedUserName!);
                 // creating Review_UserDbModel
-                await reviewProcess.CreateNewUser(reviewDb, user.UserGuid);
+                await reviewProcess.CreateNewUser(reviewDb, user.UserGuid, user.NormalizedUserName!);
                 // creating Notification_UserDbModel
                 await notifProcess.CreateNewUser(notifDb, user.UserGuid);
-
-                //seed
-                await identityProcess.Update_UserSeed(user, userManager);
 
                 object successMessage = "<h2>Your Email Successfully Changed. You need to login again to see changes.</h2>";
                 ViewBag.ResultState = "success";
@@ -135,8 +136,15 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
+            if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+            {
+                object userNotFoundMessage = "<h2>Couldn't parse user guid!</h2>";
+                ViewBag.ResultState = "danger";
+                return View("Result", userNotFoundMessage);
+            }
+
             Identity_UserDbModel? user =
-            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+            await userManager.Users.FirstOrDefaultAsync(u => u.UserGuid == userGuid_Guid);
             if (user is null)
             {
                 object userNotFoundMessage = "<h2>User Not found!!</h2>";
@@ -173,9 +181,6 @@ public class IdentityController : Controller
             await userManager.ResetPasswordAsync(user, formModel.Token, formModel.NewPassword);
             if (result.Succeeded)
             {
-                //seed
-                await identityProcess.Update_UserSeed(user, userManager);
-
                 object successMessage = "<h2>Your new password successfully set.</h2>";
                 ViewBag.ResultState = "success";
                 ViewBag.InfoBtnName = "Login";

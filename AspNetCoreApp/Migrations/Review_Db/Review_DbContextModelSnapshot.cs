@@ -33,9 +33,8 @@ namespace AspNetCore.Migrations.Review_Db
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.Property<int>("ParentReviewId")
                         .HasColumnType("int");
@@ -45,12 +44,15 @@ namespace AspNetCore.Migrations.Review_Db
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<int>("WriterId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Guid")
                         .IsUnique();
@@ -64,6 +66,21 @@ namespace AspNetCore.Migrations.Review_Db
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_FollowerFollowing_DbModel", b =>
+                {
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FollowingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FollowerId", "FollowingId");
+
+                    b.HasIndex("FollowingId");
+
+                    b.ToTable("FollowerFollowings");
+                });
+
             modelBuilder.Entity("AspNetCoreApp.Models.Review_ReviewDbModel", b =>
                 {
                     b.Property<int>("Id")
@@ -75,9 +92,8 @@ namespace AspNetCore.Migrations.Review_Db
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("SubjectGuid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("SubjectGuid")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
@@ -97,61 +113,68 @@ namespace AspNetCore.Migrations.Review_Db
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Guid")
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("NormalizedUserName")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Guid")
                         .IsUnique();
 
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Review_CommentDbModelReview_UserDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_UserLike_DbModel", b =>
                 {
-                    b.Property<int>("ThumbsUpsId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ThumbsUpsId1")
+                    b.Property<int>("ReviewId")
                         .HasColumnType("int");
 
-                    b.HasKey("ThumbsUpsId", "ThumbsUpsId1");
+                    b.HasKey("UserId", "ReviewId");
 
-                    b.HasIndex("ThumbsUpsId1");
+                    b.HasIndex("ReviewId");
 
-                    b.ToTable("Review_CommentDbModelReview_UserDbModel");
+                    b.ToTable("UserLikes");
                 });
 
-            modelBuilder.Entity("Review_CommentDbModelReview_UserDbModel1", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_UserThumbsDown_DbModel", b =>
                 {
-                    b.Property<int>("ThumbsDownsId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ThumbsDownsId1")
+                    b.Property<int>("CommentId")
                         .HasColumnType("int");
 
-                    b.HasKey("ThumbsDownsId", "ThumbsDownsId1");
+                    b.HasKey("UserId", "CommentId");
 
-                    b.HasIndex("ThumbsDownsId1");
+                    b.HasIndex("CommentId");
 
-                    b.ToTable("Review_CommentDbModelReview_UserDbModel1");
+                    b.ToTable("UserThumbsDown");
                 });
 
-            modelBuilder.Entity("Review_ReviewDbModelReview_UserDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_UserThumbsUp_DbModel", b =>
                 {
-                    b.Property<int>("LikesId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LikesId1")
+                    b.Property<int>("CommentId")
                         .HasColumnType("int");
 
-                    b.HasKey("LikesId", "LikesId1");
+                    b.HasKey("UserId", "CommentId");
 
-                    b.HasIndex("LikesId1");
+                    b.HasIndex("CommentId");
 
-                    b.ToTable("Review_ReviewDbModelReview_UserDbModel");
+                    b.ToTable("UserThumbsUp");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Review_CommentDbModel", b =>
@@ -168,7 +191,7 @@ namespace AspNetCore.Migrations.Review_Db
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Writer")
-                        .WithMany("Comments")
+                        .WithMany("GiveComments")
                         .HasForeignKey("WriterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -180,10 +203,29 @@ namespace AspNetCore.Migrations.Review_Db
                     b.Navigation("Writer");
                 });
 
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_FollowerFollowing_DbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Follower")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Following")
+                        .WithMany("Followings")
+                        .HasForeignKey("FollowingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Follower");
+
+                    b.Navigation("Following");
+                });
+
             modelBuilder.Entity("AspNetCoreApp.Models.Review_ReviewDbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Owner")
-                        .WithMany("Reviews")
+                        .WithMany("GotReviews")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -191,66 +233,94 @@ namespace AspNetCore.Migrations.Review_Db
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Review_CommentDbModelReview_UserDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_UserLike_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ThumbsUpsId")
+                    b.HasOne("AspNetCoreApp.Models.Review_ReviewDbModel", "Review")
+                        .WithMany("LikedBy")
+                        .HasForeignKey("ReviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Review_CommentDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ThumbsUpsId1")
+                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "User")
+                        .WithMany("GiveLikes")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Review");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Review_CommentDbModelReview_UserDbModel1", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_UserThumbsDown_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ThumbsDownsId")
+                    b.HasOne("AspNetCoreApp.Models.Review_CommentDbModel", "Comment")
+                        .WithMany("ThumbsDownsBy")
+                        .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Review_CommentDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ThumbsDownsId1")
+                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "User")
+                        .WithMany("GiveThumbsDowns")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Review_ReviewDbModelReview_UserDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Review_UserThumbsUp_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Review_ReviewDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("LikesId")
+                    b.HasOne("AspNetCoreApp.Models.Review_CommentDbModel", "Comment")
+                        .WithMany("ThumbsUpsBy")
+                        .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("LikesId1")
+                    b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "User")
+                        .WithMany("GiveThumbsUps")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Review_CommentDbModel", b =>
                 {
                     b.Navigation("Replies");
+
+                    b.Navigation("ThumbsDownsBy");
+
+                    b.Navigation("ThumbsUpsBy");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Review_ReviewDbModel", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("LikedBy");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Review_UserDbModel", b =>
                 {
-                    b.Navigation("Comments");
+                    b.Navigation("Followers");
 
-                    b.Navigation("Reviews");
+                    b.Navigation("Followings");
+
+                    b.Navigation("GiveComments");
+
+                    b.Navigation("GiveLikes");
+
+                    b.Navigation("GiveThumbsDowns");
+
+                    b.Navigation("GiveThumbsUps");
+
+                    b.Navigation("GotReviews");
                 });
 #pragma warning restore 612, 618
         }

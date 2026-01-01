@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Notification_Db
 {
     [DbContext(typeof(Notification_DbContext))]
-    [Migration("20251222150822_Initial")]
+    [Migration("20260101171310_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -38,26 +38,30 @@ namespace AspNetCore.Migrations.Notification_Db
 
                     b.PrimitiveCollection<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Link")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("SubjectGuid")
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid?>("SubjectGuid")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Guid")
                         .IsUnique();
@@ -77,9 +81,8 @@ namespace AspNetCore.Migrations.Notification_Db
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Library_Db
 {
     [DbContext(typeof(Library_DbContext))]
-    [Migration("20251211064329_Initial")]
+    [Migration("20260101171214_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -38,11 +38,11 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("HasImage")
                         .HasColumnType("tinyint(1)");
@@ -55,16 +55,20 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.Property<string>("Version")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
                     b.Property<byte>("_integrityVersion")
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Guid")
                         .IsUnique();
@@ -76,6 +80,21 @@ namespace AspNetCore.Migrations.Library_Db
                     b.ToTable("Documents");
                 });
 
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_DocumentTag_DbModel", b =>
+                {
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DocumentId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("DocumentTags");
+                });
+
             modelBuilder.Entity("AspNetCoreApp.Models.Library_ElementDbModel", b =>
                 {
                     b.Property<int>("Id")
@@ -85,14 +104,11 @@ namespace AspNetCore.Migrations.Library_Db
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FileName")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
@@ -101,17 +117,23 @@ namespace AspNetCore.Migrations.Library_Db
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<byte>("_order")
+                        .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
 
@@ -122,7 +144,24 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.HasIndex("ParentDocumentId");
 
+                    b.HasIndex("UpdatedAt");
+
                     b.ToTable("Elements");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_FollowerFollowing_DbModel", b =>
+                {
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FollowingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FollowerId", "FollowingId");
+
+                    b.HasIndex("FollowingId");
+
+                    b.ToTable("FollowerFollowings");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_LibraryDbModel", b =>
@@ -137,11 +176,11 @@ namespace AspNetCore.Migrations.Library_Db
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("HasImage")
                         .HasColumnType("tinyint(1)");
@@ -151,12 +190,15 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.Property<byte>("_integrityVersion")
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Guid")
                         .IsUnique();
@@ -164,6 +206,21 @@ namespace AspNetCore.Migrations.Library_Db
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Libraries");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_LibraryShelf_DbModel", b =>
+                {
+                    b.Property<int>("LibraryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShelfId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LibraryId", "ShelfId");
+
+                    b.HasIndex("ShelfId");
+
+                    b.ToTable("LibraryShelves");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_OwnerDbModel", b =>
@@ -174,21 +231,26 @@ namespace AspNetCore.Migrations.Library_Db
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("DefaultLibraryGuid")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<Guid>("DefaultLibraryGuid")
+                        .HasColumnType("char(36)");
 
-                    b.Property<string>("DefaultShelfGuid")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<Guid>("DefaultShelfGuid")
+                        .HasColumnType("char(36)");
 
-                    b.Property<string>("Guid")
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("NormalizedUserName")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.HasIndex("NormalizedUserName")
                         .IsUnique();
 
                     b.ToTable("Owners");
@@ -202,9 +264,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
@@ -226,11 +287,11 @@ namespace AspNetCore.Migrations.Library_Db
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
-                    b.Property<string>("Guid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("Guid")
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("HasImage")
                         .HasColumnType("tinyint(1)");
@@ -240,12 +301,15 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.Property<byte>("_integrityVersion")
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Guid")
                         .IsUnique();
@@ -253,6 +317,21 @@ namespace AspNetCore.Migrations.Library_Db
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Shelves");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_ShelfDocument_DbModel", b =>
+                {
+                    b.Property<int>("ShelfId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ShelfId", "DocumentId");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("ShelfDocuments");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_TagDbModel", b =>
@@ -265,7 +344,8 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
                     b.HasKey("Id");
 
@@ -275,109 +355,49 @@ namespace AspNetCore.Migrations.Library_Db
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("Library_DocumentDbModelLibrary_OwnerDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_UserFavoriteDocument_DbModel", b =>
                 {
-                    b.Property<int>("FavoriteDocumentsId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("InFavorOfId")
+                    b.Property<int>("DocumentId")
                         .HasColumnType("int");
 
-                    b.HasKey("FavoriteDocumentsId", "InFavorOfId");
+                    b.HasKey("UserId", "DocumentId");
 
-                    b.HasIndex("InFavorOfId");
+                    b.HasIndex("DocumentId");
 
-                    b.ToTable("Library_DocumentDbModelLibrary_OwnerDbModel");
+                    b.ToTable("UserFavoriteDocuments");
                 });
 
-            modelBuilder.Entity("Library_DocumentDbModelLibrary_ShelfDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_UserFavoriteLibrary_DbModel", b =>
                 {
-                    b.Property<int>("DocumentsId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ParentShelvesId")
+                    b.Property<int>("LibraryId")
                         .HasColumnType("int");
 
-                    b.HasKey("DocumentsId", "ParentShelvesId");
+                    b.HasKey("UserId", "LibraryId");
 
-                    b.HasIndex("ParentShelvesId");
+                    b.HasIndex("LibraryId");
 
-                    b.ToTable("Library_DocumentDbModelLibrary_ShelfDbModel");
+                    b.ToTable("UserFavoriteLibraries");
                 });
 
-            modelBuilder.Entity("Library_DocumentDbModelLibrary_TagDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_UserFavoriteShelf_DbModel", b =>
                 {
-                    b.Property<int>("DocumentsId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TagsId")
+                    b.Property<int>("ShelfId")
                         .HasColumnType("int");
 
-                    b.HasKey("DocumentsId", "TagsId");
+                    b.HasKey("UserId", "ShelfId");
 
-                    b.HasIndex("TagsId");
+                    b.HasIndex("ShelfId");
 
-                    b.ToTable("Library_DocumentDbModelLibrary_TagDbModel");
-                });
-
-            modelBuilder.Entity("Library_LibraryDbModelLibrary_OwnerDbModel", b =>
-                {
-                    b.Property<int>("FavoriteLibrariesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("InFavorOfId")
-                        .HasColumnType("int");
-
-                    b.HasKey("FavoriteLibrariesId", "InFavorOfId");
-
-                    b.HasIndex("InFavorOfId");
-
-                    b.ToTable("Library_LibraryDbModelLibrary_OwnerDbModel");
-                });
-
-            modelBuilder.Entity("Library_LibraryDbModelLibrary_ShelfDbModel", b =>
-                {
-                    b.Property<int>("ParentLibrariesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShelvesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ParentLibrariesId", "ShelvesId");
-
-                    b.HasIndex("ShelvesId");
-
-                    b.ToTable("Library_LibraryDbModelLibrary_ShelfDbModel");
-                });
-
-            modelBuilder.Entity("Library_OwnerDbModelLibrary_OwnerDbModel", b =>
-                {
-                    b.Property<int>("FollowersId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FollowingsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("FollowersId", "FollowingsId");
-
-                    b.HasIndex("FollowingsId");
-
-                    b.ToTable("Library_OwnerDbModelLibrary_OwnerDbModel");
-                });
-
-            modelBuilder.Entity("Library_OwnerDbModelLibrary_ShelfDbModel", b =>
-                {
-                    b.Property<int>("FavoriteShelvesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("InFavorOfId")
-                        .HasColumnType("int");
-
-                    b.HasKey("FavoriteShelvesId", "InFavorOfId");
-
-                    b.HasIndex("InFavorOfId");
-
-                    b.ToTable("Library_OwnerDbModelLibrary_ShelfDbModel");
+                    b.ToTable("UserFavoriteShelves");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_DocumentDbModel", b =>
@@ -395,6 +415,25 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Navigation("Owner");
 
                     b.Navigation("RelatedVersions");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_DocumentTag_DbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", "Document")
+                        .WithMany("Tags")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_TagDbModel", "Tag")
+                        .WithMany("Documents")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_ElementDbModel", b =>
@@ -416,6 +455,25 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Navigation("ParentDocument");
                 });
 
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_FollowerFollowing_DbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "Follower")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "Following")
+                        .WithMany("Followings")
+                        .HasForeignKey("FollowingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Follower");
+
+                    b.Navigation("Following");
+                });
+
             modelBuilder.Entity("AspNetCoreApp.Models.Library_LibraryDbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "Owner")
@@ -425,6 +483,25 @@ namespace AspNetCore.Migrations.Library_Db
                         .IsRequired();
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_LibraryShelf_DbModel", b =>
+                {
+                    b.HasOne("AspNetCoreApp.Models.Library_LibraryDbModel", "Library")
+                        .WithMany("Shelves")
+                        .HasForeignKey("LibraryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", "Shelf")
+                        .WithMany("ParentLibraries")
+                        .HasForeignKey("ShelfId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Library");
+
+                    b.Navigation("Shelf");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_ShelfDbModel", b =>
@@ -438,114 +515,98 @@ namespace AspNetCore.Migrations.Library_Db
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Library_DocumentDbModelLibrary_OwnerDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_ShelfDocument_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("FavoriteDocumentsId")
+                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", "Document")
+                        .WithMany("ParentShelves")
+                        .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("InFavorOfId")
+                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", "Shelf")
+                        .WithMany("Documents")
+                        .HasForeignKey("ShelfId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Shelf");
                 });
 
-            modelBuilder.Entity("Library_DocumentDbModelLibrary_ShelfDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_UserFavoriteDocument_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("DocumentsId")
+                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", "Document")
+                        .WithMany("InFavorOf")
+                        .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ParentShelvesId")
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "User")
+                        .WithMany("FavoriteDocuments")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Library_DocumentDbModelLibrary_TagDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_UserFavoriteLibrary_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Library_DocumentDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("DocumentsId")
+                    b.HasOne("AspNetCoreApp.Models.Library_LibraryDbModel", "Library")
+                        .WithMany("InFavorOf")
+                        .HasForeignKey("LibraryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Library_TagDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("TagsId")
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "User")
+                        .WithMany("FavoriteLibraries")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Library");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Library_LibraryDbModelLibrary_OwnerDbModel", b =>
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_UserFavoriteShelf_DbModel", b =>
                 {
-                    b.HasOne("AspNetCoreApp.Models.Library_LibraryDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("FavoriteLibrariesId")
+                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", "Shelf")
+                        .WithMany("InFavorOf")
+                        .HasForeignKey("ShelfId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("InFavorOfId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Library_LibraryDbModelLibrary_ShelfDbModel", b =>
-                {
-                    b.HasOne("AspNetCoreApp.Models.Library_LibraryDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ParentLibrariesId")
+                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "User")
+                        .WithMany("FavoriteShelves")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("ShelvesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                    b.Navigation("Shelf");
 
-            modelBuilder.Entity("Library_OwnerDbModelLibrary_OwnerDbModel", b =>
-                {
-                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("FollowersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("FollowingsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Library_OwnerDbModelLibrary_ShelfDbModel", b =>
-                {
-                    b.HasOne("AspNetCoreApp.Models.Library_ShelfDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("FavoriteShelvesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", null)
-                        .WithMany()
-                        .HasForeignKey("InFavorOfId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_DocumentDbModel", b =>
                 {
                     b.Navigation("Elements");
+
+                    b.Navigation("InFavorOf");
+
+                    b.Navigation("ParentShelves");
+
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_LibraryDbModel", b =>
+                {
+                    b.Navigation("InFavorOf");
+
+                    b.Navigation("Shelves");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_OwnerDbModel", b =>
@@ -554,12 +615,36 @@ namespace AspNetCore.Migrations.Library_Db
 
                     b.Navigation("Elements");
 
+                    b.Navigation("FavoriteDocuments");
+
+                    b.Navigation("FavoriteLibraries");
+
+                    b.Navigation("FavoriteShelves");
+
+                    b.Navigation("Followers");
+
+                    b.Navigation("Followings");
+
                     b.Navigation("Libraries");
 
                     b.Navigation("Shelves");
                 });
 
             modelBuilder.Entity("AspNetCoreApp.Models.Library_RelatedVersionsDbModel", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_ShelfDbModel", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("InFavorOf");
+
+                    b.Navigation("ParentLibraries");
+                });
+
+            modelBuilder.Entity("AspNetCoreApp.Models.Library_TagDbModel", b =>
                 {
                     b.Navigation("Documents");
                 });

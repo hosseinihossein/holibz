@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
-using UploadLargeFormFile.Filters;
+using AspNetCoreApp.Filters;
 
 namespace AspNetCoreApp.ControllersApi;
 
@@ -112,7 +112,7 @@ public class IdentityController : ControllerBase
                                 expiresInHours = jwtSettings["DurationInHours"] ?? "10",
                                 user = new Identity_UserProfile_ViewModel()
                                 {
-                                    Guid = user.UserGuid.ToString("N"),
+                                    Guid = user.UserGuid,
                                     Username = user.UserName!,
                                     Description = user.Description,
                                     Email = user.Email!,
@@ -155,7 +155,7 @@ public class IdentityController : ControllerBase
             .Where(u => u.UserGuid == userGuid_Guid)
             .Select(u => new Identity_UserProfile_ViewModel()
             {
-                Guid = u.UserGuid.ToString("N"),
+                Guid = u.UserGuid,
                 Username = u.UserName!,
                 Description = u.Description,
                 Email = u.DisplayEmailPublicly ? u.Email! : null,
@@ -736,7 +736,7 @@ public class IdentityController : ControllerBase
                 {
                     CreatedAt = user.CreatedAt,
                     UserName = user.UserName!,
-                    UserGuid = user.UserGuid.ToString("N"),
+                    UserGuid = user.UserGuid,
                     Email = user.Email!,
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
@@ -768,7 +768,7 @@ public class IdentityController : ControllerBase
                 {
                     CreatedAt = user.CreatedAt,
                     UserName = user.UserName!,
-                    UserGuid = user.UserGuid.ToString("N"),
+                    UserGuid = user.UserGuid,
                     Email = user.Email!,
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,
@@ -796,7 +796,7 @@ public class IdentityController : ControllerBase
                 {
                     CreatedAt = user.CreatedAt,
                     UserName = user.UserName!,
-                    UserGuid = user.UserGuid.ToString("N"),
+                    UserGuid = user.UserGuid,
                     Email = user.Email!,
                     EmailConfirmed = user.EmailConfirmed,
                     DisplayEmailPublicly = user.DisplayEmailPublicly,

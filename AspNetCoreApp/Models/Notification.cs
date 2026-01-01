@@ -55,8 +55,8 @@ public class Notification_DbContext : DbContext
         .IsUnique(true);
         modelBuilder.Entity<Notification_NotificationDbModel>()
         .HasIndex(notif => notif.SubjectGuid);
-        /*modelBuilder.Entity<Notification_NotificationDbModel>()
-        .HasIndex(notif => notif.CreatedAt);*/
+        modelBuilder.Entity<Notification_NotificationDbModel>()
+        .HasIndex(notif => notif.CreatedAt);
     }
 }
 
@@ -74,10 +74,10 @@ public class Notification_Process
             Storage_Notifications = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Notification", "Notifications"));
         }
     */
-    public async Task CreateNewUser(Notification_DbContext notifDb, Guid userGuid)
+    public async Task<Notification_UserDbModel?> CreateNewUser(Notification_DbContext notifDb, Guid userGuid)
     {
         bool userExist = await notifDb.Users.AnyAsync(u => u.Guid == userGuid);
-        if (userExist) return;
+        if (userExist) return null;
 
         Notification_UserDbModel userDbModel = new() { Guid = userGuid };
         notifDb.Users.Add(userDbModel);
@@ -97,37 +97,46 @@ public class Notification_Process
         };
 
         await CreateNewNotification(notifDb, welcomeNotifModel);
+
+        return userDbModel;
     }
     public async Task CreateNewNotification(Notification_DbContext notifDb, Notification_NotifCreation_FormModel newNotifModel)
     {
-        Notification_UserDbModel? owner = await notifDb.Users
+        Notification_UserDbModel? ownerDbModel = await notifDb.Users
         .Where(u => u.Guid == newNotifModel.OwnerGuid)
         .Select(u => new Notification_UserDbModel()
         {
             Id = u.Id,
         })
         .FirstOrDefaultAsync();
-        if (owner is null)
+        if (ownerDbModel is null)
         {
-            await CreateNewUser(notifDb, newNotifModel.OwnerGuid);
+            var result = await CreateNewUser(notifDb, newNotifModel.OwnerGuid);
 
-            owner = await notifDb.Users
-            .Where(u => u.Guid == newNotifModel.OwnerGuid)
-            .Select(u => new Notification_UserDbModel()
+            if (result is null)
             {
-                Id = u.Id,
-            })
-            .FirstAsync();
+                ownerDbModel = await notifDb.Users
+                .Where(u => u.Guid == newNotifModel.OwnerGuid)
+                .Select(u => new Notification_UserDbModel()
+                {
+                    Id = u.Id,
+                })
+                .FirstAsync();
+            }
+            else
+            {
+                ownerDbModel = result;
+            }
         }
 
         //begin tracking
-        notifDb.Users.Attach(owner);
+        notifDb.Users.Attach(ownerDbModel);
 
         Notification_NotificationDbModel notifDbModel = new()
         {
             Description = newNotifModel.Description,
             Link = newNotifModel.Link,
-            Owner = owner,
+            Owner = ownerDbModel,
             SubjectGuid = newNotifModel.SubjectGuid,
             Title = newNotifModel.Title,
         };
@@ -140,27 +149,9 @@ public class Notification_Process
     }
     public async Task DeleteNotification(Notification_DbContext notifDb, Guid subjectGuid)
     {
-        /*List<Guid> notifsGuids =
-        await notifDb.Notifications
-        .Include(n => n.Owner)
-        .Where(n => n.SubjectGuid == subjectGuid)
-        .Select(n => n.Guid)
-        .ToListAsync();
-
-        if (notifsGuids.Count == 0)
-        {
-            return;
-        }*/
-
         await notifDb.Notifications
         .Where(n => n.SubjectGuid == subjectGuid)
         .ExecuteDeleteAsync();
-
-        //seed
-        /*foreach (string notifGuid in notifsGuids)
-        {
-            Delete_NotificationDirectory(notifGuid);
-        }*/
     }
 
 

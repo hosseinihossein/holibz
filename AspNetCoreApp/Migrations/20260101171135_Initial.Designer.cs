@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations
 {
     [DbContext(typeof(Identity_DbContext))]
-    [Migration("20251211064300_Initial")]
+    [Migration("20260101171135_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -39,7 +39,8 @@ namespace AspNetCore.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
@@ -77,7 +78,8 @@ namespace AspNetCore.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<bool>("DisplayEmailPublicly")
                         .HasColumnType("tinyint(1)");
@@ -121,9 +123,8 @@ namespace AspNetCore.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("UserGuid")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("UserGuid")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)

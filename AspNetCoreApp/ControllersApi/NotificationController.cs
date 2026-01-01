@@ -33,14 +33,13 @@ public class NotificationController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetNumberOfNotifications()
     {
-        string myGuid = await userManager.Users
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
         int numberOfNotifs = await notifDb.Users
         .Where(u => u.Guid == myGuid)
-        .Include(u => u.Notifications)
         .SelectMany(u => u.Notifications)
         .CountAsync();
 
@@ -55,14 +54,13 @@ public class NotificationController : ControllerBase
         pageIndex ??= 0;
         pageSize ??= 10;
 
-        string myGuid = await userManager.Users
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
         Notification_NotifClient_ViewModel[] notifs = await notifDb.Users
         .Where(u => u.Guid == myGuid)
-        .Include(u => u.Notifications)
         .SelectMany(u => u.Notifications)
         .OrderByDescending(n => n.CreatedAt)
         .Skip(pageIndex.Value * pageSize.Value)
@@ -85,49 +83,36 @@ public class NotificationController : ControllerBase
     public async Task<IActionResult> DeleteNotification([FromQuery][StringLength(32)] string notifGuid,
     [FromServices] Notification_Process notifProcess)
     {
-        string myGuid = await userManager.Users
+        if (!Guid.TryParseExact(notifGuid, "N", out Guid notifGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
         await notifDb.Notifications
-        .Include(n => n.Owner)
-        .Where(n => n.Guid == notifGuid && n.Owner.Guid == myGuid)
+        .Where(n => n.Guid == notifGuid_Guid && n.Owner.Guid == myGuid)
         .ExecuteDeleteAsync();
-
-        //seed
-        notifProcess.Delete_NotificationDirectory(notifGuid);
 
         return Ok(new { success = true });
     }
 
     [HttpDelete]
     [Authorize]
-    public async Task<IActionResult> DeleteAllNotifications([FromServices] Notification_Process notifProcess)
+    public async Task<IActionResult> DeleteAllNotifications()
     {
-        string myGuid = await userManager.Users
+        Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        List<string> deletingGuids = await notifDb.Users
-        .Where(u => u.Guid == myGuid)
-        .Include(u => u.Notifications)
-        .SelectMany(u => u.Notifications)
-        .Select(n => n.Guid)
-        .ToListAsync();
-
         await notifDb.Users
         .Where(u => u.Guid == myGuid)
-        .Include(u => u.Notifications)
         .SelectMany(u => u.Notifications)
         .ExecuteDeleteAsync();
-
-        //seed
-        foreach (string notifGuid in deletingGuids)
-        {
-            notifProcess.Delete_NotificationDirectory(notifGuid);
-        }
 
         return Ok(new { success = true });
     }

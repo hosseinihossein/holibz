@@ -59,7 +59,7 @@ public class Identity_RoleDbModel : IdentityRole<int>
 //*********************************** data models ************************************
 public class Identity_UserProfile_ViewModel
 {
-    public string Guid { get; set; } = null!;
+    public Guid Guid { get; set; }
     public string Username { get; set; } = null!;
     public string? Description { get; set; }
     public bool HasImage { get; set; }
@@ -125,8 +125,7 @@ public class Identity_ChangePasswordFormModel
 
 public class Identity_ResetPasswordFormModel
 {
-    [StringLength(32)]
-    public string UserGuid { get; set; } = string.Empty;
+    public Guid UserGuid { get; set; }
 
     public string Token { get; set; } = string.Empty;
 
@@ -175,7 +174,7 @@ public class UsersList_ViewModel
     public string UserName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public bool EmailConfirmed { get; set; }
-    public string UserGuid { get; set; } = null!;
+    public Guid UserGuid { get; set; }
     public bool DisplayEmailPublicly { get; set; }
     public DateTime CreatedAt { get; set; }
 }

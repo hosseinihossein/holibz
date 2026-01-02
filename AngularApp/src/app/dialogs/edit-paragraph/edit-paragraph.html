@@ -12,7 +12,7 @@
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("maxlength")){
         <mat-error>
-            paragraph cannot be more than {{singletonModes.elementValueMaxLength()}} characters long!
+            paragraph cannot be more than {{singletonModes.elementStringValue_MaxLength()}} characters long!
         </mat-error>
         }
     </mat-form-field>

@@ -1,4 +1,4 @@
-<app-libraries-list>
+<app-generic-list [listType]="genericListType()" [isFavorite]="isFavorite()" [parentGuid]="userGuid()!">
     <mat-card appearance="outlined">
         <mat-card-header>
             <div style="float: left;position: relative;">
@@ -34,6 +34,16 @@
                 }
             </p>
         </mat-card-content>
+
+        <mat-card-actions align="end">
+            @if(isMyProfile()){
+            <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
+                <mat-icon>account_balance</mat-icon>
+                Add a new Library
+            </a>
+            }
+        </mat-card-actions>
+
         @if(isMyProfile()){
         <a matIconButton aria-label="user account manager link" [routerLink]="['/dashboard','UserAccountManager']"
             id="userAccountManager-link">
@@ -82,4 +92,4 @@
 
 
 
-</app-libraries-list>
+</app-generic-list>

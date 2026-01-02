@@ -22,6 +22,7 @@ create different size images,
 - edit library controller from begining
 - edit replyToGuid,replyToUserName,replyToBrief to nullable in angular app
 - by default comment are NOT ordered by oldest
+- asp app ready for test
 - 
 
 

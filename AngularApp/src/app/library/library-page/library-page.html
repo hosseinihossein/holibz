@@ -1,4 +1,4 @@
-<app-shelves-list [libraryGuid]="libraryGuid()!">
+<app-generic-list listType="Shelf" [parentGuid]="libraryGuid()!">
     <mat-card appearance="raised">
         <mat-card-header>
             @if(introductionImage()){
@@ -39,9 +39,7 @@
         </mat-menu>
         }
     </mat-card>
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
-</app-shelves-list>
+</app-generic-list>

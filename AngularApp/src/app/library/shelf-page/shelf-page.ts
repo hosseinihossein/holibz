@@ -20,12 +20,14 @@ import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { Result } from '../../dialogs/result/result';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
+import { GenericList } from '../generic-list/generic-list';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-shelf-page',
-  imports: [DocumentsList, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
+  imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatIcon,
     MatCardAvatar, MatBadge, MatIconButton, MatButton, MatCardActions, RouterLink,
-    NgOptimizedImage,MatProgressSpinner,MatMenuModule],
+    NgOptimizedImage,WaitSpinner,MatMenuModule,GenericList],
   templateUrl: './shelf-page.html',
   styleUrl: './shelf-page.css'
 })
@@ -45,7 +47,7 @@ export class ShelfPage {
   isMyShelf = computed(() => this.identityService.isAuthenticated() && 
   this.shelfModel()?.ownerGuid === this.identityService.userModel()?.guid);
 
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
 
   introductionImage = computed(()=>this.librarySerice.getShelfImageAddress(this.shelfModel()));
 
@@ -155,7 +157,7 @@ export class ShelfPage {
                     JSON.stringify(err)
                   ],
                 }
-              }).afterClosed().subscribe(()=>this.displaySubmitSpinner.set(false));
+              }).afterClosed().subscribe(()=>this.displayWaitSpinner.set(false));
               throw(err);
             },
           });

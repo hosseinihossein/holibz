@@ -10,6 +10,7 @@
             <!-- other buttons -->
             <ng-content />
 
+            <!--
             @if(listType() === "Library" && isMyList()){
             <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
                 <mat-icon>account_balance</mat-icon>
@@ -28,6 +29,7 @@
                 Add a new Document
             </a>
             }
+            -->
         </div>
 
         @if(listType() === "Library"){
@@ -55,5 +57,9 @@
         }
 
     </mat-sidenav-content>
+
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
+    }
 
 </mat-sidenav-container>

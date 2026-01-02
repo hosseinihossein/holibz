@@ -8,18 +8,20 @@ import { DocumentCard, DocumentCardModel } from '../document-card/document-card'
 import { ShelfCard, ShelfCardModel } from '../shelf-card/shelf-card';
 import { MatAccordion } from '@angular/material/expansion';
 import { LibraryService } from '../../services/library-service';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-generic-list',
-  imports: [MatButton, MatIcon, RouterLink, MatSidenavModule, LibraryCard, DocumentCard, 
-    ShelfCard, MatAccordion],
+  imports: [/*MatButton, MatIcon, RouterLink,*/ MatSidenavModule, LibraryCard, DocumentCard, 
+    ShelfCard, MatAccordion, WaitSpinner],
   templateUrl: './generic-list.html',
   styleUrl: './generic-list.css'
 })
 export class GenericList {
-  listType = input.required<string>();
-  parentGuid = input<string>();
+  listType = input.required<"Library"|"Shelf"|"Document">();
   isFavorite = input<boolean>(false);
+  parentGuid = input<string>();
+  itemGuids = input<string[]>();//can be used ffor search component
 
   isMyList = signal<boolean>(false);
   libraryModels = signal<LibraryCardModel[]>([]);
@@ -28,63 +30,78 @@ export class GenericList {
 
   libraryService = inject(LibraryService);
 
+  displayWaitSpinner = signal<boolean>(false);
+
   constructor(){
     effect(()=>{
-      if(this.listType() && this.parentGuid()){
-        if(this.listType() === "Library"){
-          if(this.isFavorite()){
-            this.libraryService.requestFavotiteLibrariesGuids(this.parentGuid()!).subscribe({
-              next: libGuids => {
-                if(libGuids){
-                  this.getLibraryModels(libGuids);
-                }
-              },
-            });
+      if(this.listType()){
+        if(this.parentGuid()){
+          if(this.listType() === "Library"){
+            if(this.isFavorite()){
+              this.libraryService.requestFavotiteLibrariesGuids(this.parentGuid()!).subscribe({
+                next: libGuids => {
+                  if(libGuids){
+                    this.getLibraryModels(libGuids);
+                  }
+                },
+              });
+            }
+            else{
+              this.libraryService.requestLibrariesGuids(this.parentGuid()!).subscribe({
+                next: libGuids => {
+                  if(libGuids){
+                    this.getLibraryModels(libGuids);
+                  }
+                },
+              });
+            }
           }
-          else{
-            this.libraryService.requestLibrariesGuids(this.parentGuid()!).subscribe({
-              next: libGuids => {
-                if(libGuids){
-                  this.getLibraryModels(libGuids);
-                }
-              },
-            });
-          }
-        }
-        else if(this.listType() === "Shelf"){
-          if(this.isFavorite()){
-            this.libraryService.requestFavotiteShelvesGuids(this.parentGuid()!).subscribe({
-              next: shelfGuids => {
-                this.getShelfModels(shelfGuids);
-              }
-            });
-          }
-          else{
-            this.libraryService.requestShelvesGuids(this.parentGuid()!).subscribe({
-              next: shelfGuids => {
-                if(shelfGuids){
+          else if(this.listType() === "Shelf"){
+            if(this.isFavorite()){
+              this.libraryService.requestFavotiteShelvesGuids(this.parentGuid()!).subscribe({
+                next: shelfGuids => {
                   this.getShelfModels(shelfGuids);
                 }
-              },
-            });
+              });
+            }
+            else{
+              this.libraryService.requestShelvesGuids(this.parentGuid()!).subscribe({
+                next: shelfGuids => {
+                  if(shelfGuids){
+                    this.getShelfModels(shelfGuids);
+                  }
+                },
+              });
+            }
           }
-        }
-        else if(this.listType() === "Document"){
-          if(this.isFavorite()){
-            this.libraryService.requestFavotiteDocumentsGuids(this.parentGuid()!).subscribe({
-              next: docGuids => {
-                this.getDocumentModels(docGuids);
-              }
-            });
-          }
-          else{
-            this.libraryService.requestDocumentsGuids(this.parentGuid()!).subscribe({
-              next: docGuids => {
-                if(docGuids){
+          else if(this.listType() === "Document"){
+            if(this.isFavorite()){
+              this.libraryService.requestFavotiteDocumentsGuids(this.parentGuid()!).subscribe({
+                next: docGuids => {
                   this.getDocumentModels(docGuids);
                 }
-              },
-            });
+              });
+            }
+            else{
+              this.libraryService.requestDocumentsGuids(this.parentGuid()!).subscribe({
+                next: docGuids => {
+                  if(docGuids){
+                    this.getDocumentModels(docGuids);
+                  }
+                },
+              });
+            }
+          }
+        }
+        else if(this.itemGuids()) {
+          if(this.listType() == "Library"){
+            this.getLibraryModels(this.itemGuids()!);
+          }
+          else if(this.listType() == "Shelf"){
+            this.getShelfModels(this.itemGuids()!);
+          }
+          else if(this.listType() == "Document"){
+            this.getDocumentModels(this.itemGuids()!);
           }
         }
       }

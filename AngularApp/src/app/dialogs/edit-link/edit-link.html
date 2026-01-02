@@ -11,13 +11,13 @@
         @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
         titleControl.hasError("maxlength")){
         <mat-error>
-            title cannot be more than {{singletonModes.elementTitleMaxLength()}} characters long!
+            title cannot be more than {{singletonModes.elementTitle_MaxLength()}} characters long!
         </mat-error>
         }
         @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
         titleControl.hasError("minlength")){
         <mat-error>
-            title cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+            title cannot be less than {{singletonModes.elementTitle_MinLength()}} characters!
         </mat-error>
         }
     </mat-form-field>
@@ -34,13 +34,13 @@
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("maxlength")){
         <mat-error>
-            link cannot be more than {{singletonModes.elementValueMaxLength()}} characters long!
+            link cannot be more than {{singletonModes.elementStringValue_MaxLength()}} characters long!
         </mat-error>
         }
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("minlength")){
         <mat-error>
-            link cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+            link cannot be less than {{singletonModes.elementTitle_MinLength()}} characters!
         </mat-error>
         }
     </mat-form-field>

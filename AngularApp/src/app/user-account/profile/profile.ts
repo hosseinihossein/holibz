@@ -21,12 +21,13 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { LibraryService, OwnerModel } from '../../services/library-service';
 import { ReviewService } from '../../review/review-service';
 import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
+import { GenericList } from '../../library/generic-list/generic-list';
 
 @Component({
   selector: 'app-profile',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent,
-    MatIcon, NgOptimizedImage, MatCheckboxModule, MatButtonModule, LibrariesList, RouterLink,
-    MatIconButton, MatBadgeModule, MatTooltipModule],
+    MatIcon, NgOptimizedImage, MatCheckboxModule, MatButtonModule, RouterLink,
+    MatIconButton, MatBadgeModule, MatTooltipModule, GenericList, MatCardActions],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })
@@ -51,6 +52,9 @@ export class Profile {
 
   library_OwnerModel = signal<UserProfileInfo|null>(null);
   userTotalLikes = signal<number>(0);
+
+  genericListType = signal<"Library"|"Shelf"|"Document">("Library");
+  isFavorite = signal<boolean>(false);
 
 
   constructor(){

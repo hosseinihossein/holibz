@@ -22,13 +22,13 @@
         @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
         titleControl.hasError("maxlength")){
         <mat-error>
-            title cannot be more than {{singletonModes.elementTitleMaxLength()}} characters long!
+            title cannot be more than {{singletonModes.elementTitle_MaxLength()}} characters long!
         </mat-error>
         }
         @if(titleControl.invalid && (titleControl.dirty || titleControl.touched) &&
         titleControl.hasError("minlength")){
         <mat-error>
-            title cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+            title cannot be less than {{singletonModes.elementTitle_MinLength()}} characters!
         </mat-error>
         }
         @if(imageSizeError()){

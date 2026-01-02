@@ -11,13 +11,13 @@
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("maxlength")){
         <mat-error>
-            heading cannot be more than {{singletonModes.elementTitleMaxLength()}} characters long!
+            heading cannot be more than {{singletonModes.elementTitle_MaxLength()}} characters long!
         </mat-error>
         }
         @if(valueControl.invalid && (valueControl.dirty || valueControl.touched) &&
         valueControl.hasError("minlength")){
         <mat-error>
-            heading cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+            heading cannot be less than {{singletonModes.elementTitle_MinLength()}} characters!
         </mat-error>
         }
     </mat-form-field>

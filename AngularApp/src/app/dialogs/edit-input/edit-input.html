@@ -9,12 +9,12 @@
         }
         @if(myInput.invalid && (myInput.dirty || myInput.touched) && myInput.hasError("maxlength")){
         <mat-error>
-            {{data.label}} cannot be more than {{singletonModes.elementTitleMaxLength()}} characters long!
+            {{data.label}} cannot be more than {{singletonModes.elementTitle_MaxLength()}} characters long!
         </mat-error>
         }
         @if(myInput.invalid && (myInput.dirty || myInput.touched) && myInput.hasError("minlength")){
         <mat-error>
-            {{data.label}} cannot be less than {{singletonModes.elementTitleMinLength()}} characters!
+            {{data.label}} cannot be less than {{singletonModes.elementTitle_MinLength()}} characters!
         </mat-error>
         }
     </mat-form-field>

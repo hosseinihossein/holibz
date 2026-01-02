@@ -15,12 +15,14 @@ import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Result } from '../../dialogs/result/result';
 import { MatMenuModule } from '@angular/material/menu';
+import { GenericList } from '../generic-list/generic-list';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-library-page',
-  imports: [ShelvesList, MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
+  imports: [MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
     MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton, MatIconButton,
-    MatProgressSpinner,MatMenuModule],
+    MatMenuModule,GenericList,WaitSpinner],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })
@@ -38,7 +40,7 @@ export class LibraryPage {
   this.libraryModel()?.ownerGuid === this.identityService.userModel()?.guid);
   ownerModel = signal<OwnerModel|null>(null);
   
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
 
   introductionImage = computed(()=>this.librarySerice.getLibraryImageAddress(this.libraryModel()));
 
@@ -113,11 +115,11 @@ export class LibraryPage {
         }
       ).afterClosed().subscribe(result=>{
         if(result === true){
-          this.displaySubmitSpinner.set(true);
+          this.displayWaitSpinner.set(true);
           this.librarySerice.requestDeleteLibrary(this.libraryGuid()!).subscribe({
             next: res => {
               if(res && res.success){
-                this.displaySubmitSpinner.set(false);
+                this.displayWaitSpinner.set(false);
                 this.router.navigate(['libraries', this.identityService.userModel()!.guid]);
               }
             },
@@ -131,7 +133,7 @@ export class LibraryPage {
                     JSON.stringify(err)
                   ],
                 }
-              }).afterClosed().subscribe(()=>this.displaySubmitSpinner.set(false));
+              }).afterClosed().subscribe(()=>this.displayWaitSpinner.set(false));
               throw(err);
             },
           });

@@ -300,16 +300,7 @@ public class IdentityController : ControllerBase
         if (ModelState.IsValid)
         {
             //fetch and create
-            Identity_UserDbModel user = await userManager.Users
-            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
-            .Select(u => new Identity_UserDbModel()
-            {
-                Id = u.Id,
-            })
-            .FirstAsync();
-
-            //attach
-            identityDb.Users.Attach(user);
+            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
 
             var result = await userManager.SetUserNameAsync(user, model.Username);
             if (result.Succeeded)
@@ -421,14 +412,7 @@ public class IdentityController : ControllerBase
         if (ModelState.IsValid)
         {
             //fetch and create
-            Identity_UserDbModel user = await userManager.Users
-            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
-            .Select(u => new Identity_UserDbModel()
-            {
-                Id = u.Id,
-                UserGuid = u.UserGuid,
-            })
-            .FirstAsync();
+            Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
 
             string userImagePath =
             Path.Combine(Storage_Users.FullName, user.UserGuid.ToString("N"), "image");
@@ -437,19 +421,12 @@ public class IdentityController : ControllerBase
                 await formModel.UserImageFile.CopyToAsync(fs);
             }
 
-            //attach user
-            identityDb.Users.Attach(user);
-
             //edit user
             user.HasImage = true;
             user.IntegrityVersion++;
 
-            //set user hasImage and _integrityVersion as modified
-            identityDb.Users.Entry(user).Property(u => u.HasImage).IsModified = true;
-            identityDb.Users.Entry(user).Property(u => u._integrityVersion).IsModified = true;
-
             //save
-            await identityDb.SaveChangesAsync();
+            await userManager.UpdateAsync(user);
 
             return Ok(new { success = true, user.HasImage, user.IntegrityVersion });
         }
@@ -466,14 +443,7 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> DeleteUserImage()
     {
         //fetch and create
-        Identity_UserDbModel user = await userManager.Users
-        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
-        .Select(u => new Identity_UserDbModel()
-        {
-            Id = u.Id,
-            UserGuid = u.UserGuid,
-        })
-        .FirstAsync();
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
 
         string userImagePath =
         Path.Combine(Storage_Users.FullName, user.UserGuid.ToString("N"), "image");
@@ -482,18 +452,11 @@ public class IdentityController : ControllerBase
         {
             System.IO.File.Delete(userImagePath);
 
-            //attach user
-            identityDb.Users.Attach(user);
-
             //edit user
             user.HasImage = false;
             user.IntegrityVersion = 0;
 
-            //set user hasImage and _integrityVersion as modified
-            identityDb.Users.Entry(user).Property(u => u.HasImage).IsModified = true;
-            identityDb.Users.Entry(user).Property(u => u._integrityVersion).IsModified = true;
-
-            await identityDb.SaveChangesAsync();
+            await userManager.UpdateAsync(user);
         }
 
         return Ok(new { success = true });
@@ -509,40 +472,15 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> SubmitDescription([FromBody] DescriptionModel model)
     {
         //fetch and create
-        Identity_UserDbModel user = await userManager.Users
-        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
-        .Select(u => new Identity_UserDbModel()
-        {
-            Id = u.Id,
-        })
-        .FirstAsync();
-
-        //attach
-        identityDb.Users.Attach(user);
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
 
         //edit
         user.Description = model.Description;
 
-        //modified
-        identityDb.Users.Entry(user).Property(u => u.Description).IsModified = true;
-
         //save
-        await identityDb.SaveChangesAsync();
+        await userManager.UpdateAsync(user);
 
         return Ok(new { success = true });
-
-        /*var result = await userManager.UpdateAsync(user);
-        if (result.Succeeded)
-        {
-            // user seed
-            //await identityProcess.UpdateUserSeed(user, userManager);
-            return Ok(new { success = true });
-        }
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError("", error.Description);
-        }
-        return BadRequest(ModelState);*/
     }
     public class DescriptionModel
     {
@@ -637,40 +575,15 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> SubmitDisplayEmailPublicly([FromBody] DisplayEmailPubliclyModel model)
     {
         //fetch and create
-        Identity_UserDbModel user = await userManager.Users
-        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
-        .Select(u => new Identity_UserDbModel()
-        {
-            Id = u.Id,
-        })
-        .FirstAsync();
-
-        //attach
-        identityDb.Users.Attach(user);
+        Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
 
         //edit
         user.DisplayEmailPublicly = model.DisplayEmailPublicly;
 
-        //modified
-        identityDb.Users.Entry(user).Property(u => u.DisplayEmailPublicly).IsModified = true;
-
         //save
-        await identityDb.SaveChangesAsync();
+        await userManager.UpdateAsync(user);
 
         return Ok(new { success = true });
-
-        /*var result = await userManager.UpdateAsync(user);
-        if (result.Succeeded)
-        {
-            // user seed
-            //await identityProcess.UpdateUserSeed(user, userManager);
-            return Ok(new { success = true });
-        }
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError("", error.Description);
-        }
-        return BadRequest(ModelState);*/
     }
     public class DisplayEmailPubliclyModel
     {

@@ -138,9 +138,9 @@ export class CommentModel{
   guid:string = null!;
   writerGuid:string = null!;
   isReply:boolean = false;
-  replyToGuid:string = null!;
-  replyToBrief:string = null!;
-  replyToUsername:string = null!;
+  replyToGuid?:string|null = null;
+  replyToBrief?:string|null = null;
+  replyToUsername?:string|null = null;
   text:string = null!;
   amIThumbsUp:boolean = false;
   amIThumbsDown:boolean = false;

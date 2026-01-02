@@ -129,8 +129,11 @@ public class Notification_Process
             }
         }
 
-        //begin tracking
-        notifDb.Users.Attach(ownerDbModel);
+        if (notifDb.Users.Entry(ownerDbModel).State == EntityState.Detached)
+        {
+            //begin tracking
+            notifDb.Users.Attach(ownerDbModel);
+        }
 
         Notification_NotificationDbModel notifDbModel = new()
         {

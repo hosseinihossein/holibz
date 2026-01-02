@@ -17,7 +17,7 @@ public class IdentityController : Controller
     }
 
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token,
-    [FromQuery][StringLength(60)] string email, [FromServices] Identity_Process identityProcess,
+    [FromQuery][StringLength(60)] string email,
     [FromServices] Library_DbContext libraryDb, [FromServices] Library_Process libraryProcess,
     [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb,
     [FromServices] Notification_DbContext notifDb, [FromServices] Notification_Process notifProcess)
@@ -69,7 +69,7 @@ public class IdentityController : Controller
 
     public async Task<IActionResult> ConfirmNewEmail([FromQuery][StringLength(32)] string userGuid,
     [FromQuery] string token, [FromQuery][StringLength(60)] string newEmail,
-    [FromServices] Identity_Process identityProcess, [FromServices] Library_DbContext libraryDb,
+    [FromServices] Library_DbContext libraryDb,
     [FromServices] Library_Process libraryProcess, [FromServices] Review_Process reviewProcess,
     [FromServices] Review_DbContext reviewDb, [FromServices] Notification_DbContext notifDb,
     [FromServices] Notification_Process notifProcess)

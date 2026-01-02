@@ -32,7 +32,7 @@ public class Identity_DbContext : IdentityDbContext<Identity_UserDbModel, Identi
 
 public class Identity_UserDbModel : IdentityUser<int>
 {
-    public Guid UserGuid { get; set; }
+    public Guid UserGuid { get; set; } = Guid.NewGuid();
     [MaxLength(500)]
     public string? Description { get; set; }
     public bool DisplayEmailPublicly { get; set; } = false;

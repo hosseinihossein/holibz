@@ -198,14 +198,14 @@ public class Program
                     }
 
                     Identity_UserDbModel? user = await userManager.Users
-                    .Where(u => u.UserGuid == userGuid)
-                    .Select(u => new Identity_UserDbModel()
+                    .FirstOrDefaultAsync(u => u.UserGuid == userGuid);
+                    /*.Select(u => new Identity_UserDbModel()
                     {
                         Id = u.Id,
                         UserGuid = u.UserGuid,
                         SecurityStamp = u.SecurityStamp,
                     })
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync();*/
                     if (user is null || user.SecurityStamp != securityStamp)
                     {
                         //Console.WriteLine("\n***** token is invalid!");

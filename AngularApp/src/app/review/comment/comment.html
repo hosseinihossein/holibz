@@ -17,7 +17,7 @@
         </mat-card-title>
         @if(commentModel().isReply){
         <mat-card-subtitle>
-            <div id="replyTo-div" (click)="goToElement(commentModel().replyToGuid)">
+            <div id="replyTo-div" (click)="goToElement(commentModel().replyToGuid!)">
                 <span>Reply to </span>
                 <span style="font-weight: bold;">"{{commentModel().replyToUsername}}": </span>
                 {{commentModel().replyToBrief}}

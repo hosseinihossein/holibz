@@ -30,7 +30,7 @@ export class Signup implements AfterViewInit {
   signupForm = signal(new FormGroup({
     username: new FormControl("",{
       nonNullable:true,
-      validators:[Validators.required, Validators.minLength(8), Validators.maxLength(60)],
+      validators:[Validators.required, Validators.minLength(3), Validators.maxLength(60)],
       asyncValidators: [validateUsername()],
       updateOn: "change"
     }),

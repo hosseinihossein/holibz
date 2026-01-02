@@ -5,25 +5,13 @@
 - how to get more replies
 - change downloading file and images of documents to use httpClient to have more control over it
 - set angular app to show access denied message instead of application error
-- use ExecuteDelete to delete from Dbs
 - navbar menu, library shelf and documents filter, library shelf and documents paginator, 
 create different size images, 
-- reduce the allowed minimum length of username to 3(done in backend action)
-- Use AsNoTracking() for Read-Only Queries
 - search component is a mat-card like profile component
-- update review_UserdbModel and library_ownerDbModel seeds
-- remove redundant Includes from queries
-- cancel seed processes to backup
-- revise db queries and use attach when needed
-- revise db models and contexts, remove seed,
 - set backup model to backup from storage
-- search about asp.net core Identity, how to use it at best performance and fetch data efficiently
-- define explicit join-table for many-to-many relationships
-- edit library controller from begining
-- edit replyToGuid,replyToUserName,replyToBrief to nullable in angular app
-- by default comment are NOT ordered by oldest
-- asp app ready for test
-- 
+- errors gone after turnstile update in login page
+- user AsSplitQuery for projecting collections
+-   
 
 
 ******* efficient ways for efcore query *********

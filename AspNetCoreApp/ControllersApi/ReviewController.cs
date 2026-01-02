@@ -40,8 +40,6 @@ public class ReviewController : ControllerBase
 
         int userTotalNumberOfLikes = await reviewDb.Users
         .Where(u => u.Guid == userGuid_Guid)
-        .Include(u => u.GotReviews)
-        .ThenInclude(r => r.LikedBy)
         .SelectMany(u => u.GotReviews)
         .SelectMany(r => r.LikedBy)
         .CountAsync();

@@ -315,7 +315,21 @@ public class Review_Process
         //seed
         //await Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
     }
+    public async Task DeleteReview(Review_DbContext reviewDb, Guid subjectGuid,
+    Notification_DbContext notifDb, Notification_Process notifProcess)
+    {
+        Guid[] commentsGuids = await reviewDb.Reviews
+        .Where(r => r.SubjectGuid == subjectGuid)
+        .SelectMany(r => r.Comments)
+        .Select(c => c.Guid)
+        .ToArrayAsync();
 
+        //delete review
+        await reviewDb.Reviews.Where(r => r.SubjectGuid == subjectGuid).ExecuteDeleteAsync();
+
+        //delete comment notifs
+        await notifProcess.DeleteNotifications(notifDb, commentsGuids);
+    }
 
     /*
         //public async Task DeleteUser(Review_DbContext reviewDb, string userGuid) { }

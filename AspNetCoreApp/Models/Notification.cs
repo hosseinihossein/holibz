@@ -156,7 +156,12 @@ public class Notification_Process
         .Where(n => n.SubjectGuid == subjectGuid)
         .ExecuteDeleteAsync();
     }
-
+    public async Task DeleteNotifications(Notification_DbContext notifDb, Guid[] subjectGuids)
+    {
+        await notifDb.Notifications
+        .Where(n => n.SubjectGuid != null && subjectGuids.Contains(n.SubjectGuid.Value))
+        .ExecuteDeleteAsync();
+    }
 
     //************************************ seed User data **********************************
     /*

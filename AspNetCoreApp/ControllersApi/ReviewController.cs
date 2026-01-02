@@ -79,6 +79,7 @@ public class ReviewController : ControllerBase
             iLiked = myGuid != null && r.LikedBy.Any(ur => ur.User.Guid == myGuid),
             totalComments = r.Comments.Count(c => c.ReplyTo == null),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (reviewDbInfo is null)
@@ -144,6 +145,7 @@ public class ReviewController : ControllerBase
                 Text = c.Text,
                 WriterGuid = c.Writer.Guid,
             })
+            .AsSplitQuery()
             .ToArrayAsync();
 
             if (myCommentsModels.Length < commentTakeNumber)
@@ -172,6 +174,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
 
@@ -203,6 +206,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
         }
@@ -229,6 +233,7 @@ public class ReviewController : ControllerBase
                 Text = c.Text,
                 WriterGuid = c.Writer.Guid,
             })
+            .AsSplitQuery()
             .ToArrayAsync();
         }
 
@@ -268,6 +273,7 @@ public class ReviewController : ControllerBase
             Text = c.Text,
             WriterGuid = c.Writer.Guid,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (requestedCommentModel is not null && requestedCommentModel.IsReply &&
@@ -359,6 +365,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 if (myCommentsModels.Length < pageSize.Value)
@@ -405,6 +412,7 @@ public class ReviewController : ControllerBase
                         Text = c.Text,
                         WriterGuid = c.Writer.Guid,
                     })
+                    .AsSplitQuery()
                     .ToArrayAsync();
                 }
 
@@ -454,6 +462,7 @@ public class ReviewController : ControllerBase
                         Text = c.Text,
                         WriterGuid = c.Writer.Guid,
                     })
+                    .AsSplitQuery()
                     .ToArrayAsync();
                 }
             }
@@ -482,6 +491,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
 
@@ -514,6 +524,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -541,6 +552,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -569,6 +581,7 @@ public class ReviewController : ControllerBase
                     Text = c.Text,
                     WriterGuid = c.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -646,6 +659,7 @@ public class ReviewController : ControllerBase
                 Text = rep.Text,
                 WriterGuid = rep.Writer.Guid,
             })
+            .AsSplitQuery()
             .ToArrayAsync();
 
             if (myRepliesModels.Length < 10)
@@ -690,6 +704,7 @@ public class ReviewController : ControllerBase
                     Text = rep.Text,
                     WriterGuid = rep.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
 
@@ -739,6 +754,7 @@ public class ReviewController : ControllerBase
                     Text = rep.Text,
                     WriterGuid = rep.Writer.Guid,
                 })
+                .AsSplitQuery()
                 .ToArrayAsync();
             }
         }
@@ -766,6 +782,7 @@ public class ReviewController : ControllerBase
                 Text = rep.Text,
                 WriterGuid = rep.Writer.Guid,
             })
+            .AsSplitQuery()
             .ToArrayAsync();
         }
 
@@ -875,6 +892,7 @@ public class ReviewController : ControllerBase
                 parentReviewId = c.ParentReview.Id,
                 c.Text,
             })
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
             if (parentCommentDbInfo is null)
             {
@@ -1025,6 +1043,7 @@ public class ReviewController : ControllerBase
             totalLikes = r.LikedBy.Count,
             iLiked = r.LikedBy.Any(u => u.User.Guid == myGuid),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
         if (reviewDbInfo is null)
         {
@@ -1088,6 +1107,7 @@ public class ReviewController : ControllerBase
             totalThumbsUps = c.ThumbsUpsBy.Count,
             totalThumbsDowns = c.ThumbsDownsBy.Count,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
         if (commentDbInfo is null)
         {
@@ -1166,6 +1186,7 @@ public class ReviewController : ControllerBase
             totalThumbsUps = c.ThumbsUpsBy.Count,
             totalThumbsDowns = c.ThumbsDownsBy.Count,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
         if (commentDbInfo is null)
         {
@@ -1248,6 +1269,7 @@ public class ReviewController : ControllerBase
             r.Id,
             iLiked = r.LikedBy.Any(ul => ul.User.Guid == myGuid),
         })
+        .AsSplitQuery()
         .FirstAsync();
         if (reviewDbInfo is null)
         {
@@ -1377,6 +1399,7 @@ public class ReviewController : ControllerBase
             c.Id,
             iThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
         if (commentDbInfo is null)
         {
@@ -1505,6 +1528,7 @@ public class ReviewController : ControllerBase
             c.Id,
             iThumbsDown = c.ThumbsDownsBy.Any(uup => uup.User.Guid == myGuid),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
         if (commentDbInfo is null)
         {

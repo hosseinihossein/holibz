@@ -306,8 +306,7 @@ public class IdentityController : ControllerBase
             if (result.Succeeded)
             {
                 string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
-                // user seed
-                //await identityProcess.UpdateUserSeed(user, userManager);
+
                 return Ok(new { success = true, token });
             }
             foreach (var error in result.Errors)

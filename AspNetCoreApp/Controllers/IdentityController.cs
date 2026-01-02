@@ -163,8 +163,7 @@ public class IdentityController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel,
-    [FromServices] Identity_Process identityProcess)
+    public async Task<IActionResult> SubmitResetPassword(Identity_ResetPasswordFormModel formModel)
     {
         if (ModelState.IsValid)
         {

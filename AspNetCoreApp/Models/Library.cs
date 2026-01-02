@@ -2093,7 +2093,8 @@ public class Library_NewShelf_FormModel
     [StringLength(500)]
     public string? Description { get; set; } = null;
 
-    [MaxStringArrayLength(100, 32)]
+    //[MaxStringArrayLength(100, 32)]
+    [MaxLength(100)]
     public Guid[]? LibraryGuids { get; set; } = [];
 
     public IFormFile? Image { get; set; }

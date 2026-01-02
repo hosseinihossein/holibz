@@ -70,6 +70,7 @@ public class LibraryController : ControllerBase
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
+        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(libraryCardModels);
@@ -121,6 +122,7 @@ public class LibraryController : ControllerBase
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (libraryCardModel is null)
@@ -173,6 +175,7 @@ public class LibraryController : ControllerBase
                 })
                 .ToArray(),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (libraryInfo is null)
@@ -274,6 +277,7 @@ public class LibraryController : ControllerBase
             IntegrityVersion = shelf.IntegrityVersion,
             IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
         })
+        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(shelfCardModels);
@@ -329,6 +333,7 @@ public class LibraryController : ControllerBase
                 Title = doc.Title,
             }).ToArray(),
         })
+        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(userShelfModels);
@@ -379,6 +384,7 @@ public class LibraryController : ControllerBase
             IntegrityVersion = shelf.IntegrityVersion,
             IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
 
@@ -431,6 +437,7 @@ public class LibraryController : ControllerBase
                 numberOfParentShelves = doc.ParentShelves.Count,
             }),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (shelfDbInfo is null)
@@ -508,6 +515,7 @@ public class LibraryController : ControllerBase
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
         })
+        .AsSplitQuery()
         .ToArrayAsync();
 
         return Ok(documentCardModels);
@@ -554,6 +562,7 @@ public class LibraryController : ControllerBase
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentCardModel is null)
@@ -643,6 +652,7 @@ public class LibraryController : ControllerBase
             }).ToArray(),
             IntegrityVersion = doc.IntegrityVersion,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentPageModel is null)
@@ -665,7 +675,7 @@ public class LibraryController : ControllerBase
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteDocument([FromQuery][StringLength(32)] string documentGuid,
-    [FromServices] Review_Process reviewProcess, [FromServices] Review_DbContext reviewDb,
+    [FromServices] Review_DbContext reviewDb, [FromServices] Review_Process reviewProcess,
     [FromServices] Notification_DbContext notifDb, [FromServices] Notification_Process notifProcess)
     {
         if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
@@ -682,6 +692,7 @@ public class LibraryController : ControllerBase
             ownerGuid = doc.Owner.Guid,
             elementsGuids = doc.Elements.Select(el => el.Guid),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentDbInfo is null)
@@ -711,8 +722,8 @@ public class LibraryController : ControllerBase
             libraryProcess.Delete_ElementDirectory(elementGuid.ToString("N"));
         }
 
-        //delete review
-        await reviewDb.Reviews.Where(r => r.SubjectGuid == documentGuid_Guid).ExecuteDeleteAsync();
+        //delete review and notif
+        await reviewProcess.DeleteReview(reviewDb, documentGuid_Guid, notifDb, notifProcess);
 
         return Ok(new { success = true });
     }
@@ -1523,6 +1534,7 @@ public class LibraryController : ControllerBase
                     .Select(shelf => shelf.Id)
                     .First(),
             })
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
 
             if (documentDbInfo is null)
@@ -1592,6 +1604,7 @@ public class LibraryController : ControllerBase
                     Title = doc.Title,
                 }).ToArray(),
             })
+            .AsSplitQuery()
             .ToArrayAsync();
 
             return Ok(new { success = true, parentShelves });
@@ -1623,6 +1636,7 @@ public class LibraryController : ControllerBase
                     .First(),
                 isDefaultShelf = shelf.Guid == shelf.Owner.DefaultShelfGuid,
             })
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
 
             if (shelfDbInfo is null)
@@ -1673,9 +1687,6 @@ public class LibraryController : ControllerBase
             libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf.ParentLibraries).IsModified = true;
             //save
             await libraryDb.SaveChangesAsync();
-
-            //seed
-            //await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
             return Ok(new { success = true });
         }
@@ -2562,6 +2573,7 @@ public class LibraryController : ControllerBase
                 .Select(ulf => ulf.User.Id)
                 .FirstOrDefault(),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (libInfo is null)
@@ -2617,6 +2629,7 @@ public class LibraryController : ControllerBase
                 .Select(ulf => ulf.User.Id)
                 .FirstOrDefault(),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (shelfInfo is null)
@@ -2672,6 +2685,7 @@ public class LibraryController : ControllerBase
                 .Select(ufd => ufd.User.Id)
                 .FirstOrDefault(),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (docInfo is null)
@@ -3019,6 +3033,7 @@ public class LibraryController : ControllerBase
             ownerGuid = doc.Owner.Guid,
             doc.RelatedVersions,
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (baseDocumentDbInfo is null)

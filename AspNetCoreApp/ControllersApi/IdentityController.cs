@@ -295,7 +295,8 @@ public class IdentityController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitUsername(
         //[FromBody] string username,//BadRequest status 400, username is required, The JSON value could not be converted to System.String. it didn't work even by newtonsoft json.
-        [FromBody] UsernameModel model)
+        [FromBody] UsernameModel model, [FromServices] Library_DbContext libraryDb,
+        [FromServices] Review_DbContext reviewDb)
     {
         if (ModelState.IsValid)
         {
@@ -305,8 +306,16 @@ public class IdentityController : ControllerBase
             var result = await userManager.SetUserNameAsync(user, model.Username);
             if (result.Succeeded)
             {
-                string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
+                //update user and its normalized username
+                await userManager.UpdateAsync(user);
+                //library_OwnerDbModel
+                await libraryDb.Owners.Where(o => o.Guid == user.UserGuid)
+                .ExecuteUpdateAsync(setter => setter.SetProperty(u => u.NormalizedUserName, user.NormalizedUserName));
+                //Review_UserDBModel
+                await reviewDb.Users.Where(u => u.Guid == user.UserGuid)
+                .ExecuteUpdateAsync(setter => setter.SetProperty(u => u.NormalizedUserName, user.NormalizedUserName));
 
+                string token = await userManager.GenerateUserTokenAsync(user, "customTokenProvider", "login");
                 return Ok(new { success = true, token });
             }
             foreach (var error in result.Errors)

@@ -446,11 +446,11 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        Guid userGuid = (await userManager.Users
+        Guid myGuid = (await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstOrDefaultAsync())!;
-        if (userGuid != shelfDbInfo.ownerGuid)
+        if (myGuid != shelfDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner can delete the shelf!");
             return BadRequest(ModelState);
@@ -1117,9 +1117,6 @@ public class LibraryController : ControllerBase
 
             await libraryDb.SaveChangesAsync();
 
-            //seed
-            //await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
-
             return Ok(new
             {
                 success = true,
@@ -1326,10 +1323,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        DirectoryInfo documentDirectoryInfo = Directory.CreateDirectory(
-            Path.Combine(Storage_Documents.FullName, documentGuid)
-        );
-        string documentImagePath = Path.Combine(documentDirectoryInfo.FullName, "image");
+        string documentImagePath = Path.Combine(Storage_Documents.FullName, documentGuid, "image");
         if (System.IO.File.Exists(documentImagePath))
         {
             try
@@ -1343,21 +1337,11 @@ public class LibraryController : ControllerBase
             }
         }
 
-        //create
-        Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
-        //attach
-        libraryDb.Documents.Attach(documentDbModel);
-        //edit
-        documentDbModel.HasImage = false;
-        documentDbModel.IntegrityVersion = 0;
-        //modified
-        libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.HasImage).IsModified = true;
-        libraryDb.Documents.Entry(documentDbModel).Property(doc => doc._integrityVersion).IsModified = true;
-        //save
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        //await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+        await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
+        .ExecuteUpdateAsync(setter => setter
+            .SetProperty(doc => doc.HasImage, false)
+            .SetProperty(doc => doc._integrityVersion, (byte)0)
+        );
 
         return Ok(new { success = true });
     }
@@ -1399,10 +1383,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(
-            Path.Combine(Storage_Libraries.FullName, libraryGuid)
-        );
-        string libraryImagePath = Path.Combine(libraryDirectoryInfo.FullName, "image");
+        string libraryImagePath = Path.Combine(Storage_Libraries.FullName, libraryGuid, "image");
         if (System.IO.File.Exists(libraryImagePath))
         {
             try
@@ -1416,21 +1397,11 @@ public class LibraryController : ControllerBase
             }
         }
 
-        //create
-        Library_LibraryDbModel libraryDbModel = new() { Id = libraryDbInfo.Id };
-        //attach
-        libraryDb.Libraries.Attach(libraryDbModel);
-        //edit
-        libraryDbModel.HasImage = false;
-        libraryDbModel.IntegrityVersion = 0;
-        //modified
-        libraryDb.Libraries.Entry(libraryDbModel).Property(lib => lib.HasImage).IsModified = true;
-        libraryDb.Libraries.Entry(libraryDbModel).Property(lib => lib._integrityVersion).IsModified = true;
-        //save
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        //await libraryProcess.Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
+        await libraryDb.Libraries.Where(lib => lib.Id == libraryDbInfo.Id)
+        .ExecuteUpdateAsync(setter => setter
+            .SetProperty(lib => lib.HasImage, false)
+            .SetProperty(lib => lib._integrityVersion, (byte)0)
+        );
 
         return Ok(new { success = true });
     }
@@ -1472,10 +1443,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(
-            Path.Combine(Storage_Shelves.FullName, shelfGuid)
-        );
-        string shelfImagePath = Path.Combine(shelfDirectoryInfo.FullName, "image");
+        string shelfImagePath = Path.Combine(Storage_Shelves.FullName, shelfGuid, "image");
         if (System.IO.File.Exists(shelfImagePath))
         {
             try
@@ -1489,21 +1457,11 @@ public class LibraryController : ControllerBase
             }
         }
 
-        //create
-        Library_ShelfDbModel shelfDbModel = new() { Id = shelfDbInfo.Id };
-        //attach
-        libraryDb.Shelves.Attach(shelfDbModel);
-        //edit
-        shelfDbModel.HasImage = false;
-        shelfDbModel.IntegrityVersion = 0;
-        //modified
-        libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf.HasImage).IsModified = true;
-        libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf._integrityVersion).IsModified = true;
-        //save
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        //await libraryProcess.Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
+        await libraryDb.Shelves.Where(shelf => shelf.Id == shelfDbInfo.Id)
+        .ExecuteUpdateAsync(setter => setter
+            .SetProperty(shelf => shelf.HasImage, false)
+            .SetProperty(shelf => shelf._integrityVersion, (byte)0)
+        );
 
         return Ok(new { success = true });
     }
@@ -1526,7 +1484,8 @@ public class LibraryController : ControllerBase
             {
                 doc.Id,
                 ownerGuid = doc.Owner.Guid,
-                newParentShelfIds = doc.Owner.Shelves
+                currentParentShelfIds = doc.ParentShelves.Select(shelfDoc => shelfDoc.Shelf.Id),
+                specifiedParentShelfIds = doc.Owner.Shelves
                     .Where(shelf => formModel.ShelfGuids.Contains(shelf.Guid))
                     .Select(shelf => shelf.Id),
                 ownerDefaultShelfId = doc.Owner.Shelves
@@ -1554,37 +1513,41 @@ public class LibraryController : ControllerBase
             }
 
             //create join tables
-            IEnumerable<Library_ShelfDocument_DbModel> shelfDocRels = documentDbInfo.newParentShelfIds
+            IEnumerable<Library_ShelfDocument_DbModel> newShelfDocRels = documentDbInfo.specifiedParentShelfIds
+            .ExceptBy(documentDbInfo.currentParentShelfIds, () =>)
             .Select(id => new Library_ShelfDocument_DbModel()
             {
                 ShelfId = id,
                 DocumentId = documentDbInfo.Id,
             });
-            if (!shelfDocRels.Any())
+            if (!newShelfDocRels.Any())
             {
                 Library_ShelfDocument_DbModel defaultShelfDocRel = new Library_ShelfDocument_DbModel()
                 {
                     ShelfId = documentDbInfo.ownerDefaultShelfId,
                     DocumentId = documentDbInfo.Id,
                 };
-                shelfDocRels = [defaultShelfDocRel];
+                newShelfDocRels = [defaultShelfDocRel];
             }
             //create documentDbModel
             Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
             //attach
             libraryDb.Documents.Attach(documentDbModel);
             //edit
-            documentDbModel.ParentShelves = [.. shelfDocRels];
+            documentDbModel.ParentShelves = [.. newShelfDocRels];
             //modified
             libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.ParentShelves).IsModified = true;
             //save
             await libraryDb.SaveChangesAsync();
 
-            //seed
-            //await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
+            await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
+            .ExecuteUpdateAsync(setter => setter
+                .SetProperty(doc => doc.ParentShelves, (doc) => doc.ParentShelves.shelfDocRels)
+            );
 
+            //view model
             var parentShelves = await libraryDb.Shelves
-            .Where(shelf => documentDbInfo.newParentShelfIds.Contains(shelf.Id))
+            .Where(shelf => documentDbInfo.specifiedParentShelfIds.Contains(shelf.Id))
             .Select(shelf => new
             {
                 shelf.Guid,

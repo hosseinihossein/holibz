@@ -770,36 +770,33 @@ public class LibraryController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            IEnumerable<Guid> elementGuids = formModels.Select(m => m.Guid);
-
-            var elementsDbInfo = await libraryDb.Elements
-            .Where(el => elementGuids.Contains(el.Guid))
-            .Select(el => new
-            {
-                el.Id,
-                el.Guid,
-                parentDocumentGuid = el.ParentDocument.Guid,
-                ownerGuid = el.Owner.Guid,
-            })
-            .ToListAsync();
-
-            //make sure all edited elements belong to the same document
-            IEnumerable<Guid> parentDocumentGuids = elementsDbInfo.Select(el => el.parentDocumentGuid).Distinct();
-            IEnumerable<Guid> ownerGuids = elementsDbInfo.Select(el => el.ownerGuid).Distinct();
-            if (parentDocumentGuids.Count() > 1 || ownerGuids.Count() > 1)
-            {
-                ModelState.AddModelError("ParentDocument or owner", "The edited elements don't belong to the same parent document or owner!");
-                return BadRequest(ModelState);
-            }
-
             Guid myGuid = (await userManager.Users
             .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(user => user.UserGuid)
             .FirstOrDefaultAsync())!;
 
-            if (ownerGuids.Single() != myGuid)
+            IEnumerable<Guid> elementGuids = formModels.Select(m => m.Guid);
+
+            var elementsDbInfo = await libraryDb.Elements
+            .Where(el => elementGuids.Contains(el.Guid) && el.Owner.Guid == myGuid)
+            .Select(el => new
             {
-                ModelState.AddModelError("Owner", "You are Not the owner of all of the edited elements!");
+                el.Id,
+                el.Guid,
+                parentDocumentGuid = el.ParentDocument.Guid,
+            })
+            .ToListAsync();
+
+            //make sure all edited elements belong to the same document
+            if (!elementsDbInfo.Any())
+            {
+                ModelState.AddModelError("elements", "Couldn't find the specified elements!");
+                return BadRequest(ModelState);
+            }
+            IEnumerable<Guid> parentDocumentGuids = elementsDbInfo.Select(el => el.parentDocumentGuid).Distinct();
+            if (parentDocumentGuids.Count() > 1)
+            {
+                ModelState.AddModelError("ParentDocument", "The edited elements don't belong to the same parent document!");
                 return BadRequest(ModelState);
             }
 
@@ -878,7 +875,7 @@ public class LibraryController : ControllerBase
 
             //create response
             Library_Element_ViewModel[] elementModelArray = await libraryDb.Documents
-            .Where(doc => doc.Guid == ownerGuids.Single())
+            .Where(doc => doc.Guid == parentDocumentGuids.Single())
             .SelectMany(doc => doc.Elements)
             .Select(elementDbModel => new Library_Element_ViewModel()
             {
@@ -1484,7 +1481,7 @@ public class LibraryController : ControllerBase
             {
                 doc.Id,
                 ownerGuid = doc.Owner.Guid,
-                currentParentShelfIds = doc.ParentShelves.Select(shelfDoc => shelfDoc.Shelf.Id),
+                //currentParentShelfIds = doc.ParentShelves.Select(shelfDoc => shelfDoc.Shelf.Id),
                 specifiedParentShelfIds = doc.Owner.Shelves
                     .Where(shelf => formModel.ShelfGuids.Contains(shelf.Guid))
                     .Select(shelf => shelf.Id),
@@ -1512,38 +1509,33 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
+            //delete current join tables
+            await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
+            .Select(doc => doc.ParentShelves).ExecuteDeleteAsync();
+
             //create join tables
-            IEnumerable<Library_ShelfDocument_DbModel> newShelfDocRels = documentDbInfo.specifiedParentShelfIds
-            .ExceptBy(documentDbInfo.currentParentShelfIds, () =>)
+            IEnumerable<Library_ShelfDocument_DbModel> shelfDocRels = documentDbInfo.specifiedParentShelfIds
             .Select(id => new Library_ShelfDocument_DbModel()
             {
                 ShelfId = id,
                 DocumentId = documentDbInfo.Id,
             });
-            if (!newShelfDocRels.Any())
+            if (!shelfDocRels.Any())
             {
                 Library_ShelfDocument_DbModel defaultShelfDocRel = new Library_ShelfDocument_DbModel()
                 {
                     ShelfId = documentDbInfo.ownerDefaultShelfId,
                     DocumentId = documentDbInfo.Id,
                 };
-                newShelfDocRels = [defaultShelfDocRel];
+                shelfDocRels = [defaultShelfDocRel];
             }
-            //create documentDbModel
-            Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
-            //attach
-            libraryDb.Documents.Attach(documentDbModel);
-            //edit
-            documentDbModel.ParentShelves = [.. newShelfDocRels];
-            //modified
-            libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.ParentShelves).IsModified = true;
+            //add
+            foreach (Library_ShelfDocument_DbModel shelfDoc in shelfDocRels)
+            {
+                libraryDb.ShelfDocuments.Add(shelfDoc);
+            }
             //save
             await libraryDb.SaveChangesAsync();
-
-            await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(doc => doc.ParentShelves, (doc) => doc.ParentShelves.shelfDocRels)
-            );
 
             //view model
             var parentShelves = await libraryDb.Shelves
@@ -1624,6 +1616,10 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
+            //delete current join tables
+            await libraryDb.Shelves.Where(shelf => shelf.Id == shelfDbInfo.Id)
+            .Select(shelf => shelf.ParentLibraries).ExecuteDeleteAsync();
+
             //create join tables
             IEnumerable<Library_LibraryShelf_DbModel> libShelfRels = shelfDbInfo.newParentLibrariesIds
             .Select(id => new Library_LibraryShelf_DbModel()
@@ -1640,14 +1636,11 @@ public class LibraryController : ControllerBase
                 };
                 libShelfRels = [defaultLibShelfRel];
             }
-            //create shelfDbModel
-            Library_ShelfDbModel shelfDbModel = new() { Id = shelfDbInfo.Id };
-            //attach
-            libraryDb.Shelves.Attach(shelfDbModel);
-            //edit
-            shelfDbModel.ParentLibraries = [.. libShelfRels];
-            //modified
-            libraryDb.Shelves.Entry(shelfDbModel).Property(shelf => shelf.ParentLibraries).IsModified = true;
+            //add
+            foreach (Library_LibraryShelf_DbModel libShelf in libShelfRels)
+            {
+                libraryDb.LibraryShelves.Add(libShelf);
+            }
             //save
             await libraryDb.SaveChangesAsync();
 
@@ -1991,12 +1984,12 @@ public class LibraryController : ControllerBase
         }
 
         //fetch and create
-        Library_OwnerDbModel? followingDbModel = await libraryDb.Owners
+        var followingDbInfo = await libraryDb.Owners
         .Where(owner => owner.Guid == ownerGuid_Guid)
-        .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
+        .Select(owner => new { Id = owner.Id })
         .FirstOrDefaultAsync();
 
-        if (followingDbModel is null)
+        if (followingDbInfo is null)
         {
             ModelState.AddModelError("user", "the specified owner Not found!");
             return BadRequest(ModelState);
@@ -2014,16 +2007,16 @@ public class LibraryController : ControllerBase
         }
 
         //fetch and create
-        Library_OwnerDbModel followerDbModel = await libraryDb.Owners
+        var followerDbInfo = await libraryDb.Owners
         .Where(owner => owner.Guid == myGuid)
-        .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
+        .Select(owner => new { Id = owner.Id })
         .FirstAsync();
 
         //create join table
         Library_FollowerFollowing_DbModel followerFollowing = new()
         {
-            FollowerId = followerDbModel.Id,
-            FollowingId = followingDbModel.Id,
+            FollowerId = followerDbInfo.Id,
+            FollowingId = followingDbInfo.Id,
         };
         //add
         libraryDb.FollowerFollowings.Add(followerFollowing);
@@ -2032,21 +2025,21 @@ public class LibraryController : ControllerBase
 
         //***** review *****
         //fetch and create
-        Review_UserDbModel followerDbModel_Review = await reviewDb.Users
+        var followerDbInfo_Review = await reviewDb.Users
         .Where(u => u.Guid == ownerGuid_Guid)
-        .Select(u => new Review_UserDbModel() { Id = u.Id })
+        .Select(u => new { Id = u.Id })
         .FirstAsync();
 
-        Review_UserDbModel followingDbModel_Review = await reviewDb.Users
+        var followingDbInfo_Review = await reviewDb.Users
         .Where(u => u.Guid == myGuid)
-        .Select(u => new Review_UserDbModel() { Id = u.Id })
+        .Select(u => new { Id = u.Id })
         .FirstAsync();
 
         //create join table
         Review_FollowerFollowing_DbModel followerFollowing_Review = new()
         {
-            FollowerId = followerDbModel_Review.Id,
-            FollowingId = followingDbModel_Review.Id,
+            FollowerId = followerDbInfo_Review.Id,
+            FollowingId = followingDbInfo_Review.Id,
         };
         //add
         reviewDb.FollowerFollowings.Add(followerFollowing_Review);
@@ -2067,18 +2060,6 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        //fetch and create
-        Library_OwnerDbModel? followingDbModel = await libraryDb.Owners
-        .Where(owner => owner.Guid == ownerGuid_Guid)
-        .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
-        .FirstOrDefaultAsync();
-
-        if (followingDbModel is null)
-        {
-            ModelState.AddModelError("user", "the specified owner Not found!");
-            return BadRequest(ModelState);
-        }
-
         Guid myGuid = await userManager.Users
         .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
         .Select(user => user.UserGuid)
@@ -2090,33 +2071,16 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        //fetch and create
-        Library_OwnerDbModel followerDbModel = await libraryDb.Owners
-        .Where(owner => owner.Guid == myGuid)
-        .Select(owner => new Library_OwnerDbModel() { Id = owner.Id })
-        .FirstAsync();
-
+        //***** library *****
         //delete join table
         await libraryDb.FollowerFollowings
-        .Where(ff => ff.FollowerId == followerDbModel.Id && ff.FollowingId == followingDbModel.Id)
+        .Where(ff => ff.Follower.Guid == myGuid && ff.Following.Guid == ownerGuid_Guid)
         .ExecuteDeleteAsync();
 
         //***** review *****
-        //fetch and create
-        Review_UserDbModel followerDbModel_Review = await reviewDb.Users
-        .Where(u => u.Guid == ownerGuid_Guid)
-        .Select(u => new Review_UserDbModel() { Id = u.Id })
-        .FirstAsync();
-
-        Review_UserDbModel followingDbModel_Review = await reviewDb.Users
-        .Where(u => u.Guid == myGuid)
-        .Select(u => new Review_UserDbModel() { Id = u.Id })
-        .FirstAsync();
-
         //delete join table
         await reviewDb.FollowerFollowings
-        .Where(ff => ff.FollowerId == followerDbModel_Review.Id &&
-        ff.FollowingId == followingDbModel_Review.Id)
+        .Where(ff => ff.Follower.Guid == myGuid && ff.Following.Guid == ownerGuid_Guid)
         .ExecuteDeleteAsync();
 
         return Ok(new { success = true });
@@ -2696,7 +2660,6 @@ public class LibraryController : ControllerBase
             {
                 doc.Id,
                 ownerGuid = doc.Owner.Guid,
-                //tags = doc.Tags.Select(dt => dt.Tag).Select(tag => new { tag.Id, tag.Name }),
             })
             .FirstOrDefaultAsync();
 
@@ -2717,45 +2680,42 @@ public class LibraryController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            List<Library_TagDbModel> existingTags = await libraryDb.Tags
+            List<Library_TagDbModel> existingTagDbModels = await libraryDb.Tags
             .Where(tag => formModel.Tags.Contains(tag.Name))
             .ToListAsync();
 
             List<string> notExistingTagNames = formModel.Tags
-            .Except(existingTags.Select(tag => tag.Name))
+            .Except(existingTagDbModels.Select(tag => tag.Name))
             .ToList();
 
             foreach (string tagName in notExistingTagNames)
             {
                 Library_TagDbModel tagDbModel = new() { Name = tagName };
-                libraryDb.Tags.Add(tagDbModel);
-                existingTags.Add(tagDbModel);
+                //libraryDb.Tags.Add(tagDbModel);
+                existingTagDbModels.Add(tagDbModel);
             }
 
-            //create documentDbModel
-            Library_DocumentDbModel documentDbModel = new()
+            //delete current join tables
+            await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
+            .Select(doc => doc.Tags).ExecuteDeleteAsync();
+
+            //create and add new join tables
+            foreach (Library_TagDbModel tagDbModel in existingTagDbModels)
             {
-                Id = documentDbInfo.Id,
-            };
-            //Attach documentDbModel
-            libraryDb.Documents.Attach(documentDbModel);
-            //create join tables
-            foreach (Library_TagDbModel tagDbModel in existingTags)
-            {
+                //create
                 Library_DocumentTag_DbModel documentTag = new()
                 {
-                    Document = documentDbModel,
+                    DocumentId = documentDbInfo.Id,
                     Tag = tagDbModel,
                 };
-                //edit
-                documentDbModel.Tags.Add(documentTag);
+                //add
+                libraryDb.DocumentTags.Add(documentTag);
             }
-            //modified
-            libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.Tags).IsModified = true;
+
             //save
             await libraryDb.SaveChangesAsync();
 
-            return Ok(documentDbModel.Tags.Select(dt => dt.Tag.Name).ToArray());
+            return Ok(existingTagDbModels.Select(tag => tag.Name).ToArray());
         }
         return BadRequest(ModelState);
     }
@@ -2798,7 +2758,7 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var documentDbInfo = await libraryDb.Documents
+        /*var documentDbInfo = await libraryDb.Documents
         .Where(doc => doc.Guid == documentGuid_Guid)
         .Select(doc => new
         {
@@ -2811,20 +2771,20 @@ public class LibraryController : ControllerBase
         {
             ModelState.AddModelError("documentGuid", "there's no document with the specified guid!");
             return BadRequest(ModelState);
-        }
+        }*/
 
         Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (myGuid != documentDbInfo.ownerGuid)
+        /*if (myGuid != documentDbInfo.ownerGuid)
         {
             ModelState.AddModelError("Authorization", "Only the owner can edit document with the specified guid!");
             return BadRequest(ModelState);
-        }
+        }*/
 
-        //create
+        /*/create
         Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
         //Attach
         libraryDb.Documents.Attach(documentDbModel);
@@ -2833,12 +2793,20 @@ public class LibraryController : ControllerBase
         //modified
         libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.Version).IsModified = true;
         //save
-        await libraryDb.SaveChangesAsync();
-
-        //seed
-        //await libraryProcess.Update_DocumentSeed(documentDbModel.Guid, libraryDb);
-
-        return Ok(new { version = documentDbModel.Version });
+        await libraryDb.SaveChangesAsync();*/
+        int numberOfRowsUpdated = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid && doc.Owner.Guid == myGuid)
+        .ExecuteUpdateAsync(setter => setter
+            .SetProperty(doc => doc.Version, versionName)
+        );
+        if (numberOfRowsUpdated == 0)
+        {
+            ModelState.AddModelError("Authorization or documentGuid",
+            "Only the owner can edit document with the specified guid! " +
+            "there's no document with the specified guid!");
+            return BadRequest(ModelState);
+        }
+        return Ok(new { version = versionName });
     }
 
     [HttpPost]
@@ -2885,6 +2853,17 @@ public class LibraryController : ControllerBase
 
         baseDocumentDbModel.RelatedVersions ??= new();
 
+        Library_DocumentDbModel newDocumentDbModel = new()
+        {
+            Description = baseDocumentDbModel.Description,
+            HasImage = baseDocumentDbModel.HasImage,
+            Owner = baseDocumentDbModel.Owner,
+            RelatedVersions = baseDocumentDbModel.RelatedVersions,
+            Title = baseDocumentDbModel.Title,
+            Version = newVersionName,
+        };
+
+        //elements
         List<Library_ElementDbModel> newElements = baseDocumentDbModel.Elements
         .Select(el => new Library_ElementDbModel()
         {
@@ -2894,40 +2873,32 @@ public class LibraryController : ControllerBase
             Title = el.Title,
             Type = el.Type,
             Value = el.Value,
+            ParentDocument = newDocumentDbModel,
         })
         .ToList();
+        newDocumentDbModel.Elements = newElements;
 
-        Library_DocumentDbModel newDocumentDbModel = new()
+        //tags
+        IEnumerable<Library_DocumentTag_DbModel> newDocumentTagRels = baseDocumentDbModel.Tags
+        .Select(dt => new Library_DocumentTag_DbModel()
         {
-            Description = baseDocumentDbModel.Description,
-            Elements = newElements,
-            HasImage = baseDocumentDbModel.HasImage,
-            Owner = baseDocumentDbModel.Owner,
-            RelatedVersions = baseDocumentDbModel.RelatedVersions,
-            Title = baseDocumentDbModel.Title,
-            Version = newVersionName,
-        };
+            Document = newDocumentDbModel,
+            Tag = dt.Tag,
+        });
+        newDocumentDbModel.Tags = [.. newDocumentTagRels];
+
+        //parentShelves
+        IEnumerable<Library_ShelfDocument_DbModel> newShelfDocumentRels =
+        baseDocumentDbModel.ParentShelves
+        .Select(sd => new Library_ShelfDocument_DbModel()
+        {
+            Shelf = sd.Shelf,
+            Document = newDocumentDbModel,
+        });
+        newDocumentDbModel.ParentShelves = [.. newShelfDocumentRels];
+
+        //add and save
         libraryDb.Documents.Add(newDocumentDbModel);
-
-        foreach (Library_TagDbModel tag in baseDocumentDbModel.Tags.Select(dt => dt.Tag))
-        {
-            Library_DocumentTag_DbModel documentTag = new()
-            {
-                Document = newDocumentDbModel,
-                Tag = tag,
-            };
-            libraryDb.DocumentTags.Add(documentTag);
-        }
-        foreach (Library_ShelfDbModel parentShelf in baseDocumentDbModel.ParentShelves.Select(sd => sd.Shelf))
-        {
-            Library_ShelfDocument_DbModel shelfDocument = new()
-            {
-                Shelf = parentShelf,
-                Document = newDocumentDbModel,
-            };
-            libraryDb.ShelfDocuments.Add(shelfDocument);
-        }
-
         await libraryDb.SaveChangesAsync();
 
         //copy introduction image to the new directory
@@ -2935,9 +2906,16 @@ public class LibraryController : ControllerBase
         {
             string baseDocumentImagePath =
             Path.Combine(Storage_Documents.FullName, baseDocumentDbModel.Guid.ToString("N"), "image");
-            string newDocumentImagePath =
-            Path.Combine(Storage_Documents.FullName, newDocumentDbModel.Guid.ToString("N"), "image");
-            System.IO.File.Copy(baseDocumentImagePath, newDocumentImagePath);
+            if (System.IO.File.Exists(baseDocumentImagePath))
+            {
+                //create new document directory
+                DirectoryInfo newDocumentirectoryInfo = Directory.CreateDirectory(
+                    Path.Combine(Storage_Documents.FullName, newDocumentDbModel.Guid.ToString("N"))
+                );
+                string newDocumentImagePath = Path.Combine(newDocumentirectoryInfo.FullName, "image");
+                //copy
+                System.IO.File.Copy(baseDocumentImagePath, newDocumentImagePath);
+            }
         }
 
         //copy element files and images to the new directory
@@ -2947,21 +2925,22 @@ public class LibraryController : ControllerBase
         {
             string baseElementFilePath =
             Path.Combine(Storage_Elements.FullName, fileElement.Guid.ToString("N"), fileElement.FileName!);
-
-            Library_ElementDbModel newCorespondElement = newElements
-            .Single(el => el.FileName == fileElement.FileName &&
-            el.Order == fileElement.Order &&
-            el.Type == fileElement.Type);
-
-            Directory.CreateDirectory(
-                Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid.ToString("N"))
-            );
-            string newElementFilePath =
-            Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid.ToString("N"),
-            newCorespondElement.FileName!);
-
-            System.IO.File.Copy(baseElementFilePath, newElementFilePath);
-            //if the file is image create different size files of it
+            if (System.IO.File.Exists(baseElementFilePath))
+            {
+                Library_ElementDbModel newCorespondElement = newElements
+                .Single(el => el.FileName == fileElement.FileName &&
+                el.Order == fileElement.Order &&
+                el.Type == fileElement.Type);
+                //create new element directory
+                DirectoryInfo newElementDirectoryInfo = Directory.CreateDirectory(
+                    Path.Combine(Storage_Elements.FullName, newCorespondElement.Guid.ToString("N"))
+                );
+                string newElementFilePath =
+                Path.Combine(newElementDirectoryInfo.FullName, newCorespondElement.FileName!);
+                //copy
+                System.IO.File.Copy(baseElementFilePath, newElementFilePath);
+                //if the file is image create different size files of it
+            }
         }
 
         //review
@@ -2988,66 +2967,54 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var baseDocumentDbInfo = await libraryDb.Documents
-        .Where(doc => doc.Guid == baseDocumentGuid_Guid)
-        .Select(doc => new
-        {
-            doc.Id,
-            ownerGuid = doc.Owner.Guid,
-            doc.RelatedVersions,
-        })
-        .AsSplitQuery()
-        .FirstOrDefaultAsync();
-
-        if (baseDocumentDbInfo is null)
-        {
-            ModelState.AddModelError("baseDocumentGuid", "there's no document with the specified guid!");
-            return BadRequest(ModelState);
-        }
-
-        var newRelatedDocumentDbInfo = await libraryDb.Documents
-        .Where(doc => doc.Guid == newRelatedDocumentGuid_Guid)
-        .Select(doc => new
-        {
-            doc.Id,
-            ownerGuid = doc.Owner.Guid,
-        })
-        .FirstOrDefaultAsync();
-
-        if (newRelatedDocumentDbInfo is null)
-        {
-            ModelState.AddModelError("newRelatedDocumentGuid", "there's no document with the specified guid!");
-            return BadRequest(ModelState);
-        }
-
         Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (myGuid != baseDocumentDbInfo.ownerGuid || myGuid != newRelatedDocumentDbInfo.ownerGuid)
+        var baseDocumentDbInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == baseDocumentGuid_Guid && doc.Owner.Guid == myGuid)
+        .Select(doc => new
         {
-            ModelState.AddModelError("Authorization", "Only the owner of the specified documents can create relate then!");
+            doc.Id,
+            doc.RelatedVersions,
+        })
+        .FirstOrDefaultAsync();
+
+        if (baseDocumentDbInfo is null)
+        {
+            ModelState.AddModelError("Authorization or baseDocumentGuid",
+            "Only the owner of the specified documents can create relate then! " +
+            "or there's no base document with the specified guid!");
             return BadRequest(ModelState);
         }
 
-        //create
-        Library_DocumentDbModel baseDocumentDbModel = new() { Id = baseDocumentDbInfo.Id };
-        Library_DocumentDbModel newRelatedDocumentDbModel = new() { Id = newRelatedDocumentDbInfo.Id };
-        //Attach
-        libraryDb.Documents.Attach(baseDocumentDbModel);
-        libraryDb.Documents.Attach(newRelatedDocumentDbModel);
-        //edit
-        baseDocumentDbModel.RelatedVersions = baseDocumentDbInfo.RelatedVersions ?? new();
-        newRelatedDocumentDbModel.RelatedVersions = baseDocumentDbModel.RelatedVersions;
-        //modified
-        libraryDb.Documents.Entry(baseDocumentDbModel).Property(doc => doc.RelatedVersions).IsModified = true;
-        libraryDb.Documents.Entry(newRelatedDocumentDbModel).Property(doc => doc.RelatedVersions).IsModified = true;
-        //save
-        await libraryDb.SaveChangesAsync();
+        Library_RelatedVersionsDbModel? relatedVersions = baseDocumentDbInfo.RelatedVersions;
+        if (relatedVersions is null)
+        {
+            relatedVersions = new();
+            await libraryDb.Documents.Where(doc => doc.Id == baseDocumentDbInfo.Id)
+            .ExecuteUpdateAsync(setter => setter
+                .SetProperty(doc => doc.RelatedVersions, relatedVersions)
+            );
+        }
+
+        int numberOfUpdatedRows = await libraryDb.Documents
+        .Where(doc => doc.Guid == newRelatedDocumentGuid_Guid && doc.Owner.Guid == myGuid)
+        .ExecuteUpdateAsync(setter => setter
+            .SetProperty(doc => doc.RelatedVersions, relatedVersions)
+        );
+
+        if (numberOfUpdatedRows == 0)
+        {
+            ModelState.AddModelError("Authorization or newRelatedDocumentGuid",
+            "Only the owner of the specified documents can create relate then! " +
+            "or there's no new related document with the specified guid!");
+            return BadRequest(ModelState);
+        }
 
         Library_VersionBrief_ViewModel[] versionBriefs = await libraryDb.RelatedVersions
-        .Where(rv => rv.Guid == baseDocumentDbModel.RelatedVersions.Guid)
+        .Where(rv => rv.Guid == relatedVersions.Guid)
         .SelectMany(rv => rv.Documents)
         .Select(doc => new Library_VersionBrief_ViewModel()
         {
@@ -3071,42 +3038,24 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var documentDbInfo = await libraryDb.Documents
-        .Where(doc => doc.Guid == documentGuid_Guid)
-        .Select(doc => new
-        {
-            doc.Id,
-            ownerGuid = doc.Owner.Guid,
-        })
-        .FirstOrDefaultAsync();
-
-        if (documentDbInfo is null)
-        {
-            ModelState.AddModelError("documentGuid", "there's no document with the specified guid!");
-            return BadRequest(ModelState);
-        }
-
         Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (myGuid != documentDbInfo.ownerGuid)
+        int numberOfUpdatedRows = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid && doc.Owner.Guid == myGuid)
+        .ExecuteUpdateAsync(setter => setter
+            .SetProperty(doc => doc.RelatedVersions, (Library_RelatedVersionsDbModel?)null)
+        );
+
+        if (numberOfUpdatedRows == 0)
         {
-            ModelState.AddModelError("Authorization", "Only the owner of the document can edit it!");
+            ModelState.AddModelError("Authorization or documentGuid",
+            "Only the owner of the specified documents can edit it! " +
+            "or there's no document with the specified guid!");
             return BadRequest(ModelState);
         }
-
-        //create
-        Library_DocumentDbModel documentDbModel = new() { Id = documentDbInfo.Id };
-        //Attach
-        libraryDb.Documents.Attach(documentDbModel);
-        //edit
-        documentDbModel.RelatedVersions = null;
-        //modified
-        libraryDb.Documents.Entry(documentDbModel).Property(doc => doc.RelatedVersions).IsModified = true;
-        //save
-        await libraryDb.SaveChangesAsync();
 
         return Ok(new { success = true });
     }

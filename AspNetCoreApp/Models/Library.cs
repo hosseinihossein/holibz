@@ -469,23 +469,23 @@ public class Library_Process //singleton service
         return null;
     }*/
 
-    public async Task<Library_ProcessResult> CreateNewOwner(Library_DbContext libraryDb, Guid ownerGuid,
+    public async Task CreateNewOwner(Library_DbContext libraryDb, Guid ownerGuid,
     string normalizedUserName)
     {
-        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
-        .AsNoTracking()
-        .FirstOrDefaultAsync(o => o.Guid == ownerGuid);
-        if (ownerDbModel is null)
+        bool ownerExist = await libraryDb.Owners
+        .AnyAsync(o => o.Guid == ownerGuid);
+        if (!ownerExist)
         {
-            Library_ShelfDbModel defaultShelf = new()
-            {
-                Description = "Containing all documents that doesn't belong to anyother shelves.",
-                Title = "Default Shelf",
-            };
             Library_LibraryDbModel defaultLibrary = new()
             {
                 Description = "Containing all shelves that doesn't belong to anyother libraries.",
                 Title = "Default Library",
+            };
+
+            Library_ShelfDbModel defaultShelf = new()
+            {
+                Description = "Containing all documents that doesn't belong to anyother shelves.",
+                Title = "Default Shelf",
             };
             Library_LibraryShelf_DbModel libraryShelf = new()
             {
@@ -494,7 +494,7 @@ public class Library_Process //singleton service
             };
             libraryDb.LibraryShelves.Add(libraryShelf);
 
-            ownerDbModel = new()
+            Library_OwnerDbModel ownerDbModel = new()
             {
                 Guid = ownerGuid,
                 NormalizedUserName = normalizedUserName,
@@ -506,25 +506,17 @@ public class Library_Process //singleton service
 
             libraryDb.Owners.Add(ownerDbModel);
             await libraryDb.SaveChangesAsync();
-
-            //seed
-            //await Update_OwnerSeed(ownerDbModel.Guid, libraryDb);
         }
-
-        return new Library_ProcessResult()
-        {
-            Success = true,
-            ResultObject = ownerDbModel,
-        };
     }
     public async Task<Library_ProcessResult> CreateNewLibrary(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewLibrary_FormModel formModel)
     {
-        var ownerId = await libraryDb.Owners
+        //fetch and create
+        Library_OwnerDbModel? ownerDbModel = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
-        .Select(o => new { o.Id })
+        .Select(o => new Library_OwnerDbModel() { Id = o.Id })
         .FirstOrDefaultAsync();
-        if (ownerId is null)
+        if (ownerDbModel is null)
         {
             Library_ProcessResult processResult = new()
             {
@@ -535,7 +527,7 @@ public class Library_Process //singleton service
             return processResult;
         }
 
-        Library_OwnerDbModel ownerDbModel = new() { Id = ownerId.Id };
+        //attach
         libraryDb.Owners.Attach(ownerDbModel);
 
         Library_LibraryDbModel libraryDbModel = new()
@@ -545,6 +537,7 @@ public class Library_Process //singleton service
             Description = formModel.Description,
         };
 
+        //first save image and set HasImage then save db
         if (formModel.Image is not null)
         {
             DirectoryInfo libraryDirectoryInfo = Directory.CreateDirectory(
@@ -561,19 +554,36 @@ public class Library_Process //singleton service
         libraryDb.Libraries.Add(libraryDbModel);
         await libraryDb.SaveChangesAsync();
 
-        //seed
-        //await Update_LibrarySeed(libraryDbModel.Guid, libraryDb);
-
         return new Library_ProcessResult() { Success = true, ResultObject = libraryDbModel };
     }
     public async Task<Library_ProcessResult> CreateNewShelf(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewShelf_FormModel formModel)
     {
-        var ownerInfo = await libraryDb.Owners
+        //fetch and create
+        var ownerDbInfo = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
-        .Select(o => new { o.Id, o.DefaultLibraryGuid })
+        .Select(o => new
+        {
+            owner = new Library_OwnerDbModel() { Id = o.Id },
+            specifiedLibraries = o.Libraries
+                .Where(lib => formModel.LibraryGuids != null &&
+                formModel.LibraryGuids.Length > 0 &&
+                formModel.LibraryGuids.Contains(lib.Guid))
+                .Select(lib => new Library_LibraryDbModel()
+                {
+                    Id = lib.Id,
+                }),
+            defaultLibrary = o.Libraries.Where(lib => lib.Guid == o.DefaultLibraryGuid)
+                .Select(lib => new Library_LibraryDbModel()
+                {
+                    Id = lib.Id,
+                })
+                .Single(),
+        })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
-        if (ownerInfo is null)
+
+        if (ownerDbInfo is null)
         {
             Library_ProcessResult processResult = new()
             {
@@ -584,17 +594,17 @@ public class Library_Process //singleton service
             return processResult;
         }
 
-        Library_OwnerDbModel ownerDbModel = new() { Id = ownerInfo.Id };
-        libraryDb.Owners.Attach(ownerDbModel);
+        //attach
+        libraryDb.Owners.Attach(ownerDbInfo.owner);
 
         Library_ShelfDbModel shelfDbModel = new()
         {
             Title = formModel.Title,
-            Owner = ownerDbModel,
+            Owner = ownerDbInfo.owner,
             Description = formModel.Description,
-            //ParentLibraries = parentLibraries,//after savechanges
         };
 
+        //save image and set HasImage property
         if (formModel.Image is not null)
         {
             DirectoryInfo shelfDirectoryInfo = Directory.CreateDirectory(
@@ -608,41 +618,20 @@ public class Library_Process //singleton service
             shelfDbModel.HasImage = true;
         }
 
+        //add and begin tracking
         libraryDb.Shelves.Add(shelfDbModel);
-        //await libraryDb.SaveChangesAsync();
 
-        List<Library_LibraryDbModel> parentLibraries = [];
-        if (formModel.LibraryGuids is not null && formModel.LibraryGuids.Length > 0)
+        //set shelf parentLibraries
+        IEnumerable<Library_LibraryDbModel> parentLibraries = ownerDbInfo.specifiedLibraries;
+        if (!parentLibraries.Any())
         {
-            //fetch and create
-            parentLibraries = await libraryDb.Owners
-            .Where(o => o.Id == ownerInfo.Id)
-            .SelectMany(o => o.Libraries)
-            .Where(lib => formModel.LibraryGuids.Contains(lib.Guid))
-            .Select(lib => new Library_LibraryDbModel()
-            {
-                Id = lib.Id,
-            })
-            .ToListAsync();
-        }
-
-        if (parentLibraries.Count == 0)
-        {
-            //fetch and create
-            Library_LibraryDbModel defaultLibrary = await libraryDb.Libraries
-            .Where(lib => lib.Guid == ownerInfo.DefaultLibraryGuid)
-            .Select(lib => new Library_LibraryDbModel()
-            {
-                Id = lib.Id,
-            })
-            .FirstAsync();
-            parentLibraries.Add(defaultLibrary);
+            parentLibraries = [ownerDbInfo.defaultLibrary];
         }
 
         //attach
         libraryDb.Libraries.AttachRange(parentLibraries);
 
-        //edit
+        //create join tables
         foreach (Library_LibraryDbModel parentLib in parentLibraries)
         {
             Library_LibraryShelf_DbModel libShelf = new()
@@ -650,14 +639,11 @@ public class Library_Process //singleton service
                 Library = parentLib,
                 Shelf = shelfDbModel,
             };
-            //shelfDbModel.ParentLibraries.Add(libShelf);
             libraryDb.LibraryShelves.Add(libShelf);
         }
 
+        //save
         await libraryDb.SaveChangesAsync();
-
-        //seed
-        //await Update_ShelfSeed(shelfDbModel.Guid, libraryDb);
 
         return new Library_ProcessResult() { Success = true, ResultObject = shelfDbModel };
     }
@@ -666,8 +652,27 @@ public class Library_Process //singleton service
     {
         var ownerInfo = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid)
-        .Select(o => new { o.Id, o.DefaultShelfGuid })
+        .Select(o => new
+        {
+            owner = new Library_OwnerDbModel() { Id = o.Id },
+            specifiedShelves = o.Shelves
+                .Where(shelf => formModel.ShelfGuids != null &&
+                formModel.ShelfGuids.Length > 0 &&
+                formModel.ShelfGuids.Contains(shelf.Guid))
+                .Select(shelf => new Library_ShelfDbModel()
+                {
+                    Id = shelf.Id,
+                }),
+            defaultShelf = o.Shelves.Where(shelf => shelf.Guid == o.DefaultShelfGuid)
+                .Select(lib => new Library_ShelfDbModel()
+                {
+                    Id = lib.Id,
+                })
+                .Single(),
+        })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
+
         if (ownerInfo is null)
         {
             Library_ProcessResult processResult = new()
@@ -679,14 +684,13 @@ public class Library_Process //singleton service
             return processResult;
         }
 
-        Library_OwnerDbModel ownerDbModel = new() { Id = ownerInfo.Id };
-        libraryDb.Owners.Attach(ownerDbModel);
+        //attach
+        libraryDb.Owners.Attach(ownerInfo.owner);
 
         Library_DocumentDbModel documentDbModel = new()
         {
             Description = formModel.Description,
-            Owner = ownerDbModel,
-            //ParentShelves = parentShelfDbModels,
+            Owner = ownerInfo.owner,
             Title = formModel.Title,
         };
 
@@ -701,35 +705,16 @@ public class Library_Process //singleton service
             documentDbModel.HasImage = true;
         }
 
+        //add and begin tracking
         libraryDb.Documents.Add(documentDbModel);
-        //await libraryDb.SaveChangesAsync();
 
-        List<Library_ShelfDbModel> parentShelves = [];
-        if (formModel.ShelfGuids is not null && formModel.ShelfGuids.Length > 0)
+        IEnumerable<Library_ShelfDbModel> parentShelves = ownerInfo.specifiedShelves;
+        if (!parentShelves.Any())
         {
-            parentShelves = await libraryDb.Owners
-            .Where(o => o.Id == ownerInfo.Id)
-            .SelectMany(o => o.Shelves)
-            .Where(shelf => formModel.ShelfGuids.Contains(shelf.Guid))
-            .Select(shelf => new Library_ShelfDbModel()
-            {
-                Id = shelf.Id,
-            })
-            .ToListAsync();
+            parentShelves = [ownerInfo.defaultShelf];
         }
 
-        if (parentShelves.Count == 0)
-        {
-            var defaultShelf = await libraryDb.Shelves
-            .Where(shelf => shelf.Guid == ownerInfo.DefaultShelfGuid)
-            .Select(lib => new Library_ShelfDbModel()
-            {
-                Id = lib.Id,
-            })
-            .FirstAsync();
-            parentShelves.Add(defaultShelf);
-        }
-
+        //attach
         libraryDb.Shelves.AttachRange(parentShelves);
 
         foreach (Library_ShelfDbModel parentShelf in parentShelves)
@@ -744,9 +729,6 @@ public class Library_Process //singleton service
 
         await libraryDb.SaveChangesAsync();
 
-        //seed
-        //await Update_DocumentSeed(documentDbModel.Guid, libraryDb);
-
         return new Library_ProcessResult()
         {
             Success = true,
@@ -756,117 +738,109 @@ public class Library_Process //singleton service
     public async Task<Library_ProcessResult> CreateNewElement(Library_DbContext libraryDb, Guid ownerGuid,
     Library_NewElement_FormModel formModel)
     {
-        var ownerId = await libraryDb.Owners
-        .Where(o => o.Guid == ownerGuid)
-        .Select(o => new { o.Id })
+        //fetch and create
+        var documentInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == formModel.DocumentGuid && doc.Owner.Guid == ownerGuid)
+        .Select(doc => new
+        {
+            owner = new Library_OwnerDbModel() { Id = doc.Owner.Id },
+            document = new Library_DocumentDbModel() { Id = doc.Id },
+            elementsWithGreaterEqualOrder = doc.Elements
+            .Where(el => el._order >= (byte)formModel.Order)
+            .Select(el => new Library_ElementDbModel()
+            {
+                Id = el.Id,
+            }),
+        })
         .FirstOrDefaultAsync();
-        if (ownerId is null)
+
+        if (documentInfo is null)
         {
             Library_ProcessResult processResult = new()
             {
-                ErrorTitle = "OwnerGuid",
-                ErrorDescription = $"Couldn't find any owner with guid '{ownerGuid.ToString("N")}'!",
+                ErrorTitle = "documentGuid",
+                ErrorDescription = $"Couldn't find any parent document with guid '{formModel.DocumentGuid.ToString("N")}' and the ownerGuid '{ownerGuid}'!",
                 Success = false,
             };
             return processResult;
         }
 
-        var documentId = await libraryDb.Documents
-        .Where(doc => doc.Guid == formModel.DocumentGuid)
-        .Select(doc => new { doc.Id })
-        .FirstOrDefaultAsync();
-        if (documentId is null)
-        {
-            return new Library_ProcessResult()
-            {
-                Success = false,
-                ErrorTitle = "Parent Document",
-                ErrorDescription = $"Theres no document with guid '{formModel.DocumentGuid}'!",
-            };
-        }
+        //attach
+        libraryDb.Owners.Attach(documentInfo.owner);
+        libraryDb.Documents.Attach(documentInfo.document);
 
-        Library_OwnerDbModel ownerDbModel = new() { Id = ownerId.Id };
-        libraryDb.Owners.Attach(ownerDbModel);
-
-        Library_DocumentDbModel documentDbModel = new() { Id = documentId.Id };
-        libraryDb.Documents.Attach(documentDbModel);
+        Library_ElementDbModel newElementDbmodel;
 
         if (formModel.Type == "h1" || formModel.Type == "h2" || formModel.Type == "p" ||
         formModel.Type == "code" || formModel.Type == "link")
         {
-            Library_ElementDbModel elementDbmodel = new()
+            newElementDbmodel = new()
             {
-                ParentDocument = documentDbModel,
+                ParentDocument = documentInfo.document,
                 Order = formModel.Order,
-                Owner = ownerDbModel,
+                Owner = documentInfo.owner,
                 Title = formModel.Title,
                 Type = formModel.Type,
                 Value = formModel.Value,
             };
-
-            libraryDb.Elements.Add(elementDbmodel);
-            await libraryDb.SaveChangesAsync();
-
-            //reorder elements
-            await ReorderElements(libraryDb, formModel.DocumentGuid);
-
-            //seed
-            //await Update_ElementSeed(elementDbmodel.Guid, libraryDb);
-
-            return new Library_ProcessResult()
-            {
-                Success = true,
-                ResultObject = elementDbmodel,
-            };
         }
-
-        if ((formModel.Type == "img" || formModel.Type == "file") && formModel.File is not null)
+        else if ((formModel.Type == "img" || formModel.Type == "file") && formModel.File is not null)
         {
             //get a valid file name
             string validFileName =
             fileNameValidator.GetValidFileName(WebUtility.HtmlEncode(formModel.File.FileName));
 
-            Library_ElementDbModel elementDbmodel = new()
+            newElementDbmodel = new()
             {
-                ParentDocument = documentDbModel,
+                ParentDocument = documentInfo.document,
                 Order = formModel.Order,
-                Owner = ownerDbModel,
+                Owner = documentInfo.owner,
                 Title = formModel.Title,
                 Type = formModel.Type,
                 FileName = validFileName,
             };
 
-            libraryDb.Elements.Add(elementDbmodel);
-            await libraryDb.SaveChangesAsync();
-
             DirectoryInfo elementDirectoryInfo = Directory.CreateDirectory(
-                Path.Combine(Storage_Elements.FullName, elementDbmodel.Guid.ToString("N"))
-                );
+                Path.Combine(Storage_Elements.FullName, newElementDbmodel.Guid.ToString("N"))
+            );
             string elementFilePath = Path.Combine(elementDirectoryInfo.FullName, validFileName);
             using (FileStream fs = System.IO.File.Create(elementFilePath))
             {
                 await formModel.File.CopyToAsync(fs);
             }
-
-            //reorder elements
-            await ReorderElements(libraryDb, formModel.DocumentGuid);
-
-            //seed
-            //await Update_ElementSeed(elementDbmodel.Guid, libraryDb);
-
+        }
+        else
+        {
             return new Library_ProcessResult()
             {
-                Success = true,
-                ResultObject = elementDbmodel,
+                Success = false,
+                ErrorTitle = "Element Type",
+                ErrorDescription = $"The element Type is unknown! Element type: '{formModel.Type}'",
             };
         }
 
+        //add
+        libraryDb.Elements.Add(newElementDbmodel);
+
+        //attach
+        libraryDb.Elements.AttachRange(documentInfo.elementsWithGreaterEqualOrder);
+        //reorder
+        foreach (var reOrderElement in documentInfo.elementsWithGreaterEqualOrder)
+        {
+            //edit
+            reOrderElement.Order += 1;
+            //modified
+            libraryDb.Elements.Entry(reOrderElement).Property(el => el._order).IsModified = true;
+        }
+        //save
+        await libraryDb.SaveChangesAsync();
+
         return new Library_ProcessResult()
         {
-            Success = false,
-            ErrorTitle = "Element Type",
-            ErrorDescription = $"The element Type is unknown! Element type: '{formModel.Type}'",
+            Success = true,
+            ResultObject = newElementDbmodel,
         };
+
     }
     public async Task ReorderElements(Library_DbContext libraryDb, Guid parentDocumentGuid)
     {
@@ -883,7 +857,13 @@ public class Library_Process //singleton service
         .ToList();
 
         //track
-        libraryDb.Elements.AttachRange(elementsDbModels);
+        foreach (Library_ElementDbModel element in elementsDbModels)
+        {
+            if (libraryDb.Elements.Entry(element).State == EntityState.Detached)
+            {
+                libraryDb.Elements.Attach(element);
+            }
+        }
 
         //edit
         for (int i = 0; i < elementsDbModels.Count; i++)

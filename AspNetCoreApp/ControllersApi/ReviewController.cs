@@ -983,35 +983,25 @@ public class ReviewController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var commentDbInfo = await reviewDb.Comments
-        .Where(c => c.Guid == commentGuid_Guid)
-        .Select(c => new
-        {
-            c.Id,
-            writerGuid = c.Writer.Guid,
-        })
-        .FirstOrDefaultAsync();
-        if (commentDbInfo is null)
-        {
-            ModelState.AddModelError("commentGuid", "There's not comment with the specified guid!");
-            return BadRequest(ModelState);
-        }
-
         Guid myGuid = await userManager.Users
         .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        if (commentDbInfo.writerGuid != myGuid)
+        int numberOfDeletedRows = await reviewDb.Comments
+        .Where(c => c.Guid == commentGuid_Guid && c.Writer.Guid == myGuid)
+        .ExecuteDeleteAsync();
+
+        if (numberOfDeletedRows == 0)
         {
-            ModelState.AddModelError("Authorization", "Only the writer of the comment can delete the comment!");
+            ModelState.AddModelError("Authorization or commentGuid",
+            "Only the writer of the comment can delete the comment! " +
+            "or there's not comment with the specified guid!");
             return BadRequest(ModelState);
         }
 
-        await reviewDb.Comments.Where(c => c.Id == commentDbInfo.Id).ExecuteDeleteAsync();
-
         //notif
-        await notifProcess.DeleteNotification(notifDb, commentGuid_Guid);
+        await notifProcess.DeleteNotificationForSubject(notifDb, commentGuid_Guid);
 
         return Ok(new { success = true });
     }

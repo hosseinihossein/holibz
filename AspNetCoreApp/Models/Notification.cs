@@ -83,9 +83,6 @@ public class Notification_Process
         notifDb.Users.Add(userDbModel);
         await notifDb.SaveChangesAsync();
 
-        //seed
-        //await Update_UserSeed(userDbModel.Guid);
-
         Notification_NotifCreation_FormModel welcomeNotifModel = new()
         {
             Title = "Welcome to HoLibz",
@@ -147,16 +144,14 @@ public class Notification_Process
         notifDb.Notifications.Add(notifDbModel);
         await notifDb.SaveChangesAsync();
 
-        //seed
-        //await Update_NotificationSeed(notifDbModel.Guid, notifDb);
     }
-    public async Task DeleteNotification(Notification_DbContext notifDb, Guid subjectGuid)
+    public async Task DeleteNotificationForSubject(Notification_DbContext notifDb, Guid subjectGuid)
     {
         await notifDb.Notifications
         .Where(n => n.SubjectGuid == subjectGuid)
         .ExecuteDeleteAsync();
     }
-    public async Task DeleteNotifications(Notification_DbContext notifDb, Guid[] subjectGuids)
+    public async Task DeleteAllNotificationForSubjectArray(Notification_DbContext notifDb, Guid[] subjectGuids)
     {
         await notifDb.Notifications
         .Where(n => n.SubjectGuid != null && subjectGuids.Contains(n.SubjectGuid.Value))

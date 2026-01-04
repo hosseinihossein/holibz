@@ -276,8 +276,6 @@ public class Review_Process
         reviewDb.Users.Add(userDbModel);
         await reviewDb.SaveChangesAsync();
 
-        //seed
-        //await Update_UserSeed(userGuid, reviewDb);
     }
     public async Task CreateNewReview(Review_DbContext reviewDb, Guid subjectGuid,
     Guid ownerGuid)
@@ -301,7 +299,10 @@ public class Review_Process
         }
 
         //begin tracking
-        reviewDb.Users.Attach(ownerDbModel);
+        if (reviewDb.Users.Entry(ownerDbModel).State == EntityState.Detached)
+        {
+            reviewDb.Users.Attach(ownerDbModel);
+        }
 
         Review_ReviewDbModel reviewDbModel = new()
         {
@@ -311,9 +312,6 @@ public class Review_Process
 
         reviewDb.Reviews.Add(reviewDbModel);
         await reviewDb.SaveChangesAsync();
-
-        //seed
-        //await Update_ReviewSeed(reviewDbModel.SubjectGuid, reviewDb);
     }
     public async Task DeleteReview(Review_DbContext reviewDb, Guid subjectGuid,
     Notification_DbContext notifDb, Notification_Process notifProcess)
@@ -328,7 +326,7 @@ public class Review_Process
         await reviewDb.Reviews.Where(r => r.SubjectGuid == subjectGuid).ExecuteDeleteAsync();
 
         //delete comment notifs
-        await notifProcess.DeleteNotifications(notifDb, commentsGuids);
+        await notifProcess.DeleteAllNotificationForSubjectArray(notifDb, commentsGuids);
     }
 
     /*

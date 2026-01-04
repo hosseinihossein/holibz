@@ -20,7 +20,7 @@ public class IdentityController : ControllerBase
 {
     readonly SignInManager<Identity_UserDbModel> signInManager;
     readonly UserManager<Identity_UserDbModel> userManager;
-    readonly Identity_DbContext identityDb;
+    //readonly Identity_DbContext identityDb;
     //readonly Identity_Process identityProcess;
     readonly DirectoryInfo Storage_Users;
 
@@ -29,14 +29,14 @@ public class IdentityController : ControllerBase
 
 
     public IdentityController(SignInManager<Identity_UserDbModel> signInManager,
-    UserManager<Identity_UserDbModel> userManager, Identity_Process identityProcess,
-    Identity_DbContext identityDb)
+    UserManager<Identity_UserDbModel> userManager, Identity_Process identityProcess/*,
+    Identity_DbContext identityDb*/)
     {
         this.signInManager = signInManager;
         this.userManager = userManager;
         //this.identityProcess = identityProcess;
         Storage_Users = identityProcess.Storage_Users;
-        this.identityDb = identityDb;
+        //this.identityDb = identityDb;
     }
 
 

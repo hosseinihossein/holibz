@@ -10,7 +10,6 @@ create different size images,
 - search component is a mat-card like profile component
 - set backup model to backup from storage
 - errors gone after turnstile update in login page
-- use executeUpdateAsync 
 -   
 
 

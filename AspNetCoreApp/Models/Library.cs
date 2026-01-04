@@ -823,14 +823,17 @@ public class Library_Process //singleton service
         libraryDb.Elements.Add(newElementDbmodel);
 
         //attach
-        libraryDb.Elements.AttachRange(documentInfo.elementsWithGreaterEqualOrder);
+        //libraryDb.Elements.AttachRange(documentInfo.elementsWithGreaterEqualOrder);
         //reorder
         foreach (var reOrderElement in documentInfo.elementsWithGreaterEqualOrder)
         {
             //edit
             reOrderElement.Order += 1;
             //modified
-            libraryDb.Elements.Entry(reOrderElement).Property(el => el._order).IsModified = true;
+            if (libraryDb.Elements.Entry(reOrderElement).State == EntityState.Detached)
+            {
+                libraryDb.Elements.Entry(reOrderElement).Property(el => el._order).IsModified = true;
+            }
         }
         //save
         await libraryDb.SaveChangesAsync();
@@ -841,44 +844,6 @@ public class Library_Process //singleton service
             ResultObject = newElementDbmodel,
         };
 
-    }
-    public async Task ReorderElements(Library_DbContext libraryDb, Guid parentDocumentGuid)
-    {
-        List<Library_ElementDbModel> elementsDbModels = (await libraryDb.Documents
-        .Where(doc => doc.Guid == parentDocumentGuid)
-        .SelectMany(doc => doc.Elements)
-        .Select(el => new Library_ElementDbModel()
-        {
-            Id = el.Id,
-            _order = el._order,
-        })
-        .ToListAsync())
-        .OrderBy(el => el.Order)
-        .ToList();
-
-        //track
-        foreach (Library_ElementDbModel element in elementsDbModels)
-        {
-            if (libraryDb.Elements.Entry(element).State == EntityState.Detached)
-            {
-                libraryDb.Elements.Attach(element);
-            }
-        }
-
-        //edit
-        for (int i = 0; i < elementsDbModels.Count; i++)
-        {
-            elementsDbModels[i].Order = i;
-        }
-
-        //set as modified
-        foreach (Library_ElementDbModel element in elementsDbModels)
-        {
-            libraryDb.Elements.Entry(element).Property(el => el._order).IsModified = true;
-        }
-
-        //save
-        await libraryDb.SaveChangesAsync();
     }
 
 

@@ -426,7 +426,8 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
     this.documentPageService.editedElementFormModels().size > 0 &&
     this.isMyDocument()){
       this.displaySubmitSpinner.set(true);
-      this.libraryService.submitEditedElements(this.documentPageService.getEditElementFormModelArray()).subscribe({
+      this.libraryService.submitEditedElements(this.documentPageService.documentPageModel()!.guid,
+        this.documentPageService.getEditElementFormModelArray()).subscribe({
         next: res => {
           if(res && res.success){
             this.documentPageService.documentPageModel.update(dpm=>{

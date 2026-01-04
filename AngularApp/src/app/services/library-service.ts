@@ -300,9 +300,10 @@ export class LibraryService {
     );
   }
 
-  submitEditedElements(editElementFormModelArray:EditElementFormModel[]){
+  submitEditedElements(parentDocumentGuid:string, editElementFormModelArray:EditElementFormModel[]){
+    let httpParams = new HttpParams().set("parentDocumentGuid",parentDocumentGuid);
     return this.httpClient.post<{success:boolean, elements:DocumentElementModel[]}>(
-      "/api/Library/EditElements", editElementFormModelArray
+      "/api/Library/EditElements", editElementFormModelArray, {params:httpParams}
     );
   }
 

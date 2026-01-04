@@ -319,7 +319,7 @@ public class LibraryController : ControllerBase
             shelf.Guid,
             shelf.Title,
             Libraries = shelf.ParentLibraries
-            .Select(ls => ls.Shelf)
+            .Select(ls => ls.Library)
             .Select(parentLib => new Library_LibraryBrief_ViewModel()
             {
                 Guid = parentLib.Guid,
@@ -766,117 +766,110 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditElements([FromBody] Library_EditElement_FormModel[] formModels)
+    public async Task<IActionResult> EditElements([FromQuery][StringLength(32)] string parentDocumentGuid,
+    [FromBody] Library_EditElement_FormModel[] formModels)
     {
         if (ModelState.IsValid)
         {
+            if (!Guid.TryParseExact(parentDocumentGuid, "N", out Guid parentDocumentGuid_Guid))
+            {
+                ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+                return BadRequest(ModelState);
+            }
+
             Guid myGuid = (await userManager.Users
             .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
             .Select(user => user.UserGuid)
             .FirstOrDefaultAsync())!;
 
-            IEnumerable<Guid> elementGuids = formModels.Select(m => m.Guid);
+            //IEnumerable<Guid> elementGuids = formModels.Select(m => m.Guid);
 
-            var elementsDbInfo = await libraryDb.Elements
-            .Where(el => elementGuids.Contains(el.Guid) && el.Owner.Guid == myGuid)
-            .Select(el => new
+            var allElementsDbModels = await libraryDb.Documents
+            .Where(doc => doc.Guid == parentDocumentGuid_Guid && doc.Owner.Guid == myGuid)
+            //.Where(el => elementGuids.Contains(el.Guid) && el.Owner.Guid == myGuid)
+            .SelectMany(doc => doc.Elements)
+            /*.Select(el => new
             {
                 el.Id,
                 el.Guid,
-                parentDocumentGuid = el.ParentDocument.Guid,
-            })
+            })*/
             .ToListAsync();
 
             //make sure all edited elements belong to the same document
-            if (!elementsDbInfo.Any())
+            if (!allElementsDbModels.Any())
             {
-                ModelState.AddModelError("elements", "Couldn't find the specified elements!");
-                return BadRequest(ModelState);
-            }
-            IEnumerable<Guid> parentDocumentGuids = elementsDbInfo.Select(el => el.parentDocumentGuid).Distinct();
-            if (parentDocumentGuids.Count() > 1)
-            {
-                ModelState.AddModelError("ParentDocument", "The edited elements don't belong to the same parent document!");
+                ModelState.AddModelError("Authorization or elementGuids", "Only the owner can edit the elements! " +
+                "or Couldn't find the specified elements!");
                 return BadRequest(ModelState);
             }
 
-            //************* delete *************
+            //************* delete elements *************
             bool needToReorder = false;
 
             IEnumerable<Library_EditElement_FormModel> deletedFormModels =
             formModels.Where(fm => fm.Delete ?? false);
 
-            IEnumerable<Guid> deletedElementsGuids = deletedFormModels
+            IEnumerable<Guid> deletedFormModelsGuids = deletedFormModels
             .Select(fm => fm.Guid);
 
-            IEnumerable<int> deletedElementsIds = elementsDbInfo
-            .Where(el => deletedElementsGuids.Contains(el.Guid))
-            .Select(el => el.Id);
+            IEnumerable<Library_ElementDbModel> deletedElements = allElementsDbModels
+            .Where(el => deletedFormModelsGuids.Contains(el.Guid));
 
-            int numberOfDeletes = await libraryDb.Elements
-            .Where(el => deletedElementsIds.Contains(el.Id))
-            .ExecuteDeleteAsync();
-
-            if (numberOfDeletes > 0)
+            if (deletedElements.Any())
             {
-                //storage
-                foreach (Guid deletedGuid in deletedElementsGuids)
+                libraryDb.Elements.RemoveRange(deletedElements);
+                foreach (var deletedElement in deletedElements)
                 {
-                    libraryProcess.Delete_ElementDirectory(deletedGuid.ToString("N"));
+                    //storage
+                    libraryProcess.Delete_ElementDirectory(deletedElement.Guid.ToString("N"));
                 }
                 needToReorder = true;
             }
 
 
-            //*********** edit ***********
+            //*********** edit elements ***********
             IEnumerable<Library_EditElement_FormModel> editedFormModels =
             formModels.Except(deletedFormModels);
 
-            IEnumerable<Guid> editedElementsGuids = editedFormModels
-            .Select(fm => fm.Guid);
-
-            //create
-            IEnumerable<Library_ElementDbModel> editedElementDbs = elementsDbInfo
-            .Where(el => editedElementsGuids.Contains(el.Guid))
-            .Select(el => new Library_ElementDbModel()
-            {
-                Id = el.Id,
-                Guid = el.Guid,
-            });
-            //attach
-            libraryDb.Elements.AttachRange(editedElementDbs);
             //edit
-            foreach (Library_ElementDbModel elementDbModel in editedElementDbs)
+            foreach (var formModel in editedFormModels)
             {
-                var formModel = editedFormModels.First(fm => fm.Guid == elementDbModel.Guid);
+                Library_ElementDbModel? elementDbModel = allElementsDbModels
+                .FirstOrDefault(el => el.Guid == formModel.Guid);
+                if (elementDbModel is null) continue;
+
                 if (formModel.Order is not null && formModel.Order.HasValue)
                 {
                     elementDbModel.Order = formModel.Order.Value;
-                    libraryDb.Elements.Entry(elementDbModel).Property(el => el._order).IsModified = true;
                 }
                 if (formModel.Title is not null)
                 {
                     elementDbModel.Title = formModel.Title;
-                    libraryDb.Elements.Entry(elementDbModel).Property(el => el.Title).IsModified = true;
                 }
                 if (formModel.Value is not null)
                 {
                     elementDbModel.Value = formModel.Value;
-                    libraryDb.Elements.Entry(elementDbModel).Property(el => el.Value).IsModified = true;
                 }
             }
-            //save
-            await libraryDb.SaveChangesAsync();
 
             if (needToReorder)
             {
-                await libraryProcess.ReorderElements(libraryDb, parentDocumentGuids.Single());
+                foreach (var deletedElement in deletedElements)
+                {
+                    allElementsDbModels.Remove(deletedElement);
+                }
+                var orderedElements = allElementsDbModels.OrderBy(el => el.Order).ToList();
+                for (int i = 0; i < orderedElements.Count; i++)
+                {
+                    orderedElements[i].Order = i;
+                }
             }
 
+            //save
+            await libraryDb.SaveChangesAsync();
+
             //create response
-            Library_Element_ViewModel[] elementModelArray = await libraryDb.Documents
-            .Where(doc => doc.Guid == parentDocumentGuids.Single())
-            .SelectMany(doc => doc.Elements)
+            Library_Element_ViewModel[] elementModelArray = allElementsDbModels
             .Select(elementDbModel => new Library_Element_ViewModel()
             {
                 Guid = elementDbModel.Guid,
@@ -888,7 +881,7 @@ public class LibraryController : ControllerBase
                 Value = elementDbModel.Value ??
                     $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
             })
-            .ToArrayAsync();
+            .ToArray();
 
             return Ok(new { success = true, elements = elementModelArray });
         }

@@ -25,10 +25,12 @@ import { ParentShelfModel } from '../../library/new-document-form/new-document-f
 })
 export class ParentEditor {
   readonly dialogRef = inject(MatDialogRef<ParentEditor>);
-  readonly data = 
-  inject<{parentOf:"document"|"shelf", parentLibraryGuids?:string[], parentShelfGuids?:string[], childGuid:string}>(
-    MAT_DIALOG_DATA
-  );
+  readonly data = inject<{
+    parentOf:"document"|"shelf", 
+    childGuid:string, 
+    parentLibraryGuids?:string[], 
+    parentShelfGuids?:string[],
+  }>(MAT_DIALOG_DATA);
 
   identityService = inject(IdentityService);
   libraryService = inject(LibraryService);
@@ -57,10 +59,10 @@ export class ParentEditor {
   constructor(){
     effect(() => {
       if(this.identityService.userModel()?.guid){
-        this.libraryService.requestLibraryList(this.identityService.userModel()!.guid!).subscribe({
+        this.libraryService.requestLibraryBriefList(this.identityService.userModel()!.guid!).subscribe({
           next: res => {
             if(res){
-              this.allLibraryList.set(res.map(lib=> ({guid:lib.guid, title:lib.title})));
+              this.allLibraryList.set(res);
               this.displayedLibraries.set(
                 this.allLibraryList().filter(lib=>(this.data.parentLibraryGuids ?? []).includes(lib.guid)).map(lib=>lib.title)
               );

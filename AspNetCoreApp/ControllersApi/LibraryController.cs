@@ -75,6 +75,27 @@ public class LibraryController : ControllerBase
 
         return Ok(libraryCardModels);
     }
+    [HttpGet]
+    public async Task<IActionResult> BriefList([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Library_LibraryBrief_ViewModel[] libraryBrifModels = await libraryDb.Owners
+        .Where(owner => owner.Guid == ownerGuid_Guid)
+        .SelectMany(owner => owner.Libraries)
+        .Select(lib => new Library_LibraryBrief_ViewModel()
+        {
+            Guid = lib.Guid,
+            Title = lib.Title,
+        })
+        .ToArrayAsync();
+
+        return Ok(libraryBrifModels);
+    }
 
     [HttpGet]
     public async Task<IActionResult> LibrariesGuids([FromQuery][StringLength(32)] string ownerGuid)
@@ -284,6 +305,23 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<IActionResult> UserShelvesGuids([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] shelfGuids = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.Shelves)
+        .Select(shelf => shelf.Guid)
+        .ToArrayAsync();
+
+        return Ok(shelfGuids);
+    }
+    [HttpGet]
     public async Task<IActionResult> ShelvesGuids([FromQuery][StringLength(32)] string libraryGuid)
     {
         if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
@@ -371,7 +409,7 @@ public class LibraryController : ControllerBase
             }).ToArray(),
             Guid = shelf.Guid,
             Libraries = shelf.ParentLibraries
-            .Select(ls => ls.Shelf)
+            .Select(ls => ls.Library)
             .Select(parentLib => new Library_LibraryBrief_ViewModel()
             {
                 Guid = parentLib.Guid,
@@ -521,6 +559,23 @@ public class LibraryController : ControllerBase
         return Ok(documentCardModels);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> UserDocumentsGuids([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid[] documentsGuids = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.Documents)
+        .Select(doc => doc.Guid)
+        .ToArrayAsync();
+
+        return Ok(documentsGuids);
+    }
     [HttpGet]
     public async Task<IActionResult> DocumentsGuids([FromQuery][StringLength(32)] string shelfGuid)
     {

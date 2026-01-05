@@ -51,6 +51,8 @@ export class ShelfPage {
 
   introductionImage = computed(()=>this.librarySerice.getShelfImageAddress(this.shelfModel()));
 
+  genericListItemGuids = signal<string[]>([]);
+
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("shelfGuid")){
@@ -79,6 +81,18 @@ export class ShelfPage {
               this.ownerModel.set(res);
             }
           },
+        });
+      }
+    });
+
+    effect(()=>{
+      if(this.shelfGuid()){
+        this.librarySerice.requestDocumentsGuids(this.shelfGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.genericListItemGuids.set(res);
+            }
+          }
         });
       }
     });
@@ -116,6 +130,7 @@ export class ShelfPage {
 
   editParentLibraries(){
     if(this.isMyShelf()){
+      console.log(this.shelfModel()?.libraries.map(value=>value.guid));
       this.dialog.open(ParentEditor,{data:{
         parentOf:"shelf",
         parentLibraryGuids: this.shelfModel()?.libraries.map(value=>value.guid),

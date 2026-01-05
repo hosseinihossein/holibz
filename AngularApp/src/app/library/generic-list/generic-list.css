@@ -19,17 +19,6 @@ mat-sidenav-content{
     padding: 8px;
 }
 
-.top-box{
-    padding: 16px;
-    border-bottom: 1px solid var(--mat-sys-outline-variant);
-    box-shadow: 0 1px 5px var(--mat-sys-outline-variant);
-}
-
-.top-box .topBtn{
-    margin: 8px;
-    float: right;
-}
-
 .list{
     display: flex;
     flex-direction: row;

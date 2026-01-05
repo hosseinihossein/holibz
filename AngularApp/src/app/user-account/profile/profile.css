@@ -2,7 +2,7 @@ mat-card{
     width: 80%;
     max-width: 800px;
     min-width: 350px;
-    margin: 50px auto;
+    margin: 16px auto 8px;
     position: relative;
 }
 
@@ -30,6 +30,25 @@ mat-card-content{
     position: absolute;
     top: 0;
     right: 0;
+}
+
+.top-box{
+    padding: 16px 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    box-shadow: 0 1px 5px var(--mat-sys-outline-variant);
+    width: 80%;
+    max-width: 800px;
+    min-width: 350px;
+    margin: auto;
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+}
+
+.verticalDivider{
+    border: 1px solid var(--mat-sys-outline-variant);
+    height: 56px;
+    float: left;
 }
 
 .icon-box{

@@ -1,4 +1,4 @@
-<app-generic-list listType="Document" [parentGuid]="shelfGuid()!">
+<app-generic-list listType="Document" [itemGuids]="genericListItemGuids()">
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">

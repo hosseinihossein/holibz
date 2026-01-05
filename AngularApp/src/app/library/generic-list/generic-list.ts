@@ -19,9 +19,7 @@ import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 })
 export class GenericList {
   listType = input.required<"Library"|"Shelf"|"Document">();
-  isFavorite = input<boolean>(false);
-  parentGuid = input<string>();
-  itemGuids = input<string[]>();//can be used ffor search component
+  itemGuids = input.required<string[]>();
 
   isMyList = signal<boolean>(false);
   libraryModels = signal<LibraryCardModel[]>([]);
@@ -34,66 +32,7 @@ export class GenericList {
 
   constructor(){
     effect(()=>{
-      if(this.listType()){
-        if(this.parentGuid()){
-          if(this.listType() === "Library"){
-            if(this.isFavorite()){
-              this.libraryService.requestFavotiteLibrariesGuids(this.parentGuid()!).subscribe({
-                next: libGuids => {
-                  if(libGuids){
-                    this.getLibraryModels(libGuids);
-                  }
-                },
-              });
-            }
-            else{
-              this.libraryService.requestLibrariesGuids(this.parentGuid()!).subscribe({
-                next: libGuids => {
-                  if(libGuids){
-                    this.getLibraryModels(libGuids);
-                  }
-                },
-              });
-            }
-          }
-          else if(this.listType() === "Shelf"){
-            if(this.isFavorite()){
-              this.libraryService.requestFavotiteShelvesGuids(this.parentGuid()!).subscribe({
-                next: shelfGuids => {
-                  this.getShelfModels(shelfGuids);
-                }
-              });
-            }
-            else{
-              this.libraryService.requestShelvesGuids(this.parentGuid()!).subscribe({
-                next: shelfGuids => {
-                  if(shelfGuids){
-                    this.getShelfModels(shelfGuids);
-                  }
-                },
-              });
-            }
-          }
-          else if(this.listType() === "Document"){
-            if(this.isFavorite()){
-              this.libraryService.requestFavotiteDocumentsGuids(this.parentGuid()!).subscribe({
-                next: docGuids => {
-                  this.getDocumentModels(docGuids);
-                }
-              });
-            }
-            else{
-              this.libraryService.requestDocumentsGuids(this.parentGuid()!).subscribe({
-                next: docGuids => {
-                  if(docGuids){
-                    this.getDocumentModels(docGuids);
-                  }
-                },
-              });
-            }
-          }
-        }
-        else if(this.itemGuids()) {
+      if(this.listType() && this.itemGuids() && this.itemGuids().length > 0){
           if(this.listType() == "Library"){
             this.getLibraryModels(this.itemGuids()!);
           }
@@ -104,11 +43,11 @@ export class GenericList {
             this.getDocumentModels(this.itemGuids()!);
           }
         }
-      }
     });
   }
   
   getLibraryModels(libGuids:string[]){
+    this.libraryModels.set([]);
     libGuids.forEach(libGuid=>{
       this.libraryService.requestLibraryModel(libGuid).subscribe({
         next: libModel => {
@@ -120,6 +59,7 @@ export class GenericList {
     });
   }
   getShelfModels(shelfGuids:string[]){
+    this.shelfModels.set([]);
     shelfGuids.forEach(shelfGuid=>{
       this.libraryService.requestShelfModel(shelfGuid).subscribe({
         next: shelfModel => {
@@ -131,6 +71,7 @@ export class GenericList {
     });
   }
   getDocumentModels(docGuids:string[]){
+    this.documentCardModels.set([]);
     docGuids.forEach(docGuid=>{
       this.libraryService.requestDocumentCardModel(docGuid).subscribe({
         next: docModel => {

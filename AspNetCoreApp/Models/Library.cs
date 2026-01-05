@@ -479,13 +479,13 @@ public class Library_Process //singleton service
             Library_LibraryDbModel defaultLibrary = new()
             {
                 Description = "Containing all shelves that doesn't belong to anyother libraries.",
-                Title = "Default Library",
+                Title = "Default",
             };
 
             Library_ShelfDbModel defaultShelf = new()
             {
                 Description = "Containing all documents that doesn't belong to anyother shelves.",
-                Title = "Default Shelf",
+                Title = "Default",
             };
             Library_LibraryShelf_DbModel libraryShelf = new()
             {

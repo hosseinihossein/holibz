@@ -28,8 +28,6 @@
         <mat-form-field>
             <mat-label>Shelf</mat-label>
             <mat-select required [formControl]="shelfGuids" multiple>
-                <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
-                <!--mat-optgroup [label]="libraryTitle"-->
                 @for(shelfModel of allShelfList(); track shelfModel.guid){
                 @if(shelfParentsIncludeAnyOfLibraries(shelfModel, displayedLibraries())){
                 <mat-option [value]="shelfModel.guid">
@@ -38,8 +36,6 @@
                 </mat-option>
                 }
                 }
-                <!--/mat-optgroup-->
-                <!--}-->
             </mat-select>
             @if(shelfGuids.invalid && (shelfGuids.dirty || shelfGuids.touched) &&
             shelfGuids.hasError("required")){

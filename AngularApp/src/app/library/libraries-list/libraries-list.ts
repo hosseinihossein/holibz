@@ -59,7 +59,7 @@ export class LibrariesList {
     effect(()=>{
       if(this.showFavorites()){
 
-        this.libraryService.requestFavotiteLibrariesGuids(this.ownerGuid()!).subscribe({
+        this.libraryService.requestFavoriteLibrariesGuids(this.ownerGuid()!).subscribe({
           next: libGuids => {
             if(libGuids && libGuids.length > 0){
               for(let libGuid of libGuids){

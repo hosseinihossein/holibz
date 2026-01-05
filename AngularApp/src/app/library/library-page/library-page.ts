@@ -44,6 +44,8 @@ export class LibraryPage {
 
   introductionImage = computed(()=>this.librarySerice.getLibraryImageAddress(this.libraryModel()));
 
+  genericListItemGuids = signal<string[]>([]);
+
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
       if(params.has("libraryGuid")){
@@ -71,6 +73,18 @@ export class LibraryPage {
               this.ownerModel.set(res);
             }
           },
+        });
+      }
+    });
+
+    effect(()=>{
+      if(this.libraryGuid()){
+        this.librarySerice.requestShelvesGuids(this.libraryGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.genericListItemGuids.set(res);
+            }
+          }
         });
       }
     });

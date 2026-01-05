@@ -1,4 +1,4 @@
-<app-generic-list [listType]="genericListType()" [isFavorite]="isFavorite()" [parentGuid]="userGuid()!">
+<app-generic-list [listType]="genericListType()" [itemGuids]="genericListItemGuids()">
     <mat-card appearance="outlined">
         <mat-card-header>
             <div style="float: left;position: relative;">
@@ -38,9 +38,19 @@
         <mat-card-actions align="end">
             @if(isMyProfile()){
             <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
-                <mat-icon>account_balance</mat-icon>
+                <mat-icon>library_add</mat-icon>
                 Add a new Library
             </a>
+            }
+            @else {
+            <button matButton="elevated">
+                <mat-icon>person_add</mat-icon>
+                Follow
+            </button>
+            <button matButton="elevated">
+                <mat-icon>person_add_disabled</mat-icon>
+                UnFollow
+            </button>
             }
         </mat-card-actions>
 
@@ -53,41 +63,52 @@
     </mat-card>
 
     <!-- default ng-content -->
-    <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfLibraries" matTooltip="Number of libraries">
-        <mat-icon>account_balance</mat-icon>
-    </div>
-    <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfShelves" matTooltip="Number of shelves">
-        <mat-icon>shelves</mat-icon>
-    </div>
-    <div class="icon-box" [matBadge]="library_OwnerModel()?.numberOfDocuments" matTooltip="Number of documents">
-        <mat-icon>newsstand</mat-icon>
-    </div>
+    <div class="top-box clearfix">
 
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowers" matTooltip="Followers"
-        (click)="displayFollowersList()">
-        <mat-icon>groups</mat-icon>
-    </button>
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowings" matTooltip="Followings"
-        (click)="displayFollowingsList()">
-        <mat-icon>group_search</mat-icon>
-    </button>
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfLibraries"
+            matTooltip="Libraries" (click)="displayLibraries()">
+            <mat-icon>library_books</mat-icon>
+        </button>
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfShelves" matTooltip="Shelves"
+            (click)="displayShelves()">
+            <mat-icon>shelves</mat-icon>
+        </button>
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfDocuments"
+            matTooltip="Documents" (click)="displayDocuments()">
+            <mat-icon>article</mat-icon>
+        </button>
 
-    <div class="icon-box" [matBadge]="userTotalLikes()" matTooltip="Number of likes">
-        <mat-icon>favorite</mat-icon>
+        <div class="verticalDivider"></div>
+
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteLibraries"
+            matTooltip="Favorite libraries" (click)="favoriteLibraries()">
+            <mat-icon>collections_bookmark</mat-icon>
+        </button>
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteShelves"
+            matTooltip="Favorite shelves" (click)="favoriteShelves()">
+            <mat-icon>newsstand</mat-icon>
+        </button>
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteDocuments"
+            matTooltip="Favorite documents" (click)="favoriteDocuments()">
+            <mat-icon>docs</mat-icon>
+        </button>
+
+        <div class="verticalDivider"></div>
+
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowers"
+            matTooltip="Followers" (click)="displayFollowersList()">
+            <mat-icon>groups</mat-icon>
+        </button>
+        <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFollowings"
+            matTooltip="Followings" (click)="displayFollowingsList()">
+            <mat-icon>group_search</mat-icon>
+        </button>
+        <button matIconButton class="icon-box" [matBadge]="userTotalLikes()" matTooltip="Number of likes"
+            (click)="displayStatics()">
+            <mat-icon>favorite</mat-icon>
+        </button>
+
     </div>
-
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteLibraries"
-        matTooltip="Favorite libraries" (click)="favoriteLibraries()">
-        <mat-icon>groups</mat-icon>
-    </button>
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteShelves"
-        matTooltip="Favorite shelves" (click)="favoriteShelves()">
-        <mat-icon>group_search</mat-icon>
-    </button>
-    <button matIconButton class="icon-box" [matBadge]="library_OwnerModel()?.numberOfFavoriteDocuments"
-        matTooltip="Favorite documents" (click)="favoriteDocuments()">
-        <mat-icon>group_search</mat-icon>
-    </button>
 
 
 

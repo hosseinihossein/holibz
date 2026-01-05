@@ -9,27 +9,6 @@
         <div class="top-box clearfix">
             <!-- other buttons -->
             <ng-content />
-
-            <!--
-            @if(listType() === "Library" && isMyList()){
-            <a matButton="elevated" [routerLink]="['/library','new']" class="topBtn">
-                <mat-icon>account_balance</mat-icon>
-                Add a new Library
-            </a>
-            }
-            @if(listType() === "Shelf" && isMyList()){
-            <a matButton="elevated" [routerLink]="['/shelf','new', parentGuid()]" class="topBtn">
-                <mat-icon>shelves</mat-icon>
-                Add a new Shelf
-            </a>
-            }
-            @if(listType() === "Document" && isMyList()){
-            <a matButton="elevated" [routerLink]="['/document','new',parentGuid()]" class="topBtn">
-                <mat-icon>newsstand</mat-icon>
-                Add a new Document
-            </a>
-            }
-            -->
         </div>
 
         @if(listType() === "Library"){

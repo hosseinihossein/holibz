@@ -109,9 +109,8 @@ public class NotificationController : ControllerBase
         .Select(u => u.UserGuid)
         .FirstAsync();
 
-        await notifDb.Users
-        .Where(u => u.Guid == myGuid)
-        .SelectMany(u => u.Notifications)
+        await notifDb.Notifications
+        .Where(notif => notif.Owner.Guid == myGuid)
         .ExecuteDeleteAsync();
 
         return Ok(new { success = true });

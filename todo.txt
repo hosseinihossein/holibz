@@ -10,7 +10,13 @@ create different size images,
 - search component is a mat-card like profile component
 - set backup model to backup from storage
 - errors gone after turnstile update in login page
--   
+- don't show parentheses in document card when the version is default
+- transfer turnstile to the components where its needed
+- specify navigation keys for db models for nullable navigation properties
+- only display remove related version if the relatedVersions is not null
+- edit waitSpinner css(position:stick) to display the spinner in the middle no matter what about scroll
+- don't show erase all notifications when theres no notification
+- 
 
 
 ******* efficient ways for efcore query *********

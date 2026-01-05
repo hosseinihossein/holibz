@@ -854,7 +854,7 @@ public class ReviewController : ControllerBase
                     $"From '{me.UserName}' for document '{documentTitle}': ",
                     comment.Text[..(comment.Text.Length > 128 ? 128 : comment.Text.Length)],
                 ],
-                Link = $"/document/{formModel.ParentSubjectGuid}?commentGuid={comment.Guid}",
+                Link = $"/document/{formModel.ParentSubjectGuid.ToString("N")}?commentGuid={comment.Guid.ToString("N")}",
             };
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 
@@ -947,7 +947,7 @@ public class ReviewController : ControllerBase
                     $"From '{me.UserName}' in document '{documentTitle}': ",
                     reply.Text[..(reply.Text.Length > 128 ? 128 : reply.Text.Length)],
                 ],
-                Link = $"/document/{parentCommentDbInfo.parentReviewSubjectGuid}?commentGuid={reply.Guid}",
+                Link = $"/document/{parentCommentDbInfo.parentReviewSubjectGuid.ToString("N")}?commentGuid={reply.Guid.ToString("N")}",
             };
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 

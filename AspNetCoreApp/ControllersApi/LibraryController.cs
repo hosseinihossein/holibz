@@ -620,7 +620,7 @@ public class LibraryController : ControllerBase
                 Type = el.Type,
                 UpdatedAt = el.UpdatedAt,
                 Value = el.Value ??
-                    $"/api/Library/ElementFile?elementGuid={el.Guid}&elementFileName={el.FileName}",
+                    $"/api/Library/ElementFile?elementGuid={el.Guid.ToString("N")}&elementFileName={el.FileName}",
             }).ToArray(),
             RelatedVersions = doc.RelatedVersions == null ?
             new Library_VersionBrief_ViewModel[0] :
@@ -784,15 +784,9 @@ public class LibraryController : ControllerBase
 
             //IEnumerable<Guid> elementGuids = formModels.Select(m => m.Guid);
 
-            var allElementsDbModels = await libraryDb.Documents
+            List<Library_ElementDbModel> allElementsDbModels = await libraryDb.Documents
             .Where(doc => doc.Guid == parentDocumentGuid_Guid && doc.Owner.Guid == myGuid)
-            //.Where(el => elementGuids.Contains(el.Guid) && el.Owner.Guid == myGuid)
             .SelectMany(doc => doc.Elements)
-            /*.Select(el => new
-            {
-                el.Id,
-                el.Guid,
-            })*/
             .ToListAsync();
 
             //make sure all edited elements belong to the same document
@@ -812,10 +806,10 @@ public class LibraryController : ControllerBase
             IEnumerable<Guid> deletedFormModelsGuids = deletedFormModels
             .Select(fm => fm.Guid);
 
-            IEnumerable<Library_ElementDbModel> deletedElements = allElementsDbModels
-            .Where(el => deletedFormModelsGuids.Contains(el.Guid));
+            List<Library_ElementDbModel> deletedElements = allElementsDbModels
+            .Where(el => deletedFormModelsGuids.Contains(el.Guid)).ToList();
 
-            if (deletedElements.Any())
+            if (deletedElements.Count != 0)
             {
                 libraryDb.Elements.RemoveRange(deletedElements);
                 foreach (var deletedElement in deletedElements)
@@ -824,8 +818,8 @@ public class LibraryController : ControllerBase
                     libraryProcess.Delete_ElementDirectory(deletedElement.Guid.ToString("N"));
                 }
                 needToReorder = true;
+                allElementsDbModels = allElementsDbModels.Except(deletedElements).ToList();
             }
-
 
             //*********** edit elements ***********
             IEnumerable<Library_EditElement_FormModel> editedFormModels =
@@ -854,10 +848,6 @@ public class LibraryController : ControllerBase
 
             if (needToReorder)
             {
-                foreach (var deletedElement in deletedElements)
-                {
-                    allElementsDbModels.Remove(deletedElement);
-                }
                 var orderedElements = allElementsDbModels.OrderBy(el => el.Order).ToList();
                 for (int i = 0; i < orderedElements.Count; i++)
                 {
@@ -874,12 +864,12 @@ public class LibraryController : ControllerBase
             {
                 Guid = elementDbModel.Guid,
                 Order = elementDbModel.Order,
-                OwnerGuid = elementDbModel.Owner.Guid,
+                OwnerGuid = myGuid,
                 Title = elementDbModel.Title,
                 Type = elementDbModel.Type,
                 UpdatedAt = elementDbModel.UpdatedAt,
                 Value = elementDbModel.Value ??
-                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
+                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid.ToString("N")}&elementFileName={elementDbModel.FileName}",
             })
             .ToArray();
 
@@ -1043,7 +1033,7 @@ public class LibraryController : ControllerBase
                     Type = elementDbModel.Type,
                     UpdatedAt = elementDbModel.UpdatedAt,
                     Value = elementDbModel.Value ??
-                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid}&elementFileName={elementDbModel.FileName}",
+                    $"/api/Library/ElementFile?elementGuid={elementDbModel.Guid.ToString("N")}&elementFileName={elementDbModel.FileName}",
                 };
 
                 return Ok(elementModel);
@@ -1503,8 +1493,8 @@ public class LibraryController : ControllerBase
             }
 
             //delete current join tables
-            await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
-            .Select(doc => doc.ParentShelves).ExecuteDeleteAsync();
+            await libraryDb.ShelfDocuments.Where(shelfDoc => shelfDoc.DocumentId == documentDbInfo.Id)
+            .ExecuteDeleteAsync();
 
             //create join tables
             IEnumerable<Library_ShelfDocument_DbModel> shelfDocRels = documentDbInfo.specifiedParentShelfIds
@@ -1610,8 +1600,8 @@ public class LibraryController : ControllerBase
             }
 
             //delete current join tables
-            await libraryDb.Shelves.Where(shelf => shelf.Id == shelfDbInfo.Id)
-            .Select(shelf => shelf.ParentLibraries).ExecuteDeleteAsync();
+            await libraryDb.LibraryShelves.Where(libShelf => libShelf.ShelfId == shelfDbInfo.Id)
+            .ExecuteDeleteAsync();
 
             //create join tables
             IEnumerable<Library_LibraryShelf_DbModel> libShelfRels = shelfDbInfo.newParentLibrariesIds
@@ -2689,8 +2679,8 @@ public class LibraryController : ControllerBase
             }
 
             //delete current join tables
-            await libraryDb.Documents.Where(doc => doc.Id == documentDbInfo.Id)
-            .Select(doc => doc.Tags).ExecuteDeleteAsync();
+            await libraryDb.DocumentTags.Where(docTag => docTag.DocumentId == documentDbInfo.Id)
+            .ExecuteDeleteAsync();
 
             //create and add new join tables
             foreach (Library_TagDbModel tagDbModel in existingTagDbModels)
@@ -2707,6 +2697,9 @@ public class LibraryController : ControllerBase
 
             //save
             await libraryDb.SaveChangesAsync();
+
+            //remove every tag without any document
+            await libraryDb.Tags.Where(tag => tag.Documents.Count == 0).ExecuteDeleteAsync();
 
             return Ok(existingTagDbModels.Select(tag => tag.Name).ToArray());
         }
@@ -2817,7 +2810,7 @@ public class LibraryController : ControllerBase
 
         Library_DocumentDbModel? baseDocumentDbModel = await libraryDb.Documents
         .AsSplitQuery()
-        .AsNoTracking()
+        //.AsNoTracking() //Owner and RelatedVersions needs to be tracked
         .Include(doc => doc.Owner)
         .Include(doc => doc.Elements)
         .Include(doc => doc.ParentShelves)
@@ -2855,6 +2848,7 @@ public class LibraryController : ControllerBase
             Title = baseDocumentDbModel.Title,
             Version = newVersionName,
         };
+        libraryDb.Documents.Add(newDocumentDbModel);
 
         //elements
         List<Library_ElementDbModel> newElements = baseDocumentDbModel.Elements
@@ -2869,7 +2863,7 @@ public class LibraryController : ControllerBase
             ParentDocument = newDocumentDbModel,
         })
         .ToList();
-        newDocumentDbModel.Elements = newElements;
+        libraryDb.Elements.AddRange(newElements);
 
         //tags
         IEnumerable<Library_DocumentTag_DbModel> newDocumentTagRels = baseDocumentDbModel.Tags
@@ -2878,7 +2872,7 @@ public class LibraryController : ControllerBase
             Document = newDocumentDbModel,
             Tag = dt.Tag,
         });
-        newDocumentDbModel.Tags = [.. newDocumentTagRels];
+        libraryDb.DocumentTags.AddRange(newDocumentTagRels);
 
         //parentShelves
         IEnumerable<Library_ShelfDocument_DbModel> newShelfDocumentRels =
@@ -2888,10 +2882,9 @@ public class LibraryController : ControllerBase
             Shelf = sd.Shelf,
             Document = newDocumentDbModel,
         });
-        newDocumentDbModel.ParentShelves = [.. newShelfDocumentRels];
+        libraryDb.ShelfDocuments.AddRange(newShelfDocumentRels);
 
-        //add and save
-        libraryDb.Documents.Add(newDocumentDbModel);
+        //save
         await libraryDb.SaveChangesAsync();
 
         //copy introduction image to the new directory
@@ -3039,7 +3032,7 @@ public class LibraryController : ControllerBase
         int numberOfUpdatedRows = await libraryDb.Documents
         .Where(doc => doc.Guid == documentGuid_Guid && doc.Owner.Guid == myGuid)
         .ExecuteUpdateAsync(setter => setter
-            .SetProperty(doc => doc.RelatedVersions, (Library_RelatedVersionsDbModel?)null)
+            .SetProperty(doc => EF.Property<int?>(doc, "RelatedVersionsId"), (int?)null)
         );
 
         if (numberOfUpdatedRows == 0)

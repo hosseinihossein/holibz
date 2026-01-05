@@ -431,10 +431,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         next: res => {
           if(res && res.success){
             this.documentPageService.documentPageModel.update(dpm=>{
-              for(let editedElement of res.elements){
-                let elIndex = dpm!.elements.findIndex(el=>el.guid === editedElement.guid);
-                dpm!.elements.splice(elIndex,1,editedElement);
-              }
+              dpm!.elements = res.elements;
               return new DocumentPageModel(dpm!);
             });
 

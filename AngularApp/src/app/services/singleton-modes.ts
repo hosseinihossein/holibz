@@ -64,9 +64,9 @@ export class SingletonModes {
     }
   }
 
-  getUserImageAddress(userModel:{userGuid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
-    if(userModel?.hasImage && userModel.userGuid){
-      return `/api/Identity/UserImage?userGuid=${userModel.userGuid}&v=${userModel.integrityVersion}`;
+  getUserImageAddress(userModel:{guid?:string, integrityVersion?:number, hasImage?:boolean}|null):string|null{
+    if(userModel?.hasImage && userModel.guid){
+      return `/api/Identity/UserImage?userGuid=${userModel.guid}&v=${userModel.integrityVersion}`;
     }
     return null;
   }

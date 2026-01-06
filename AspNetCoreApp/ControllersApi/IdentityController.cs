@@ -282,8 +282,16 @@ public class IdentityController : ControllerBase
         "target='_blank'>'Here'</a>" +
         " to confirm your email.</p>";
 
-        await emailSender.SendEmailAsync(user.UserName!, user.Email!,
-        "Email Validation", emailMessage);
+        try
+        {
+            await emailSender.SendEmailAsync(user.UserName!, user.Email!,
+            "Email Validation", emailMessage);
+        }
+        catch (Exception e)
+        {
+            //log
+            Console.WriteLine($"\n **app** :" + e.Message);
+        }
     }
 
 
@@ -388,10 +396,16 @@ public class IdentityController : ControllerBase
         "target='_blank'>'Here'</a>" +
         " to confirm your new email.</p>";
 
-        await emailSender.SendEmailAsync(user.UserName!, newEmail!,
-        "New Email Validation", emailMessage);
-
-        Console.WriteLine($"\n***** email sent");
+        try
+        {
+            await emailSender.SendEmailAsync(user.UserName!, newEmail!,
+            "New Email Validation", emailMessage);
+        }
+        catch (Exception e)
+        {
+            //log
+            Console.WriteLine("\n **app** :" + e.Message);
+        }
     }
 
 
@@ -419,17 +433,17 @@ public class IdentityController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            //fetch and create
             Identity_UserDbModel user = (await userManager.FindByNameAsync(User.Identity!.Name!))!;
 
-            string userImagePath =
-            Path.Combine(Storage_Users.FullName, user.UserGuid.ToString("N"), "image");
+            DirectoryInfo userDirectoryInfo = Directory.CreateDirectory(
+                 Path.Combine(Storage_Users.FullName, user.UserGuid.ToString("N"))
+            );
+            string userImagePath = Path.Combine(userDirectoryInfo.FullName, "image");
             using (FileStream fs = System.IO.File.Create(userImagePath))
             {
                 await formModel.UserImageFile.CopyToAsync(fs);
             }
 
-            //edit user
             user.HasImage = true;
             user.IntegrityVersion++;
 
@@ -569,8 +583,16 @@ public class IdentityController : ControllerBase
         "target='_blank'>'Here'</a>" +
         " to proceed password reset.</p>";
 
-        await emailSender.SendEmailAsync(user.UserName!, user.Email!,
-        "Reset Password", emailMessage);
+        try
+        {
+            await emailSender.SendEmailAsync(user.UserName!, user.Email!,
+            "Reset Password", emailMessage);
+        }
+        catch (Exception e)
+        {
+            //log
+            Console.WriteLine("\n **app** :" + e.Message);
+        }
     }
 
 

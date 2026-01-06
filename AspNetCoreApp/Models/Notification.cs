@@ -81,9 +81,9 @@ public class Notification_Process
 
         Notification_UserDbModel userDbModel = new() { Guid = userGuid };
         notifDb.Users.Add(userDbModel);
-        await notifDb.SaveChangesAsync();
+        //await notifDb.SaveChangesAsync();
 
-        Notification_NotifCreation_FormModel welcomeNotifModel = new()
+        /*Notification_NotifCreation_FormModel welcomeNotifModel = new()
         {
             Title = "Welcome to HoLibz",
             Description = [
@@ -93,7 +93,20 @@ public class Notification_Process
             OwnerGuid = userDbModel.Guid,
         };
 
-        await CreateNewNotification(notifDb, welcomeNotifModel);
+        await CreateNewNotification(notifDb, welcomeNotifModel);*/
+
+        Notification_NotificationDbModel notifDbModel = new()
+        {
+            Description = [
+                "Your account created and confirmed successfully.",
+                "It's great to have you here",
+            ],
+            Owner = userDbModel,
+            Title = "Welcome to HoLibz",
+        };
+
+        notifDb.Notifications.Add(notifDbModel);
+        await notifDb.SaveChangesAsync();
 
         return userDbModel;
     }

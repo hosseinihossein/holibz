@@ -16,6 +16,7 @@ create different size images,
 - only display remove related version if the relatedVersions is not null
 - edit waitSpinner css(position:stick) to display the spinner in the middle no matter what about scroll
 - don't show erase all notifications when theres no notification
+- don't shoe delete button in edit user image when there's no user image
 - 
 
 

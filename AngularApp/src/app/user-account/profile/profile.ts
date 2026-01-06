@@ -80,6 +80,7 @@ export class Profile {
           next: res=>this.identity_UserModel.set(res),
         });
       }
+      //console.log(JSON.stringify(this.identity_UserModel()));
     });
 
     effect(()=>{

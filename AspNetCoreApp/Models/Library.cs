@@ -283,17 +283,17 @@ public class Library_DbContext : DbContext
 
         //*********** Users-FavoriteShelves Many-To-Many *********
         modelBuilder.Entity<Library_UserFavoriteShelf_DbModel>()
-        .HasKey(ul => new { ul.UserId, ul.ShelfId });
+        .HasKey(ush => new { ush.UserId, ush.ShelfId });
 
         modelBuilder.Entity<Library_UserFavoriteShelf_DbModel>()
-        .HasOne(ul => ul.User)
+        .HasOne(ush => ush.User)
         .WithMany(o => o.FavoriteShelves)
-        .HasForeignKey(ul => ul.UserId);
+        .HasForeignKey(ush => ush.UserId);
 
         modelBuilder.Entity<Library_UserFavoriteShelf_DbModel>()
-        .HasOne(ul => ul.Shelf)
-        .WithMany(lib => lib.InFavorOf)
-        .HasForeignKey(ul => ul.ShelfId);
+        .HasOne(ush => ush.Shelf)
+        .WithMany(shelf => shelf.InFavorOf)
+        .HasForeignKey(ush => ush.ShelfId);
 
         //*********** Users-FavoriteDocuments Many-To-Many *********
         modelBuilder.Entity<Library_UserFavoriteDocument_DbModel>()

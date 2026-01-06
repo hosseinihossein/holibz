@@ -108,7 +108,6 @@ export class Profile {
           this.libraryService.requestLibrariesGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Library");
               }
@@ -119,7 +118,6 @@ export class Profile {
           this.libraryService.requestUserShelvesGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Shelf");
               }
@@ -130,7 +128,6 @@ export class Profile {
           this.libraryService.requestUserDocumentsGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Document");
               }
@@ -141,7 +138,6 @@ export class Profile {
           this.libraryService.requestFavoriteLibrariesGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Library");
               }
@@ -152,7 +148,6 @@ export class Profile {
           this.libraryService.requestFavoriteShelvesGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Shelf");
               }
@@ -163,7 +158,6 @@ export class Profile {
           this.libraryService.requestFavoriteDocumentsGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Document");
               }
@@ -175,7 +169,6 @@ export class Profile {
           this.libraryService.requestLibrariesGuids(this.userGuid()!).subscribe({
             next: res => {
               if(res){
-                console.log(this.genericListItemType());
                 this.genericListItemGuids.set(res);
                 this.genericListType.set("Library");
               }

@@ -32,7 +32,7 @@ export class GenericList {
 
   constructor(){
     effect(()=>{
-      if(this.listType() && this.itemGuids() && this.itemGuids().length > 0){
+      if(this.listType() && this.itemGuids()){
           if(this.listType() == "Library"){
             this.getLibraryModels(this.itemGuids()!);
           }
@@ -47,40 +47,56 @@ export class GenericList {
   }
   
   getLibraryModels(libGuids:string[]){
-    this.libraryModels.set([]);
-    libGuids.forEach(libGuid=>{
-      this.libraryService.requestLibraryModel(libGuid).subscribe({
-        next: libModel => {
-          if(libModel){
-            this.libraryModels.set([...this.libraryModels(), libModel]);
-          }
-        },
+    this.libraryModels().length = 0;
+    this.shelfModels().length = 0;
+    this.documentCardModels().length = 0;
+    
+    if(libGuids.length > 0){
+      libGuids.forEach(libGuid=>{
+        this.libraryService.requestLibraryModel(libGuid).subscribe({
+          next: libModel => {
+            if(libModel){
+              this.libraryModels().push(libModel);
+            }
+          },
+        });
       });
-    });
+    }
   }
   getShelfModels(shelfGuids:string[]){
-    this.shelfModels.set([]);
-    shelfGuids.forEach(shelfGuid=>{
-      this.libraryService.requestShelfModel(shelfGuid).subscribe({
-        next: shelfModel => {
-          if(shelfModel){
-            this.shelfModels.set([...this.shelfModels(), shelfModel]);
-          }
-        },
+    this.libraryModels().length = 0;
+    this.shelfModels().length = 0;
+    this.documentCardModels().length = 0;
+
+    if(shelfGuids.length > 0){
+      console.log(shelfGuids);
+      shelfGuids.forEach(shelfGuid=>{
+        this.libraryService.requestShelfModel(shelfGuid).subscribe({
+          next: shelfModel => {
+            if(shelfModel){
+              this.shelfModels().push(shelfModel);
+            }
+          },
+        });
       });
-    });
+    }
   }
   getDocumentModels(docGuids:string[]){
-    this.documentCardModels.set([]);
-    docGuids.forEach(docGuid=>{
-      this.libraryService.requestDocumentCardModel(docGuid).subscribe({
-        next: docModel => {
-          if(docModel){
-            this.documentCardModels.set([...this.documentCardModels(), docModel]);
-          }
-        },
+    this.libraryModels().length = 0;
+    this.shelfModels().length = 0;
+    this.documentCardModels().length = 0;
+
+    if(docGuids.length > 0){
+      docGuids.forEach(docGuid=>{
+        this.libraryService.requestDocumentCardModel(docGuid).subscribe({
+          next: docModel => {
+            if(docModel){
+              this.documentCardModels().push(docModel);
+            }
+          },
+        });
       });
-    });
+    }
   }
 
 }

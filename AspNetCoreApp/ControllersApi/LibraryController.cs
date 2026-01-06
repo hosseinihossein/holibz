@@ -2140,8 +2140,7 @@ public class LibraryController : ControllerBase
         Guid[] favoriteLibrariesGuids = await libraryDb.Owners
         .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteLibraries)
-        .Select(ul => ul.Library)
-        .Select(lib => lib.Guid)
+        .Select(ul => ul.Library.Guid)
         .ToArrayAsync();
 
         return Ok(favoriteLibrariesGuids);
@@ -2158,8 +2157,7 @@ public class LibraryController : ControllerBase
         Guid[] favoriteShelvesGuids = await libraryDb.Owners
         .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteShelves)
-        .Select(ush => ush.Shelf)
-        .Select(shelf => shelf.Guid)
+        .Select(ush => ush.Shelf.Guid)
         .ToArrayAsync();
 
         return Ok(favoriteShelvesGuids);
@@ -2176,8 +2174,7 @@ public class LibraryController : ControllerBase
         Guid[] favoriteDocumentsGuids = await libraryDb.Owners
         .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteDocuments)
-        .Select(ud => ud.Document)
-        .Select(doc => doc.Guid)
+        .Select(ud => ud.Document.Guid)
         .ToArrayAsync();
 
         return Ok(favoriteDocumentsGuids);

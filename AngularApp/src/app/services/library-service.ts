@@ -17,8 +17,7 @@ import { UserProfileInfo } from '../user-account/profile/profile';
 export class LibraryService {
   private httpClient = inject(HttpClient);
 
-  libraryCard_Storage = //signal<RuCache<LibraryCardModel>>(new RuCache<LibraryCardModel>());
-  new RuCache<LibraryCardModel>();
+  libraryCard_Storage = signal<RuCache<LibraryCardModel>>(new RuCache<LibraryCardModel>());
   shelfCard_Storage = signal<RuCache<ShelfCardModel>>(new RuCache<ShelfCardModel>());
   documentCard_Storage = signal<RuCache<DocumentCardModel>>(new RuCache<DocumentCardModel>());
   documentPage_Storage = signal<RuCache<DocumentPageModel>>(new RuCache<DocumentPageModel>());
@@ -29,17 +28,14 @@ export class LibraryService {
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
     return this.httpClient.get<LibraryCardModel[]>(
       "/api/Library/List", { params: quryParams}
-    )/*.pipe(
+    ).pipe(
       tap(res=>{
         if(res){
           //console.log("add library card list to cache: "+JSON.stringify(res.map(lib=>lib.title)));
-          this.libraryCard_Storage.update(ruCache=>{
-            ruCache.add(...res);
-            return ruCache;
-          });
+          this.libraryCard_Storage().add(...res);
         }
       }),
-    )*/;
+    );
   }
   requestLibraryBriefList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
@@ -53,6 +49,7 @@ export class LibraryService {
       "/api/Library/LibrariesGuids", {params:httpParams}
     );
   }
+
   requestShelfList(libraryGuid: string){
     let quryParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.get<ShelfCardModel[]>(
@@ -60,11 +57,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          //console.log("add shelf card list to cache: "+JSON.stringify(res.map(shelf=>shelf.title)));
-          this.shelfCard_Storage.update(ruCache=>{
-            ruCache.add(...res);
-            return ruCache;
-          });
+          this.shelfCard_Storage().add(...res);
         }
       }),
     );
@@ -87,6 +80,7 @@ export class LibraryService {
       "/api/Library/UserShelfList", { params: quryParams}
     );
   }
+
   requestDocumentCardList(shelfGuid: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.get<DocumentCardModel[]>(
@@ -94,11 +88,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          //console.log("add document card list to cache: "+JSON.stringify(res.map(doc=>doc.title)));
-          this.documentCard_Storage.update(ruCache=>{
-            ruCache.add(...res);
-            return ruCache;
-          });
+          this.documentCard_Storage().add(...res);
         }
       }),
     );
@@ -130,20 +120,17 @@ export class LibraryService {
   }
 
   requestLibraryModel(libraryGuid:string){
-    //let cachedLibraryCardModel = this.libraryCard_Storage().getWithGuid(libraryGuid);
-    let cachedLibraryCardModel = this.libraryCard_Storage.getWithGuid(libraryGuid);
+    let cachedLibraryCardModel = this.libraryCard_Storage().getWithGuid(libraryGuid);
     if(cachedLibraryCardModel){
       return of(cachedLibraryCardModel);
     }
-   console.log("requestLibraryModel");
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.get<LibraryCardModel>(
       "/api/Library/LibraryModel", {params: httpParams}
     ).pipe(
       tap(res=>{
         if(res){
-          //this.libraryCard_Storage().add(res);
-          this.libraryCard_Storage.add(res);
+          this.libraryCard_Storage().add(res);
         }
       }),
     );
@@ -151,7 +138,6 @@ export class LibraryService {
   requestShelfModel(shelfGuid:string){
     let cachedShelfCardModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
     if(cachedShelfCardModel){
-      //console.log("got one shelf card from cache: "+cachedShelfCardModel.title);
       return of(cachedShelfCardModel);
     }
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
@@ -160,11 +146,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          //console.log("add one shelf card to cache: "+JSON.stringify(res.title));
-          this.shelfCard_Storage.update(ruCache=>{
-            ruCache.add(res);
-            return ruCache;
-          });
+          this.shelfCard_Storage().add(res);
         }
       }),
     );
@@ -172,7 +154,6 @@ export class LibraryService {
   requestDocumentCardModel(docGuid: string){
     let cachedDocumentCardModel = this.documentCard_Storage().getWithGuid(docGuid);
     if(cachedDocumentCardModel){
-      //console.log("got one document card from cache: "+cachedDocumentCardModel.title);
       return of(cachedDocumentCardModel);
     }
     let httpParams = new HttpParams().set("documentGuid", docGuid);
@@ -181,11 +162,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          //console.log("add one document card to cache: "+JSON.stringify(res.title));
-          this.documentCard_Storage.update(ruCache=>{
-            ruCache.add(res);
-            return ruCache;
-          });
+          this.documentCard_Storage().add(res);
         }
       }),
     );
@@ -193,7 +170,6 @@ export class LibraryService {
   requestDocumentPageModel(documentGuid:string){
     let cachedDocumentPageModel = this.documentPage_Storage().getWithGuid(documentGuid);
     if(cachedDocumentPageModel){
-      //console.log("got one document page from cache: "+cachedDocumentPageModel.title);
       return of(cachedDocumentPageModel);
     }
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
@@ -202,11 +178,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          //console.log("add one documennt page to cache: "+JSON.stringify(res.title));
-          this.documentPage_Storage.update(ruCache=>{
-            ruCache.add(res);
-            return ruCache;
-          });
+          this.documentPage_Storage().add(res);
         }
       }),
     );
@@ -400,7 +372,6 @@ export class LibraryService {
   requestOwnerModel(ownerGuid:string){
     let cachedOwnerModel = this.owner_Storage().getWithGuid(ownerGuid);
     if(cachedOwnerModel){
-      //console.log("got one owner from cache: "+cachedOwnerModel.username);
       return of(cachedOwnerModel);
     }
     return this.httpClient.get<OwnerModel>(
@@ -408,11 +379,7 @@ export class LibraryService {
     ).pipe(
       tap(res=>{
         if(res){
-          //console.log("add one owner to cache: "+JSON.stringify(res.username));
-          this.owner_Storage.update(ruCache=>{
-            ruCache.add(res);
-            return ruCache;
-          });
+          this.owner_Storage().add(res);
         }
       }),
     );
@@ -655,13 +622,11 @@ export class RuCache<T extends {guid:string}>{
   private cache:T[] = [];
 
   getWithGuid(guid:string):T|null{
-    console.log("begining of getWithGuid");
     let index = this.cache.findIndex(value=>value.guid === guid);
     if(index >= 0){
       let element = this.cache[index];
       this.cache.splice(index,1);
       this.cache.unshift(element);
-      console.log("end of getWithGuid");
       return element;
     }
     else{
@@ -693,19 +658,4 @@ export class RuCache<T extends {guid:string}>{
     this.cache.unshift(...newValues);
   }
 }
-
-/*export class FavoriteModel{
-  constructor(favoriteModel:FavoriteModel){
-    this.guid = favoriteModel.guid;
-    this.title = favoriteModel.title;
-    this.hasImage = favoriteModel.hasImage;
-    this.integrityVersion = favoriteModel.integrityVersion;
-    this.owner = new OwnerModel(favoriteModel.owner);
-  }
-  guid:string = null!;
-  title:string = null!;
-  hasImage:boolean = false;
-  integrityVersion:number = 0;
-  owner:OwnerModel = null!;
-}*/
 

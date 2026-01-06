@@ -80,6 +80,12 @@ export class LibraryService {
       "/api/Library/UserShelfList", { params: quryParams}
     );
   }
+  /*requestRecentlyAddedDocs_ShelffCardModel(){
+    let httpParams = new HttpParams().set("shelfGuid", "RecentlyAddedDocuments");
+    return this.httpClient.get<ShelfCardModel>(
+      "/api/Library/ShelfModel", {params:httpParams}
+    );
+  }*/
 
   requestDocumentCardList(shelfGuid: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
@@ -147,6 +153,9 @@ export class LibraryService {
       tap(res=>{
         if(res){
           this.shelfCard_Storage().add(res);
+          if(res.documentCardModels.length > 0){
+            this.documentCard_Storage().add(...res.documentCardModels);
+          }
         }
       }),
     );

@@ -66,6 +66,7 @@ export class ShelfPage {
           next: res => {
             if(res){
               this.shelfModel.set(res);
+              this.genericListItemGuids.set(res.documentCardModels.map(doc=>doc.guid));
             }
           },
         });
@@ -85,7 +86,7 @@ export class ShelfPage {
       }
     });
 
-    effect(()=>{
+    /*effect(()=>{
       if(this.shelfGuid()){
         this.librarySerice.requestDocumentsGuids(this.shelfGuid()!).subscribe({
           next: res => {
@@ -95,7 +96,7 @@ export class ShelfPage {
           }
         });
       }
-    });
+    });*/
   }
 
   editIntroduction(){

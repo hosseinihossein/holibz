@@ -42,7 +42,7 @@
                 Add a new Library
             </a>
             }
-            @else {
+            @else if(identityService.isAuthenticated()) {
             <button matButton="elevated">
                 <mat-icon>person_add</mat-icon>
                 Follow

@@ -39,7 +39,7 @@ mat-card-content{
     width: 80%;
     max-width: 800px;
     min-width: 350px;
-    margin: auto;
+    margin: 0 auto 8px;
     display: flex;
     justify-content: space-evenly;
     flex-wrap: wrap;

@@ -380,6 +380,11 @@ public class LibraryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ShelfModel([FromQuery][StringLength(32)] string shelfGuid)
     {
+        if (shelfGuid == "RecentlyAddedDocuments")
+        {
+            return Ok(await RecentlyAddedDocs_ShelfModel());
+        }
+
         if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
@@ -523,6 +528,30 @@ public class LibraryController : ControllerBase
         await libraryDb.SaveChangesAsync();
 
         return Ok(new { success = true });
+    }
+
+
+
+
+
+    private async Task<Library_ShelfCard_ViewModel> RecentlyAddedDocs_ShelfModel()
+    {
+        Library_DocumentCard_ViewModel[] recetlyAddedDocs = await RecentlyAddDocuments_DocumentCardModel();
+
+        return new Library_ShelfCard_ViewModel()
+        {
+            CreatedAt = DateTime.UtcNow,
+            Description = "Recently Added Documents",
+            DocumentCardModels = recetlyAddedDocs,
+            Guid = Guid.Empty,
+            Libraries = [],
+            Title = "New Documents",
+            OwnerGuid = Guid.Empty,
+            TotalNumberOfShelfDocuments = recetlyAddedDocs.Length,
+            HasImage = false,
+            IntegrityVersion = 0,
+            IsDefault = false,
+        };
     }
 
 
@@ -781,6 +810,30 @@ public class LibraryController : ControllerBase
         await reviewProcess.DeleteReview(reviewDb, documentGuid_Guid, notifDb, notifProcess);
 
         return Ok(new { success = true });
+    }
+
+
+
+
+
+    private async Task<Library_DocumentCard_ViewModel[]> RecentlyAddDocuments_DocumentCardModel()
+    {
+        return await libraryDb.Documents
+        .OrderByDescending(doc => doc.CreatedAt)
+        .Take(10)
+        .Select(doc => new Library_DocumentCard_ViewModel()
+        {
+            Description = doc.Description,
+            Guid = doc.Guid,
+            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
+            OwnerGuid = doc.Owner.Guid,
+            Title = doc.Title,
+            HasImage = doc.HasImage,
+            IntegrityVersion = doc.IntegrityVersion,
+            VersionName = doc.Version == "Default" ? null : doc.Version,
+        })
+        .AsSplitQuery()
+        .ToArrayAsync();
     }
 
 

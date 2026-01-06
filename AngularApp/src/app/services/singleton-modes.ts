@@ -46,6 +46,9 @@ export class SingletonModes {
   userProfileDescription_MaxLength = signal(500);
   comment_MaxLength = signal(500);
 
+  EmptyGuid = "00000000000000000000000000000000";
+  RecentlyAddedDocuments_ShelfGuid = "RecentlyAddedDocuments";
+
   
 
 

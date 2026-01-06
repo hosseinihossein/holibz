@@ -33,8 +33,8 @@ import { MatDividerModule } from '@angular/material/divider';
   styleUrl: './profile.css'
 })
 export class Profile {
-  userGuid = signal<string|null>(null);
-  isMyProfile = computed(() => this.userGuid() === this.identityService.userModel()?.guid);
+  ownerGuid = signal<string|null>(null);
+  isMyProfile = computed(() => this.ownerGuid() === this.identityService.userModel()?.guid);
 
   singleton = inject(SingletonModes);
   identityService = inject(IdentityService);
@@ -44,12 +44,12 @@ export class Profile {
   reviewService = inject(ReviewService);
   dialog = inject(MatDialog);
 
-  identity_UserModel = signal<UserProfileModel|null>(null);
-  userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.identity_UserModel()));
-  username = computed(()=>this.identity_UserModel()?.username);
-  description = computed(()=>this.identity_UserModel()?.description);
-  email = computed(()=>this.identity_UserModel()?.email);
-  displayEmailPublicly = computed(()=>this.identity_UserModel()?.displayEmailPublicly);
+  identity_OwnerModel = signal<UserProfileModel|null>(null);
+  userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.identity_OwnerModel()));
+  username = computed(()=>this.identity_OwnerModel()?.username);
+  description = computed(()=>this.identity_OwnerModel()?.description);
+  email = computed(()=>this.identity_OwnerModel()?.email);
+  displayEmailPublicly = computed(()=>this.identity_OwnerModel()?.displayEmailPublicly);
 
   library_OwnerModel = signal<UserProfileInfo|null>(null);
   userTotalLikes = signal<number>(0);
@@ -62,10 +62,10 @@ export class Profile {
   constructor(){
     let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
     if(userGuidRouteParam){
-      this.userGuid.set(userGuidRouteParam);
+      this.ownerGuid.set(userGuidRouteParam);
     }
     else if(this.identityService.isAuthenticated() && this.identityService.userModel()){
-      this.userGuid.set(this.identityService.userModel()!.guid);
+      this.ownerGuid.set(this.identityService.userModel()!.guid);
     }
     else{
       this.router.navigate(['/login'],{queryParams:{returnUrl:'/profile'}});
@@ -73,18 +73,18 @@ export class Profile {
     
     effect(()=>{
       if(this.isMyProfile()){
-        this.identity_UserModel.set(this.identityService.userModel());
+        this.identity_OwnerModel.set(this.identityService.userModel());
       }
       else{
-        this.identityService.requestUserModel(this.userGuid()!).subscribe({
-          next: res=>this.identity_UserModel.set(res),
+        this.identityService.requestUserModel(this.ownerGuid()!).subscribe({
+          next: res=>this.identity_OwnerModel.set(res),
         });
       }
       //console.log(JSON.stringify(this.identity_UserModel()));
     });
 
     effect(()=>{
-      this.libraryService.requestUserProfileInfo(this.userGuid()!).subscribe({
+      this.libraryService.requestUserProfileInfo(this.ownerGuid()!).subscribe({
         next: res => {
           if(res){
             this.library_OwnerModel.set(res);
@@ -94,7 +94,7 @@ export class Profile {
     });
 
     effect(()=>{
-      this.reviewService.requestUserTotalLikes(this.userGuid()!).subscribe({
+      this.reviewService.requestUserTotalLikes(this.ownerGuid()!).subscribe({
         next: res => {
           if(res){
             this.userTotalLikes.set(res.totalNumberOfLikes);
@@ -106,7 +106,7 @@ export class Profile {
     effect(()=>{
       switch (this.genericListItemType()) {
         case "Libraries":
-          this.libraryService.requestLibrariesGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestLibrariesGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -116,7 +116,7 @@ export class Profile {
           });
           break;
         case "Shelves":
-          this.libraryService.requestUserShelvesGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestUserShelvesGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -126,7 +126,7 @@ export class Profile {
           });
           break;
         case "Documents":
-          this.libraryService.requestUserDocumentsGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestUserDocumentsGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -136,7 +136,7 @@ export class Profile {
           });
           break;
         case "FavoriteLibraries":
-          this.libraryService.requestFavoriteLibrariesGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestFavoriteLibrariesGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -146,7 +146,7 @@ export class Profile {
           });
           break;
         case "FavoriteShelves":
-          this.libraryService.requestFavoriteShelvesGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestFavoriteShelvesGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -156,7 +156,7 @@ export class Profile {
           });
           break;
         case "FavoriteDocuments":
-          this.libraryService.requestFavoriteDocumentsGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestFavoriteDocumentsGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -167,7 +167,7 @@ export class Profile {
           break;
       
         default:
-          this.libraryService.requestLibrariesGuids(this.userGuid()!).subscribe({
+          this.libraryService.requestLibrariesGuids(this.ownerGuid()!).subscribe({
             next: res => {
               if(res){
                 this.genericListItemGuids.set(res);
@@ -181,20 +181,20 @@ export class Profile {
   }
 
   displayFollowersList(){
-    if(this.userGuid()){
+    if(this.ownerGuid()){
       this.dialog.open(BriefUsersList,{data:{
         label: "Followers",
-        subjectGuid: this.userGuid(),
+        subjectGuid: this.ownerGuid(),
         totalNumberOfItems: this.library_OwnerModel()?.numberOfFollowers,
         type: "Follower",
       }});
     }
   }
   displayFollowingsList(){
-    if(this.userGuid()){
+    if(this.ownerGuid()){
       this.dialog.open(BriefUsersList,{data:{
         label: "Followings",
-        subjectGuid: this.userGuid(),
+        subjectGuid: this.ownerGuid(),
         totalNumberOfItems: this.library_OwnerModel()?.numberOfFollowings,
         type: "Following",
       }});

@@ -286,84 +286,74 @@ public class Program
 
 
         /********************** Migrate Pending DataBases **********************/
-        Identity_DbContext identityDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_DbContext>();
-        identityDb.Database.Migrate();
-
-        Library_DbContext libraryDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Library_DbContext>();
-        libraryDb.Database.Migrate();
-
-        Review_DbContext reviewDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Review_DbContext>();
-        reviewDb.Database.Migrate();
-
-        Notification_DbContext notifDb = app.Services.CreateScope().ServiceProvider.GetRequiredService<Notification_DbContext>();
-        notifDb.Database.Migrate();
-
-        Console.WriteLine("** All DB Migration Completed! **");
-
-        //************************** Seed DataBases **************************
-        //***** "admin" Identity *****
-        UserManager<Identity_UserDbModel> userManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();
-        RoleManager<Identity_RoleDbModel> roleManager = app.Services.CreateScope().ServiceProvider.GetRequiredService<RoleManager<Identity_RoleDbModel>>();
-        Identity_UserDbModel? admin = await userManager.FindByNameAsync("admin");
-        if (admin == null)
+        using (var scope = app.Services.CreateScope())
         {
-            string adminPassword = builder.Configuration["Identity:AdminPassword"]!;
-            admin = new Identity_UserDbModel
-            {
-                UserName = "admin",
-                //UserGuid = "admin",
-                Email = "admin@yourdomain.com",
-                EmailConfirmed = true,
-                Description = "This identity belongs to the admin of the website."
-            };
-            IdentityResult result = await userManager.CreateAsync(admin, adminPassword);
+            Identity_DbContext identityDb = scope.ServiceProvider.GetRequiredService<Identity_DbContext>();
+            identityDb.Database.Migrate();
 
-            if (!result.Succeeded)
+            Library_DbContext libraryDb = scope.ServiceProvider.GetRequiredService<Library_DbContext>();
+            libraryDb.Database.Migrate();
+
+            Review_DbContext reviewDb = scope.ServiceProvider.GetRequiredService<Review_DbContext>();
+            reviewDb.Database.Migrate();
+
+            Notification_DbContext notifDb = scope.ServiceProvider.GetRequiredService<Notification_DbContext>();
+            notifDb.Database.Migrate();
+
+            Console.WriteLine("** All DB Migration Completed! **");
+
+            //************************** Seed DataBases **************************
+            //***** Create "admin" Identity *****
+            UserManager<Identity_UserDbModel> userManager = scope.ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();
+            RoleManager<Identity_RoleDbModel> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Identity_RoleDbModel>>();
+            Identity_UserDbModel? admin = await userManager.FindByNameAsync("admin");
+            if (admin == null)
             {
-                foreach (var error in result.Errors)
+                string adminPassword = builder.Configuration["Identity:AdminPassword"]!;
+                admin = new Identity_UserDbModel
                 {
-                    Console.WriteLine(error.Description);
+                    UserName = "admin",
+                    UserGuid = Guid.Empty,
+                    Email = "admin@yourdomain.com",
+                    EmailConfirmed = true,
+                    Description = "This identity belongs to the admin of the website."
+                };
+                IdentityResult result = await userManager.CreateAsync(admin, adminPassword);
+
+                if (!result.Succeeded)
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        Console.WriteLine(error.Description);
+                    }
+                    return;
                 }
-                return;
             }
+
+            //***** Seed Roles *****
+            if (await roleManager.FindByNameAsync("Identity_Admins") == null)
+            {
+                await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
+                await userManager.AddToRoleAsync(admin, "Identity_Admins");
+            }
+            if (await roleManager.FindByNameAsync("Backup_Admins") == null)
+            {
+                await roleManager.CreateAsync(new Identity_RoleDbModel("Backup_Admins") { Description = "Backup Admins" });
+                await userManager.AddToRoleAsync(admin, "Backup_Admins");
+            }
+
+            //***** Create Library_Owner and Default Library and Shelf for admin *****
+            var libraryProcess = scope.ServiceProvider.GetRequiredService<Library_Process>();
+            await libraryProcess.CreateNewOwner(libraryDb, admin.UserGuid, admin.NormalizedUserName!);
+
+            //***** Create Review_User for admin *****
+            var reviewProcess = scope.ServiceProvider.GetRequiredService<Review_Process>();
+            await reviewProcess.CreateNewUser(reviewDb, admin.UserGuid, admin.NormalizedUserName!);
+
+            //***** Create notification User for admin *****
+            var notifProcess = scope.ServiceProvider.GetRequiredService<Notification_Process>();
+            await notifProcess.CreateNewUser(notifDb, admin.UserGuid);
         }
-
-        //***** Seed Roles *****
-        if (await roleManager.FindByNameAsync("Identity_Admins") == null)
-        {
-            await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
-            await userManager.AddToRoleAsync(admin, "Identity_Admins");
-        }
-        if (await roleManager.FindByNameAsync("Backup_Admins") == null)
-        {
-            await roleManager.CreateAsync(new Identity_RoleDbModel("Backup_Admins") { Description = "Backup Admins" });
-            await userManager.AddToRoleAsync(admin, "Backup_Admins");
-        }
-
-        //***** Seed Users *****
-        /*if (app.Configuration["Seed:Identity"] == "true")
-        {
-            Console.WriteLine("** Seeding Identity Service Started... **");
-            Identity_Process account_Process = app.Services.CreateScope().ServiceProvider.GetRequiredService<Identity_Process>();
-            await account_Process.SeedUsersToDb(userManager);
-            Console.WriteLine("** Seeding Identity Service Completed! **");
-        }*/
-
-        //***** Create Default Library and Shelf for everyone *****
-        /*List<string> AllConfirmedUsersGuidsExceptAdmin =
-        await userManager.Users
-        .Where(u => u.EmailConfirmed && u.UserGuid != "admin")
-        .Select(u => u.UserGuid)
-        .ToListAsync();
-
-        Library_Process libraryProcess = app.Services.CreateScope().ServiceProvider.GetRequiredService<Library_Process>();
-
-        foreach (string userGuid in AllConfirmedUsersGuidsExceptAdmin)
-        {
-            var ownerCreationResult = await libraryProcess.CreateNewOwner(libraryDb, userGuid);
-        }*/
-        //await libraryDb.SaveChangesAsync();
-
 
 
 
@@ -438,7 +428,7 @@ public class Program
         });*/
 
         //********* app.Map("/user*") *********
-        app.Map("/users", async (HttpContext context) =>
+        /*app.Map("/users", async (HttpContext context, UserManager<Identity_UserDbModel> userManager) =>
         {
             var allUsers = await userManager.Users
             .Select(u => new { u.UserName, u.Email, u.EmailConfirmed, u.UserGuid })
@@ -447,7 +437,7 @@ public class Program
 
             await context.Response.WriteAsJsonAsync(allUsers);
         });
-        app.Map("/deleteuser/{username}", async (HttpContext context) =>
+        app.Map("/deleteuser/{username}", async (HttpContext context, UserManager<Identity_UserDbModel> userManager) =>
         {
             string? username = context.Request.RouteValues["username"]?.ToString();
             if (username is null)
@@ -476,7 +466,7 @@ public class Program
             }
 
             await context.Response.WriteAsJsonAsync(result.Errors);
-        });
+        });*/
 
         app.Map("/", () => "Hello World");
 

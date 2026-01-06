@@ -1,1 +1,6 @@
-<p>home works!</p>
+@if(recentlyAddedDocs_ShelfCardModel()){
+<div id="recentlyAddedDocs-div">
+    <p>Recntly Added Documents:</p>
+    <app-shelf-card [shelfModel]="recentlyAddedDocs_ShelfCardModel()!"></app-shelf-card>
+</div>
+}

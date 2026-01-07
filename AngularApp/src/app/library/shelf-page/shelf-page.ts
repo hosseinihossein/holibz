@@ -66,7 +66,7 @@ export class ShelfPage {
           next: res => {
             if(res){
               this.shelfModel.set(res);
-              this.genericListItemGuids.set(res.documentCardModels.map(doc=>doc.guid));
+              this.genericListItemGuids.set(res.documentsGuids);
             }
           },
         });
@@ -131,16 +131,15 @@ export class ShelfPage {
 
   editParentLibraries(){
     if(this.isMyShelf()){
-      console.log(this.shelfModel()?.libraries.map(value=>value.guid));
       this.dialog.open(ParentEditor,{data:{
         parentOf:"shelf",
-        parentLibraryGuids: this.shelfModel()?.libraries.map(value=>value.guid),
+        parentLibraryGuids: this.shelfModel()?.librariesGuids,
         //parentShelfGuids: this.documentPageService.documentPageModel()?.shelves.map(shelf=>shelf.guid),
         childGuid: this.shelfModel()?.guid,
-      }}).afterClosed().subscribe(result=>{
+      }}).afterClosed().subscribe((result:string[])=>{
         if(result){
           this.shelfModel.update(shelf=>{
-            shelf!.libraries = result;
+            shelf!.librariesGuids = result;
             return new ShelfCardModel(shelf!);
           });
         }

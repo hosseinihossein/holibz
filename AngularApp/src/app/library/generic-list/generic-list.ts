@@ -69,7 +69,7 @@ export class GenericList {
     this.documentCardModels().length = 0;
 
     if(shelfGuids.length > 0){
-      console.log(shelfGuids);
+      //console.log(shelfGuids);
       shelfGuids.forEach(shelfGuid=>{
         this.libraryService.requestShelfModel(shelfGuid).subscribe({
           next: shelfModel => {

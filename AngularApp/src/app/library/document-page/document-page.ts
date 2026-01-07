@@ -562,10 +562,10 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         parentLibraryGuids: this.parentLibraryGuids(),
         parentShelfGuids: this.documentPageService.documentPageModel()?.shelves.map(shelf=>shelf.guid),
         childGuid: this.documentPageService.documentPageModel()?.guid,
-      }}).afterClosed().subscribe(result=>{
+      }}).afterClosed().subscribe((result:ParentShelfModel[])=>{
         if(result){
           //console.log(JSON.stringify(result));
-          let resultShelves = (result as ParentShelfModel[]).map(shelf=>new ParentShelfModel(shelf));
+          let resultShelves = result.map(shelf=>new ParentShelfModel(shelf));
           this.documentPageService.documentPageModel.update(dpm=>{
             dpm!.shelves = resultShelves;
             return new DocumentPageModel(dpm!);

@@ -28,7 +28,7 @@
     </mat-expansion-panel-header>
 
     <div class="listOfDocs">
-        @for (documentCardModel of shelfModel().documentCardModels; track documentCardModel) {
+        @for (documentCardModel of documentCardModels(); track documentCardModel) {
         <app-document-card [documentCardModel]="documentCardModel" [mini]="true"
             (click)="router.navigate(['/document',documentCardModel.guid])"
             style="cursor: pointer;"></app-document-card>

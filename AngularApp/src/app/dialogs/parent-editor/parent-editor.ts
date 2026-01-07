@@ -121,7 +121,7 @@ export class ParentEditor {
             else if(this.data.parentOf === "shelf"){
               let filteredLibs:{guid:string,title:string}[] = 
               this.allLibraryList().filter(lib=>this.libraryGuids.value.includes(lib.guid));
-              this.dialogRef.close(filteredLibs);
+              this.dialogRef.close(filteredLibs.map(lib=>lib.guid));
             }
           }
         },

@@ -142,9 +142,9 @@ export class LibraryService {
     );
   }
   requestShelfModel(shelfGuid:string){
-    let cachedShelfCardModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
-    if(cachedShelfCardModel){
-      return of(cachedShelfCardModel);
+    let cacheModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
+    if(cacheModel){
+      return of(cacheModel);
     }
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.get<ShelfCardModel>(
@@ -153,9 +153,6 @@ export class LibraryService {
       tap(res=>{
         if(res){
           this.shelfCard_Storage().add(res);
-          if(res.documentCardModels.length > 0){
-            this.documentCard_Storage().add(...res.documentCardModels);
-          }
         }
       }),
     );
@@ -188,6 +185,24 @@ export class LibraryService {
       tap(res=>{
         if(res){
           this.documentPage_Storage().add(res);
+          this.documentCard_Storage().add(new DocumentCardModel({
+            description: res.description,
+            guid: res.guid,
+            hasImage: res.hasImage,
+            headers: res.elements.filter(el=>el.type == "h1" || el.type == "h2").map(el=>el.value),
+            integrityVersion: res.integrityVersion,
+            ownerGuid: res.owner.userGuid,
+            title: res.title,
+            versionName: res.version,
+          }));
+          
+          for(let parentShelfGuid of res.shelves.map(shelf=>shelf.guid)){ 
+            let parentShelf = this.shelfCard_Storage().getWithGuid(parentShelfGuid);
+            if(parentShelf && !parentShelf.documentsGuids.includes(res.guid)){
+              parentShelf!.documentsGuids.push(res.guid);
+              parentShelf!.totalNumberOfShelfDocuments += 1;
+            }
+          }
         }
       }),
     );
@@ -277,6 +292,20 @@ export class LibraryService {
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteDocument", {params: httpParams}
+    ).pipe(
+      tap(res=>{
+        if(res && res.success){
+          this.documentPage_Storage().delete(documentGuid);
+          this.documentCard_Storage().delete(documentGuid);
+          this.shelfCard_Storage().getArrayReference().forEach((shelfCardModel)=>{
+            let index = shelfCardModel.documentsGuids.indexOf(documentGuid);
+            if(index >= 0){
+              shelfCardModel.documentsGuids.splice(index,1);
+              shelfCardModel.totalNumberOfShelfDocuments -= 1;
+            }
+          });
+        }
+      }),
     );
   }
   requestDeleteElement(elementGuid:string){
@@ -289,12 +318,24 @@ export class LibraryService {
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteLibrary", {params: httpParams}
+    ).pipe(
+      tap(res=>{
+        if(res && res.success){
+          this.libraryCard_Storage().delete(libraryGuid);
+        }
+      }),
     );
   }
   requestDeleteShelf(shelfGuid:string){
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteShelf", {params: httpParams}
+    ).pipe(
+      tap(res=>{
+        if(res && res.success){
+          this.shelfCard_Storage().delete(shelfGuid);
+        }
+      }),
     );
   }
 
@@ -612,7 +653,6 @@ export class EditElementFormModel{
   Order?:string;
   Delete?:boolean;
 }
-
 export class OwnerModel{
   constructor(ownerModel:OwnerModel){
     this.guid = ownerModel.guid;
@@ -625,7 +665,6 @@ export class OwnerModel{
   hasImage:boolean = false;
   integrityVersion:number = 0;
 }
-
 export class RuCache<T extends {guid:string}>{
   private capacity:number = 50;
   private cache:T[] = [];
@@ -642,7 +681,6 @@ export class RuCache<T extends {guid:string}>{
       return null;
     }
   }
-
   add(...newValues:T[]){
     newValues.forEach(newValue=>{
       let index = this.cache.findIndex(value=>value.guid === newValue.guid);
@@ -666,5 +704,27 @@ export class RuCache<T extends {guid:string}>{
     
     this.cache.unshift(...newValues);
   }
+  delete(guid:string){
+    let index = this.cache.findIndex(value=>value.guid === guid);
+    if(index >= 0){
+      this.cache.splice(index,1);
+    }
+  }
+  getArrayReference():T[]{
+    return this.cache;
+  }
 }
+/*export class ShelfCardModel_CacheModel{
+  guid:string = null!;
+  ownerGuid:string = null!;
+  title:string = null!;
+  description?:string;
+  librariesGuids:string[] = [];
+  documentsGuids:string[] = [];
+  totalNumberOfShelfDocuments:number = 0;
+  createdAt:Date = null!;
+  hasImage:boolean = false;
+  integrityVersion:number = 0;
+  isDefault:boolean = false;
+}*/
 

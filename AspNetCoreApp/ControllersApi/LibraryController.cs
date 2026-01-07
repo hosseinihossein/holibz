@@ -268,11 +268,11 @@ public class LibraryController : ControllerBase
         {
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
-            DocumentCardModels = shelf.Documents
+            DocumentsGuids = shelf.Documents
             .Select(sd => sd.Document)
             .OrderBy(doc => doc.Id)
             .Take(10)
-            .Select(doc => new Library_DocumentCard_ViewModel()
+            .Select(doc => doc.Guid/*new Library_DocumentCard_ViewModel()
             {
                 Description = doc.Description,
                 Guid = doc.Guid,
@@ -282,15 +282,15 @@ public class LibraryController : ControllerBase
                 HasImage = doc.HasImage,
                 IntegrityVersion = doc.IntegrityVersion,
                 VersionName = doc.Version == "Default" ? null : doc.Version,
-            }).ToArray(),
+            }*/).ToArray(),
             Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries
+            LibrariesGuids = shelf.ParentLibraries
             .Select(ls => ls.Library)
-            .Select(parentLib => new Library_LibraryBrief_ViewModel()
+            .Select(parentLib => parentLib.Guid/*new Library_LibraryBrief_ViewModel()
             {
                 Guid = parentLib.Guid,
                 Title = parentLib.Title,
-            }).ToArray(),
+            }*/).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.Owner.Guid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
@@ -397,11 +397,11 @@ public class LibraryController : ControllerBase
         {
             CreatedAt = shelf.CreatedAt,
             Description = shelf.Description,
-            DocumentCardModels = shelf.Documents
+            DocumentsGuids = shelf.Documents
             .Select(sd => sd.Document)
             .OrderBy(doc => doc.Id)
             .Take(10)
-            .Select(doc => new Library_DocumentCard_ViewModel()
+            .Select(doc => doc.Guid/*new Library_DocumentCard_ViewModel()
             {
                 Description = doc.Description,
                 Guid = doc.Guid,
@@ -411,15 +411,15 @@ public class LibraryController : ControllerBase
                 HasImage = doc.HasImage,
                 IntegrityVersion = doc.IntegrityVersion,
                 VersionName = doc.Version == "Default" ? null : doc.Version,
-            }).ToArray(),
+            }*/).ToArray(),
             Guid = shelf.Guid,
-            Libraries = shelf.ParentLibraries
+            LibrariesGuids = shelf.ParentLibraries
             .Select(ls => ls.Library)
-            .Select(parentLib => new Library_LibraryBrief_ViewModel()
+            .Select(parentLib => parentLib.Guid/*new Library_LibraryBrief_ViewModel()
             {
                 Guid = parentLib.Guid,
                 Title = parentLib.Title,
-            }).ToArray(),
+            }*/).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.Owner.Guid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
@@ -536,15 +536,15 @@ public class LibraryController : ControllerBase
 
     private async Task<Library_ShelfCard_ViewModel> RecentlyAddedDocs_ShelfModel()
     {
-        Library_DocumentCard_ViewModel[] recetlyAddedDocs = await RecentlyAddDocuments_DocumentCardModel();
+        Guid[] recetlyAddedDocs = await RecentlyAddDocuments_DocumentCardModel();
 
         return new Library_ShelfCard_ViewModel()
         {
             CreatedAt = DateTime.UtcNow,
             Description = "Recently Added Documents",
-            DocumentCardModels = recetlyAddedDocs,
+            DocumentsGuids = recetlyAddedDocs,
             Guid = Guid.Empty,
-            Libraries = [],
+            LibrariesGuids = [],
             Title = "New Documents",
             OwnerGuid = Guid.Empty,
             TotalNumberOfShelfDocuments = recetlyAddedDocs.Length,
@@ -816,12 +816,12 @@ public class LibraryController : ControllerBase
 
 
 
-    private async Task<Library_DocumentCard_ViewModel[]> RecentlyAddDocuments_DocumentCardModel()
+    private async Task<Guid[]> RecentlyAddDocuments_DocumentCardModel()
     {
         return await libraryDb.Documents
         .OrderByDescending(doc => doc.CreatedAt)
         .Take(10)
-        .Select(doc => new Library_DocumentCard_ViewModel()
+        .Select(doc => doc.Guid/*new Library_DocumentCard_ViewModel()
         {
             Description = doc.Description,
             Guid = doc.Guid,
@@ -831,8 +831,8 @@ public class LibraryController : ControllerBase
             HasImage = doc.HasImage,
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
-        })
-        .AsSplitQuery()
+        }*/)
+        //.AsSplitQuery()
         .ToArrayAsync();
     }
 

@@ -1945,8 +1945,8 @@ public class Library_ShelfCard_ViewModel
     public Guid OwnerGuid { get; set; }
     public string Title { get; set; } = null!;
     public string? Description { get; set; } = null;
-    public Library_LibraryBrief_ViewModel[] Libraries { get; set; } = [];
-    public Library_DocumentCard_ViewModel[] DocumentCardModels { get; set; } = [];
+    public Guid[] LibrariesGuids { get; set; } = [];
+    public Guid[] DocumentsGuids { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public int TotalNumberOfShelfDocuments { get; set; }
     public bool HasImage { get; set; }

@@ -31,9 +31,11 @@ export class ShelfCard {
   ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
   shelfImageAddress = computed(()=>this.libraryService.getShelfImageAddress(this.shelfModel()));
 
+  documentCardModels = signal<DocumentCardModel[]>([]);
+
   constructor(){
     effect(()=>{
-      if(this.shelfModel()){
+      if(this.shelfModel().ownerGuid){
         this.libraryService.requestOwnerModel(this.shelfModel().ownerGuid!).subscribe({
           next: res => {
             if(res){
@@ -41,6 +43,20 @@ export class ShelfCard {
             }
           },
         });
+      }
+    });
+
+    effect(()=>{
+      if(this.shelfModel().documentsGuids){
+        for(let docGuid of this.shelfModel().documentsGuids){
+          this.libraryService.requestDocumentCardModel(docGuid).subscribe({
+            next: res => {
+              if(res){
+                this.documentCardModels().push(res);
+              }
+            },
+          });
+        }
       }
     });
   }
@@ -51,7 +67,7 @@ export class ShelfCard {
 }
 
 export class ShelfCardModel{
-  constructor(shelfCardModel:ShelfCardModel){
+  /*constructor(shelfCardModel:ShelfCardModel){
     this.guid = shelfCardModel.guid;
     this.ownerGuid = shelfCardModel.ownerGuid;
     this.title = shelfCardModel.title;
@@ -71,6 +87,32 @@ export class ShelfCardModel{
   description?:string;
   libraries:{guid:string, title:string}[] = [];
   documentCardModels:DocumentCardModel[] = [];
+  totalNumberOfShelfDocuments:number = 0;
+  createdAt:Date = null!;
+  hasImage:boolean = false;
+  integrityVersion:number = 0;
+  isDefault:boolean = false;*/
+
+  constructor(shelfCardModel:ShelfCardModel){
+    this.guid = shelfCardModel.guid;
+    this.ownerGuid = shelfCardModel.ownerGuid;
+    this.title = shelfCardModel.title;
+    this.description = shelfCardModel.description;
+    this.librariesGuids = shelfCardModel.librariesGuids.map(g=>g);
+    this.documentsGuids = shelfCardModel.documentsGuids.map(g=>g);
+    this.totalNumberOfShelfDocuments = shelfCardModel.totalNumberOfShelfDocuments;
+    this.createdAt = shelfCardModel.createdAt;
+    this.hasImage = shelfCardModel.hasImage;
+    this.integrityVersion = shelfCardModel.integrityVersion;
+    this.isDefault = shelfCardModel.isDefault;
+  }
+
+  guid:string = null!;
+  ownerGuid:string = null!;
+  title:string = null!;
+  description?:string;
+  librariesGuids:string[] = [];
+  documentsGuids:string[] = [];
   totalNumberOfShelfDocuments:number = 0;
   createdAt:Date = null!;
   hasImage:boolean = false;

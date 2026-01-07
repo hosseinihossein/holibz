@@ -76,7 +76,7 @@ mat-sidenav-content a#userProfile img{
 }
 
 mat-sidenav-content a#userProfile #username{
-    transform: translateY(10px);
+    transform: translateY(-14px);
     display: inline-block;
     padding-right: 8px;
 }
@@ -109,7 +109,7 @@ mat-sidenav-content app-section{
     transition: all 200ms;
 }
 
-mat-sidenav-content img{
+mat-sidenav-content #introduction-box img{
     display: block;
     max-width: 70%;
     max-height: 90vh;
@@ -123,7 +123,7 @@ mat-sidenav-content img{
     object-fit: contain;
 }
 
-mat-sidenav-content img:hover{
+mat-sidenav-content #introduction-box img:hover{
     box-shadow: 0px 5px 10px 0 var(--mat-sys-outline);
 }
 

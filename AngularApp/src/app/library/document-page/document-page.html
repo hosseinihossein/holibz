@@ -63,11 +63,14 @@
                 matTooltip="Owner">
                 @if(ownerImgSrc()){
                 <img [ngSrc]="ownerImgSrc()!" priority width="40" height="40" alt="user image">
+                <span id="username">{{ownerModel()?.username}}</span>
                 }
                 @else {
-                <mat-icon style="font-size: 40px;width: 40px;height: 40px;">account_circle</mat-icon>
+                <span>
+                    <mat-icon style="font-size: 40px;width: 40px;height: 40px;">account_circle</mat-icon>
+                    <span id="username">{{ownerModel()?.username}}</span>
+                </span>
                 }
-                <span id="username">{{ownerModel()?.username}}</span>
             </a>
             <button matButton="elevated" [matMenuTriggerFor]="version" matTooltip="Select a version"
                 style="padding-bottom: 6px;">

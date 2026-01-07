@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspNetCore.Migrations.Review_Db
 {
     [DbContext(typeof(Review_DbContext))]
-    [Migration("20260101171243_Initial")]
+    [Migration("20260107101619_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -209,13 +209,13 @@ namespace AspNetCore.Migrations.Review_Db
             modelBuilder.Entity("AspNetCoreApp.Models.Review_FollowerFollowing_DbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Follower")
-                        .WithMany("Followers")
+                        .WithMany("Followings")
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Following")
-                        .WithMany("Followings")
+                        .WithMany("Followers")
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -43,14 +43,18 @@
             </a>
             }
             @else if(identityService.isAuthenticated()) {
-            <button matButton="elevated">
-                <mat-icon>person_add</mat-icon>
-                Follow
-            </button>
-            <button matButton="elevated">
+            @if(library_OwnerModel()?.iFollow){
+            <button matButton="elevated" (click)="unFollow()">
                 <mat-icon>person_add_disabled</mat-icon>
                 UnFollow
             </button>
+            }
+            @else {
+            <button matButton="elevated" (click)="follow()">
+                <mat-icon>person_add</mat-icon>
+                Follow
+            </button>
+            }
             }
         </mat-card-actions>
 

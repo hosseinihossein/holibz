@@ -206,13 +206,13 @@ namespace AspNetCore.Migrations.Review_Db
             modelBuilder.Entity("AspNetCoreApp.Models.Review_FollowerFollowing_DbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Follower")
-                        .WithMany("Followers")
+                        .WithMany("Followings")
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AspNetCoreApp.Models.Review_UserDbModel", "Following")
-                        .WithMany("Followings")
+                        .WithMany("Followers")
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

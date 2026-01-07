@@ -424,13 +424,13 @@ export class LibraryService {
 
   requestToFollow(ownerGuid:string){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.post<{success:boolean}>(
+    return this.httpClient.post<{success:boolean}>(
       "/api/Library/Follow", null, {params:httpParams}
     );
   }
   requestToUnFollow(ownerGuid:string){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.post<{success:boolean}>(
+    return this.httpClient.post<{success:boolean}>(
       "/api/Library/UnFollow", null, {params:httpParams}
     );
   }

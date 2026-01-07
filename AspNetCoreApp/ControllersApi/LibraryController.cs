@@ -1783,6 +1783,15 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
         Library_OwnerProfileStatics_ViewModel? userProfileInfo = await libraryDb.Owners
         .Where(o => o.Guid == userGuid_Guid)
         .Select(o => new Library_OwnerProfileStatics_ViewModel()
@@ -1795,6 +1804,7 @@ public class LibraryController : ControllerBase
             NumberOfFollowings = o.Followings.Count,
             NumberOfLibraries = o.Libraries.Count,
             NumberOfShelves = o.Shelves.Count,
+            IFollow = myGuid != null && o.Followers.Any(ff => ff.Follower.Guid == myGuid),
         })
         .FirstOrDefaultAsync();
 
@@ -2117,12 +2127,12 @@ public class LibraryController : ControllerBase
         //***** review *****
         //fetch and create
         var followerDbInfo_Review = await reviewDb.Users
-        .Where(u => u.Guid == ownerGuid_Guid)
+        .Where(u => u.Guid == myGuid)
         .Select(u => new { Id = u.Id })
         .FirstAsync();
 
         var followingDbInfo_Review = await reviewDb.Users
-        .Where(u => u.Guid == myGuid)
+        .Where(u => u.Guid == ownerGuid_Guid)
         .Select(u => new { Id = u.Id })
         .FirstAsync();
 

@@ -259,12 +259,12 @@ public class Library_DbContext : DbContext
 
         modelBuilder.Entity<Library_FollowerFollowing_DbModel>()
         .HasOne(ff => ff.Follower)
-        .WithMany(u => u.Followers)
+        .WithMany(u => u.Followings)
         .HasForeignKey(ff => ff.FollowerId);
 
         modelBuilder.Entity<Library_FollowerFollowing_DbModel>()
         .HasOne(ff => ff.Following)
-        .WithMany(u => u.Followings)
+        .WithMany(u => u.Followers)
         .HasForeignKey(ff => ff.FollowingId);
 
         //*********** Users-FavoriteLibraries Many-To-Many *********
@@ -1923,6 +1923,7 @@ public class Library_OwnerProfileStatics_ViewModel
     public int NumberOfFavoriteLibraries { get; set; }
     public int NumberOfFavoriteShelves { get; set; }
     public int NumberOfFavoriteDocuments { get; set; }
+    public bool IFollow { get; set; }
 }
 public class Library_LibraryCard_ViewModel
 {

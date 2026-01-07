@@ -17,6 +17,14 @@ create different size images,
 - edit waitSpinner css(position:stick) to display the spinner in the middle no matter what about scroll
 - don't show erase all notifications when theres no notification
 - don't shoe delete button in edit user image when there's no user image
+- update Storage_shelfmodel ruCache after creating a new document
+- create an new user account named application or holibz(or anything else with EmptyGuid) 
+to represent the application, present recntly added documents, and offer some special services 
+and recommandation to users.
+- tooltip username for navbar user account dropdown and set username as its first item menu
+- display snackbar after following, unfollowing and other actions to inform the user
+- set an space between username and user image in brief users list doalig
+- set sorting cleared after opening new document
 - 
 
 
@@ -39,4 +47,5 @@ and reacting to their document.
 - add Async to the end of the name of async methods in models process class
 - the for loop in templates reinitiates alot of times with each event like scrolling the page, 
 how to prevent it for the sake of performance
+- define iAuthenticated instead of isAuthenticated in libraryService
 - 

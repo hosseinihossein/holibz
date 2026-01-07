@@ -223,10 +223,35 @@ export class Profile {
     this.genericListItemType.set("FavoriteDocuments");
   }
 
+  follow(){
+    if(this.identityService.isAuthenticated() && !this.isMyProfile() && this.ownerGuid() && 
+    this.library_OwnerModel() && !this.library_OwnerModel()!.iFollow){
+      this.libraryService.requestToFollow(this.ownerGuid()!).subscribe({
+        next: res => {
+          if(res){
+            this.library_OwnerModel()!.iFollow = true;
+          }
+        },
+      });
+    }
+  }
+  unFollow(){
+    if(this.identityService.isAuthenticated() && !this.isMyProfile() && this.ownerGuid() && 
+    this.library_OwnerModel() && this.library_OwnerModel()!.iFollow){
+      this.libraryService.requestToUnFollow(this.ownerGuid()!).subscribe({
+        next: res => {
+          if(res){
+            this.library_OwnerModel()!.iFollow = false;
+          }
+        },
+      });
+    }
+  }
+
 }
 
 export class UserProfileInfo{
-  guid:string = null!;
+  //guid:string = null!;
   numberOfLibraries:number = 0;
   numberOfShelves:number = 0;
   numberOfDocuments:number = 0;
@@ -235,4 +260,5 @@ export class UserProfileInfo{
   numberOfFavoriteLibraries:number = 0;
   numberOfFavoriteShelves:number = 0;
   numberOfFavoriteDocuments:number = 0;
+  iFollow:boolean = false;
 }

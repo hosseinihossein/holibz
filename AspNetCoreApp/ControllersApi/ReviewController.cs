@@ -863,7 +863,7 @@ public class ReviewController : ControllerBase
                 CreatedAt = comment.CreatedAt,
                 Guid = comment.Guid,
                 Text = comment.Text,
-                WriterGuid = comment.Writer.Guid,
+                WriterGuid = me.UserGuid,
             };
 
             return Ok(commentModel);
@@ -899,11 +899,6 @@ public class ReviewController : ControllerBase
                 ModelState.AddModelError("parentCommentGuid", "There's no comment with the specified guid!");
                 return BadRequest(ModelState);
             }
-
-            /*string parentCommentWriterUserName = await userManager.Users
-            .Where(u => u.UserGuid == parentCommentDbModel.Writer.Guid)
-            .Select(u => u.UserName!)
-            .FirstAsync();*/
 
             var me = await userManager.Users
             .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
@@ -957,7 +952,7 @@ public class ReviewController : ControllerBase
                 CreatedAt = reply.CreatedAt,
                 Guid = reply.Guid,
                 Text = reply.Text,
-                WriterGuid = reply.Writer.Guid,
+                WriterGuid = me.UserGuid,
                 IsReply = true,
                 ReplyToBrief = parentCommentDbInfo.Text[..briefLength],
                 ReplyToGuid = formModel.ParentCommentGuid,

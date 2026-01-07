@@ -158,12 +158,12 @@ public class Review_DbContext : DbContext
 
         modelBuilder.Entity<Review_FollowerFollowing_DbModel>()
         .HasOne(ff => ff.Follower)
-        .WithMany(u => u.Followers)
+        .WithMany(u => u.Followings)
         .HasForeignKey(ff => ff.FollowerId);
 
         modelBuilder.Entity<Review_FollowerFollowing_DbModel>()
         .HasOne(ff => ff.Following)
-        .WithMany(u => u.Followings)
+        .WithMany(u => u.Followers)
         .HasForeignKey(ff => ff.FollowingId);
 
         //************* Review_ReviewDbModel *************

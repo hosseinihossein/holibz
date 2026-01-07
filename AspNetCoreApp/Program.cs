@@ -346,13 +346,31 @@ public class Program
             var libraryProcess = scope.ServiceProvider.GetRequiredService<Library_Process>();
             await libraryProcess.CreateNewOwner(libraryDb, admin.UserGuid, admin.NormalizedUserName!);
 
+            //for other user
+            /*var otherUsresInfo = await userManager.Users.Where(u => u.UserGuid != admin.UserGuid)
+            .Select(u => new { u.UserGuid, u.NormalizedUserName }).ToListAsync();
+            foreach (var userInfo in otherUsresInfo)
+            {
+                await libraryProcess.CreateNewOwner(libraryDb, userInfo.UserGuid, userInfo.NormalizedUserName!);
+            }*/
+
+
             //***** Create Review_User for admin *****
             var reviewProcess = scope.ServiceProvider.GetRequiredService<Review_Process>();
             await reviewProcess.CreateNewUser(reviewDb, admin.UserGuid, admin.NormalizedUserName!);
 
+            //for other user
+            /*foreach (var userInfo in otherUsresInfo)
+            {
+                await reviewProcess.CreateNewUser(reviewDb, userInfo.UserGuid, userInfo.NormalizedUserName!);
+            }*/
+
+
             //***** Create notification User for admin *****
             var notifProcess = scope.ServiceProvider.GetRequiredService<Notification_Process>();
             await notifProcess.CreateNewUser(notifDb, admin.UserGuid);
+
+
         }
 
 

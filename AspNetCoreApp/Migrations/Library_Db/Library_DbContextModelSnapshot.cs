@@ -455,13 +455,13 @@ namespace AspNetCore.Migrations.Library_Db
             modelBuilder.Entity("AspNetCoreApp.Models.Library_FollowerFollowing_DbModel", b =>
                 {
                     b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "Follower")
-                        .WithMany("Followers")
+                        .WithMany("Followings")
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AspNetCoreApp.Models.Library_OwnerDbModel", "Following")
-                        .WithMany("Followings")
+                        .WithMany("Followers")
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

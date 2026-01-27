@@ -15,11 +15,12 @@ import { IdentityService } from '../../services/identity-service';
 import { Result } from '../../dialogs/result/result';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-new-shelf-form',
   imports: [MatFormField,/*MatSelect,MatOption,*/MatButton,MatLabel,MatInput,MatIcon,
-    ReactiveFormsModule,MatError,MatProgressSpinner,MatIconButton,MatButtonToggleModule
+    ReactiveFormsModule,MatError,WaitSpinner,MatIconButton,MatButtonToggleModule
   ],
   templateUrl: './new-shelf-form.html',
   styleUrl: './new-shelf-form.css'
@@ -43,7 +44,7 @@ export class NewShelfForm {
   image = this.newShelfForm.get("image");
 
   previewImgSrc = signal<string|null>(null);
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   libraryList = signal<LibraryCardModel[]>([]);
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
@@ -120,11 +121,11 @@ export class NewShelfForm {
   onSubmit(){
     if(this.newShelfForm.valid){
       console.log(JSON.stringify(this.newShelfForm.value));
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       this.libraryService.createNewShelf(this.newShelfForm.value).subscribe({
         next: res => {
           if(res && res.success){
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             this.router.navigate(['/shelf',res.shelfGuid]);
           }
         },
@@ -149,7 +150,7 @@ export class NewShelfForm {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         },
       });
     }

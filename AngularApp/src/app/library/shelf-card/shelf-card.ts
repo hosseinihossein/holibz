@@ -20,23 +20,45 @@ import { SingletonModes } from '../../services/singleton-modes';
   styleUrl: './shelf-card.css'
 })
 export class ShelfCard {
-  shelfModel = input.required<ShelfCardModel>();
+  //shelfModel = input.required<ShelfCardModel>();
+  shelfGuid = input.required<string>();
 
   router = inject(Router);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
   singleton = inject(SingletonModes);
 
+  shelfModel = signal<ShelfCardModel|null>(null);
   ownerModel = signal<OwnerModel|null>(null);
   ownerImgSrc = computed(()=>this.singleton.getUserImageAddress(this.ownerModel()));
   shelfImageAddress = computed(()=>this.libraryService.getShelfImageAddress(this.shelfModel()));
 
-  documentCardModels = signal<DocumentCardModel[]>([]);
+  //documentCardModels = signal<DocumentCardModel[]>([]);
+  /*documentCardModels_Sorted = computed(()=>this.documentCardModels().sort((a,b)=>{
+    if(a.createdAt >= b.createdAt){
+      return 1;
+    }
+    else{
+      return -1;
+    }
+  }));*/
 
   constructor(){
     effect(()=>{
-      if(this.shelfModel().ownerGuid){
-        this.libraryService.requestOwnerModel(this.shelfModel().ownerGuid!).subscribe({
+      if(this.shelfGuid()){
+        this.libraryService.requestShelfModel(this.shelfGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.shelfModel.set(res);
+            }
+          },
+        });
+      }
+    });
+
+    effect(()=>{
+      if(this.shelfModel() && this.shelfModel()!.ownerGuid){
+        this.libraryService.requestOwnerModel(this.shelfModel()!.ownerGuid!).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);
@@ -45,54 +67,14 @@ export class ShelfCard {
         });
       }
     });
-
-    effect(()=>{
-      if(this.shelfModel().documentsGuids){
-        for(let docGuid of this.shelfModel().documentsGuids){
-          this.libraryService.requestDocumentCardModel(docGuid).subscribe({
-            next: res => {
-              if(res){
-                this.documentCardModels().push(res);
-              }
-            },
-          });
-        }
-      }
-    });
   }
 
   openShelf(){
-    this.router.navigate(["/shelf", this.shelfModel().guid]);
+    this.router.navigate(["/shelf", this.shelfGuid()]);
   }
 }
 
 export class ShelfCardModel{
-  /*constructor(shelfCardModel:ShelfCardModel){
-    this.guid = shelfCardModel.guid;
-    this.ownerGuid = shelfCardModel.ownerGuid;
-    this.title = shelfCardModel.title;
-    this.description = shelfCardModel.description;
-    this.libraries = shelfCardModel.libraries.map(a=>Object.create(a));
-    this.documentCardModels = shelfCardModel.documentCardModels.map(a=>new DocumentCardModel(a));
-    this.totalNumberOfShelfDocuments = shelfCardModel.totalNumberOfShelfDocuments;
-    this.createdAt = shelfCardModel.createdAt;
-    this.hasImage = shelfCardModel.hasImage;
-    this.integrityVersion = shelfCardModel.integrityVersion;
-    this.isDefault = shelfCardModel.isDefault;
-  }
-
-  guid:string = null!;
-  ownerGuid:string = null!;
-  title:string = null!;
-  description?:string;
-  libraries:{guid:string, title:string}[] = [];
-  documentCardModels:DocumentCardModel[] = [];
-  totalNumberOfShelfDocuments:number = 0;
-  createdAt:Date = null!;
-  hasImage:boolean = false;
-  integrityVersion:number = 0;
-  isDefault:boolean = false;*/
-
   constructor(shelfCardModel:ShelfCardModel){
     this.guid = shelfCardModel.guid;
     this.ownerGuid = shelfCardModel.ownerGuid;
@@ -105,6 +87,8 @@ export class ShelfCardModel{
     this.hasImage = shelfCardModel.hasImage;
     this.integrityVersion = shelfCardModel.integrityVersion;
     this.isDefault = shelfCardModel.isDefault;
+    //this.isMyFavorite = shelfCardModel.isMyFavorite;
+    this.totalNumberOfUsersInFavor = shelfCardModel.totalNumberOfUsersInFavor;
   }
 
   guid:string = null!;
@@ -118,4 +102,6 @@ export class ShelfCardModel{
   hasImage:boolean = false;
   integrityVersion:number = 0;
   isDefault:boolean = false;
+  //isMyFavorite:boolean = false;
+  totalNumberOfUsersInFavor:number = 0;
 }

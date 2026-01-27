@@ -1,7 +1,5 @@
 import { AfterViewInit, Component, inject, input, model, output } from '@angular/core';
 import { EditBox } from "../edit-box/edit-box";
-import { SingletonModes } from '../../../../services/singleton-modes';
-import { SectionModel } from '../../../../models/section-model';
 import { H1Element } from '../h1-element/h1-element';
 import { H2Element } from '../h2-element/h2-element';
 import { PElement } from '../p-element/p-element';

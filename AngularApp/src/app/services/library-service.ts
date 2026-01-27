@@ -10,32 +10,34 @@ import { Observable, of, tap, throwError } from 'rxjs';
 import { ParentShelfModel } from '../library/new-document-form/new-document-form';
 import { SingletonModes } from './singleton-modes';
 import { UserProfileInfo } from '../user-account/profile/profile';
+import { GenericListFilter } from '../library/generic-list/generic-list';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LibraryService {
   private httpClient = inject(HttpClient);
+  singleton = inject(SingletonModes);
 
-  libraryCard_Storage = signal<RuCache<LibraryCardModel>>(new RuCache<LibraryCardModel>());
-  shelfCard_Storage = signal<RuCache<ShelfCardModel>>(new RuCache<ShelfCardModel>());
-  documentCard_Storage = signal<RuCache<DocumentCardModel>>(new RuCache<DocumentCardModel>());
-  documentPage_Storage = signal<RuCache<DocumentPageModel>>(new RuCache<DocumentPageModel>());
-  owner_Storage = signal<RuCache<OwnerModel>>(new RuCache<OwnerModel>());
+  //libraryCard_Storage = signal<RuCache<LibraryCardModel>>(new RuCache<LibraryCardModel>());
+  //shelfCard_Storage = signal<RuCache<ShelfCardModel>>(new RuCache<ShelfCardModel>());
+  //documentCard_Storage = signal<RuCache<DocumentCardModel>>(new RuCache<DocumentCardModel>());
+  //documentPage_Storage = signal<RuCache<DocumentPageModel>>(new RuCache<DocumentPageModel>());
+  //owner_Storage = signal<RuCache<OwnerModel>>(new RuCache<OwnerModel>());
 
 
   requestLibraryList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
     return this.httpClient.get<LibraryCardModel[]>(
       "/api/Library/List", { params: quryParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           //console.log("add library card list to cache: "+JSON.stringify(res.map(lib=>lib.title)));
           this.libraryCard_Storage().add(...res);
         }
       }),
-    );
+    )*/;
   }
   requestLibraryBriefList(ownerGuid: string){
     let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
@@ -43,10 +45,43 @@ export class LibraryService {
       "/api/Library/BriefList", { params: quryParams}
     );
   }
-  requestLibrariesGuids(ownerGuid: string){
+  requestUserLibrariesGuids(ownerGuid: string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
-      "/api/Library/LibrariesGuids", {params:httpParams}
+      "/api/Library/GetUserLibrariesGuids", {params:httpParams}
+    );
+  }
+  requestTotalNumberOfUserLibraries(ownerGuid: string, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfUserLibraries", {params:httpParams}
     );
   }
 
@@ -54,24 +89,90 @@ export class LibraryService {
     let quryParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.get<ShelfCardModel[]>(
       "/api/Library/ShelfList", { params: quryParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.shelfCard_Storage().add(...res);
         }
       }),
-    );
+    )*/;
   }
-  requestShelvesGuids(libraryGuid:string){
+  requestLibraryShelvesGuids(libraryGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("libraryGuid",libraryGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
-      "/api/Library/ShelvesGuids", {params:httpParams}
+      "/api/Library/GetLibraryShelvesGuids", {params:httpParams}
     );
   }
-  requestUserShelvesGuids(ownerGuid:string){
+  requestTotalNumberOfLibraryShelves(libraryGuid:string, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("libraryGuid",libraryGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfLibraryShelves", {params:httpParams}
+    );
+  }
+  requestUserShelvesGuids(ownerGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
-      "/api/Library/UserShelvesGuids", {params:httpParams}
+      "/api/Library/GetUserShelvesGuids", {params:httpParams}
+    );
+  }
+  requestTotalNumberOfUserShelves(ownerGuid:string, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfUserShelves", {params:httpParams}
     );
   }
   requestUserShelfList(ownerGuid: string){
@@ -80,108 +181,155 @@ export class LibraryService {
       "/api/Library/UserShelfList", { params: quryParams}
     );
   }
-  /*requestRecentlyAddedDocs_ShelffCardModel(){
-    let httpParams = new HttpParams().set("shelfGuid", "RecentlyAddedDocuments");
-    return this.httpClient.get<ShelfCardModel>(
-      "/api/Library/ShelfModel", {params:httpParams}
-    );
-  }*/
 
   requestDocumentCardList(shelfGuid: string){
     let quryParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.get<DocumentCardModel[]>(
       "/api/Library/DocumentCardList", { params: quryParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.documentCard_Storage().add(...res);
         }
       }),
-    );
+    )*/;
   }
-  requestDocumentsGuids(shelfGuid:string){
+  requestShelfDocumentsGuids(shelfGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("shelfGuid",shelfGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
-      "/api/Library/DocumentsGuids", {params:httpParams}
+      "/api/Library/GetShelfDocumentsGuids", {params:httpParams}
     );
   }
-  requestUserDocumentsGuids(ownerGuid:string){
+  requestTotalNumberOfShelfDocuments(shelfGuid:string, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("shelfGuid",shelfGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfShelfDocuments", {params:httpParams}
+    );
+  }
+  requestUserDocumentsGuids(ownerGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
-      "/api/Library/UserDocumentsGuids", {params:httpParams}
+      "/api/Library/GetUserDocumentsGuids", {params:httpParams}
     );
   }
-
-  requestTotalNumberOfDocuments(ownerGuid: string){
-    let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
-    return this.httpClient.get<{totalNumberOfUserDocuments: number}>(
-      "/api/Library/TotalNumberOfDocuments", { params: quryParams}
-    );
-  }
-  requestTotalNumberOfShelves(ownerGuid: string){
-    let quryParams = new HttpParams().set("ownerGuid", ownerGuid);
-    return this.httpClient.get<{totalNumberOfUserShelves: number}>(
-      "/api/Library/TotalNumberOfShelves", { params: quryParams}
+  requestTotalNumberOfUserDocuments(ownerGuid:string, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("ownerGuid",ownerGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfUserDocuments", {params:httpParams}
     );
   }
 
   requestLibraryModel(libraryGuid:string){
-    let cachedLibraryCardModel = this.libraryCard_Storage().getWithGuid(libraryGuid);
+    /*let cachedLibraryCardModel = this.libraryCard_Storage().getWithGuid(libraryGuid);
     if(cachedLibraryCardModel){
       return of(cachedLibraryCardModel);
-    }
+    }*/
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.get<LibraryCardModel>(
       "/api/Library/LibraryModel", {params: httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.libraryCard_Storage().add(res);
         }
       }),
-    );
+    )*/;
   }
   requestShelfModel(shelfGuid:string){
-    let cacheModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
+    /*let cacheModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
     if(cacheModel){
       return of(cacheModel);
-    }
+    }*/
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.get<ShelfCardModel>(
       "/api/Library/ShelfModel", {params: httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.shelfCard_Storage().add(res);
         }
       }),
-    );
+    )*/;
   }
   requestDocumentCardModel(docGuid: string){
-    let cachedDocumentCardModel = this.documentCard_Storage().getWithGuid(docGuid);
+    /*let cachedDocumentCardModel = this.documentCard_Storage().getWithGuid(docGuid);
     if(cachedDocumentCardModel){
       return of(cachedDocumentCardModel);
-    }
+    }*/
     let httpParams = new HttpParams().set("documentGuid", docGuid);
     return this.httpClient.get<DocumentCardModel>(
       "/api/Library/DocumentCardModel", {params: httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.documentCard_Storage().add(res);
         }
       }),
-    );
+    )*/;
   }
   requestDocumentPageModel(documentGuid:string){
-    let cachedDocumentPageModel = this.documentPage_Storage().getWithGuid(documentGuid);
+    /*let cachedDocumentPageModel = this.documentPage_Storage().getWithGuid(documentGuid);
     if(cachedDocumentPageModel){
       return of(cachedDocumentPageModel);
-    }
+    }*/
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
     return this.httpClient.get<DocumentPageModel>(
       "/api/Library/DocumentPageModel", {params:httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.documentPage_Storage().add(res);
@@ -194,6 +342,7 @@ export class LibraryService {
             ownerGuid: res.owner.userGuid,
             title: res.title,
             versionName: res.version,
+            createdAt: res.createdAt,
           }));
           
           for(let parentShelfGuid of res.shelves.map(shelf=>shelf.guid)){ 
@@ -205,7 +354,7 @@ export class LibraryService {
           }
         }
       }),
-    );
+    )*/;
   }
 
   createNewLibrary(newLibraryFormModel: NewLibraryFormModel){
@@ -292,7 +441,7 @@ export class LibraryService {
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteDocument", {params: httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res && res.success){
           this.documentPage_Storage().delete(documentGuid);
@@ -306,7 +455,7 @@ export class LibraryService {
           });
         }
       }),
-    );
+    )*/;
   }
   requestDeleteElement(elementGuid:string){
     let httpParams = new HttpParams().set("elementGuid", elementGuid);
@@ -318,25 +467,25 @@ export class LibraryService {
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteLibrary", {params: httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res && res.success){
           this.libraryCard_Storage().delete(libraryGuid);
         }
       }),
-    );
+    )*/;
   }
   requestDeleteShelf(shelfGuid:string){
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
     return this.httpClient.delete<{success:boolean}>(
       "/api/Library/DeleteShelf", {params: httpParams}
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res && res.success){
           this.shelfCard_Storage().delete(shelfGuid);
         }
       }),
-    );
+    )*/;
   }
 
   submitEditedElements(parentDocumentGuid:string, editElementFormModelArray:EditElementFormModel[]){
@@ -411,6 +560,29 @@ export class LibraryService {
       {documentGuid:documentGuid, shelfGuids:shelfGuids}
     );
   }
+  removeDoumentFromParentShelf(documentGuid:string,shelfGuid:string){
+    let httpParams = new HttpParams().set("documentGuid",documentGuid).set("shelfGuid",shelfGuid);
+    return this.httpClient.post<{success:boolean}>(
+      "/api/Library/RemoveDocumentFromParentShelf", null, {params:httpParams}
+    )/*.pipe(
+      tap(res=>{
+        if(res && res.success){
+          //shelfCardModel
+          const shelfCardModel = this.shelfCard_Storage().getWithGuid(shelfGuid);
+          if(shelfCardModel){
+            let index = shelfCardModel.documentsGuids.indexOf(documentGuid);
+            shelfCardModel.documentsGuids.splice(index,1);
+          }
+          //documentPageModel
+          const documentPageModel = this.documentPage_Storage().getWithGuid(documentGuid);
+          if(documentPageModel){
+            let index = documentPageModel.shelves.findIndex(shelf=>shelf.guid === shelfGuid)
+            documentPageModel.shelves.splice(index,1);
+          }
+        }
+      }),
+    )*/;
+  }
   editShelfParentLibraries(shelfGuid:string, libraryGuids:string[]){
     return this.httpClient.post<{success:boolean}>(
       "/api/Library/EditShelfParentLibraries", 
@@ -420,19 +592,19 @@ export class LibraryService {
 
   //transfer it to the IdentityService
   requestOwnerModel(ownerGuid:string){
-    let cachedOwnerModel = this.owner_Storage().getWithGuid(ownerGuid);
+    /*let cachedOwnerModel = this.owner_Storage().getWithGuid(ownerGuid);
     if(cachedOwnerModel){
       return of(cachedOwnerModel);
-    }
+    }*/
     return this.httpClient.get<OwnerModel>(
       `/api/Library/GetOwnerModel?ownerGuid=${ownerGuid}`
-    ).pipe(
+    )/*.pipe(
       tap(res=>{
         if(res){
           this.owner_Storage().add(res);
         }
       }),
-    );
+    )*/;
   }
   requestUserProfileInfo(userGuid:string){
     let httpParams = new HttpParams().set("userGuid",userGuid);
@@ -479,7 +651,7 @@ export class LibraryService {
   requestFollowers(ownerGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
     httpParams = httpParams.set("bunchIndex", bunchIndex);
-    if(filter?.trim()){
+    if(filter && filter.trim().length >= 3){
       httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
@@ -489,7 +661,7 @@ export class LibraryService {
   requestFollowings(ownerGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
     httpParams = httpParams.set("bunchIndex", bunchIndex);
-    if(filter?.trim()){
+    if(filter && filter.trim().length >= 3){
       httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
@@ -497,69 +669,75 @@ export class LibraryService {
     );
   }
 
-  /*requestFavoriteLibraries(ownerGuid:string){
-    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.get<FavoriteModel[]>(
-      "/api/Library/GetFavoriteLibraries", {params:httpParams}
-    );
-  }
-  requestFavoriteShelves(ownerGuid:string){
-    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.get<FavoriteModel[]>(
-      "/api/Library/GetFavoriteShelves", {params:httpParams}
-    );
-  }
-  requestFavoriteDocuments(ownerGuid:string){
-    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
-    this.httpClient.get<FavoriteModel[]>(
-      "/api/Library/GetFavoriteDocuments", {params:httpParams}
-    );
-  }*/
-
-  requestUsersInFavorOfLibrary(libraryGuid:string){
+  requestUsersInFavorOfLibrary(libraryGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
-    this.httpClient.get<OwnerModel[]>(
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
+    if(filter && filter.trim().length >= 3){
+      httpParams = httpParams.set("filter", filter.trim());
+    }
+    return this.httpClient.get<OwnerModel[]>(
       "/api/Library/GetUsersInFavorOfLibrary", {params:httpParams}
     );
   }
-  requestUsersInFavorOfShelf(shelfGuid:string){
+  requestUsersInFavorOfShelf(shelfGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
-    this.httpClient.get<OwnerModel[]>(
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
+    if(filter && filter.trim().length >= 3){
+      httpParams = httpParams.set("filter", filter.trim());
+    }
+    return this.httpClient.get<OwnerModel[]>(
       "/api/Library/GetUsersInFavorOfShelf", {params:httpParams}
     );
   }
-  requestUsersInFavorOfDocument(documentGuid:string){
+  requestUsersInFavorOfDocument(documentGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
-    this.httpClient.get<OwnerModel[]>(
+    httpParams = httpParams.set("bunchIndex", bunchIndex);
+    if(filter && filter.trim().length >= 3){
+      httpParams = httpParams.set("filter", filter.trim());
+    }
+    return this.httpClient.get<OwnerModel[]>(
       "/api/Library/GetUsersInFavorOfDocument", {params:httpParams}
     );
   }
 
   requestToToggleFavoriteLibrary(libraryGuid:string){
     let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
-    this.httpClient.post<{success:boolean}>(
+    return this.httpClient.post<{success:boolean}>(
       "/api/Library/ToggleFavoriteLibrary", null, {params:httpParams}
     );
   }
   requestToToggleFavoriteShelf(shelfGuid:string){
     let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
-    this.httpClient.post<{success:boolean}>(
+    return this.httpClient.post<{success:boolean}>(
       "/api/Library/ToggleFavoriteShelf", null, {params:httpParams}
     );
   }
   requestToToggleFavoriteDocument(documentGuid:string){
     let httpParams = new HttpParams().set("documentGuid", documentGuid);
-    this.httpClient.post<{success:boolean}>(
+    return this.httpClient.post<{success:boolean}>(
       "/api/Library/ToggleFavoriteDocument", null, {params:httpParams}
     );
   }
 
-  requestTagsList(partialName:string){
-    let httpParams = new HttpParams().set("partialName", partialName);
-    return this.httpClient.get<string[]>(
-      "/api/Library/GetTagsList", {params:httpParams}
-    )
+  isMyFavoriteLibrary(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid",libraryGuid);
+    return this.httpClient.get<{isMyFavorite:boolean}>(
+      "/api/Library/IsMyFavoriteLibrary",{params:httpParams}
+    );
   }
+  isMyFavoriteShelf(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid",shelfGuid);
+    return this.httpClient.get<{isMyFavorite:boolean}>(
+      "/api/Library/IsMyFavoriteShelf",{params:httpParams}
+    );
+  }
+  isMyFavoriteDocument(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid",documentGuid);
+    return this.httpClient.get<{isMyFavorite:boolean}>(
+      "/api/Library/IsMyFavoriteDocument",{params:httpParams}
+    );
+  }
+
   requestEditDocumentTags(tags:string[], documentGuid:string){
     const formData = new FormData();
     formData.append("DocumentGuid", documentGuid);
@@ -569,6 +747,107 @@ export class LibraryService {
     return this.httpClient.post<string[]>(
       "/api/Library/EditDocumentTags", formData
     )
+  }
+
+  requestTags(partialName:string){
+    let httpParams = new HttpParams().set("partialName", partialName);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetTags", {params:httpParams}
+    )
+  }
+  requestUserTags(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetUserTags",{params:httpParams}
+    );
+  }
+  requestUserFavoriteLibrariesTags(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetUserFavoriteLibrariesTags",{params:httpParams}
+    );
+  }
+  requestUserFavoriteShelvesTags(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetUserFavoriteShelvesTags",{params:httpParams}
+    );
+  }
+  requestUserFavoriteDocumentsTags(ownerGuid:string){
+    let httpParams = new HttpParams().set("ownerGuid", ownerGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetUserFavoriteDocumentsTags",{params:httpParams}
+    );
+  }
+  requestLibraryTags(libraryGuid:string){
+    let httpParams = new HttpParams().set("libraryGuid", libraryGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetLibraryTags",{params:httpParams}
+    );
+  }
+  requestShelfTags(shelfGuid:string){
+    let httpParams = new HttpParams().set("shelfGuid", shelfGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetShelfTags",{params:httpParams}
+    );
+  }
+  requestDocumentTags(documentGuid:string){
+    let httpParams = new HttpParams().set("documentGuid", documentGuid);
+    return this.httpClient.get<string[]>(
+      "/api/Library/GetLibraryTags",{params:httpParams}
+    );
+  }
+
+  searchDocuments(tags?:string[],title?:string|null,sortBy?:"newest"|"popular", pageIndex?:number, pageSize?:number){
+    if((!tags || tags.length == 0) && 
+      (!title || title.trim().length < this.singleton.introductionTitle_MinLength())
+    ){
+      return of([""]);
+    }
+    
+    let httpParams = new HttpParams();
+    
+    if(tags && tags.length > 0){
+      tags.forEach((value,index)=>{
+        httpParams = httpParams.set(`tags[${index}]`,value);
+      });
+    }
+    if(title && title.trim().length >= this.singleton.introductionTitle_MinLength()){
+      httpParams = httpParams.set("title",title.trim());
+    }
+    httpParams = httpParams.set("sortBy",sortBy ?? "newest");
+    
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex",pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize",pageSize);
+    }
+    return this.httpClient.get<string[]>(
+      "/api/Library/SearchDocuments", {params:httpParams}
+    );
+  }
+  requestTotalNumberOfSearchDocuments(tags?:string[],title?:string|null){
+    if((!tags || tags.length == 0) && 
+      (!title || title.trim().length < this.singleton.introductionTitle_MinLength())
+    ){
+      return of({totalNumberOfItems : 0});
+    }
+    
+    let httpParams = new HttpParams();
+    
+    if(tags && tags.length > 0){
+      tags.forEach((value,index)=>{
+        httpParams = httpParams.set(`tags[${index}]`,value);
+      });
+    }
+    if(title && title.trim().length >= this.singleton.introductionTitle_MinLength()){
+      httpParams = httpParams.set("title",title.trim());
+    }
+
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfSearchDocuments", {params:httpParams}
+    );
   }
 
   requestAddVersionRelationship(baseDocumentGuid:string, newRelatedDocumentGuid:string){
@@ -599,24 +878,125 @@ export class LibraryService {
     );
   }
 
-  requestFavoriteLibrariesGuids(userGuid:string){
+  requestFavoriteLibrariesGuids(userGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("userGuid",userGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
       "/api/Library/GetFavoriteLibrariesGuids", {params:httpParams}
     );
   }
-  requestFavoriteShelvesGuids(userGuid:string){
+  requestTotalNumberOfUserFavoriteLibraries(userGuid:string, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("userGuid",userGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfUserFavoriteLibraries", {params:httpParams}
+    );
+  }
+  requestFavoriteShelvesGuids(userGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
       "/api/Library/GetFavoriteShelvesGuids", {params:httpParams}
     );
   }
-  requestFavoriteDocumentsGuids(userGuid:string){
+  requestTotalNumberOfUserFavoriteShelves(userGuid:string, filterInfo?:GenericListFilter){
     let httpParams = new HttpParams().set("userGuid",userGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfUserFavoriteShelves", {params:httpParams}
+    );
+  }
+  requestFavoriteDocumentsGuids(userGuid:string, pageIndex?:number, pageSize?:number, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    if(pageIndex){
+      httpParams = httpParams.set("pageIndex", pageIndex);
+    }
+    if(pageSize){
+      httpParams = httpParams.set("pageSize", pageSize);
+    }
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+      httpParams = httpParams.set("sortBy",filterInfo.sortBy);
+    }
     return this.httpClient.get<string[]>(
       "/api/Library/GetFavoriteDocumentsGuids", {params:httpParams}
     );
   }
+  requestTotalNumberOfUserFavoriteDocuments(userGuid:string, filterInfo?:GenericListFilter){
+    let httpParams = new HttpParams().set("userGuid",userGuid);
+    if(filterInfo){
+      if(filterInfo.tags && filterInfo.tags.length > 0){
+        filterInfo.tags.forEach((value,index)=>{
+          httpParams = httpParams.set(`tags[${index}]`,value);
+        });
+      }
+      if(filterInfo.title && filterInfo.title.trim().length >= this.singleton.introductionTitle_MinLength()){
+        httpParams = httpParams.set("title",filterInfo.title.trim());
+      }
+    }
+    return this.httpClient.get<{totalNumberOfItems:number}>(
+      "/api/Library/TotalNumberOfUserFavoriteDocuments", {params:httpParams}
+    );
+  }
+
+  
 
 
 }
@@ -665,7 +1045,7 @@ export class OwnerModel{
   hasImage:boolean = false;
   integrityVersion:number = 0;
 }
-export class RuCache<T extends {guid:string}>{
+/*export class RuCache<T extends {guid:string}>{
   private capacity:number = 50;
   private cache:T[] = [];
 
@@ -713,18 +1093,5 @@ export class RuCache<T extends {guid:string}>{
   getArrayReference():T[]{
     return this.cache;
   }
-}
-/*export class ShelfCardModel_CacheModel{
-  guid:string = null!;
-  ownerGuid:string = null!;
-  title:string = null!;
-  description?:string;
-  librariesGuids:string[] = [];
-  documentsGuids:string[] = [];
-  totalNumberOfShelfDocuments:number = 0;
-  createdAt:Date = null!;
-  hasImage:boolean = false;
-  integrityVersion:number = 0;
-  isDefault:boolean = false;
 }*/
 

@@ -3,7 +3,6 @@ import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
-import { SectionModel } from '../../../../models/section-model';
 import { DocumentElementModel } from '../document-element/document-element';
 
 @Component({

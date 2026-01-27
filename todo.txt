@@ -1,51 +1,35 @@
-- add reference element to other elements(and some other elements such as table, chart, list, ...)
-- test edition and deletion of default library and shelf
-- enable choosing heading for adding new element
 - set review as lazy loading by defer
+- create different size of images, 
+- add reference element to other elements(and some other elements such as table, chart, list, ...)
+- enable choosing heading for adding new element
 - how to get more replies
-- change downloading file and images of documents to use httpClient to have more control over it
-- set angular app to show access denied message instead of application error
-- navbar menu, library shelf and documents filter, library shelf and documents paginator, 
-create different size images, 
-- search component is a mat-card like profile component
-- set backup model to backup from storage
-- errors gone after turnstile update in login page
-- don't show parentheses in document card when the version is default
-- transfer turnstile to the components where its needed
-- specify navigation keys for db models for nullable navigation properties
-- only display remove related version if the relatedVersions is not null
-- edit waitSpinner css(position:stick) to display the spinner in the middle no matter what about scroll
-- don't show erase all notifications when theres no notification
-- don't shoe delete button in edit user image when there's no user image
-- update Storage_shelfmodel ruCache after creating a new document
-- create an new user account named application or holibz(or anything else with EmptyGuid) 
-to represent the application, present recntly added documents, and offer some special services 
-and recommandation to users.
-- tooltip username for navbar user account dropdown and set username as its first item menu
-- display snackbar after following, unfollowing and other actions to inform the user
-- set an space between username and user image in brief users list doalig
-- set sorting cleared after opening new document
+- design navbar menu 
+- design home page
+- backup(Done, needs test)
+- service manager administration
 - 
 
 
-******* efficient ways for efcore query *********
-- Use AsNoTracking() for Read-Only Queries
-- edit efcore queries to not query large bunch of data
-- user bunch by bunch process to query very large (10 millions) of data
-- EF.CompileQuery
-*************************************************
+***** ask ai *****
+- how to resize images in client app
+- will creating anonymous objects with select be done on database or client in efcore
+- the same above question about selectMany 
+(will useing selectMany be done on database or client in efcore)
+- does efcore support the All() method
+- 
+
+
 
 
 - set changedetection onpush and do some other performance updates like ssr
 - break the angular app to several sub apps for each service.
-- add the ability for users to follow eachother
 - add the ability for users to send review request to eachother for reading 
 and reacting to their document.
-- add table, list, chart and reference elements to documents
-- create images with different sizes for each uploaded images
 - upgrade to Angular v21
-- add Async to the end of the name of async methods in models process class
-- the for loop in templates reinitiates alot of times with each event like scrolling the page, 
+- the "for" loop in templates reinitiates several times with each event like scrolling the page, 
 how to prevent it for the sake of performance
-- define iAuthenticated instead of isAuthenticated in libraryService
+- change isAuthenticated to iAuthenticated in libraryService
+- move getUserImage from singletonModel service to identityService
+- after adding private elements to buy, change the way of downloading file and images of private 
+elements to use httpClient to have more control over it
 - 

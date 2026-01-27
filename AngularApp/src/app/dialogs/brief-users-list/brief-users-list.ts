@@ -12,11 +12,12 @@ import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/
 import { ReviewService } from '../../review/review-service';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-brief-users-list',
   imports: [MatDialogModule, NgOptimizedImage, MatIcon, RouterLink,MatButton,MatFormField,MatInput,
-    MatLabel,MatProgressSpinner,ReactiveFormsModule
+    MatLabel,WaitSpinner,ReactiveFormsModule
   ],
   templateUrl: './brief-users-list.html',
   styleUrl: './brief-users-list.css',
@@ -29,7 +30,7 @@ export class BriefUsersList implements AfterViewInit {
     label?:string, 
     subjectGuid:string, 
     totalNumberOfItems:number,
-    type:"Like"|"ThumbsUp"|"ThumbsDown"|"Follower"|"Following",
+    type:"Like"|"ThumbsUp"|"ThumbsDown"|"Follower"|"Following"|"InFavorOfLibrary"|"InFavorOfShelf"|"InFavorOfDocument",
   }>(MAT_DIALOG_DATA);
 
   readonly singleton = inject(SingletonModes);
@@ -38,7 +39,7 @@ export class BriefUsersList implements AfterViewInit {
 
   users = signal<OwnerModel[]>([]);
   displayMore = computed(()=>this.users().length < this.data.totalNumberOfItems);
-  displaySubmitSpinner = signal(true);
+  displayWaitSpinner = signal(true);
   bunchIndex = signal(0);
   filterControl = new FormControl("",{validators:[Validators.maxLength(32)]});
 
@@ -54,7 +55,7 @@ export class BriefUsersList implements AfterViewInit {
       distinctUntilChanged()
     ).subscribe({
       next: () => {
-        this.displaySubmitSpinner.set(true);
+        this.displayWaitSpinner.set(true);
         this.bunchIndex.set(0);
         this.requestUsers();
       },
@@ -62,7 +63,7 @@ export class BriefUsersList implements AfterViewInit {
   }
 
   onMore(){
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
     this.requestUsers();
   }
 
@@ -72,7 +73,7 @@ export class BriefUsersList implements AfterViewInit {
         if(res){
           this.users.set(res);
           this.bunchIndex.update(b=>++b);
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         }
       },
     };
@@ -97,6 +98,15 @@ export class BriefUsersList implements AfterViewInit {
       }
       else if(this.data.type === "Following"){
         this.libraryService.requestFollowings(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "InFavorOfLibrary"){
+        this.libraryService.requestUsersInFavorOfLibrary(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "InFavorOfShelf"){
+        this.libraryService.requestUsersInFavorOfShelf(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
+      }
+      else if(this.data.type === "InFavorOfDocument"){
+        this.libraryService.requestUsersInFavorOfDocument(this.data.subjectGuid, this.bunchIndex(), filter).subscribe(callBacks);
       }
     }
   }

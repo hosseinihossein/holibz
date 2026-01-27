@@ -15,13 +15,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { Result } from '../../dialogs/result/result';
 import { SingletonModes } from '../../services/singleton-modes';
 import { RouterLink } from '@angular/router';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 declare const turnstile : any;
 
 @Component({
   selector: 'app-signup',
   imports: [MatFormField, MatInput, MatButton, MatIconButton, MatSuffix, MatLabel, MatError, MatIcon,
-    ReactiveFormsModule, MatProgressSpinner, RouterLink],
+    ReactiveFormsModule, WaitSpinner, RouterLink, MatProgressSpinner],
   templateUrl: './signup.html',
   styleUrl: './signup.css'
 })
@@ -53,7 +54,7 @@ export class Signup implements AfterViewInit {
   cfTurnstile = computed(()=>this.signupForm().controls["CfTurnstileResponse"]);
 
   //errorResponse = signal<object | null>(null);
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   widgetId = signal("");
 
   identityService = inject(IdentityService);
@@ -110,12 +111,12 @@ export class Signup implements AfterViewInit {
 
   signup(){
     if(this.signupForm().valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       let formValue = this.signupForm().value;
       this.identityService.signup(formValue).subscribe({
         next: res => {
           if(res.success){
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             //display a message to users that they need to validate their email
             this.dialog.open(Result,{
               //panelClass: "success-ResultStatus", 
@@ -158,7 +159,7 @@ export class Signup implements AfterViewInit {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           turnstile.reset(this.widgetId());
         },
       });

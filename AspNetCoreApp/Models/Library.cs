@@ -87,6 +87,7 @@ public class Library_DocumentDbModel
     public string Description { get; set; } = null!;
     [MaxLength(30)]
     public string Version { get; set; } = "Default";
+    public int? RelatedVersionsId { get; set; }
     public Library_RelatedVersionsDbModel? RelatedVersions { get; set; }
     public ICollection<Library_ShelfDocument_DbModel> ParentShelves { get; set; } = [];
     public ICollection<Library_ElementDbModel> Elements { get; set; } = [];
@@ -345,8 +346,9 @@ public class Library_DbContext : DbContext
         //********************************** RelatedVersions ***********************************
         //*********** RelatedVerions-Documents One-To-Many *********
         modelBuilder.Entity<Library_RelatedVersionsDbModel>()
-        .HasMany(d => d.Documents)
-        .WithOne(rv => rv.RelatedVersions)
+        .HasMany(rv => rv.Documents)
+        .WithOne(doc => doc.RelatedVersions)
+        .HasForeignKey(doc => doc.RelatedVersionsId)
         .IsRequired(false);
 
 
@@ -423,7 +425,7 @@ public class Library_DbContext : DbContext
 //*********************************** Processes **********************************
 public class Library_Process //singleton service
 {
-    readonly DirectoryInfo Storage_Owners;
+    //readonly DirectoryInfo Storage_Owners;
     public readonly DirectoryInfo Storage_Libraries;
     public readonly DirectoryInfo Storage_Shelves;
     public readonly DirectoryInfo Storage_Documents;
@@ -437,7 +439,7 @@ public class Library_Process //singleton service
     IConfiguration config*/)
     {
         //SeedFileName = config["SeedFileName"] ?? "holibzSeedData.json";
-        Storage_Owners = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Owners"));
+        //Storage_Owners = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Owners"));
         Storage_Libraries = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Libraries"));
         Storage_Shelves = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Shelves"));
         Storage_Documents = Directory.CreateDirectory(Path.Combine(_env.ContentRootPath, "Storage", "Library", "Documents"));
@@ -745,6 +747,7 @@ public class Library_Process //singleton service
         {
             owner = new Library_OwnerDbModel() { Id = doc.Owner.Id },
             document = new Library_DocumentDbModel() { Id = doc.Id },
+            totalElements = doc.Elements.Count,
             elementsWithGreaterEqualOrder = doc.Elements
             .Where(el => el._order >= (byte)formModel.Order)
             .Select(el => new Library_ElementDbModel()
@@ -752,6 +755,7 @@ public class Library_Process //singleton service
                 Id = el.Id,
             }),
         })
+        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (documentInfo is null)
@@ -760,6 +764,17 @@ public class Library_Process //singleton service
             {
                 ErrorTitle = "documentGuid",
                 ErrorDescription = $"Couldn't find any parent document with guid '{formModel.DocumentGuid.ToString("N")}' and the ownerGuid '{ownerGuid}'!",
+                Success = false,
+            };
+            return processResult;
+        }
+
+        if (documentInfo.totalElements >= 255)
+        {
+            Library_ProcessResult processResult = new()
+            {
+                ErrorTitle = "Total Elements",
+                ErrorDescription = $"Couldn't add more than 255 elements to a document!",
                 Success = false,
             };
             return processResult;
@@ -847,8 +862,8 @@ public class Library_Process //singleton service
     }
 
 
-    //************************************ storage **********************************
-    public void Delete_OwnerDirectory(string dbModelGuid)
+    //************************************ storage directory **********************************
+    /*public void Delete_OwnerDirectory(string dbModelGuid)
     {
         string directoryPath = Path.Combine(Storage_Owners.FullName, dbModelGuid);
         if (Directory.Exists(directoryPath))
@@ -863,7 +878,7 @@ public class Library_Process //singleton service
                 Console.WriteLine($"\n     ***** {e.Message} *****");
             }
         }
-    }
+    }*/
     public void Delete_LibraryDirectory(string dbModelGuid)
     {
         string directoryPath = Path.Combine(Storage_Libraries.FullName, dbModelGuid);
@@ -1937,6 +1952,8 @@ public class Library_LibraryCard_ViewModel
     public Guid OwnerGuid { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsDefault { get; set; }
+    //public bool IsMyFavorite { get; set; }
+    public int TotalNumberOfUsersInFavor { get; set; }
 
 }
 public class Library_ShelfCard_ViewModel
@@ -1952,6 +1969,8 @@ public class Library_ShelfCard_ViewModel
     public bool HasImage { get; set; }
     public int IntegrityVersion { get; set; }
     public bool IsDefault { get; set; }
+    //public bool IsMyFavorite { get; set; }
+    public int TotalNumberOfUsersInFavor { get; set; }
 }
 public class Library_DocumentCard_ViewModel
 {
@@ -1963,6 +1982,7 @@ public class Library_DocumentCard_ViewModel
     public int IntegrityVersion { get; set; }
     public Guid OwnerGuid { get; set; }
     public string? VersionName { get; set; } = null;
+    public DateTime CreatedAt { get; set; }
 }
 public class Library_DocumentPage_ViewModel
 {
@@ -1979,6 +1999,8 @@ public class Library_DocumentPage_ViewModel
     public Library_Element_ViewModel[] Elements { get; set; } = [];
     public string[] Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
+    //public bool IsMyFavorite { get; set; }
+    public int TotalNumberOfUsersInFavor { get; set; }
 }
 public class Library_Element_ViewModel
 {
@@ -2136,3 +2158,5 @@ public class Library_EditTags_FormModel
     [TagCharactersValidator]
     public string[] Tags { get; set; } = [];
 }
+
+//public Library_FilterItems_FormModel{}

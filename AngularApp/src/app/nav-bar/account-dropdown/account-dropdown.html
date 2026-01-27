@@ -1,9 +1,10 @@
-<button matIconButton [matMenuTriggerFor]="menu()" [style]="imgSrc() ? imgBtn : ''">
+<button matIconButton [matMenuTriggerFor]="menu()" [style]="imgSrc() ? imgBtnStyle : ''">
     @if(imgSrc()){
-    <img [ngSrc]="imgSrc()!" priority width="50" height="50" alt="user image">
+    <img [ngSrc]="imgSrc()!" priority width="50" height="50" alt="user image"
+        [matTooltip]="identityService.userModel()?.username">
     }
     @else if(identityService.isAuthenticated()){
-    <mat-icon>account_circle</mat-icon>
+    <mat-icon [matTooltip]="identityService.userModel()?.username">account_circle</mat-icon>
     }
     @else {
     <mat-icon>account_circle_off</mat-icon>

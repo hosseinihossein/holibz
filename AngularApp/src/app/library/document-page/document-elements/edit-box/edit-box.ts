@@ -1,19 +1,15 @@
-import { Component, inject, input, model, output, signal } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { SectionModel } from '../../../../models/section-model';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { EditHeader } from '../../../../dialogs/edit-header/edit-header';
 import { EditParagraph } from '../../../../dialogs/edit-paragraph/edit-paragraph';
-import { DocumentService } from '../../../../services/document-service';
 import { EditCode } from '../../../../dialogs/edit-code/edit-code';
 import { EditLink } from '../../../../dialogs/edit-link/edit-link';
 import { EditFile } from '../../../../dialogs/edit-file/edit-file';
 import { EditImageTitle } from '../../../../dialogs/edit-image-title/edit-image-title';
 import { DocumentElementModel } from '../document-element/document-element';
 import { EditElementFormModel, LibraryService } from '../../../../services/library-service';
-import { Result } from '../../../../dialogs/result/result';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { DocumentPageService } from '../../document-page-service';
 
 @Component({

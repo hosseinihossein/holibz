@@ -16,19 +16,23 @@ import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LibrariesList } from "../../library/libraries-list/libraries-list";
+//import { LibrariesList } from "../../library/libraries-list/libraries-list";
 import { MatBadgeModule } from '@angular/material/badge';
 import { LibraryService, OwnerModel } from '../../services/library-service';
 import { ReviewService } from '../../review/review-service';
 import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
-import { GenericList } from '../../library/generic-list/generic-list';
+import { GenericList, GenericListFilter } from '../../library/generic-list/generic-list';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-profile',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent,
     MatIcon, NgOptimizedImage, MatCheckboxModule, MatButtonModule, RouterLink, 
-    MatIconButton, MatBadgeModule, MatTooltipModule, GenericList, MatCardActions],
+    MatIconButton, MatBadgeModule, MatTooltipModule, GenericList, MatCardActions,
+    MatPaginatorModule,WaitSpinner],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })
@@ -43,6 +47,7 @@ export class Profile {
   libraryService = inject(LibraryService);
   reviewService = inject(ReviewService);
   dialog = inject(MatDialog);
+  snackBar = inject(MatSnackBar);
 
   identity_OwnerModel = signal<UserProfileModel|null>(null);
   userImgSrc = computed(()=>this.singleton.getUserImageAddress(this.identity_OwnerModel()));
@@ -58,6 +63,13 @@ export class Profile {
   genericListItemGuids = signal<string[]>([]);
   genericListItemType = signal<"Libraries"|"Shelves"|"Documents"|"FavoriteLibraries"|"FavoriteShelves"|
   "FavoriteDocuments">("Libraries");
+  pageIndex = signal<number>(0);
+  pageSize = signal<number>(10);
+  totalNumberOfItems = signal<number>(0);
+  genericListTags = signal<string[]>([]);
+  filterInfo = signal<GenericListFilter>(new GenericListFilter());
+
+  displayWaitSpinner = signal(false);
 
   constructor(){
     let userGuidRouteParam = this.activatedRoute.snapshot.paramMap.get("userGuid");
@@ -80,7 +92,6 @@ export class Profile {
           next: res=>this.identity_OwnerModel.set(res),
         });
       }
-      //console.log(JSON.stringify(this.identity_UserModel()));
     });
 
     effect(()=>{
@@ -104,80 +115,166 @@ export class Profile {
     });
 
     effect(()=>{
-      switch (this.genericListItemType()) {
-        case "Libraries":
-          this.libraryService.requestLibrariesGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Library");
+      if(this.ownerGuid()){
+        this.displayWaitSpinner.set(true);
+
+        switch (this.genericListItemType()) {
+          case "Libraries":
+            this.libraryService.requestUserLibrariesGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Library");
+                }
               }
-            }
-          });
-          break;
-        case "Shelves":
-          this.libraryService.requestUserShelvesGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Shelf");
+            });
+            break;
+          case "Shelves":
+            this.libraryService.requestUserShelvesGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Shelf");
+                }
               }
-            }
-          });
-          break;
-        case "Documents":
-          this.libraryService.requestUserDocumentsGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Document");
+            });
+            break;
+          case "Documents":
+            this.libraryService.requestUserDocumentsGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Document");
+                }
               }
-            }
-          });
-          break;
-        case "FavoriteLibraries":
-          this.libraryService.requestFavoriteLibrariesGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Library");
+            });
+            break;
+          case "FavoriteLibraries":
+            this.libraryService.requestFavoriteLibrariesGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Library");
+                }
               }
-            }
-          });
-          break;
-        case "FavoriteShelves":
-          this.libraryService.requestFavoriteShelvesGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Shelf");
+            });
+            break;
+          case "FavoriteShelves":
+            this.libraryService.requestFavoriteShelvesGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Shelf");
+                }
               }
-            }
-          });
-          break;
-        case "FavoriteDocuments":
-          this.libraryService.requestFavoriteDocumentsGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Document");
+            });
+            break;
+          case "FavoriteDocuments":
+            this.libraryService.requestFavoriteDocumentsGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Document");
+                }
               }
-            }
-          });
-          break;
-      
-        default:
-          this.libraryService.requestLibrariesGuids(this.ownerGuid()!).subscribe({
-            next: res => {
-              if(res){
-                this.genericListItemGuids.set(res);
-                this.genericListType.set("Library");
+            });
+            break;
+        
+          default:
+            this.libraryService.requestUserLibrariesGuids(this.ownerGuid()!,this.pageIndex(),
+            this.pageSize(), this.filterInfo()).subscribe({
+              next: res => {
+                if(res){
+                  this.genericListItemGuids.set(res);
+                  this.genericListType.set("Library");
+                }
               }
-            }
-          });
-          break;
+            });
+            break;
+        }
+        
+        this.displayWaitSpinner.set(false);
       }
     });
+
+    effect(()=>{
+      if(this.ownerGuid()){
+        
+        const callBack = {
+          next: (res:string[]) => {
+            if(res && res.length > 0){
+              this.genericListTags.set(res);
+            }
+          }
+        };
+
+        switch (this.genericListItemType()) {
+          case "Libraries":
+          case "Shelves":
+          case "Documents":
+            this.libraryService.requestUserTags(this.ownerGuid()!).subscribe(callBack);
+            break;
+          case "FavoriteLibraries":
+            this.libraryService.requestUserFavoriteLibrariesTags(this.ownerGuid()!).subscribe(callBack);
+            break;
+          case "FavoriteShelves":
+            this.libraryService.requestUserFavoriteShelvesTags(this.ownerGuid()!).subscribe(callBack);
+            break;
+          case "FavoriteDocuments":
+            this.libraryService.requestUserFavoriteDocumentsTags(this.ownerGuid()!).subscribe(callBack);
+            break;
+        
+          default:
+            this.libraryService.requestUserTags(this.ownerGuid()!).subscribe(callBack);
+            break;
+        }
+      }
+    });
+
+    effect(()=>{
+      if(this.ownerGuid()){
+        
+        const callBack = {
+          next: (res:{totalNumberOfItems:number}) => {
+            if(res){
+              this.totalNumberOfItems.set(res.totalNumberOfItems);
+            }
+          }
+        };
+
+        switch (this.genericListItemType()) {
+          case "Libraries":
+            this.libraryService.requestTotalNumberOfUserLibraries(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+          case "Shelves":
+            this.libraryService.requestTotalNumberOfUserShelves(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+          case "Documents":
+            this.libraryService.requestTotalNumberOfUserDocuments(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+          case "FavoriteLibraries":
+            this.libraryService.requestTotalNumberOfUserFavoriteLibraries(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+          case "FavoriteShelves":
+            this.libraryService.requestTotalNumberOfUserFavoriteShelves(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+          case "FavoriteDocuments":
+            this.libraryService.requestTotalNumberOfUserFavoriteDocuments(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+        
+          default:
+            this.libraryService.requestTotalNumberOfUserLibraries(this.ownerGuid()!,this.filterInfo()).subscribe(callBack);
+            break;
+        }
+      }
+    });
+
   }
 
   displayFollowersList(){
@@ -230,6 +327,7 @@ export class Profile {
         next: res => {
           if(res){
             this.library_OwnerModel()!.iFollow = true;
+            this.snackBar.open("Followed Successfully", "Ok", { duration: 5000 });
           }
         },
       });
@@ -242,10 +340,21 @@ export class Profile {
         next: res => {
           if(res){
             this.library_OwnerModel()!.iFollow = false;
+            this.snackBar.open("UnFollowed Successfully", "Ok", { duration: 5000 });
           }
         },
       });
     }
+  }
+
+  handlePageEvent(e: PageEvent) {
+    //let length = e.length;
+    this.pageSize.set(e.pageSize);
+    this.pageIndex.set(e.pageIndex);
+  }
+
+  onSubmitFilter(filter:GenericListFilter){
+    this.filterInfo.set(filter);
   }
 
 }

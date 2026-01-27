@@ -41,10 +41,18 @@ public class BackupController : ControllerBase
     public async Task<IActionResult> GetBackupStatus()
     {
         Backup_Status? status = null;
-        if (System.IO.File.Exists(backupProcess.StatusFilePath))
+        if (System.IO.File.Exists(backupProcess.Backup_Status_FilePath))
         {
-            string json = await System.IO.File.ReadAllTextAsync(backupProcess.StatusFilePath);
-            status = JsonSerializer.Deserialize<Backup_Status>(json);
+            string json = await System.IO.File.ReadAllTextAsync(backupProcess.Backup_Status_FilePath);
+            try
+            {
+                status = JsonSerializer.Deserialize<Backup_Status>(json);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine(e.Message);
+            }
         }
         status ??= new();
         return Ok(status);
@@ -55,22 +63,26 @@ public class BackupController : ControllerBase
     public async Task<IActionResult> DownloadBackupFile()
     {
         Backup_Status? status = null;
-        if (System.IO.File.Exists(backupProcess.StatusFilePath))
+        if (System.IO.File.Exists(backupProcess.Backup_Status_FilePath))
         {
-            string json = await System.IO.File.ReadAllTextAsync(backupProcess.StatusFilePath);
+            string json = await System.IO.File.ReadAllTextAsync(backupProcess.Backup_Status_FilePath);
             status = JsonSerializer.Deserialize<Backup_Status>(json);
         }
         if (status is null)
         {
             return NotFound("status file not found!");
         }
-        string backupFilePath = Path.Combine(backupProcess.Backup_Directory.FullName, status.FileName);
+        string backupFilePath = Path.Combine(backupProcess.Backup_Directory.FullName, status.File_Name ?? backupProcess.BackupFileNameWithoutDate);
         if (System.IO.File.Exists(backupFilePath))
         {
             /*In ASP.NET Core, when you return a file using PhysicalFile, File, or FileContentResult, 
             the framework automatically sets the Content-Disposition header to attachment if 
             you pass a fileDownloadName.*/
-            return PhysicalFile(backupFilePath, "application/octet-stream", status.FileName, true);
+            /*
+            Content-Disposition: inline; Display the content in the browser.
+            Content-Disposition: attachment; Prompt the user to download the file.
+            */
+            return PhysicalFile(backupFilePath, "application/octet-stream", status.File_Name, true);
         }
         return NotFound();
     }
@@ -79,7 +91,7 @@ public class BackupController : ControllerBase
     [Authorize(Roles = "Backup_Admins")]
     public IActionResult GenerateBackupFile()
     {
-        _ = backupProcess.GenerateBackupZipFile();
+        _ = backupProcess.Generate_Backup_ZipFile();
         return Ok();
     }
 
@@ -87,23 +99,34 @@ public class BackupController : ControllerBase
     [Authorize(Roles = "Backup_Admins")]
     public IActionResult DeleteBackupFile()
     {
+        if (backupProcess.Backup_Db_Directory.Exists)
+        {
+            try
+            {
+                backupProcess.Backup_Db_Directory.Delete(true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** couldn't delete directory {backupProcess.Backup_Db_Directory.FullName} *****");
+                Console.WriteLine(e.Message);
+            }
+        }
 
         if (backupProcess.Backup_Directory.Exists)
         {
-            foreach (FileInfo file in backupProcess.Backup_Directory.EnumerateFiles())
+            try
             {
-                try
-                {
-                    file.Delete();
-                }
-                catch (Exception e)
-                {
-                    //log
-                    Console.WriteLine($"\n     ***** couldn't delet file {file.Name} from backup directory *****");
-                    Console.WriteLine(e.Message);
-                }
+                backupProcess.Backup_Directory.Delete(true);
+            }
+            catch (Exception e)
+            {
+                //log
+                Console.WriteLine($"\n     ***** couldn't delete directory {backupProcess.Backup_Directory.FullName} *****");
+                Console.WriteLine(e.Message);
             }
         }
+
         return Ok();
     }
 

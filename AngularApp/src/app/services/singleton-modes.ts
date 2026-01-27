@@ -1,30 +1,21 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { WindowService } from './window-service';
 import { LibraryCardModel } from '../library/library-card/library-card';
 import { ShelfCardModel } from '../library/shelf-card/shelf-card';
 import { DocumentCardModel } from '../library/document-card/document-card';
 import { DocumentPageModel } from '../library/document-page/document-page';
 import { OwnerModel } from './library-service';
+import { IdentityService } from './identity-service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SingletonModes {
-  constructor(){
-    let theme = localStorage.getItem("theme");
-    if(theme && theme == "dark"){
-      this.darkMode.set(true);
-      this.windowService.nativeWindow.document.body.classList.add('dark-mode');
-    }
-    else{
-      this.darkMode.set(false);
-      this.windowService.nativeWindow.document.body.classList.remove('dark-mode');
-    }
-  }
-
+  identityService = inject(IdentityService);
   windowService = inject(WindowService);
 
   readonly turnstileSiteKey = "0x4AAAAAAAkeZ2wTzJxqgC_K";
+  turnstileEnabled = signal(false);
 
   editMode = signal(false);
   darkMode = signal(false);
@@ -49,8 +40,23 @@ export class SingletonModes {
   EmptyGuid = "00000000000000000000000000000000";
   RecentlyAddedDocuments_ShelfGuid = "RecentlyAddedDocuments";
 
-  
+  constructor(){
+    let theme = localStorage.getItem("theme");
+    if(theme && theme == "dark"){
+      this.darkMode.set(true);
+      this.windowService.nativeWindow.document.body.classList.add('dark-mode');
+    }
+    else{
+      this.darkMode.set(false);
+      this.windowService.nativeWindow.document.body.classList.remove('dark-mode');
+    }
 
+    effect(()=>{
+      if(!this.identityService.isAuthenticated()){
+        this.editMode.set(false);
+      }
+    });
+  }
 
   toggleEditMode(){
     this.editMode.update(mode=>!mode);

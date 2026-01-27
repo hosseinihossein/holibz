@@ -1,14 +1,11 @@
-import { AfterViewInit, Component, effect, inject, input, model, OnInit, output, signal, viewChild } from '@angular/core';
+import { Component, effect, inject, input, model, OnInit, output, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from "@angular/material/button";
 import { MatIcon } from '@angular/material/icon';
 import { IconService } from '../services/icon-service';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatBadge } from "@angular/material/badge";
+import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CommentModel, NewCommentFormModel, NewReplyFormModel, ReviewComment } from './comment/comment';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { NewCommentFormModel, ReviewComment } from './comment/comment';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { BriefUsersList } from '../dialogs/brief-users-list/brief-users-list';
 import { EditTextarea } from '../dialogs/edit-textarea/edit-textarea';
@@ -16,11 +13,12 @@ import { ReviewService } from './review-service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { IdentityService } from '../services/identity-service';
 import { ViewportScroller } from '@angular/common';
+import { WaitSpinner } from '../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-review',
-  imports: [MatButtonModule, MatIcon, MatButtonToggleModule, ReactiveFormsModule,MatTooltipModule,
-    ReviewComment,MatProgressSpinner,MatPaginatorModule,
+  imports: [MatButtonModule, MatIcon, MatButtonToggleModule,MatTooltipModule,
+    ReviewComment,WaitSpinner,MatPaginatorModule,
   ],
   templateUrl: './review.html',
   styleUrl: './review.css'
@@ -39,21 +37,31 @@ export class Review implements OnInit {
   paginator = viewChild(MatPaginator);
 
   reviewModel = signal<ReviewModel>(new ReviewModel(null));
-  displaySubmitSpinner = signal(true);
+  displayWaitSpinner = signal(true);
   bunchIndexMap = signal<Map<string,number>>(new Map<string,number>());
 
-  orderCommentsBy_FormControl = new FormControl<"Newest"|"Oldest"|"Most Agreed"|null>(null);
+  orderCommentsBy = signal<"Newest"|"Oldest"|"Most Agreed"|null>(null);
+
+  iLiked = signal(false);
+  deletedCommentsGuids = signal<string[]>([]);
 
   constructor(){
+
     effect(()=>{
       if(this.subjectGuid()){
+        this.displayWaitSpinner.set(true);
+        this.orderCommentsBy.set(null);
+        this.bunchIndexMap.set(new Map<string,number>());
+        this.deletedCommentsGuids.set([]);
+        this.iLiked.set(false);
+        
         this.reviewService.requestReviewModel(this.subjectGuid(), this.requestedCommentGuid()).subscribe({
           next: res => {
             if(res){
               this.reviewModel.set(res);
               this.bunchIndexMap.set(new Map<string,number>());
-              res.comments.forEach(c=>{
-                this.bunchIndexMap().set(c.guid, 0);
+              res.commentsGuids.forEach(cGuid=>{
+                this.bunchIndexMap().set(cGuid, 0);
               });
 
               if(this.requestedCommentGuid()){
@@ -62,12 +70,28 @@ export class Review implements OnInit {
                 }, 1000);
               }
 
-              this.displaySubmitSpinner.set(false);
+              this.displayWaitSpinner.set(false);
             }
           },
         });
       }
     });
+
+    effect(()=>{
+      if(this.identityService.isAuthenticated() && this.subjectGuid()){
+        this.reviewService.amILiked(this.subjectGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.iLiked.set(res.iLiked);
+            }
+          },
+        });
+      }
+      else{
+        this.iLiked.set(false);
+      }
+    });
+
   }
   ngOnInit(): void {
     this.viewportScroller.setOffset([0,64]);//[xOffset, yOffset]
@@ -77,33 +101,33 @@ export class Review implements OnInit {
     this.viewportScroller.scrollToAnchor(guid, {behavior:'smooth'});
   }
 
-  orderComments(){
-    this.displaySubmitSpinner.set(true);
+  orderComments(e:MatButtonToggleChange){
+    this.displayWaitSpinner.set(true);
+    this.orderCommentsBy.set(e.value);
     if(this.paginator()){
       this.paginator()!.pageIndex = 0;
     }
     this.requestComments();
   }
-
   requestComments(){
     this.reviewService.requestComments(
       this.subjectGuid(),
-      this.orderCommentsBy_FormControl.value,
+      this.orderCommentsBy(),
       this.paginator()?.pageIndex,
       this.paginator()?.pageSize
     ).subscribe({
       next: res => {
         if(res){
           this.reviewModel.update(rm=>{
-            rm.comments = res;
+            rm.commentsGuids = res;
             return new ReviewModel(rm);
           });
           this.bunchIndexMap.set(new Map<string,number>());
-          res.forEach(c=>{
-            this.bunchIndexMap().set(c.guid, 0);
+          res.forEach(cGuid=>{
+            this.bunchIndexMap().set(cGuid, 0);
           });
         }
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
       },
     });
   }
@@ -121,72 +145,12 @@ export class Review implements OnInit {
         },
       });
   
-      this.reviewModel.update(rm=>{
-        rm.amILiked = !rm.amILiked;
-        return new ReviewModel(rm);
-      });
+      this.iLiked.update(l=>!l);
     }
     else{
       this.snackBar.open("Please Login", "Ok", { duration: 5000 });
     }
   }
-  toggleThumbsUp(commentGuid:string){
-    if(this.identityService.isAuthenticated()){
-      this.reviewService.requestToggleThumbsUp(commentGuid).subscribe({
-        next: res => {
-          if(res){
-            this.reviewModel.update(rm=>{
-              let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-              comment.numberOfThumbsUps = res.numberOfThumbUps;
-              return new ReviewModel(rm);
-            });
-          }
-        },
-      });
-
-      this.reviewModel.update(rm=>{
-        let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-        comment.amIThumbsUp = !comment.amIThumbsUp;
-        if(comment.amIThumbsUp && comment.amIThumbsDown){
-          comment.amIThumbsDown = false;
-          comment.numberOfThumbsDowns--;
-        }
-        return new ReviewModel(rm);
-      });
-    }
-    else{
-      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
-    }
-  }
-  toggleThumbsDown(commentGuid:string){
-    if(this.identityService.isAuthenticated()){
-      this.reviewService.requestToggleThumbsDown(commentGuid).subscribe({
-        next: res => {
-          if(res){
-            this.reviewModel.update(rm=>{
-              let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-              comment.numberOfThumbsDowns = res.numberOfThumbDowns;
-              return new ReviewModel(rm);
-            });
-          }
-        },
-      });
-
-      this.reviewModel.update(rm=>{
-        let comment = rm.comments.find(c=>c.guid == commentGuid)!;
-        comment.amIThumbsDown = !comment.amIThumbsDown;
-        if(comment.amIThumbsDown && comment.amIThumbsUp){
-          comment.amIThumbsUp = false;
-          comment.numberOfThumbsUps--;
-        }
-        return new ReviewModel(rm);
-      });
-    }
-    else{
-      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
-    }
-  }
-
   openListOfLikes(){
     this.dialog.open(BriefUsersList, {
       data:{label:"Likes",
@@ -203,48 +167,35 @@ export class Review implements OnInit {
     //let pageSize = e.pageSize;
     //let pageIndex = e.pageIndex;
 
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
     this.requestComments();
   }
 
-  onSubmitReply(replyFormModel:NewReplyFormModel){
-    this.displaySubmitSpinner.set(true);
-    this.reviewService.postNewReply(replyFormModel).subscribe({
-      next: res => {
-        if(res){
-          this.reviewModel.update(rm=>{
-            let index = rm.comments.findIndex(c=>c.guid === replyFormModel.parentCommentGuid) + 1;
-            rm.comments.splice(index, 0, res);
-            let comment = rm.comments[index-1];
-            comment.numberOfReplies += 1;
-            return new ReviewModel(rm);
-          });
-          this.bunchIndexMap().set(res.guid, 0);
-        }
-        this.displaySubmitSpinner.set(false);
-      },
-      error: err => {
-        this.displaySubmitSpinner.set(false);
-        throw(err);
-      },
+  onSubmitReply(parentCommentGuid:string,replyGuid:string){
+    this.displayWaitSpinner.set(true);
+    this.reviewModel.update(rm=>{
+      let index = rm.commentsGuids.indexOf(parentCommentGuid) + 1;
+      rm.commentsGuids.splice(index, 0, replyGuid);
+      return new ReviewModel(rm);
     });
+    this.bunchIndexMap().set(replyGuid, 0);
   }
   onDisplayReplies(commentGuid:string){
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
     this.reviewService.requestReplies(commentGuid, this.bunchIndexMap().get(commentGuid)).subscribe({
       next: res => {
         if(res){
           this.reviewModel.update(rm=>{
-            let index = rm.comments.findIndex(c=>c.guid === commentGuid) + 1;
-            rm.comments.splice(index, 0, ...res);
+            let index = rm.commentsGuids.indexOf(commentGuid) + 1;
+            rm.commentsGuids.splice(index, 0, ...res);
             return new ReviewModel(rm);
           });
           this.bunchIndexMap().set(commentGuid, (this.bunchIndexMap().get(commentGuid) ?? 0) + 1);
-          res.forEach(c=>{
-            this.bunchIndexMap().set(c.guid, 0);
+          res.forEach(cGuid=>{
+            this.bunchIndexMap().set(cGuid, 0);
           });
         }
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
       },
     });
   }
@@ -252,7 +203,7 @@ export class Review implements OnInit {
     if(this.identityService.isAuthenticated()){
       this.dialog.open(EditTextarea,{data:{label:`New Comment`}}).afterClosed().subscribe((result)=>{
         if(result){
-          this.displaySubmitSpinner.set(true);
+          this.displayWaitSpinner.set(true);
   
           let newComment = new NewCommentFormModel();
           newComment.parentSubjectGuid = this.subjectGuid();
@@ -262,15 +213,15 @@ export class Review implements OnInit {
             next: res => {
               if(res){
                 this.reviewModel.update(rm=>{
-                  rm.comments.unshift(res);
+                  rm.commentsGuids.unshift(res.commentGuid);
                   return new ReviewModel(rm);
                 });
-                this.bunchIndexMap().set(res.guid, 0);
+                this.bunchIndexMap().set(res.commentGuid, 0);
               }
-              this.displaySubmitSpinner.set(false);
+              this.displayWaitSpinner.set(false);
             },
             error: err => {
-              this.displaySubmitSpinner.set(false);
+              this.displayWaitSpinner.set(false);
               throw(err);
             }
           });
@@ -282,30 +233,15 @@ export class Review implements OnInit {
     }
   }
   onDeleteComment(commentGuid:string){
-    if(!this.identityService.isAuthenticated()){
-      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
-    }
-
-    let comment = this.reviewModel().comments.find(c=>c.guid == commentGuid);
-    if(comment?.writerGuid === this.identityService.userModel()?.guid){
-      this.displaySubmitSpinner.set(true);
-      this.reviewService.requestDeleteComment(commentGuid).subscribe({
-        next: res => {
-          if(res && res.success){
-            this.deleteCommentAndRepliesRecursively(commentGuid, this.reviewModel().comments);
-            this.reviewModel.update(rm=>{
-              return new ReviewModel(rm);
-            });
-            this.displaySubmitSpinner.set(false);
-          }
-        }
-      });
-    }
-    else{
-      this.snackBar.open("Only the writer delete their comments!", "Ok", { duration: 5000 });
-    }
+    let index = this.reviewModel().commentsGuids.indexOf(commentGuid);
+    this.reviewModel().commentsGuids.splice(index, 1);
+    this.bunchIndexMap().delete(commentGuid);
+    this.deletedCommentsGuids.update(guids=>{
+      guids.push(commentGuid);
+      return guids.map(g=>g);
+    });
   }
-  deleteCommentAndRepliesRecursively(commentGuid:string, comments:CommentModel[]){
+  /*deleteCommentAndRepliesRecursively(commentGuid:string, comments:CommentModel[]){
     let index = comments.findIndex(c=>c.guid === commentGuid);
     comments.splice(index,1);
     comments.forEach(c=>{
@@ -313,19 +249,19 @@ export class Review implements OnInit {
         this.deleteCommentAndRepliesRecursively(c.guid, comments);
       }
     });
-  }
+  }*/
 
 }
 
 export class ReviewModel{
   constructor(reviewModel:ReviewModel|null){
-    this.amILiked = reviewModel?.amILiked ?? false;
+    //this.amILiked = reviewModel?.amILiked ?? false;
     this.numberOfLikes = reviewModel?.numberOfLikes ?? 0;
     this.totalNumberOfComments = reviewModel?.totalNumberOfComments ?? 0;
-    this.comments = reviewModel?.comments.map(c=>new CommentModel(c)) ?? [];
+    this.commentsGuids = reviewModel?.commentsGuids.map(c=>c) ?? [];
   }
-  amILiked:boolean = false;
+  //amILiked:boolean = false;
   numberOfLikes:number = 0;
   totalNumberOfComments:number = 0;
-  comments:CommentModel[] = [];
+  commentsGuids:string[] = [];
 }

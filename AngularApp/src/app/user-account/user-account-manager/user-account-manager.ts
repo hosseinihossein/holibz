@@ -15,7 +15,7 @@ import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-e
 import { MatCheckbox, MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { ChangePassword } from '../../dialogs/change-password/change-password';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-user-account-manager',
@@ -29,7 +29,8 @@ export class UserAccountManager {
   singletonModes = inject(SingletonModes);
   dialog = inject(MatDialog);
   identityService = inject(IdentityService);
-  activatedRoute = inject(ActivatedRoute);
+  //activatedRoute = inject(ActivatedRoute);
+  router = inject(Router);
 
   userImgSrc = computed(()=>this.singletonModes.getUserImageAddress(this.identityService.userModel()));
   username = computed(()=>this.identityService.userModel()?.username);
@@ -40,23 +41,29 @@ export class UserAccountManager {
   errorResponse = signal("");
 
   constructor(){
+    effect(() => {
+      if(!this.identityService.isAuthenticated() || !this.identityService.userModel()){
+        this.router.navigate(["/"]);
+      }
+    });
 
     effect(() => {
-      this.identityService.getCsrf().subscribe({
-        next: () => {
-          console.log("Csrf received successfully.");
-        },
-        error: err => {
-          console.error("Couldn't get Csrf!");
-          throw(err);
-        },
-      });
+      if(this.identityService.isAuthenticated() && this.identityService.userModel()){
+        this.identityService.getCsrf().subscribe({
+          next: () => {
+            console.log("Csrf received successfully.");
+          },
+          error: err => {
+            console.error("Couldn't get Csrf!");
+            throw(err);
+          },
+        });
+      }
     });
   }
 
   openEditImageDialog(){
-    this.dialog.open(EditUserImage,
-    {data:{currentImgSrc: this.userImgSrc()}});
+    this.dialog.open(EditUserImage);
   }
 
   openEditUsernameDialog(){

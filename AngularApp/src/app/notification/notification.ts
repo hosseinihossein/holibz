@@ -7,11 +7,12 @@ import { Router, RouterLink } from '@angular/router';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatIcon } from '@angular/material/icon';
+import { WaitSpinner } from '../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-notification',
   imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions, 
-    MatButton, DatePipe, MatPaginatorModule, MatProgressSpinner, MatIcon],
+    MatButton, DatePipe, MatPaginatorModule, WaitSpinner, MatIcon],
   templateUrl: './notification.html',
   styleUrl: './notification.css'
 })
@@ -24,7 +25,7 @@ export class Notification {
 
   paginator = viewChild.required(MatPaginator);
 
-  displaySubmitSpinner = signal(true);
+  displayWaitSpinner = signal(true);
 
   constructor(){
     this.notifService.requestNotifications().subscribe({
@@ -32,7 +33,7 @@ export class Notification {
         if(res){
           this.notifications.set(res);
         }
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
       },
     });
     this.notifService.requestNumberOfNotifications().subscribe({
@@ -45,7 +46,7 @@ export class Notification {
   }
 
   deleteNotif(notifGuid:string){
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
     this.notifService.requestDeleteNotification(notifGuid).subscribe({
       next: res => {
         if(res && res.success){
@@ -55,18 +56,18 @@ export class Notification {
             return notifs;
           });
         }
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
       },
     });
   }
   deleteAllNotifs(){
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
     this.notifService.requestDeleteAllNotifications().subscribe({
       next: res => {
         if(res && res.success){
           this.notifications.set([]);
         }
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
       },
     });
   }
@@ -76,13 +77,13 @@ export class Notification {
     let pageSize = e.pageSize;
     let pageIndex = e.pageIndex;
 
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
     this.notifService.requestNotifications(pageIndex, pageSize).subscribe({
       next: res => {
         if(res){
           this.notifications.set(res);
         }
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
       },
     });
   }

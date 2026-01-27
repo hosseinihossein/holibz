@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { ShelvesList } from "../shelves-list/shelves-list";
+//import { ShelvesList } from "../shelves-list/shelves-list";
 import { MatCard, MatCardAvatar, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle, MatCardActions } from "@angular/material/card";
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LibraryService, OwnerModel } from '../../services/library-service';
@@ -15,14 +15,17 @@ import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Result } from '../../dialogs/result/result';
 import { MatMenuModule } from '@angular/material/menu';
-import { GenericList } from '../generic-list/generic-list';
+import { GenericList, GenericListFilter } from '../generic-list/generic-list';
 import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { IconService } from '../../services/icon-service';
+import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
 
 @Component({
   selector: 'app-library-page',
   imports: [MatCard, MatCardHeader, MatCardContent, MatCardTitle, MatCardAvatar,
     MatCardSubtitle, NgOptimizedImage, MatIcon, MatCardActions, RouterLink, MatButton, MatIconButton,
-    MatMenuModule,GenericList,WaitSpinner],
+    MatMenuModule, GenericList, WaitSpinner, MatPaginatorModule, MatTooltip],
   templateUrl: './library-page.html',
   styleUrl: './library-page.css'
 })
@@ -30,10 +33,11 @@ export class LibraryPage {
   libraryGuid = signal<string|null>(null);
 
   activatedRoute = inject(ActivatedRoute);
-  librarySerice = inject(LibraryService);
+  libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
   dialog = inject(MatDialog);
   router = inject(Router);
+  iconService = inject(IconService);
 
   libraryModel = signal<LibraryCardModel|null>(null);
   isMyLibrary = computed(() => this.identityService.isAuthenticated() && 
@@ -42,9 +46,15 @@ export class LibraryPage {
   
   displayWaitSpinner = signal(false);
 
-  introductionImage = computed(()=>this.librarySerice.getLibraryImageAddress(this.libraryModel()));
+  introductionImage = computed(()=>this.libraryService.getLibraryImageAddress(this.libraryModel()));
 
   genericListItemGuids = signal<string[]>([]);
+  pageIndex = signal<number>(0);
+  pageSize = signal<number>(10);
+  totalNumberOfShelves = signal<number>(0);
+  genericListTags = signal<string[]>([]);
+  filterInfo = signal<GenericListFilter>(new GenericListFilter());
+  isMyFavorite = signal(false);
 
   constructor(){
     this.activatedRoute.paramMap.subscribe(params=>{
@@ -55,7 +65,7 @@ export class LibraryPage {
 
     effect(() => {
       if(this.libraryGuid()){
-        this.librarySerice.requestLibraryModel(this.libraryGuid()!).subscribe({
+        this.libraryService.requestLibraryModel(this.libraryGuid()!).subscribe({
           next: res => {
             if(res){
               this.libraryModel.set(res);
@@ -67,7 +77,7 @@ export class LibraryPage {
     
     effect(() => {
       if(this.libraryModel()){
-        this.librarySerice.requestOwnerModel(this.libraryModel()!.ownerGuid).subscribe({
+        this.libraryService.requestOwnerModel(this.libraryModel()!.ownerGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);
@@ -79,15 +89,55 @@ export class LibraryPage {
 
     effect(()=>{
       if(this.libraryGuid()){
-        this.librarySerice.requestShelvesGuids(this.libraryGuid()!).subscribe({
+        this.libraryService.requestTotalNumberOfLibraryShelves(this.libraryGuid()!,this.filterInfo()).subscribe({
+          next: res => {
+            if(res){
+              this.totalNumberOfShelves.set(res.totalNumberOfItems);
+            }
+          },
+        });
+      }
+    });
+
+    effect(()=>{
+      if(this.libraryGuid()){
+        this.displayWaitSpinner.set(true);
+        this.libraryService.requestLibraryShelvesGuids(this.libraryGuid()!, this.pageIndex(), 
+        this.pageSize(), this.filterInfo()).subscribe({
           next: res => {
             if(res){
               this.genericListItemGuids.set(res);
+              this.displayWaitSpinner.set(false);
             }
           }
         });
       }
     });
+
+    effect(()=>{
+      if(this.libraryGuid()){
+        this.libraryService.requestLibraryTags(this.libraryGuid()!).subscribe({
+          next: res => {
+            if(res && res.length > 0){
+              this.genericListTags.set(res);
+            }
+          },
+        });
+      }
+    });
+
+    effect(()=>{
+      if(this.identityService.isAuthenticated() && this.libraryGuid()){
+        this.libraryService.isMyFavoriteLibrary(this.libraryGuid()!).subscribe({
+          next: res => {
+            if(res){
+              this.isMyFavorite.set(res.isMyFavorite);
+            }
+          },
+        });
+      }
+    });
+
   }
 
   editIntroduction(){
@@ -130,7 +180,7 @@ export class LibraryPage {
       ).afterClosed().subscribe(result=>{
         if(result === true){
           this.displayWaitSpinner.set(true);
-          this.librarySerice.requestDeleteLibrary(this.libraryGuid()!).subscribe({
+          this.libraryService.requestDeleteLibrary(this.libraryGuid()!).subscribe({
             next: res => {
               if(res && res.success){
                 this.displayWaitSpinner.set(false);
@@ -153,6 +203,39 @@ export class LibraryPage {
           });
         }
       });
+    }
+  }
+
+  handlePageEvent(e: PageEvent) {
+    //let length = e.length;
+    this.pageSize.set(e.pageSize);
+    this.pageIndex.set(e.pageIndex);
+  }
+
+  onSubmitFilter(filter:GenericListFilter){
+    this.filterInfo.set(filter);
+  }
+
+  toggleFavorite(){
+    if(this.identityService.isAuthenticated() && this.libraryGuid() && this.libraryModel()){
+      this.libraryService.requestToToggleFavoriteLibrary(this.libraryGuid()!).subscribe({
+        next: res => {
+          if(res && res.success){
+            this.isMyFavorite.update(f=>!f);
+          }
+        },
+      });
+    }
+  }
+
+  displayUsersInFavor(){
+    if(this.libraryGuid() && this.libraryModel()){
+      this.dialog.open(BriefUsersList,{data:{
+        label: "Users In Favor",
+        subjectGuid: this.libraryGuid(),
+        totalNumberOfItems: this.libraryModel()!.totalNumberOfUsersInFavor,
+        type: "InFavorOfLibrary"
+      }});
     }
   }
 

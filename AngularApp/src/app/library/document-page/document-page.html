@@ -79,6 +79,7 @@
                     <mat-icon>arrow_drop_down</mat-icon>
                 </span>
             </button>
+
             @if(isMyDocument()){
             @if(documentPageService.editMode()){
             <button matButton="elevated" [matMenuTriggerFor]="elementMenu" matTooltip="New element"
@@ -105,7 +106,23 @@
             <button matButton="elevated" matTooltip="Enter edit mode" class="noPaddingBtn" (click)="enterEditMode()">
                 <mat-icon>edit</mat-icon>
             </button>
+            <button matButton="elevated" matTooltip="Display users in favor of this document" class="noPaddingBtn"
+                (click)="displayUsersInFavor()">
+                <mat-icon>group_diversity</mat-icon>
+            </button>
+            }
+            }
+
+
             <div style="float: right;display: flex;align-items: center;">
+                @if(identityService.isAuthenticated()){
+                <button matIconButton (click)="toggleFavorite()"
+                    [matTooltip]="isMyFavorite() ? 'Unmark from favorites' : 'Mark as favorite'">
+                    <mat-icon [style]="isMyFavorite() ? iconService.fillIcon() : ''">
+                        bookmark
+                    </mat-icon>
+                </button>
+                }
                 <button matIconButton matTooltip="Copy document's link" matTooltipPosition="above"
                     (click)="copyDocumentLink()">
                     <mat-icon>link</mat-icon>
@@ -118,8 +135,6 @@
                 <span id="createdAt-span">Created At: {{documentPageService.documentPageModel()?.createdAt|
                     date}}</span>
             </div>
-            }
-            }
         </div>
 
         <!--------------------- matmenu -------------------->
@@ -136,10 +151,13 @@
                 (click)="addRelatedVersion()">
                 <mat-icon>format_list_bulleted_add</mat-icon> Add
             </button>
+            @if(documentPageService.documentPageModel() &&
+            documentPageService.documentPageModel()!.relatedVersions.length > 0){
             <button mat-menu-item matTooltipPosition="right" matTooltip="Remove this document as a version from here"
                 (click)="removeRelatedVersion()">
                 <mat-icon>playlist_remove</mat-icon> Remove
             </button>
+            }
             }
             @for(relatedVersion of sortedVersions(); track relatedVersion){
             @if(relatedVersion.documentGuid === documentPageService.documentPageModel()?.guid){
@@ -252,10 +270,8 @@
         }
 
         <!--------------------- spinner -------------------->
-        @if(displaySubmitSpinner()){
-        <div id="submit-spinner-layout">
-            <mat-spinner id="submit-spinner"></mat-spinner>
-        </div>
+        @if(displayWaitSpinner()){
+        <app-wait-spinner></app-wait-spinner>
         }
 
     </mat-sidenav-content>

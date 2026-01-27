@@ -18,11 +18,12 @@ import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/
 import { Result } from '../../dialogs/result/result';
 import { MatDialog } from '@angular/material/dialog';
 import { SingletonModes } from '../../services/singleton-modes';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-new-document-form',
   imports: [MatFormField, MatLabel, MatInput, MatButton, MatIconButton, MatIcon, MatTooltip, MatSelect,
-    MatOption, /*MatOptgroup,*/ReactiveFormsModule,MatError,MatProgressSpinner,
+    MatOption, /*MatOptgroup,*/ReactiveFormsModule,MatError,WaitSpinner,
     MatButtonToggleModule],
   templateUrl: './new-document-form.html',
   styleUrl: './new-document-form.css'
@@ -51,7 +52,7 @@ export class NewDocumentForm {
   
   previewImgSrc = signal<string|null>(null);
   
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ParentShelfModel[]>([]);
@@ -165,11 +166,11 @@ export class NewDocumentForm {
 
   onSubmit(){
     if(this.newDocumentForm.valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       this.libraryService.createNewDocument(this.newDocumentForm.value).subscribe({
         next: res => {
           if(res && res.success){
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             this.router.navigate(['/document',res.documentGuid]);
           }
         },
@@ -194,7 +195,7 @@ export class NewDocumentForm {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         },
       });
     }

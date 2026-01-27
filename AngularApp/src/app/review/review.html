@@ -5,7 +5,7 @@
                 matTooltipPosition="above">
                 <!-- does this work after updating to v21 and migrating to zoneless app? -->
                 <!-- if Not then define an if to check the identityService.isAuthenticated() -->
-                <mat-icon [style]="reviewModel().amILiked ? iconService.fillIcon()+'color:red;' : ''">
+                <mat-icon [style]="iLiked() ? iconService.fillIcon()+'color:red;' : ''">
                     favorite
                 </mat-icon>
             </button>
@@ -21,8 +21,8 @@
 
         <span class="full-spacer"></span>
 
-        <mat-button-toggle-group [formControl]="orderCommentsBy_FormControl" aria-label="order comments by"
-            (change)="orderComments()" matTooltip="Order comments by" matTooltipPosition="above">
+        <mat-button-toggle-group aria-label="order comments by" (change)="orderComments($event)"
+            matTooltip="Order comments by" matTooltipPosition="above">
             <mat-button-toggle value="Newest">Newest</mat-button-toggle>
             <mat-button-toggle value="Oldest">Oldest</mat-button-toggle>
             <mat-button-toggle value="Most Agreed">Most Agreed</mat-button-toggle>
@@ -30,23 +30,20 @@
     </div>
 
     <div class="clearfix" style="width: 100%;position: relative;">
-        @for(comment of reviewModel().comments; track comment.guid){
-        <app-review-comment [commentModel]="comment" (submitReply)="onSubmitReply($event)"
-            (displayReplies)="onDisplayReplies(comment.guid)" (deleteComment)="onDeleteComment(comment.guid)"
-            (thumbsUp)="toggleThumbsUp(comment.guid)" (thumbsDown)="toggleThumbsDown(comment.guid)"
-            (parentComment)="requestedCommentGuid.set($event)">
+        @for(commentGuid of reviewModel().commentsGuids; track commentGuid){
+        <app-review-comment [commentGuid]="commentGuid" (submitReply)="onSubmitReply(commentGuid,$event)"
+            (displayReplies)="onDisplayReplies(commentGuid)" (deleteComment)="onDeleteComment(commentGuid)"
+            (parentComment)="requestedCommentGuid.set($event)" [deletedCommentsGuids]="deletedCommentsGuids()">
         </app-review-comment>
         }
 
 
-        @if(displaySubmitSpinner()){
-        <div id="submit-spinner-layout">
-            <mat-spinner id="submit-spinner"></mat-spinner>
-        </div>
+        @if(displayWaitSpinner()){
+        <app-wait-spinner></app-wait-spinner>
         }
     </div>
 
-    @if(reviewModel() && paginator() && reviewModel()!.totalNumberOfComments > paginator()!.pageSize){
+    @if(reviewModel() && reviewModel()!.totalNumberOfComments > 10){
     <mat-paginator [length]="reviewModel().totalNumberOfComments" [pageSize]="10" [pageSizeOptions]="[10, 20, 50, 100]"
         (page)="handlePageEvent()" style="margin: 16px 0;" aria-label="Select page of comments">
     </mat-paginator>

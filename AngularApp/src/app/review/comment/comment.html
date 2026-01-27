@@ -1,4 +1,4 @@
-<mat-card [class.reply]="commentModel().isReply" [id]="commentModel().guid">
+<mat-card [class.reply]="commentModel()?.isReply" [id]="commentGuid()">
     <mat-card-header>
         <a [routerLink]="['/profile', writerModel()?.guid]" mat-card-avatar>
             @if(userAvatarSrc()){
@@ -13,44 +13,44 @@
                 style="text-decoration: none;display: inline-block;margin: 4px 0;">
                 {{writerModel()?.username ?? "hossein"}}
             </a>
-            <span style="font-size: 0.75rem;">&nbsp; on {{commentModel().createdAt | date}}</span>
+            <span style="font-size: 0.75rem;">&nbsp; on {{commentModel()?.createdAt | date}}</span>
         </mat-card-title>
-        @if(commentModel().isReply){
+        @if(commentModel()?.isReply){
         <mat-card-subtitle>
-            <div id="replyTo-div" (click)="goToElement(commentModel().replyToGuid!)">
+            <div id="replyTo-div" (click)="goToElement(commentModel()?.replyToGuid!)">
                 <span>Reply to </span>
-                <span style="font-weight: bold;">"{{commentModel().replyToUsername}}": </span>
-                {{commentModel().replyToBrief}}
+                <span style="font-weight: bold;">"{{commentModel()?.replyToUsername}}": </span>
+                {{commentModel()?.replyToBrief}}
             </div>
         </mat-card-subtitle>
         }
     </mat-card-header>
 
     <mat-card-content>
-        <p>{{commentModel().text}}</p>
+        <p>{{commentModel()?.text}}</p>
     </mat-card-content>
 
     <mat-card-actions align="end">
         <div style="position: relative;margin: 0 8px;">
-            <button matIconButton matTooltip="Agree" matTooltipPosition="above" (click)="thumbsUp.emit()">
-                <mat-icon [style]="commentModel().amIThumbsUp ? iconService.fillIcon() :''">
+            <button matIconButton matTooltip="Agree" matTooltipPosition="above" (click)="toggleThumbsUp()">
+                <mat-icon [style]="iThumbsUp() ? iconService.fillIcon() :''">
                     thumb_up
                 </mat-icon>
             </button>
             <span id="numberOf-span" (click)="openListOfThumbsUps()" matTooltip="Agreed list"
                 matTooltipPosition="above">
-                {{commentModel().numberOfThumbsUps}}
+                {{commentModel()?.numberOfThumbsUps}}
             </span>
         </div>
         <div style="position: relative;margin: 0 8px;">
-            <button matIconButton matTooltip="Disagree" matTooltipPosition="above" (click)="thumbsDown.emit()">
-                <mat-icon [style]="commentModel().amIThumbsDown ? iconService.fillIcon() :''">
+            <button matIconButton matTooltip="Disagree" matTooltipPosition="above" (click)="toggleThumbsDown()">
+                <mat-icon [style]="iThumbsDown() ? iconService.fillIcon() :''">
                     thumb_down
                 </mat-icon>
             </button>
             <span id="numberOf-span" (click)="openListOfThumbsDowns()" matTooltip="Disagreed list"
                 matTooltipPosition="above">
-                {{commentModel().numberOfThumbsDowns}}
+                {{commentModel()?.numberOfThumbsDowns}}
             </span>
         </div>
         <div style="position: relative;margin: 0 8px;">
@@ -60,7 +60,7 @@
                 </mat-icon>
             </button>
             <span id="numberOf-span" (click)="showReplies()" matTooltip="Show replies" matTooltipPosition="above">
-                {{commentModel().numberOfReplies}}
+                {{commentModel()?.numberOfReplies}}
             </span>
         </div>
     </mat-card-actions>
@@ -81,10 +81,8 @@
         }
     </mat-menu>
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
 
 </mat-card>

@@ -7,6 +7,7 @@ import { adminRoutes } from './admin/admin.routes';
 
 export const routes: Routes = [
     {path: "", component: Home},
+    {path: "AccessDenied", component: Home, data:{accessDenied:true}},
     //{path: "angular/:path", redirectTo: (activatedRoute)=> activatedRoute.params["path"]},
     //{path: "angular", redirectTo: ""},
     ...userAccountRoutes,

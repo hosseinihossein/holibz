@@ -26,7 +26,7 @@
 
         @if(data.parentOf === "document"){
         <mat-form-field>
-            <mat-label>Shelf</mat-label>
+            <mat-label>Shelf(Library)</mat-label>
             <mat-select required [formControl]="shelfGuids" multiple>
                 @for(shelfModel of allShelfList(); track shelfModel.guid){
                 @if(shelfParentsIncludeAnyOfLibraries(shelfModel, displayedLibraries())){
@@ -75,10 +75,8 @@
     </mat-dialog-actions>
     }
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
 
 </mat-dialog-content>

@@ -1,5 +1,4 @@
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { DocumentService } from '../../services/document-service';
 import { MatError, MatFormField, MatFormFieldModule, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatChipGrid, MatChipInput, MatChipRemove, MatChipRow } from "@angular/material/chips";
 import { MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger, MatOption } from '@angular/material/autocomplete';
@@ -30,15 +29,12 @@ export class EditTags {
   displayErrorText = signal<boolean>(false);
 
   removeTag(removedTag:string){
-    this.selectedTags.update(tags=>{
-      let removedTagIndex = tags.findIndex(tag=>tag == removedTag);
-      tags.splice(removedTagIndex, 1);
-      return tags.map(t=>t);
-    });
+    let removedTagIndex = this.selectedTags().indexOf(removedTag);
+    this.selectedTags().splice(removedTagIndex,1);
   }
 
   selectTag(event: MatAutocompleteSelectedEvent):void{
-    this.selectedTags.update(oldTags=>[...oldTags, event.option.viewValue]);
+    this.selectedTags().push(event.option.viewValue);
     event.option.deselect();
   }
 
@@ -60,7 +56,7 @@ export class EditTags {
 
     if(filteredValue.length < 3) return;
 
-    this.libraryService.requestTagsList(filteredValue).pipe(
+    this.libraryService.requestTags(filteredValue).pipe(
       debounceTime(1000),
       distinctUntilChanged(),
     ).subscribe({

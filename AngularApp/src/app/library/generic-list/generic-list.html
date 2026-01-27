@@ -1,44 +1,92 @@
 <mat-sidenav-container>
-    <mat-sidenav id="" mode="side" position="start" fixedInViewport fixedTopGap="56" fixedBottomGap="16">
+    <mat-sidenav id="" [opened]="openSideNav()" mode="side" position="start" fixedInViewport fixedTopGap="56"
+        fixedBottomGap="16">
+
+        <mat-form-field>
+            <mat-label>Title</mat-label>
+            <input matInput [formControl]="titleFormControl">
+            @if(titleFormControl.invalid && (titleFormControl.dirty || titleFormControl.touched) &&
+            titleFormControl.hasError("maxLength")){
+            <mat-error>
+                Title cannot be more than {{singleton.introductionTitle_MaxLength()}} characters!
+            </mat-error>
+            }
+            @if(titleFormControl.invalid && (titleFormControl.dirty || titleFormControl.touched) &&
+            titleFormControl.hasError("minLength")){
+            <mat-error>
+                Title cannot be less than {{singleton.introductionTitle_MinLength()}} characters!
+            </mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Tags</mat-label>
+            <input placeholder="search tag.." #tagInput [matChipInputFor]="chipGrid" [matAutocomplete]="autoComplete"
+                (input)="onInput()" />
+            <mat-autocomplete #autoComplete (optionSelected)="selectTag($event);tagInput.value='';">
+                @for(tag of tags(); track tag){
+                @if(!selectedTags().includes(tag)){
+                <mat-option [value]="tag">{{tag}}</mat-option>
+                }
+                }
+            </mat-autocomplete>
+            <mat-chip-grid #chipGrid>
+                @for(tag of selectedTags(); track tag){
+                <mat-chip-row (removed)="removeTag(tag)" class="smallTags">
+                    {{tag}}
+                    <button matChipRemove>
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </mat-chip-row>
+                }
+            </mat-chip-grid>
+        </mat-form-field>
+
+        <mat-button-toggle-group multiple [value]="sortBy()" (change)="onSortBy($event)"
+            style="width: fit-content;margin: 8px auto;display: flex;">
+            <mat-button-toggle value="newest">Newest</mat-button-toggle>
+            <mat-button-toggle value="popular">Most Popular</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <button matButton="" (click)="onSubmitFiltter()">Submit Filter</button>
 
     </mat-sidenav>
 
     <mat-sidenav-content>
         <ng-content select="mat-card" />
 
-        <div class="top-box clearfix">
-            <!-- other buttons -->
+        <div class="clearfix">
             <ng-content />
         </div>
 
-        @if(listType() === "Library"){
+        @if(listType() === "Library" && itemGuids().length > 0){
         <div class="list">
-            @for(libModel of libraryModels(); track libModel.guid){
-            <app-library-card [libraryModel]="libModel"></app-library-card>
+            @for(libGuid of itemGuids(); track libGuid){
+            <app-library-card [libraryGuid]="libGuid"></app-library-card>
             }
         </div>
         }
 
-        @if(listType() === "Shelf"){
+        @if(listType() === "Shelf" && itemGuids().length > 0){
         <mat-accordion multi>
-            @for(shelfModel of shelfModels(); track shelfModel.guid){
-            <app-shelf-card [shelfModel]="shelfModel"></app-shelf-card>
+            @for(shelfGuid of itemGuids(); track shelfGuid){
+            <app-shelf-card [shelfGuid]="shelfGuid"></app-shelf-card>
             }
         </mat-accordion>
         }
 
-        @if(listType() === "Document"){
+        @if(listType() === "Document" && itemGuids().length > 0){
         <div class="list">
-            @for(documentCardModel of documentCardModels(); track documentCardModel.guid){
-            <app-document-card [documentCardModel]="documentCardModel"></app-document-card>
+            @for(documentGuid of itemGuids(); track documentGuid){
+            <app-document-card [documentGuid]="documentGuid"
+                (removeFromShelf)="removeDocumentFromParentShelf.emit($event)">
+            </app-document-card>
             }
         </div>
         }
 
-    </mat-sidenav-content>
+        <ng-content select="mat-paginator" />
 
-    @if(displayWaitSpinner()){
-    <app-wait-spinner></app-wait-spinner>
-    }
+    </mat-sidenav-content>
 
 </mat-sidenav-container>

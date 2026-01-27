@@ -17,19 +17,33 @@ import { IdentityService, UserProfileModel } from '../../services/identity-servi
   }
 })
 export class LibraryCard {
-  libraryModel = input.required<LibraryCardModel>();
+  //libraryModel = input.required<LibraryCardModel>();
+  libraryGuid = input.required<string>();
 
   router = inject(Router);
   libraryService = inject(LibraryService);
   identityService = inject(IdentityService);
 
+  libraryModel = signal<LibraryCardModel|null>(null);
   ownerModel = signal<OwnerModel|null>(null);
   libraryImageAddress = computed(()=>this.libraryService.getLibraryImageAddress(this.libraryModel()));
 
   constructor(){
     effect(()=>{
+      if(this.libraryGuid()){
+        this.libraryService.requestLibraryModel(this.libraryGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.libraryModel.set(res);
+            }
+          },
+        });
+      }
+    });
+
+    effect(()=>{
       if(this.libraryModel()){
-        this.libraryService.requestOwnerModel(this.libraryModel().ownerGuid).subscribe({
+        this.libraryService.requestOwnerModel(this.libraryModel()!.ownerGuid).subscribe({
           next: res => {
             if(res){
               this.ownerModel.set(res);
@@ -41,7 +55,7 @@ export class LibraryCard {
   }
 
   openLibrary(){
-    this.router.navigate(["/library", this.libraryModel().guid]);
+    this.router.navigate(["/library", this.libraryGuid()]);
   }
 }
 
@@ -56,6 +70,8 @@ export class LibraryCardModel {
     this.ownerGuid = libraryCardModel.ownerGuid;
     this.createdAt = libraryCardModel.createdAt;
     this.isDefault = libraryCardModel.isDefault;
+    //this.isMyFavorite = libraryCardModel.isMyFavorite;
+    this.totalNumberOfUsersInFavor = libraryCardModel.totalNumberOfUsersInFavor;
   }
 
   guid: string = null!;
@@ -67,4 +83,6 @@ export class LibraryCardModel {
   ownerGuid: string = null!;
   createdAt:Date = null!;
   isDefault:boolean = false;
+  //isMyFavorite:boolean = false;
+  totalNumberOfUsersInFavor:number = 0;
 }

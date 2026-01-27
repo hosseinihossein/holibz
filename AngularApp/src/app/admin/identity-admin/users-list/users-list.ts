@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { MatButton, MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,20 +17,22 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { catchError, fromEvent, merge, of, startWith, Subscription, switchMap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Result } from '../../../dialogs/result/result';
-import { RouterLink } from "@angular/router";
+import { Router, RouterLink } from "@angular/router";
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { DatePipe } from '@angular/common';
 import { MatDividerModule } from '@angular/material/divider';
 import { ConfirmDelete } from '../../../dialogs/confirm-delete/confirm-delete';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { IdentityService } from '../../../services/identity-service';
+import { WaitSpinner } from '../../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-users-list',
   providers:[provideNativeDateAdapter()],
   imports: [MatTableModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule,
-    MatPaginatorModule, MatProgressSpinner, MatIcon, MatSidenavModule, ReactiveFormsModule,
+    MatPaginatorModule, MatIcon, MatSidenavModule, ReactiveFormsModule,
     MatInputModule, MatDatepickerModule, MatRadioModule, MatSelectModule, MatSortModule, RouterLink,
-    DatePipe, MatDividerModule, MatTooltipModule],
+    DatePipe, MatDividerModule, MatTooltipModule,WaitSpinner],
   templateUrl: './users-list.html',
   styleUrl: './users-list.css'
 })
@@ -40,7 +42,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
   dataSource = signal<UsersListModel[]>([]);
   displayedColumns = signal<string[]>(["UserImage","UserName","UserGuid","Email","EmailConfirmed",
   "DisplayEmailPublicly","CreatedAt","Actions"]);
-  displayLoadingSpinner = signal<boolean>(true);
+  displayWaitSpinner = signal<boolean>(true);
   resultsLength = signal<number>(0);
 
   usernameFilter = signal(new FormControl<string|null>(null,{validators:[Validators.maxLength(60)]}));
@@ -56,17 +58,20 @@ export class UsersList implements AfterViewInit, OnDestroy {
 
   readonly adminService = inject(AdminService);
   readonly dialog = inject(MatDialog);
+  identityService = inject(IdentityService);
+  router = inject(Router);
 
   paginator = viewChild.required(MatPaginator);
   sort = viewChild.required(MatSort);
   submitFilterButton = viewChild.required<MatButton>("submitFilterBtn");
 
   constructor(){
-    /*this.adminService.requestRolesList().subscribe({
-      next: res => {
-        this.rolesList.set(res);
-      },
-    });*/
+    effect(() => {
+      if(!this.identityService.isAuthenticated() || !this.identityService.userModel() ||
+        !this.identityService.userModel()?.roles?.includes("Identity_Admins")){
+        this.router.navigate(["/"]);
+      }
+    });
   }
   ngAfterViewInit(): void {
     // If the user changes the sort order, reset back to the first page.
@@ -81,7 +86,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
       ).pipe(
         startWith({}),
         switchMap(() => {
-          this.displayLoadingSpinner.set(true);
+          this.displayWaitSpinner.set(true);
 
           let filterModel = new UsersListFilterModel();
           if(this.usernameFilter().value?.trim()) {filterModel.username = this.usernameFilter().value!;}
@@ -110,7 +115,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
         })
       ).subscribe({
         next: res => {
-          this.displayLoadingSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           //console.log(res);
           if(res === null){
             this.dataSource.set([]);
@@ -121,7 +126,7 @@ export class UsersList implements AfterViewInit, OnDestroy {
           }
         },
         error: err => {
-          this.displayLoadingSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           this.dataSource.set([]);
           throw(err);
         },
@@ -140,11 +145,11 @@ export class UsersList implements AfterViewInit, OnDestroy {
     const deleteDialogRef = this.dialog.open(ConfirmDelete,{data:{type:"User", label:userName}});
     deleteDialogRef.afterClosed().subscribe(result => {
       if(result === true){
-        this.displayLoadingSpinner.set(true);
+        this.displayWaitSpinner.set(true);
 
         this.adminService.requestDeleteUser(userGuid).subscribe({
           next: res => {
-            this.displayLoadingSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             if(res.success){
               const dialogRef = this.dialog.open(Result,{
                 //panelClass: "success-ResultStatus", 

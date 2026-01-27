@@ -5,7 +5,7 @@
             Sections:
         </p>
         <div class="sidenav-option-container">
-            <a matFab extended [routerLink]="['/profile']">
+            <a matFab extended [routerLink]="['/profile',identityService.userModel()?.guid]">
                 <mat-icon>article_person</mat-icon>
                 Profile
             </a>

@@ -1,9 +1,11 @@
+@if(notifications().length > 1){
 <div>
     <button matButton (click)="deleteAllNotifs()" style="color: var(--mat-sys-error);margin: 4px 8px;">
         <mat-icon>ink_eraser</mat-icon>
         Erase All Notifications
     </button>
 </div>
+}
 
 @for(notif of notifications(); track notif.guid){
 <mat-card>
@@ -32,8 +34,6 @@
     (page)="handlePageEvent($event)" aria-label="Select page of notification results">
 </mat-paginator>
 
-@if(displaySubmitSpinner()){
-<div id="submit-spinner-layout">
-    <mat-spinner id="submit-spinner"></mat-spinner>
-</div>
+@if(displayWaitSpinner()){
+<app-wait-spinner></app-wait-spinner>
 }

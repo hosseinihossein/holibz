@@ -12,10 +12,11 @@ import { MatInput } from '@angular/material/input';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { Result } from '../../dialogs/result/result';
 import { MatDialog } from '@angular/material/dialog';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-new-library-form',
-  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,MatProgressSpinner,
+  imports: [ReactiveFormsModule,MatIcon,MatFormField,MatLabel,MatError,WaitSpinner,
     MatInput,MatButton,MatIconButton
   ],
   templateUrl: './new-library-form.html',
@@ -37,7 +38,7 @@ export class NewLibraryForm {
   image = computed(()=>this.newLibraryForm().get("image"));
 
   previewImgSrc = signal<string|null>(null);
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
   imgInput = viewChild.required<ElementRef<HTMLInputElement>>("fileInput");
@@ -99,11 +100,11 @@ export class NewLibraryForm {
 
   onSubmit(){
     if(this.newLibraryForm().valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       this.libraryService.createNewLibrary(this.newLibraryForm().value).subscribe({
         next: res => {
           if(res && res.success){
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             this.router.navigate(['/library',res.libraryGuid]);
           }
         },
@@ -125,7 +126,7 @@ export class NewLibraryForm {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         },
       });
     }

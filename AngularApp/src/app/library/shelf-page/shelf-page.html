@@ -1,4 +1,6 @@
-<app-generic-list listType="Document" [itemGuids]="genericListItemGuids()">
+<app-generic-list listType="Document" [itemGuids]="genericListItemGuids()" [tags]="genericListTags()"
+    (removeDocumentFromParentShelf)="removeDocumentFromThisShelf($event);" [filterInfo]="filterInfo()"
+    (submitFilter)="onSubmitFilter($event)">
     <mat-card appearance="raised">
         <mat-card-header>
             <div matCardAvatar [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
@@ -38,6 +40,14 @@
                 Add a new Document
             </a>
             }
+            @if(identityService.isAuthenticated()){
+            <button matIconButton (click)="toggleFavorite()"
+                [matTooltip]="isMyFavorite() ? 'Unmark from favorites' : 'Mark as favorite'">
+                <mat-icon [style]="isMyFavorite() ? iconService.fillIcon() : ''">
+                    bookmark
+                </mat-icon>
+            </button>
+            }
         </mat-card-actions>
         @if(isMyShelf() && !shelfModel()?.isDefault){
         <button matIconButton [matMenuTriggerFor]="settingMenu" aria-label="library setting menu" id="setting-btn">
@@ -56,10 +66,20 @@
                 <mat-icon style="color: var(--mat-sys-error);">delete</mat-icon>
                 Delete Shelf
             </button>
+            <button mat-menu-item (click)="displayUsersInFavor()">
+                <mat-icon>group_diersity</mat-icon>
+                Users In Favor
+            </button>
         </mat-menu>
         }
     </mat-card>
-    @if(displayWaitSpinner()){
-    <app-wait-spinner></app-wait-spinner>
-    }
+
+    <mat-paginator [length]="totalNumberOfDocuments()" [pageSize]="pageSize()" [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="handlePageEvent($event)" aria-label="Select page" style="width: fit-content;margin: 50px auto;">
+    </mat-paginator>
+
 </app-generic-list>
+
+@if(displayWaitSpinner()){
+<app-wait-spinner></app-wait-spinner>
+}

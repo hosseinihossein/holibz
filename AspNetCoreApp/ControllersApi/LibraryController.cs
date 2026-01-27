@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json;
 using AspNetCoreApp.Models;
+using AspNetCoreApp.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -50,6 +51,15 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
         Library_LibraryCard_ViewModel[] libraryCardModels = await libraryDb.Owners
         .Where(owner => owner.Guid == ownerGuid_Guid)
         .SelectMany(owner => owner.Libraries)
@@ -69,6 +79,8 @@ public class LibraryController : ControllerBase
             IntegrityVersion = lib.IntegrityVersion,
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
+            //IsMyFavorite = myGuid != null && lib.InFavorOf.Any(ul => ul.User.Guid == myGuid),
+            TotalNumberOfUsersInFavor = lib.InFavorOf.Count,
         })
         .AsSplitQuery()
         .ToArrayAsync();
@@ -98,21 +110,153 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> LibrariesGuids([FromQuery][StringLength(32)] string ownerGuid)
+    public async Task<IActionResult> GetUserLibrariesGuids(
+    [FromQuery][StringLength(32)] string ownerGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy)
     {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
-        Guid[] userLibrariesGuids = await libraryDb.Owners
-        .Where(o => o.Guid == ownerGuid_Guid)
-        .SelectMany(o => o.Libraries)
-        .Select(lib => lib.Guid)
-        .ToArrayAsync();
+        if (sortBy == "newest")
+        {
+            Guid[] orderedSelectedLibraries;
+            if (tags is not null)
+            {
+                orderedSelectedLibraries = await libraryDb.Owners
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Documents)
+                .Where(doc => tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+                .SelectMany(doc => doc.ParentShelves)
+                .SelectMany(shelfDoc => shelfDoc.Shelf.ParentLibraries)
+                .Select(libShelf => libShelf.Library)
+                //.DistinctBy(lib => lib.Guid)
+                .Where(lib => title == null || lib.Title.Contains(title))
+                .OrderByDescending(lib => lib.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(lib => lib.Guid)
+                .ToArrayAsync();
+            }
+            else
+            {
+                orderedSelectedLibraries = await libraryDb.Owners
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Libraries)
+                .Where(lib => title == null || lib.Title.Contains(title))
+                .OrderByDescending(lib => lib.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(lib => lib.Guid)
+                .ToArrayAsync();
+            }
 
-        return Ok(userLibrariesGuids);
+            return Ok(orderedSelectedLibraries);
+        }
+
+        //sortBy == popular, OrderBy InFavorOf.Count
+        Guid[] selectedLibraries;
+        if (tags is not null)
+        {
+            selectedLibraries = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Documents)
+            .Where(doc => tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            .SelectMany(doc => doc.ParentShelves)
+            .SelectMany(shelfDoc => shelfDoc.Shelf.ParentLibraries)
+            .Select(libShelf => libShelf.Library)
+            //.DistinctBy(lib => lib.Guid)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .OrderByDescending(lib => lib.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(lib => lib.Guid)
+            .ToArrayAsync();
+        }
+        else
+        {
+            selectedLibraries = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Libraries)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .OrderByDescending(lib => lib.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(lib => lib.Guid)
+            .ToArrayAsync();
+        }
+
+        return Ok(selectedLibraries);
+    }
+    [HttpGet]
+    public async Task<IActionResult> TotalNumberOfUserLibraries(
+    [FromQuery][StringLength(32)] string ownerGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
+    {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        int numberOfItems;
+        if (tags is not null)
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Documents)
+            .Where(doc => tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            .SelectMany(doc => doc.ParentShelves)
+            .SelectMany(shelfDoc => shelfDoc.Shelf.ParentLibraries)
+            .Select(libShelf => libShelf.Library)
+            //.DistinctBy(lib => lib.Guid)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .CountAsync();
+        }
+        else
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Libraries)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .CountAsync();
+        }
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
     }
 
     [HttpGet]
@@ -122,6 +266,15 @@ public class LibraryController : ControllerBase
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
+        }
+
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
         }
 
         Library_LibraryCard_ViewModel? libraryCardModel = await libraryDb.Libraries
@@ -142,6 +295,8 @@ public class LibraryController : ControllerBase
             IntegrityVersion = lib.IntegrityVersion,
             HasImage = lib.HasImage,
             IsDefault = lib.Guid == lib.Owner.DefaultLibraryGuid,
+            //IsMyFavorite = myGuid != null && lib.InFavorOf.Any(ul => ul.User.Guid == myGuid),
+            TotalNumberOfUsersInFavor = lib.InFavorOf.Count,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -260,6 +415,15 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
         Library_ShelfCard_ViewModel[] shelfCardModels = await libraryDb.Libraries
         .Where(lib => lib.Guid == libraryGuid_Guid)
         .SelectMany(lib => lib.Shelves)
@@ -272,31 +436,19 @@ public class LibraryController : ControllerBase
             .Select(sd => sd.Document)
             .OrderBy(doc => doc.Id)
             .Take(10)
-            .Select(doc => doc.Guid/*new Library_DocumentCard_ViewModel()
-            {
-                Description = doc.Description,
-                Guid = doc.Guid,
-                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
-                OwnerGuid = doc.Owner.Guid,
-                Title = doc.Title,
-                HasImage = doc.HasImage,
-                IntegrityVersion = doc.IntegrityVersion,
-                VersionName = doc.Version == "Default" ? null : doc.Version,
-            }*/).ToArray(),
+            .Select(doc => doc.Guid).ToArray(),
             Guid = shelf.Guid,
             LibrariesGuids = shelf.ParentLibraries
             .Select(ls => ls.Library)
-            .Select(parentLib => parentLib.Guid/*new Library_LibraryBrief_ViewModel()
-            {
-                Guid = parentLib.Guid,
-                Title = parentLib.Title,
-            }*/).ToArray(),
+            .Select(parentLib => parentLib.Guid).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.Owner.Guid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
             HasImage = shelf.HasImage,
             IntegrityVersion = shelf.IntegrityVersion,
             IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
+            //IsMyFavorite = myGuid != null && shelf.InFavorOf.Any(ush => ush.User.Guid == myGuid),
+            TotalNumberOfUsersInFavor = shelf.InFavorOf.Count,
         })
         .AsSplitQuery()
         .ToArrayAsync();
@@ -305,39 +457,307 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> UserShelvesGuids([FromQuery][StringLength(32)] string ownerGuid)
+    public async Task<IActionResult> GetUserShelvesGuids(
+    [FromQuery][StringLength(32)] string ownerGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy)
     {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
-        Guid[] shelfGuids = await libraryDb.Owners
-        .Where(o => o.Guid == ownerGuid_Guid)
-        .SelectMany(o => o.Shelves)
-        .Select(shelf => shelf.Guid)
-        .ToArrayAsync();
+        if (sortBy == "newest")
+        {
+            Guid[] orderedShelfGuids;
+            if (tags is not null)
+            {
+                orderedShelfGuids = await libraryDb.Owners
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Documents)
+                .Where(doc => tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+                .SelectMany(doc => doc.ParentShelves)
+                .Select(shelfDoc => shelfDoc.Shelf)
+                //.DistinctBy(shelf => shelf.Guid)
+                .Where(shelf => title == null || shelf.Title.Contains(title))
+                .OrderByDescending(shelf => shelf.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(shelf => shelf.Guid)
+                .ToArrayAsync();
+            }
+            else
+            {
+                orderedShelfGuids = await libraryDb.Owners
+                .Where(o => o.Guid == ownerGuid_Guid)
+                .SelectMany(o => o.Shelves)
+                .Where(shelf => title == null || shelf.Title.Contains(title))
+                .OrderByDescending(shelf => shelf.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(shelf => shelf.Guid)
+                .ToArrayAsync();
+            }
+
+            return Ok(orderedShelfGuids);
+        }
+
+        //sortBy == popular
+        Guid[] shelfGuids;
+        if (tags is not null)
+        {
+            shelfGuids = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Documents)
+            .Where(doc => tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            .SelectMany(doc => doc.ParentShelves)
+            .Select(shelfDoc => shelfDoc.Shelf)
+            //.DistinctBy(shelf => shelf.Guid)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .OrderByDescending(shelf => shelf.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(shelf => shelf.Guid)
+            .ToArrayAsync();
+        }
+        else
+        {
+            shelfGuids = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Shelves)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .OrderByDescending(shelf => shelf.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(shelf => shelf.Guid)
+            .ToArrayAsync();
+        }
 
         return Ok(shelfGuids);
     }
+
     [HttpGet]
-    public async Task<IActionResult> ShelvesGuids([FromQuery][StringLength(32)] string libraryGuid)
+    public async Task<IActionResult> TotalNumberOfUserShelves(
+    [FromQuery][StringLength(32)] string ownerGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
     {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        int numberOfItems;
+        if (tags is not null)
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Documents)
+            .Where(doc => tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            .SelectMany(doc => doc.ParentShelves)
+            .Select(shelfDoc => shelfDoc.Shelf)
+            //.DistinctBy(shelf => shelf.Guid)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .CountAsync();
+        }
+        else
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Shelves)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .CountAsync();
+        }
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetLibraryShelvesGuids(
+    [FromQuery][StringLength(32)] string libraryGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy)
+    {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
-        Guid[] shelfGuids = await libraryDb.Libraries
-        .Where(lib => lib.Guid == libraryGuid_Guid)
-        .SelectMany(lib => lib.Shelves)
-        .Select(ls => ls.Shelf)
-        .Select(shelf => shelf.Guid)
-        .ToArrayAsync();
+        if (sortBy == "newest")
+        {
+            Guid[] orderedShelfGuids;
+            if (tags is not null)
+            {
+                orderedShelfGuids = await libraryDb.Libraries
+                .Where(lib => lib.Guid == libraryGuid_Guid)
+                .SelectMany(lib => lib.Shelves)
+                .SelectMany(libShelf => libShelf.Shelf.Documents)
+                .Select(shelfDoc => shelfDoc.Document)
+                .Where(doc => tags.Length > 0 && tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+                .SelectMany(doc => doc.ParentShelves)
+                .Select(shelfDoc => shelfDoc.Shelf)
+                //.DistinctBy(shelf => shelf.Guid)
+                .Where(shelf => title == null || shelf.Title.Contains(title))
+                .OrderByDescending(shelf => shelf.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(shelf => shelf.Guid)
+                .ToArrayAsync();
+            }
+            else
+            {
+                orderedShelfGuids = await libraryDb.Libraries
+                .Where(lib => lib.Guid == libraryGuid_Guid)
+                .SelectMany(lib => lib.Shelves)
+                .Select(lsh => lsh.Shelf)
+                .Where(shelf => title == null || shelf.Title.Contains(title))
+                .OrderByDescending(shelf => shelf.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(shelf => shelf.Guid)
+                .ToArrayAsync();
+            }
+
+            return Ok(orderedShelfGuids);
+        }
+
+        //sortBy == popular
+        Guid[] shelfGuids;
+        if (tags is not null)
+        {
+            shelfGuids = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.Shelves)
+            .SelectMany(libShelf => libShelf.Shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc => tags.Length > 0 && tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            .SelectMany(doc => doc.ParentShelves)
+            .Select(shelfDoc => shelfDoc.Shelf)
+            //.DistinctBy(shelf => shelf.Guid)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .OrderByDescending(shelf => shelf.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(shelf => shelf.Guid)
+            .ToArrayAsync();
+        }
+        else
+        {
+            shelfGuids = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.Shelves)
+            .Select(lsh => lsh.Shelf)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .OrderByDescending(shelf => shelf.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(shelf => shelf.Guid)
+            .ToArrayAsync();
+        }
 
         return Ok(shelfGuids);
+    }
+    [HttpGet]
+    public async Task<IActionResult> TotalNumberOfLibraryShelves(
+    [FromQuery][StringLength(32)] string libraryGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
+    {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        int numberOfItems;
+        if (tags is not null)
+        {
+            numberOfItems = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.Shelves)
+            .SelectMany(libShelf => libShelf.Shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc => tags.Length > 0 && tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            .SelectMany(doc => doc.ParentShelves)
+            .Select(shelfDoc => shelfDoc.Shelf)
+            //.DistinctBy(shelf => shelf.Guid)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .CountAsync();
+        }
+        else
+        {
+            numberOfItems = await libraryDb.Libraries
+            .Where(lib => lib.Guid == libraryGuid_Guid)
+            .SelectMany(lib => lib.Shelves)
+            .Select(lsh => lsh.Shelf)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .CountAsync();
+        }
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
     }
 
     [HttpGet]
@@ -391,6 +811,15 @@ public class LibraryController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
+        }
+
         Library_ShelfCard_ViewModel? shelfCardModel = await libraryDb.Shelves
         .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .Select(shelf => new Library_ShelfCard_ViewModel()
@@ -401,31 +830,19 @@ public class LibraryController : ControllerBase
             .Select(sd => sd.Document)
             .OrderBy(doc => doc.Id)
             .Take(10)
-            .Select(doc => doc.Guid/*new Library_DocumentCard_ViewModel()
-            {
-                Description = doc.Description,
-                Guid = doc.Guid,
-                Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
-                OwnerGuid = doc.Owner.Guid,
-                Title = doc.Title,
-                HasImage = doc.HasImage,
-                IntegrityVersion = doc.IntegrityVersion,
-                VersionName = doc.Version == "Default" ? null : doc.Version,
-            }*/).ToArray(),
+            .Select(doc => doc.Guid).ToArray(),
             Guid = shelf.Guid,
             LibrariesGuids = shelf.ParentLibraries
             .Select(ls => ls.Library)
-            .Select(parentLib => parentLib.Guid/*new Library_LibraryBrief_ViewModel()
-            {
-                Guid = parentLib.Guid,
-                Title = parentLib.Title,
-            }*/).ToArray(),
+            .Select(parentLib => parentLib.Guid).ToArray(),
             Title = shelf.Title,
             OwnerGuid = shelf.Owner.Guid,
             TotalNumberOfShelfDocuments = shelf.Documents.Count,
             HasImage = shelf.HasImage,
             IntegrityVersion = shelf.IntegrityVersion,
             IsDefault = shelf.Guid == shelf.Owner.DefaultShelfGuid,
+            //IsMyFavorite = myGuid != null && shelf.InFavorOf.Any(ush => ush.User.Guid == myGuid),
+            TotalNumberOfUsersInFavor = shelf.InFavorOf.Count,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -551,6 +968,8 @@ public class LibraryController : ControllerBase
             HasImage = false,
             IntegrityVersion = 0,
             IsDefault = false,
+            //IsMyFavorite = false,
+            TotalNumberOfUsersInFavor = 0,
         };
     }
 
@@ -581,6 +1000,7 @@ public class LibraryController : ControllerBase
             HasImage = doc.HasImage,
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
+            CreatedAt = doc.CreatedAt,
         })
         .AsSplitQuery()
         .ToArrayAsync();
@@ -589,39 +1009,219 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> UserDocumentsGuids([FromQuery][StringLength(32)] string ownerGuid)
+    public async Task<IActionResult> GetUserDocumentsGuids(
+    [FromQuery][StringLength(32)] string ownerGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy,
+    [FromServices] Review_DbContext reviewDb)
     {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
+        if (sortBy == "newest")
+        {
+            Guid[] orderedDocumentsGuids = await libraryDb.Owners
+            .Where(o => o.Guid == ownerGuid_Guid)
+            .SelectMany(o => o.Documents)
+            .Where(doc =>
+                (title == null || doc.Title.Contains(title)) &&
+                (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            )
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(doc => doc.Guid)
+            .ToArrayAsync();
+
+            return Ok(orderedDocumentsGuids);
+        }
+
+        //sortBy == popular
         Guid[] documentsGuids = await libraryDb.Owners
         .Where(o => o.Guid == ownerGuid_Guid)
         .SelectMany(o => o.Documents)
+        .Where(doc =>
+            (title == null || doc.Title.Contains(title)) &&
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+        )
+        .OrderByDescending(doc => doc.CreatedAt)
+        .Take(100_000)
         .Select(doc => doc.Guid)
         .ToArrayAsync();
 
-        return Ok(documentsGuids);
+        Guid[] popularDocumentsGuids = await reviewDb.Reviews
+        .Where(r => documentsGuids.Contains(r.SubjectGuid))
+        .OrderByDescending(r => r.LikedBy.Count)
+        .Skip(pageIndex.Value * pageSize.Value)
+        .Take(pageSize.Value)
+        .Select(r => r.SubjectGuid)
+        .ToArrayAsync();
+
+        return Ok(popularDocumentsGuids);
     }
     [HttpGet]
-    public async Task<IActionResult> DocumentsGuids([FromQuery][StringLength(32)] string shelfGuid)
+    public async Task<IActionResult> TotalNumberOfUserDocuments(
+    [FromQuery][StringLength(32)] string ownerGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
     {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        int numberOfItems = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.Documents)
+        .Where(doc =>
+            (title == null || doc.Title.Contains(title)) &&
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+        )
+        .CountAsync();
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetShelfDocumentsGuids(
+    [FromQuery][StringLength(32)] string shelfGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy,
+    [FromServices] Review_DbContext reviewDb)
+    {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
+        if (sortBy == "newest")
+        {
+            Guid[] orderedDocumentsGuids = await libraryDb.Shelves
+            .Where(shelf => shelf.Guid == shelfGuid_Guid)
+            .SelectMany(shelf => shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc =>
+                (title == null || doc.Title.Contains(title)) &&
+                (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))))
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(doc => doc.Guid)
+            .ToArrayAsync();
+
+            return Ok(orderedDocumentsGuids);
+        }
+
+        //sortBy == popular
         Guid[] documentsGuids = await libraryDb.Shelves
         .Where(shelf => shelf.Guid == shelfGuid_Guid)
         .SelectMany(shelf => shelf.Documents)
-        .Select(sd => sd.Document)
+        .Select(shelfDoc => shelfDoc.Document)
+        .Where(doc =>
+            (title == null || doc.Title.Contains(title)) &&
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))))
+        .OrderByDescending(doc => doc.CreatedAt)
+        .Take(100_000)
         .Select(doc => doc.Guid)
         .ToArrayAsync();
 
-        return Ok(documentsGuids);
+        Guid[] popularDocumentsGuids = await reviewDb.Reviews
+        .Where(r => documentsGuids.Contains(r.SubjectGuid))
+        .OrderByDescending(r => r.LikedBy.Count)
+        .Skip(pageIndex.Value * pageSize.Value)
+        .Take(pageSize.Value)
+        .Select(r => r.SubjectGuid)
+        .ToArrayAsync();
+
+        return Ok(popularDocumentsGuids);
+    }
+    [HttpGet]
+    public async Task<IActionResult> TotalNumberOfShelfDocuments(
+    [FromQuery][StringLength(32)] string shelfGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
+    {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        int numberOfItems = await libraryDb.Shelves
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
+        .SelectMany(shelf => shelf.Documents)
+        .Select(shelfDoc => shelfDoc.Document)
+        .Where(doc =>
+            (title == null || doc.Title.Contains(title)) &&
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))))
+        .CountAsync();
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
     }
 
     [HttpGet]
@@ -645,6 +1245,7 @@ public class LibraryController : ControllerBase
             HasImage = doc.HasImage,
             IntegrityVersion = doc.IntegrityVersion,
             VersionName = doc.Version == "Default" ? null : doc.Version,
+            CreatedAt = doc.CreatedAt,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -675,6 +1276,15 @@ public class LibraryController : ControllerBase
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
+        }
+
+        Guid? myGuid = null;
+        if ((User.Identity?.IsAuthenticated ?? false) && User.Identity.Name is not null)
+        {
+            myGuid = await userManager.Users
+            .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+            .Select(u => u.UserGuid)
+            .FirstAsync();
         }
 
         Library_DocumentPage_ViewModel? documentPageModel = await libraryDb.Documents
@@ -735,6 +1345,8 @@ public class LibraryController : ControllerBase
                 Title = parentshelf.Title,
             }).ToArray(),
             IntegrityVersion = doc.IntegrityVersion,
+            //IsMyFavorite = myGuid != null && doc.InFavorOf.Any(ud => ud.User.Guid == myGuid),
+            TotalNumberOfUsersInFavor = doc.InFavorOf.Count,
         })
         .AsSplitQuery()
         .FirstOrDefaultAsync();
@@ -821,18 +1433,7 @@ public class LibraryController : ControllerBase
         return await libraryDb.Documents
         .OrderByDescending(doc => doc.CreatedAt)
         .Take(10)
-        .Select(doc => doc.Guid/*new Library_DocumentCard_ViewModel()
-        {
-            Description = doc.Description,
-            Guid = doc.Guid,
-            Headers = doc.Elements.Where(el => el.Type == "h1" || el.Type == "h2").Select(el => el.Value!).ToArray(),
-            OwnerGuid = doc.Owner.Guid,
-            Title = doc.Title,
-            HasImage = doc.HasImage,
-            IntegrityVersion = doc.IntegrityVersion,
-            VersionName = doc.Version == "Default" ? null : doc.Version,
-        }*/)
-        //.AsSplitQuery()
+        .Select(doc => doc.Guid)
         .ToArrayAsync();
     }
 
@@ -985,44 +1586,6 @@ public class LibraryController : ControllerBase
         }
 
         return BadRequest(ModelState);
-    }
-
-
-
-
-
-    [HttpGet]
-    public async Task<IActionResult> TotalNumberOfDocuments([FromQuery][StringLength(32)] string ownerGuid)
-    {
-        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
-        {
-            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
-            return BadRequest(ModelState);
-        }
-
-        int totalNumberOfUserDocuments = await libraryDb.Owners
-        .Where(owner => owner.Guid == ownerGuid_Guid)
-        .Select(owner => owner.Documents.Count)
-        .FirstOrDefaultAsync();
-
-        return Ok(new { totalNumberOfUserDocuments });
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> TotalNumberOfShelves([FromQuery][StringLength(32)] string ownerGuid)
-    {
-        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
-        {
-            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
-            return BadRequest(ModelState);
-        }
-
-        int totalNumberOfUserShelves = await libraryDb.Owners
-        .Where(owner => owner.Guid == ownerGuid_Guid)
-        .Select(owner => owner.Shelves.Count)
-        .FirstOrDefaultAsync();
-
-        return Ok(new { totalNumberOfUserShelves });
     }
 
 
@@ -1662,6 +2225,78 @@ public class LibraryController : ControllerBase
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveDocumentFromParentShelf([FromQuery][StringLength(32)]
+    string documentGuid, [FromQuery][StringLength(32)] string shelfGuid)
+    {
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified document guid");
+            return BadRequest(ModelState);
+        }
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified shelf guid");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid).FirstAsync();
+
+        var documentInfo = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid && doc.Owner.Guid == myGuid)
+        .Select(doc => new
+        {
+            doc.Id,
+            parentShelfId = doc.ParentShelves
+            .Where(shelfDoc => shelfDoc.Shelf.Guid == shelfGuid_Guid)
+            .Select(shelfDoc => shelfDoc.ShelfId).FirstOrDefault(),
+            numberOfParentSelves = doc.ParentShelves.Count,
+            ownerDefaultShelfGuid = doc.Owner.DefaultShelfGuid,
+        })
+        .AsSplitQuery()
+        .FirstOrDefaultAsync();
+
+        if (documentInfo is null)
+        {
+            ModelState.AddModelError("document info or authorization", "Couldn't find the specified document between your docments");
+            return BadRequest(ModelState);
+        }
+
+        if (documentInfo.ownerDefaultShelfGuid == shelfGuid_Guid &&
+        documentInfo.numberOfParentSelves == 1)
+        {
+            return Ok();
+        }
+
+        int numberOfDeletedRows = await libraryDb.ShelfDocuments
+        .Where(shelfDoc => shelfDoc.DocumentId == documentInfo.Id &&
+        shelfDoc.ShelfId == documentInfo.parentShelfId)
+        .ExecuteDeleteAsync();
+
+        if (numberOfDeletedRows == documentInfo.numberOfParentSelves)
+        {
+            int ownerDefaultShelfId = await libraryDb.Shelves
+            .Where(shelf => shelf.Guid == documentInfo.ownerDefaultShelfGuid)
+            .Select(shelf => shelf.Id)
+            .FirstAsync();
+
+            //create default parent shelf join table
+            Library_ShelfDocument_DbModel shelfDoc = new()
+            {
+                DocumentId = documentInfo.Id,
+                ShelfId = ownerDefaultShelfId,
+            };
+            libraryDb.ShelfDocuments.Add(shelfDoc);
+            await libraryDb.SaveChangesAsync();
+        }
+
+        return Ok(new { success = true });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditShelfParentLibraries([FromBody]
     Library_ShelfParentLibraries_FormModel formModel)
     {
@@ -1853,7 +2488,7 @@ public class LibraryController : ControllerBase
         bunchIndex ??= 0;
         int bunchSize = 10;
 
-        if (string.IsNullOrWhiteSpace(filter))
+        if (string.IsNullOrWhiteSpace(filter) || filter.Trim().Length < 3)
         {
             filter = null;
         }
@@ -1870,8 +2505,10 @@ public class LibraryController : ControllerBase
             .Where(o => o.Guid == ownerGuid_Guid)
             .SelectMany(o => o.Followers)
             .Select(ff => ff.Follower)
-            .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
-            .Where(fer => fer.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
+            .Where(u =>
+                (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                u.Followers.Any(ferff => ferff.Follower.Guid == myGuid)
+            )
             .OrderBy(o => o.Id)
             .Select(o => o.Guid)
             .Skip(bunchIndex.Value * bunchSize)
@@ -1885,7 +2522,7 @@ public class LibraryController : ControllerBase
             .AnyAsync(ff => ff.Follower.Guid == myGuid &&
                 (filter == null || ff.Follower.NormalizedUserName.Contains(filter))
             );
-            if (iFollow)
+            if (iFollow && bunchIndex == 0)
             {
                 followersGuids_MutualsWithMyFollowings = [myGuid.Value, .. followersGuids_MutualsWithMyFollowings];
             }
@@ -1896,8 +2533,10 @@ public class LibraryController : ControllerBase
                 .Where(o => o.Guid == ownerGuid_Guid)
                 .SelectMany(o => o.Followers)
                 .Select(ff => ff.Follower)
-                .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
-                .Where(fer => fer.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    (u.Guid == myGuid || u.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
+                )
                 .CountAsync();
                 int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
@@ -1908,8 +2547,11 @@ public class LibraryController : ControllerBase
                 .Where(o => o.Guid == ownerGuid_Guid)
                 .SelectMany(o => o.Followers)
                 .Select(ff => ff.Follower)
-                .Where(fer => filter == null || fer.NormalizedUserName.Contains(filter))
-                .Where(fer => !fer.Followers.Any(ferff => ferff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    u.Guid != myGuid &&
+                    !u.Followers.Any(ferff => ferff.Follower.Guid == myGuid)
+                )
                 .OrderBy(o => o.Id)
                 .Select(o => o.Guid)
                 .Skip(numberOfSkipOthersFollowers)
@@ -1978,7 +2620,7 @@ public class LibraryController : ControllerBase
         bunchIndex ??= 0;
         int bunchSize = 10;
 
-        if (string.IsNullOrWhiteSpace(filter))
+        if (string.IsNullOrWhiteSpace(filter) || filter.Trim().Length < 3)
         {
             filter = null;
         }
@@ -1995,12 +2637,14 @@ public class LibraryController : ControllerBase
             .Where(o => o.Guid == ownerGuid_Guid)
             .SelectMany(o => o.Followings)
             .Select(ff => ff.Following)
-            .Where(fing => filter == null || fing.NormalizedUserName.Contains(filter))
-            .Where(fing => fing.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
+            .Where(u =>
+                (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                u.Followers.Any(fingff => fingff.Follower.Guid == myGuid)
+            )
             .OrderBy(o => o.Id)
-            .Select(o => o.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(o => o.Guid)
             .ToListAsync();
 
             //am i followed
@@ -2010,7 +2654,7 @@ public class LibraryController : ControllerBase
             .AnyAsync(ff => ff.Following.Guid == myGuid &&
                 (filter == null || ff.Following.NormalizedUserName.Contains(filter))
             );
-            if (followedMe)
+            if (followedMe && bunchIndex == 0)
             {
                 followingsGuids_MutualsWithMyFollowings = [myGuid.Value, .. followingsGuids_MutualsWithMyFollowings];
             }
@@ -2021,8 +2665,10 @@ public class LibraryController : ControllerBase
                 .Where(o => o.Guid == ownerGuid_Guid)
                 .SelectMany(o => o.Followings)
                 .Select(ff => ff.Following)
-                .Where(fing => filter == null || fing.NormalizedUserName.Contains(filter))
-                .Where(fing => fing.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    (u.Guid == myGuid || u.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
+                )
                 .CountAsync();
                 int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
@@ -2033,12 +2679,15 @@ public class LibraryController : ControllerBase
                 .Where(o => o.Guid == ownerGuid_Guid)
                 .SelectMany(o => o.Followings)
                 .Select(ff => ff.Following)
-                .Where(fing => filter == null || fing.NormalizedUserName.Contains(filter))
-                .Where(fing => !fing.Followers.Any(fingff => fingff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    u.Guid != myGuid &&
+                    !u.Followers.Any(fingff => fingff.Follower.Guid == myGuid)
+                )
                 .OrderBy(o => o.Id)
-                .Select(o => o.Guid)
                 .Skip(numberOfSkipOthersFollowers)
                 .Take(numberOfNeededOthersFollowers)
+                .Select(o => o.Guid)
                 .ToListAsync();
             }
         }
@@ -2050,9 +2699,9 @@ public class LibraryController : ControllerBase
             .Select(ff => ff.Following)
             .Where(f => filter == null || f.NormalizedUserName.Contains(filter))
             .OrderBy(o => o.Id)
-            .Select(f => f.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(f => f.Guid)
             .ToListAsync();
         }
 
@@ -2192,60 +2841,455 @@ public class LibraryController : ControllerBase
 
 
     [HttpGet]
-    public async Task<IActionResult> GetFavoriteLibrariesGuids([FromQuery][StringLength(32)] string userGuid)
+    public async Task<IActionResult> GetFavoriteLibrariesGuids(
+    [FromQuery][StringLength(32)] string userGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy)
     {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
-        Guid[] favoriteLibrariesGuids = await libraryDb.Owners
-        .Where(o => o.Guid == userGuid_Guid)
-        .SelectMany(o => o.FavoriteLibraries)
-        .Select(ul => ul.Library.Guid)
-        .ToArrayAsync();
+        if (sortBy == "newest")
+        {
+            Guid[] orderedFavoriteLibrariesGuids;
+            if (tags is not null)
+            {
+                orderedFavoriteLibrariesGuids = await libraryDb.Owners
+                .Where(o => o.Guid == userGuid_Guid)
+                .SelectMany(o => o.FavoriteLibraries)
+                .SelectMany(ul => ul.Library.Shelves)
+                .SelectMany(libShelf => libShelf.Shelf.Documents)
+                .Select(shelfDoc => shelfDoc.Document)
+                .Where(doc =>
+                    tags == null ||
+                    tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))
+                )
+                .SelectMany(doc => doc.ParentShelves)
+                .SelectMany(shelfDoc => shelfDoc.Shelf.ParentLibraries)
+                .Select(libShelf => libShelf.Library)
+                //.DistinctBy(lib => lib.Guid)
+                .Where(lib => title == null || lib.Title.Contains(title))
+                .OrderByDescending(lib => lib.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(lib => lib.Guid)
+                .ToArrayAsync();
+            }
+            else
+            {
+                orderedFavoriteLibrariesGuids = await libraryDb.Owners
+                .Where(o => o.Guid == userGuid_Guid)
+                .SelectMany(o => o.FavoriteLibraries)
+                .Select(ul => ul.Library)
+                .Where(lib => title == null || lib.Title.Contains(title))
+                .OrderByDescending(lib => lib.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(lib => lib.Guid)
+                .ToArrayAsync();
+            }
+
+            return Ok(orderedFavoriteLibrariesGuids);
+        }
+
+        //sortBy == popular, OrderByDescending(lib => lib.InFavorOf.Count)
+        Guid[] favoriteLibrariesGuids;
+        if (tags is not null)
+        {
+            favoriteLibrariesGuids = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteLibraries)
+            .SelectMany(ul => ul.Library.Shelves)
+            .SelectMany(libShelf => libShelf.Shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc =>
+                tags == null ||
+                tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))
+            )
+            .SelectMany(doc => doc.ParentShelves)
+            .SelectMany(shelfDoc => shelfDoc.Shelf.ParentLibraries)
+            .Select(libShelf => libShelf.Library)
+            //.DistinctBy(lib => lib.Guid)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .OrderByDescending(lib => lib.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(lib => lib.Guid)
+            .ToArrayAsync();
+        }
+        else
+        {
+            favoriteLibrariesGuids = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteLibraries)
+            .Select(ul => ul.Library)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .OrderByDescending(lib => lib.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(lib => lib.Guid)
+            .ToArrayAsync();
+        }
 
         return Ok(favoriteLibrariesGuids);
     }
     [HttpGet]
-    public async Task<IActionResult> GetFavoriteShelvesGuids([FromQuery][StringLength(32)] string userGuid)
+    public async Task<IActionResult> TotalNumberOfUserFavoriteLibraries(
+    [FromQuery][StringLength(32)] string userGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
     {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
-        Guid[] favoriteShelvesGuids = await libraryDb.Owners
-        .Where(o => o.Guid == userGuid_Guid)
-        .SelectMany(o => o.FavoriteShelves)
-        .Select(ush => ush.Shelf.Guid)
-        .ToArrayAsync();
+        int numberOfItems;
+        if (tags is not null)
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteLibraries)
+            .SelectMany(ul => ul.Library.Shelves)
+            .SelectMany(libShelf => libShelf.Shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc =>
+                tags == null ||
+                tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))
+            )
+            .SelectMany(doc => doc.ParentShelves)
+            .SelectMany(shelfDoc => shelfDoc.Shelf.ParentLibraries)
+            .Select(libShelf => libShelf.Library)
+            //.DistinctBy(lib => lib.Guid)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .CountAsync();
+        }
+        else
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteLibraries)
+            .Select(ul => ul.Library)
+            .Where(lib => title == null || lib.Title.Contains(title))
+            .CountAsync();
+        }
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetFavoriteShelvesGuids(
+    [FromQuery][StringLength(32)] string userGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy)
+    {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        if (sortBy == "newest")
+        {
+            Guid[] orderedFavoriteShelvesGuids;
+            if (tags is not null)
+            {
+                orderedFavoriteShelvesGuids = await libraryDb.Owners
+                .Where(o => o.Guid == userGuid_Guid)
+                .SelectMany(o => o.FavoriteShelves)
+                .SelectMany(ush => ush.Shelf.Documents)
+                .Select(shelfDoc => shelfDoc.Document)
+                .Where(doc =>
+                    tags == null ||
+                    tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))
+                )
+                .SelectMany(doc => doc.ParentShelves)
+                .Select(ush => ush.Shelf)
+                //.DistinctBy(shelf => shelf.Guid)
+                .Where(shelf => title == null || shelf.Title.Contains(title))
+                .OrderByDescending(shelf => shelf.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(shelf => shelf.Guid)
+                .ToArrayAsync();
+            }
+            else
+            {
+                orderedFavoriteShelvesGuids = await libraryDb.Owners
+                .Where(o => o.Guid == userGuid_Guid)
+                .SelectMany(o => o.FavoriteShelves)
+                .Select(ush => ush.Shelf)
+                .Where(shelf => title == null || shelf.Title.Contains(title))
+                .OrderByDescending(shelf => shelf.CreatedAt)
+                .Skip(pageIndex.Value * pageSize.Value)
+                .Take(pageSize.Value)
+                .Select(shelf => shelf.Guid)
+                .ToArrayAsync();
+            }
+
+            return Ok(orderedFavoriteShelvesGuids);
+        }
+
+        //sortBy == popular,
+        Guid[] favoriteShelvesGuids;
+        if (tags is not null)
+        {
+            favoriteShelvesGuids = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteShelves)
+            .SelectMany(ush => ush.Shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc =>
+                tags == null ||
+                tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))
+            )
+            .SelectMany(doc => doc.ParentShelves)
+            .Select(ush => ush.Shelf)
+            //.DistinctBy(shelf => shelf.Guid)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .OrderByDescending(shelf => shelf.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(shelf => shelf.Guid)
+            .ToArrayAsync();
+        }
+        else
+        {
+            favoriteShelvesGuids = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteShelves)
+            .Select(ush => ush.Shelf)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .OrderByDescending(shelf => shelf.InFavorOf.Count)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(shelf => shelf.Guid)
+            .ToArrayAsync();
+        }
 
         return Ok(favoriteShelvesGuids);
     }
     [HttpGet]
-    public async Task<IActionResult> GetFavoriteDocumentsGuids([FromQuery][StringLength(32)] string userGuid)
+    public async Task<IActionResult> TotalNumberOfUserFavoriteShelves(
+    [FromQuery][StringLength(32)] string userGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
     {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
         if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
         {
             ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
             return BadRequest(ModelState);
         }
 
+        int numberOfItems;
+        if (tags is not null)
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteShelves)
+            .SelectMany(ush => ush.Shelf.Documents)
+            .Select(shelfDoc => shelfDoc.Document)
+            .Where(doc =>
+                tags == null ||
+                tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))
+            )
+            .SelectMany(doc => doc.ParentShelves)
+            .Select(ush => ush.Shelf)
+            //.DistinctBy(shelf => shelf.Guid)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .CountAsync();
+        }
+        else
+        {
+            numberOfItems = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteShelves)
+            .Select(ush => ush.Shelf)
+            .Where(shelf => title == null || shelf.Title.Contains(title))
+            .CountAsync();
+        }
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetFavoriteDocumentsGuids(
+    [FromQuery][StringLength(32)] string userGuid,
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy,
+    [FromServices] Review_DbContext reviewDb)
+    {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        if (sortBy == "newest")
+        {
+            Guid[] orderedFavoriteDocumentsGuids = await libraryDb.Owners
+            .Where(o => o.Guid == userGuid_Guid)
+            .SelectMany(o => o.FavoriteDocuments)
+            .Select(ud => ud.Document)
+            .Where(doc =>
+                (title == null || doc.Title.Contains(title)) &&
+                (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+            )
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(doc => doc.Guid)
+            .ToArrayAsync();
+
+            return Ok(orderedFavoriteDocumentsGuids);
+        }
+
+        //sortBy == popular
         Guid[] favoriteDocumentsGuids = await libraryDb.Owners
         .Where(o => o.Guid == userGuid_Guid)
         .SelectMany(o => o.FavoriteDocuments)
-        .Select(ud => ud.Document.Guid)
+        .Select(ud => ud.Document)
+        .Where(doc =>
+            (title == null || doc.Title.Contains(title)) &&
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+        )
+        .OrderByDescending(doc => doc.CreatedAt)
+        .Take(100_000)
+        .Select(doc => doc.Guid)
         .ToArrayAsync();
 
-        return Ok(favoriteDocumentsGuids);
+        Guid[] popularFavoriteDocumentsGuids = await reviewDb.Reviews
+        .Where(r => favoriteDocumentsGuids.Contains(r.SubjectGuid))
+        .OrderByDescending(r => r.LikedBy.Count)
+        .Skip(pageIndex.Value * pageSize.Value)
+        .Take(pageSize.Value)
+        .Select(r => r.SubjectGuid)
+        .ToArrayAsync();
+
+        return Ok(popularFavoriteDocumentsGuids);
+    }
+    [HttpGet]
+    public async Task<IActionResult> TotalNumberOfUserFavoriteDocuments(
+    [FromQuery][StringLength(32)] string userGuid,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
+    {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (!Guid.TryParseExact(userGuid, "N", out Guid userGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        int numberOfItems = await libraryDb.Owners
+        .Where(o => o.Guid == userGuid_Guid)
+        .SelectMany(o => o.FavoriteDocuments)
+        .Select(ud => ud.Document)
+        .Where(doc =>
+            (title == null || doc.Title.Contains(title)) &&
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName)))
+        )
+        .CountAsync();
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
     }
 
     [HttpGet]
     public async Task<IActionResult> GetUsersInFavorOfLibrary([FromQuery][StringLength(32)] string libraryGuid,
-    [FromQuery] int? bunchIndex)
+    [FromQuery] int? bunchIndex, [FromQuery][StringLength(30)] string? filter)
     {
         if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
         {
@@ -2274,6 +3318,15 @@ public class LibraryController : ControllerBase
         bunchIndex ??= 0;
         int bunchSize = 10;
 
+        if (string.IsNullOrWhiteSpace(filter) || filter.Trim().Length < 3)
+        {
+            filter = null;
+        }
+        else
+        {
+            filter = userManager.NormalizeName(filter.Trim());
+        }
+
         List<Guid> usersInFavorOfGuids_MutualsWithMyFollowings = [];
         List<Guid> UsersInFavorOfGuids_Others = [];
         if (myGuid is not null && myGuid.HasValue)
@@ -2282,32 +3335,41 @@ public class LibraryController : ControllerBase
             .Where(lib => lib.Guid == libraryGuid_Guid)
             .SelectMany(lib => lib.InFavorOf)
             .Select(ul => ul.User)
-            .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+            .Where(u =>
+                (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                u.Followers.Any(uff => uff.Follower.Guid == myGuid)
+            )
             .OrderBy(u => u.Id)
-            .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(u => u.Guid)
             .ToListAsync();
 
             //is my favorite
             bool myFavorite = await libraryDb.Libraries
             .Where(lib => lib.Guid == libraryGuid_Guid)
             .SelectMany(lib => lib.InFavorOf)
-            .AnyAsync(ul => ul.User.Guid == myGuid);
-            if (myFavorite)
+            .Select(ul => ul.User)
+            .AnyAsync(u => u.Guid == myGuid &&
+                (filter == null || u.NormalizedUserName.Contains(filter))
+            );
+            if (myFavorite && bunchIndex == 0)
             {
                 usersInFavorOfGuids_MutualsWithMyFollowings = [myGuid.Value, .. usersInFavorOfGuids_MutualsWithMyFollowings];
             }
 
             if (usersInFavorOfGuids_MutualsWithMyFollowings.Count < bunchSize)
             {
-                int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Libraries
+                int totalNumberOfUsersInFavor_MutualWithMyFollowings = await libraryDb.Libraries
                 .Where(lib => lib.Guid == libraryGuid_Guid)
                 .SelectMany(lib => lib.InFavorOf)
                 .Select(ul => ul.User)
-                .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    (u.Guid == myGuid || u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                )
                 .CountAsync();
-                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
+                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfUsersInFavor_MutualWithMyFollowings;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
 
                 int numberOfNeededOthersFollowers = bunchSize - usersInFavorOfGuids_MutualsWithMyFollowings.Count;
@@ -2316,11 +3378,15 @@ public class LibraryController : ControllerBase
                 .Where(lib => lib.Guid == libraryGuid_Guid)
                 .SelectMany(lib => lib.InFavorOf)
                 .Select(ul => ul.User)
-                .Where(u => !u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    u.Guid != myGuid &&
+                    !u.Followers.Any(uff => uff.Follower.Guid == myGuid)
+                )
                 .OrderBy(u => u.Id)
-                .Select(u => u.Guid)
                 .Skip(numberOfSkipOthersFollowers)
                 .Take(numberOfNeededOthersFollowers)
+                .Select(u => u.Guid)
                 .ToListAsync();
             }
         }
@@ -2329,11 +3395,12 @@ public class LibraryController : ControllerBase
             UsersInFavorOfGuids_Others = await libraryDb.Libraries
             .Where(lib => lib.Guid == libraryGuid_Guid)
             .SelectMany(lib => lib.InFavorOf)
-            .Select(u => u.User)
+            .Select(ul => ul.User)
+            .Where(u => filter == null || u.NormalizedUserName.Contains(filter))
             .OrderBy(u => u.Id)
-            .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(u => u.Guid)
             .ToListAsync();
         }
 
@@ -2354,7 +3421,7 @@ public class LibraryController : ControllerBase
     }
     [HttpGet]
     public async Task<IActionResult> GetUsersInFavorOfShelf([FromQuery][StringLength(32)] string shelfGuid,
-    [FromQuery] int? bunchIndex)
+    [FromQuery] int? bunchIndex, [FromQuery][StringLength(30)] string? filter)
     {
         if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
         {
@@ -2383,6 +3450,15 @@ public class LibraryController : ControllerBase
         bunchIndex ??= 0;
         int bunchSize = 10;
 
+        if (string.IsNullOrWhiteSpace(filter) || filter.Trim().Length < 3)
+        {
+            filter = null;
+        }
+        else
+        {
+            filter = userManager.NormalizeName(filter.Trim());
+        }
+
         List<Guid> usersInFavorOfGuids_MutualsWithMyFollowings = [];
         List<Guid> UsersInFavorOfGuids_Others = [];
         if (myGuid is not null && myGuid.HasValue)
@@ -2391,32 +3467,40 @@ public class LibraryController : ControllerBase
             .Where(shelf => shelf.Guid == shelfGuid_Guid)
             .SelectMany(shelf => shelf.InFavorOf)
             .Select(ul => ul.User)
-            .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+            .Where(u => (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                u.Followers.Any(uff => uff.Follower.Guid == myGuid)
+            )
             .OrderBy(u => u.Id)
-            .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(u => u.Guid)
             .ToListAsync();
 
             //is my favorite
             bool myFavorite = await libraryDb.Shelves
             .Where(shelf => shelf.Guid == shelfGuid_Guid)
             .SelectMany(shelf => shelf.InFavorOf)
-            .AnyAsync(ul => ul.User.Guid == myGuid);
-            if (myFavorite)
+            .Select(ush => ush.User)
+            .AnyAsync(u => u.Guid == myGuid &&
+                (filter == null || u.NormalizedUserName.Contains(filter))
+            );
+            if (myFavorite && bunchIndex == 0)
             {
                 usersInFavorOfGuids_MutualsWithMyFollowings = [myGuid.Value, .. usersInFavorOfGuids_MutualsWithMyFollowings];
             }
 
             if (usersInFavorOfGuids_MutualsWithMyFollowings.Count < bunchSize)
             {
-                int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Shelves
+                int totalNumberOfUsersInFavor_MutualWithMyFollowings = await libraryDb.Shelves
                 .Where(shelf => shelf.Guid == shelfGuid_Guid)
                 .SelectMany(shelf => shelf.InFavorOf)
                 .Select(ul => ul.User)
-                .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    (u.Guid == myGuid || u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                )
                 .CountAsync();
-                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
+                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfUsersInFavor_MutualWithMyFollowings;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
 
                 int numberOfNeededOthersFollowers = bunchSize - usersInFavorOfGuids_MutualsWithMyFollowings.Count;
@@ -2425,11 +3509,15 @@ public class LibraryController : ControllerBase
                 .Where(shelf => shelf.Guid == shelfGuid_Guid)
                 .SelectMany(shelf => shelf.InFavorOf)
                 .Select(ul => ul.User)
-                .Where(u => !u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .Where(u =>
+                    (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    u.Guid != myGuid &&
+                    !u.Followers.Any(uff => uff.Follower.Guid == myGuid)
+                )
                 .OrderBy(u => u.Id)
-                .Select(u => u.Guid)
                 .Skip(numberOfSkipOthersFollowers)
                 .Take(numberOfNeededOthersFollowers)
+                .Select(u => u.Guid)
                 .ToListAsync();
             }
         }
@@ -2439,10 +3527,11 @@ public class LibraryController : ControllerBase
             .Where(shelf => shelf.Guid == shelfGuid_Guid)
             .SelectMany(shelf => shelf.InFavorOf)
             .Select(u => u.User)
+            .Where(u => filter == null || u.NormalizedUserName.Contains(filter))
             .OrderBy(u => u.Id)
-            .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(u => u.Guid)
             .ToListAsync();
         }
 
@@ -2463,7 +3552,7 @@ public class LibraryController : ControllerBase
     }
     [HttpGet]
     public async Task<IActionResult> GetUsersInFavorOfDocument([FromQuery][StringLength(32)] string documentGuid,
-    [FromQuery] int? bunchIndex)
+    [FromQuery] int? bunchIndex, [FromQuery][StringLength(30)] string? filter)
     {
         if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
         {
@@ -2492,6 +3581,15 @@ public class LibraryController : ControllerBase
         bunchIndex ??= 0;
         int bunchSize = 10;
 
+        if (string.IsNullOrWhiteSpace(filter) || filter.Trim().Length < 3)
+        {
+            filter = null;
+        }
+        else
+        {
+            filter = userManager.NormalizeName(filter.Trim());
+        }
+
         List<Guid> usersInFavorOfGuids_MutualsWithMyFollowings = [];
         List<Guid> UsersInFavorOfGuids_Others = [];
         if (myGuid is not null && myGuid.HasValue)
@@ -2500,18 +3598,23 @@ public class LibraryController : ControllerBase
             .Where(doc => doc.Guid == documentGuid_Guid)
             .SelectMany(doc => doc.InFavorOf)
             .Select(ul => ul.User)
-            .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+            .Where(u => (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                u.Followers.Any(uff => uff.Follower.Guid == myGuid)
+            )
             .OrderBy(u => u.Id)
-            .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(u => u.Guid)
             .ToListAsync();
 
             //is my favorite
             bool myFavorite = await libraryDb.Documents
             .Where(doc => doc.Guid == documentGuid_Guid)
             .SelectMany(doc => doc.InFavorOf)
-            .AnyAsync(ul => ul.User.Guid == myGuid);
+            .Select(ul => ul.User)
+            .AnyAsync(u => u.Guid == myGuid &&
+                (filter == null || u.NormalizedUserName.Contains(filter))
+            );
             if (myFavorite)
             {
                 usersInFavorOfGuids_MutualsWithMyFollowings = [myGuid.Value, .. usersInFavorOfGuids_MutualsWithMyFollowings];
@@ -2519,13 +3622,15 @@ public class LibraryController : ControllerBase
 
             if (usersInFavorOfGuids_MutualsWithMyFollowings.Count < bunchSize)
             {
-                int totalNumberOfMyFollowingsIntersectFollowers = await libraryDb.Documents
+                int totalNumberOfUsersInFavor_MutualWithMyFollowings = await libraryDb.Documents
                 .Where(doc => doc.Guid == documentGuid_Guid)
                 .SelectMany(doc => doc.InFavorOf)
                 .Select(ul => ul.User)
-                .Where(u => u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .Where(u => (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    (u.Guid == myGuid || u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                )
                 .CountAsync();
-                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsIntersectFollowers;
+                int numberOfSkipOthersFollowers = (bunchIndex.Value * bunchSize) - totalNumberOfUsersInFavor_MutualWithMyFollowings;
                 if (numberOfSkipOthersFollowers < 0) numberOfSkipOthersFollowers = 0;
 
                 int numberOfNeededOthersFollowers = bunchSize - usersInFavorOfGuids_MutualsWithMyFollowings.Count;
@@ -2534,11 +3639,14 @@ public class LibraryController : ControllerBase
                 .Where(doc => doc.Guid == documentGuid_Guid)
                 .SelectMany(doc => doc.InFavorOf)
                 .Select(ul => ul.User)
-                .Where(u => !u.Followers.Any(uff => uff.Follower.Guid == myGuid))
+                .Where(u => (filter == null || u.NormalizedUserName.Contains(filter)) &&
+                    u.Guid != myGuid &&
+                    !u.Followers.Any(uff => uff.Follower.Guid == myGuid)
+                )
                 .OrderBy(u => u.Id)
-                .Select(u => u.Guid)
                 .Skip(numberOfSkipOthersFollowers)
                 .Take(numberOfNeededOthersFollowers)
+                .Select(u => u.Guid)
                 .ToListAsync();
             }
         }
@@ -2548,10 +3656,11 @@ public class LibraryController : ControllerBase
             .Where(doc => doc.Guid == documentGuid_Guid)
             .SelectMany(doc => doc.InFavorOf)
             .Select(u => u.User)
+            .Where(u => filter == null || u.NormalizedUserName.Contains(filter))
             .OrderBy(u => u.Id)
-            .Select(u => u.Guid)
             .Skip(bunchIndex.Value * bunchSize)
             .Take(bunchSize)
+            .Select(u => u.Guid)
             .ToListAsync();
         }
 
@@ -2740,6 +3849,75 @@ public class LibraryController : ControllerBase
         return Ok(new { success = true });
     }
 
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> IsMyFavoriteLibrary([FromQuery][StringLength(32)] string libraryGuid)
+    {
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstAsync();
+
+        bool isMyFavorite = await libraryDb.Owners
+        .Where(o => o.Guid == myGuid)
+        .SelectMany(o => o.FavoriteLibraries)
+        .Select(ul => ul.Library)
+        .AnyAsync(lib => lib.Guid == libraryGuid_Guid);
+
+        return Ok(new { isMyFavorite });
+    }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> IsMyFavoriteShelf([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstAsync();
+
+        bool isMyFavorite = await libraryDb.Owners
+        .Where(o => o.Guid == myGuid)
+        .SelectMany(o => o.FavoriteShelves)
+        .Select(ush => ush.Shelf)
+        .AnyAsync(shelf => shelf.Guid == shelfGuid_Guid);
+
+        return Ok(new { isMyFavorite });
+    }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> IsMyFavoriteDocument([FromQuery][StringLength(32)] string documentGuid)
+    {
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(user => user.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name!))
+        .Select(user => user.UserGuid)
+        .FirstAsync();
+
+        bool isMyFavorite = await libraryDb.Owners
+        .Where(o => o.Guid == myGuid)
+        .SelectMany(o => o.FavoriteDocuments)
+        .Select(ud => ud.Document)
+        .AnyAsync(doc => doc.Guid == documentGuid_Guid);
+
+        return Ok(new { isMyFavorite });
+    }
 
 
 
@@ -2822,7 +4000,7 @@ public class LibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTagsList([FromQuery][StringLength(32, MinimumLength = 3)] string partialName)
+    public async Task<IActionResult> GetTags([FromQuery][StringLength(32, MinimumLength = 3)] string partialName)
     {
         string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
         foreach (char c in partialName)
@@ -2841,9 +4019,234 @@ public class LibraryController : ControllerBase
 
         return Ok(tags);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetUserTags([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
+        string[] tags = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.Documents)
+        .SelectMany(doc => doc.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
 
+        return Ok(tags);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetUserFavoriteLibrariesTags([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
 
+        string[] tags = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.FavoriteLibraries)
+        .SelectMany(ul => ul.Library.Shelves)
+        .SelectMany(libShelf => libShelf.Shelf.Documents)
+        .SelectMany(shelfDoc => shelfDoc.Document.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetUserFavoriteShelvesTags([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string[] tags = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.FavoriteShelves)
+        .SelectMany(ush => ush.Shelf.Documents)
+        .SelectMany(shelfDoc => shelfDoc.Document.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetUserFavoriteDocumentsTags([FromQuery][StringLength(32)] string ownerGuid)
+    {
+        if (!Guid.TryParseExact(ownerGuid, "N", out Guid ownerGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string[] tags = await libraryDb.Owners
+        .Where(o => o.Guid == ownerGuid_Guid)
+        .SelectMany(o => o.FavoriteDocuments)
+        .SelectMany(ud => ud.Document.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetLibraryTags([FromQuery][StringLength(32)] string libraryGuid)
+    {
+        if (!Guid.TryParseExact(libraryGuid, "N", out Guid libraryGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string[] tags = await libraryDb.Libraries
+        .Where(lib => lib.Guid == libraryGuid_Guid)
+        .SelectMany(lib => lib.Shelves)
+        .SelectMany(libShelf => libShelf.Shelf.Documents)
+        .SelectMany(shelfDoc => shelfDoc.Document.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetShelfTags([FromQuery][StringLength(32)] string shelfGuid)
+    {
+        if (!Guid.TryParseExact(shelfGuid, "N", out Guid shelfGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string[] tags = await libraryDb.Shelves
+        .Where(shelf => shelf.Guid == shelfGuid_Guid)
+        .SelectMany(shelf => shelf.Documents)
+        .SelectMany(shelfDoc => shelfDoc.Document.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetDocumentTags([FromQuery][StringLength(32)] string documentGuid)
+    {
+        if (!Guid.TryParseExact(documentGuid, "N", out Guid documentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        string[] tags = await libraryDb.Documents
+        .Where(doc => doc.Guid == documentGuid_Guid)
+        .SelectMany(doc => doc.Tags)
+        .Select(docTag => docTag.Tag.Name)
+        .ToArrayAsync();
+
+        return Ok(tags);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SearchDocuments(
+    [FromQuery] int? pageIndex, [FromQuery] int? pageSize,
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromServices] Review_DbContext reviewDb,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title,
+    [FromQuery][StringLength(20)] string? sortBy)
+    {
+        pageIndex ??= 0;
+        pageSize ??= 10;
+        sortBy ??= "newest";
+        sortBy = sortBy.ToLower();
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (tags is null && title is null)
+        {
+            return Ok();
+        }
+
+        if (sortBy == "newest")
+        {
+            Guid[] newestDocumentsGuids = await libraryDb.Documents
+            .Where(doc =>
+                (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))) &&
+                (title == null || doc.Title.Contains(title))
+            )
+            .OrderByDescending(doc => doc.CreatedAt)
+            .Skip(pageIndex.Value * pageSize.Value)
+            .Take(pageSize.Value)
+            .Select(doc => doc.Guid)
+            .ToArrayAsync();
+
+            return Ok(newestDocumentsGuids);
+        }
+
+        //else if (sortBy == "popular"){}
+        Guid[] documentsGuids = await libraryDb.Documents
+        .Where(doc =>
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))) &&
+            (title == null || doc.Title.Contains(title))
+        )
+        .OrderByDescending(doc => doc.CreatedAt)
+        .Take(100_000)
+        .Select(doc => doc.Guid)
+        .ToArrayAsync();
+
+        Guid[] popularDocumentsGuids = await reviewDb.Reviews
+        .Where(r => documentsGuids.Contains(r.SubjectGuid))
+        .OrderByDescending(r => r.LikedBy.Count)
+        .Skip(pageIndex.Value * pageSize.Value)
+        .Take(pageSize.Value)
+        .Select(r => r.SubjectGuid)
+        .ToArrayAsync();
+
+        return Ok(popularDocumentsGuids);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TotalNumberOfSearchDocuments(
+    [FromQuery][MaxStringArrayLength(32, 32)] string[]? tags,
+    [FromQuery][StringLength(60, MinimumLength = 3)] string? title)
+    {
+        title = title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length < 3)
+        {
+            title = null;
+        }
+
+        if (tags is null || tags.Length == 0)
+        {
+            tags = null;
+        }
+
+        if (tags is null && title is null)
+        {
+            return Ok(new { totalNumberOfItems = 0 });
+        }
+
+        int numberOfItems = await libraryDb.Documents
+        .Where(doc =>
+            (tags == null || tags.All(tagName => doc.Tags.Select(docTag => docTag.Tag.Name).Contains(tagName))) &&
+            (title == null || doc.Title.Contains(title))
+        )
+        .CountAsync();
+
+        return Ok(new { totalNumberOfItems = numberOfItems });
+    }
 
 
     //************************* version *************************
@@ -3147,14 +4550,14 @@ public class LibraryController : ControllerBase
         int numberOfUpdatedRows = await libraryDb.Documents
         .Where(doc => doc.Guid == documentGuid_Guid && doc.Owner.Guid == myGuid)
         .ExecuteUpdateAsync(setter => setter
-            .SetProperty(doc => EF.Property<int?>(doc, "RelatedVersionsId"), (int?)null)
+            .SetProperty(doc => doc.RelatedVersionsId/*EF.Property<int?>(doc, "RelatedVersionsId")*/, (int?)null)
         );
 
         if (numberOfUpdatedRows == 0)
         {
             ModelState.AddModelError("Authorization or documentGuid",
-            "Only the owner of the specified documents can edit it! " +
-            "or there's no document with the specified guid!");
+            "There's no document with the specified guid! " +
+            "or Only the owner of the specified documents can edit it!");
             return BadRequest(ModelState);
         }
 

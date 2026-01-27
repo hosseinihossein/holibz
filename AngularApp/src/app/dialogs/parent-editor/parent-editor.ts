@@ -14,12 +14,13 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { MatTooltip } from "@angular/material/tooltip";
 import { MatButton } from '@angular/material/button';
 import { ParentShelfModel } from '../../library/new-document-form/new-document-form';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-parent-editor',
   imports: [MatDialogContent, MatDialogActions, MatDialogClose, ReactiveFormsModule, MatIcon,
     MatButtonToggleModule, MatFormField, MatError, MatLabel, MatSelect, /*MatOptgroup,*/ MatOption,
-    MatProgressSpinner, MatButton],
+    WaitSpinner, MatButton],
   templateUrl: './parent-editor.html',
   styleUrl: './parent-editor.css'
 })
@@ -43,7 +44,7 @@ export class ParentEditor {
   //shelfGuids = this.parentForm.get("shelfGuids");
   submitErrors = signal<string|null>(null);
   
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   allLibraryList = signal<{guid:string,title:string}[]>([]);
   displayedLibraries = signal<string[]>([]);
   allShelfList = signal<ParentShelfModel[]>([]);
@@ -101,12 +102,12 @@ export class ParentEditor {
 
   onSubmit(){
     //if(this.parentForm.valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
 
       const calbacks = {
         next: (res: {success:boolean, parentShelves?:ParentShelfModel[]}) => {
           if(res && res.success){
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             if(this.data.parentOf === "document"){
               let parentShelves: ParentShelfModel[];
               if(res.parentShelves){
@@ -143,7 +144,7 @@ export class ParentEditor {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         },
       };
       

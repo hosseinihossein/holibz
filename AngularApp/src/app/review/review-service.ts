@@ -27,6 +27,12 @@ export class ReviewService {
       "/api/Review/GetReviewModel", {params:httpParams}
     );
   }
+  requestCommentModel(commentGuid:string){
+    let httpParams = new HttpParams().set("commentGuid",commentGuid);
+    return this.httpClient.get<CommentModel>(
+      "/api/Review/GetCommentModel",{params:httpParams}
+    );
+  }
 
   requestComments(subjectGuid:string, orderBy?:string|null, pageIndex?:number, pageSize?:number){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
@@ -39,14 +45,14 @@ export class ReviewService {
     if(pageSize){
       httpParams = httpParams.set("pageSize",pageSize);
     }
-    return this.httpClient.get<CommentModel[]>(
+    return this.httpClient.get<string[]>(
       "/api/Review/GetComments", {params:httpParams}
     );
   }
   requestReplies(commentGuid:string, bunchIndex:number=0){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
     httpParams = httpParams.set("bunchIndex", bunchIndex);
-    return this.httpClient.get<CommentModel[]>(
+    return this.httpClient.get<string[]>(
       "/api/Review/GetReplies", {params:httpParams}
     );
   }
@@ -55,7 +61,7 @@ export class ReviewService {
     formData.append("ParentSubjectGuid", formModel.parentSubjectGuid);
     formData.append("Text", formModel.text);
     
-    return this.httpClient.post<CommentModel>(
+    return this.httpClient.post<{commentGuid:string}>(
       "/api/Review/SubmitNewComment", formData
     );
   }
@@ -64,7 +70,7 @@ export class ReviewService {
     formData.append("ParentCommentGuid", formModel.parentCommentGuid);
     formData.append("Text", formModel.text);
     
-    return this.httpClient.post<CommentModel>(
+    return this.httpClient.post<{replyGuid:string}>(
       "/api/Review/SubmitNewReply", formData
     );
   }
@@ -83,13 +89,13 @@ export class ReviewService {
   }
   requestToggleThumbsUp(commentGuid:string){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
-    return this.httpClient.post<{numberOfThumbUps:number}>(
+    return this.httpClient.post<{numberOfThumbsUps:number,numberOfThumbsDowns:number}>(
       "/api/Review/ToggleThumbsUp", null, {params:httpParams}
     );
   }
   requestToggleThumbsDown(commentGuid:string){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
-    return this.httpClient.post<{numberOfThumbDowns:number}>(
+    return this.httpClient.post<{numberOfThumbsUps:number,numberOfThumbsDowns:number}>(
       "/api/Review/ToggleThumbsDown", null, {params:httpParams}
     );
   }
@@ -97,7 +103,7 @@ export class ReviewService {
   requestLikesUserList(subjectGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
     httpParams = httpParams.set("bunchIndex", bunchIndex);
-    if(filter?.trim()){
+    if(filter && filter?.trim().length >= 3){
       httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
@@ -107,7 +113,7 @@ export class ReviewService {
   requestThumbsUpUserList(commentGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
     httpParams = httpParams.set("bunchIndex", bunchIndex);
-    if(filter?.trim()){
+    if(filter && filter?.trim().length >= 3){
       httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
@@ -117,7 +123,7 @@ export class ReviewService {
   requestThumbsDownUserList(commentGuid:string, bunchIndex:number, filter?:string|null){
     let httpParams = new HttpParams().set("commentGuid",commentGuid);
     httpParams = httpParams.set("bunchIndex", bunchIndex);
-    if(filter?.trim()){
+    if(filter && filter?.trim().length >= 3){
       httpParams = httpParams.set("filter", filter.trim());
     }
     return this.httpClient.get<OwnerModel[]>(
@@ -125,7 +131,24 @@ export class ReviewService {
     );
   }
 
-  
+  amILiked(subjectGuid:string){
+    let httpParams = new HttpParams().set("subjectGuid",subjectGuid);
+    return this.httpClient.get<{iLiked:boolean}>(
+      "/api/Review/AmILiked",{params:httpParams}
+    );
+  }
+  amIThumbsUp(commentGuid:string){
+    let httpParams = new HttpParams().set("commentGuid",commentGuid);
+    return this.httpClient.get<{iThumbsUp:boolean}>(
+      "/api/Review/AmIThumbsUp",{params:httpParams}
+    );
+  }
+  amIThumbsDown(commentGuid:string){
+    let httpParams = new HttpParams().set("commentGuid",commentGuid);
+    return this.httpClient.get<{iThumbsDown:boolean}>(
+      "/api/Review/AmIThumbsDown",{params:httpParams}
+    );
+  }
 
 
 }

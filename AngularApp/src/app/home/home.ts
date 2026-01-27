@@ -1,30 +1,38 @@
-import { Component, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, signal } from '@angular/core';
 import { ShelfCard, ShelfCardModel } from "../library/shelf-card/shelf-card";
 import { LibraryService } from '../services/library-service';
 import { SingletonModes } from '../services/singleton-modes';
+import { HomeSearch } from './home-search/home-search';
+import { ActivatedRoute } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { Result } from '../dialogs/result/result';
 
 @Component({
   selector: 'app-home',
-  imports: [ShelfCard],
+  imports: [ShelfCard,HomeSearch],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
-export class Home {
-  recentlyAddedDocs_ShelfCardModel = signal<ShelfCardModel|null>(null);
-
+export class Home implements AfterViewInit {
+  actiatedRoute = inject(ActivatedRoute);
   libraryService = inject(LibraryService);
   singleton = inject(SingletonModes);
+  dialog = inject(MatDialog);
 
-  constructor(){
-    this.libraryService.requestShelfModel(this.singleton.RecentlyAddedDocuments_ShelfGuid).subscribe({
-      next: res => {
-        if(res){
-          if(res.guid == this.singleton.EmptyGuid){
-            res.guid = this.singleton.RecentlyAddedDocuments_ShelfGuid;
-          }
-          this.recentlyAddedDocs_ShelfCardModel.set(res);
+  constructor(){}
+  ngAfterViewInit(): void {
+    this.actiatedRoute.data.subscribe(data=>{
+      if(data){
+        if(data["accessDenied"]){
+          this.dialog.open(Result,{data:{
+            status:"warning",
+            title:"Access Denied!",
+            description: [
+              "You're Not Allowed to access the specified route!"
+            ],
+          }});
         }
-      },
+      }
     });
   }
 }

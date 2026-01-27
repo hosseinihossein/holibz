@@ -1,7 +1,7 @@
 <mat-expansion-panel hideToggle expanded>
     <mat-expansion-panel-header>
         <mat-panel-title>
-            <div class="icon-box" [matBadge]="shelfModel().totalNumberOfShelfDocuments" matBadgePosition="above">
+            <div class="icon-box" [matBadge]="shelfModel()?.totalNumberOfShelfDocuments" matBadgePosition="above">
                 @if(shelfImageAddress()){
                 <img [ngSrc]="shelfImageAddress()!" width="40" height="40" alt="shelf image">
                 }
@@ -11,10 +11,10 @@
             </div>
             &nbsp;
             &nbsp;
-            {{shelfModel().title}}
+            {{shelfModel()?.title}}
         </mat-panel-title>
         <mat-panel-description>
-            {{shelfModel().description}}
+            {{shelfModel()?.description}}
         </mat-panel-description>
 
         @if(ownerImgSrc()){
@@ -28,9 +28,8 @@
     </mat-expansion-panel-header>
 
     <div class="listOfDocs">
-        @for (documentCardModel of documentCardModels(); track documentCardModel) {
-        <app-document-card [documentCardModel]="documentCardModel" [mini]="true"
-            (click)="router.navigate(['/document',documentCardModel.guid])"
+        @for (docGuid of this.shelfModel()?.documentsGuids; track docGuid) {
+        <app-document-card [documentGuid]="docGuid" [mini]="true" (click)="router.navigate(['/document',docGuid])"
             style="cursor: pointer;"></app-document-card>
         }
     </div>

@@ -196,10 +196,8 @@
 
 
         <!--/div-->
-        @if(displayLoadingSpinner()){
-        <div id="loading-spinner-layout">
-            <mat-spinner id="loading-spinner"></mat-spinner>
-        </div>
+        @if(displayWaitSpinner()){
+        <app-wait-spinner></app-wait-spinner>
         }
     </mat-sidenav-content>
 

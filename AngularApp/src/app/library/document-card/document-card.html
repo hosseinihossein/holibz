@@ -1,7 +1,8 @@
 <mat-card [appearance]="appearance()" class="document-card" [class.alone]="false" [class.mini]="mini()"
     (mouseenter)="raiseCard()" (mouseleave)="outlineCard()">
-    @if(singletonModes.editMode()){
-    <button matIconButton class="noPaddingBtn" id="remove-btn" matTooltip="Remove from shelf">
+    @if(isMyDocument() && singletonModes.editMode() && !mini()){
+    <button matIconButton class="noPaddingBtn" id="remove-btn" matTooltip="Remove from this shelf"
+        (click)="removeDocumentFromParentShelf()">
         <mat-icon>cancel</mat-icon>
     </button>
     }
@@ -15,8 +16,10 @@
             }
         </a>
         <mat-card-title>
-            {{documentCardModel().title}}
-            <span style="font-size: 12px;">({{documentCardModel().versionName}})</span>
+            {{documentCardModel()?.title}}
+            @if(documentCardModel()?.versionName && documentCardModel()?.versionName != "Default"){
+            <span style="font-size: 12px;">({{documentCardModel()?.versionName}})</span>
+            }
         </mat-card-title>
         <mat-card-subtitle>
             <a [routerLink]="['/profile', ownerModel()?.guid]">
@@ -38,10 +41,10 @@
         }
         <!--/div-->
         }
-        <p>{{documentCardModel().description}}</p>
+        <p>{{documentCardModel()?.description}}</p>
         <ul style="margin: 0px;">
             <h4 style="margin-bottom: 0;">Contents:</h4>
-            @for(header of documentCardModel().headers; track header){
+            @for(header of documentCardModel()?.headers; track header){
             <li>
                 <h3>{{header}}</h3>
             </li>
@@ -52,6 +55,6 @@
     <!--span style="flex: 1 1 auto;"></span-->
 
     <mat-card-actions align="end">
-        <a matButton [routerLink]="['/document', documentCardModel().guid]">Open</a>
+        <a matButton [routerLink]="['/document', documentCardModel()?.guid]">Open</a>
     </mat-card-actions>
 </mat-card>

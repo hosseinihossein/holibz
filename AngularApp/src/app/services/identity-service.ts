@@ -30,7 +30,7 @@ export class IdentityService {
     );
   }
 
-  login(formValue:Partial<{UsernameOrEmail: string; password: string; CfTurnstileResponse: string;}>){
+  login(formValue:Partial<{UsernameOrEmail: string; password: string; CfTurnstileResponse?: string;}>){
     return this.httpClient.post<{token:string, expiresInHours:string, user: UserProfileModel}>(
       "/api/Identity/login", 
       formValue

@@ -19,14 +19,15 @@
             Submit
         </button>
     </mat-dialog-actions>
+
+    @if(currentImgSrc()){
     <mat-dialog-actions align="start">
         <button matButton="filled" class="warning" (click)="onDelete()">Delete</button>
     </mat-dialog-actions>
+    }
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
 
 </mat-dialog-content>

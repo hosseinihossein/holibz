@@ -13,13 +13,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { SingletonModes } from '../../services/singleton-modes';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SendLinkToEmail } from '../../dialogs/send-link-to-email/send-link-to-email';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 declare const turnstile:any;
 
 @Component({
   selector: 'app-login',
   imports: [MatFormField, MatInput, MatLabel, MatError, MatIcon, MatButton, MatIconButton, MatSuffix,
-    ReactiveFormsModule, MatProgressSpinnerModule, RouterLink],
+    ReactiveFormsModule, WaitSpinner, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -35,7 +36,7 @@ export class Login implements AfterViewInit {
   cfTurnstile = computed(()=>this.loginForm().controls["CfTurnstileResponse"]);
 
   //errorResponse = signal<object | null>(null);
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   widgetId = signal("");
 
   identityService = inject(IdentityService);
@@ -51,39 +52,46 @@ export class Login implements AfterViewInit {
       formField.subscriptSizing = "dynamic";
     }
 
-    this.widgetId.set(
-      turnstile.render("#widget-container", {
-        sitekey: this.singletonModes.turnstileSiteKey,
-        size: "flexible",
-        theme: this.singletonModes.darkMode() ? "dark" : "light",
-        "response-field": false,
-        action: "login",
-        "refresh-expired": "manual",
-        "refresh-timeout": "manual",
-        callback: (token:string) => {
-          const errors = Object.create(this.loginForm().errors);
-          this.cfTurnstile()?.setValue(token);
-          for(let error in errors){
-            if(error !== "turnstileError"){
-              this.loginForm().setErrors(errors[error]);
-            }
-          }
-          //console.log("Challenge completed:", token);
-        },
-        'error-callback': (errorCode: string) => {
-          this.loginForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
-          console.error("error-callback: " + errorCode);
-        },
-        'expired-callback': () => {
-          this.loginForm().setErrors({turnstileError: "Turnstile expired!"});
-          console.error("expired-callback");
-        },
-        'timeout-callback': () => {
-          this.loginForm().setErrors({turnstileError: "Turnstile timeouted!"});
-          console.error("timeout-callback");
-        },
-      })
-    );
+    if(this.singletonModes.turnstileEnabled()){
+      this.widgetId.set(
+        turnstile.render("#widget-container", {
+          sitekey: this.singletonModes.turnstileSiteKey,
+          size: "flexible",
+          theme: this.singletonModes.darkMode() ? "dark" : "light",
+          "response-field": false,
+          action: "login",
+          "refresh-expired": "manual",
+          "refresh-timeout": "manual",
+          callback: (token:string) => {
+            //const errors = Object.create(this.loginForm().errors);
+            const errors = this.loginForm().errors;
+            this.cfTurnstile()?.setValue(token);
+            this.loginForm().setErrors(errors);
+            /*for(let error in errors){
+              if(error !== "turnstileError"){
+                this.loginForm().setErrors(errors[error]);
+              }
+            }*/
+          },
+          'error-callback': (errorCode: string) => {
+            this.loginForm().setErrors({turnstileError: "Turnstile error! error code: " + errorCode});
+            console.error("error-callback: " + errorCode);
+          },
+          'expired-callback': () => {
+            this.loginForm().setErrors({turnstileError: "Turnstile expired!"});
+            console.error("expired-callback");
+          },
+          'timeout-callback': () => {
+            this.loginForm().setErrors({turnstileError: "Turnstile timeouted!"});
+            console.error("timeout-callback");
+          },
+        })
+      );
+    }
+    else{
+      this.cfTurnstile().clearValidators();
+      this.cfTurnstile().updateValueAndValidity();
+    }
   }
 
   changeVisibility(){
@@ -97,7 +105,7 @@ export class Login implements AfterViewInit {
 
   login(){
     if(this.loginForm().valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       let formValue = this.loginForm().value;
       this.identityService.login(formValue).subscribe({
         next: res => {
@@ -133,7 +141,7 @@ export class Login implements AfterViewInit {
           else{
             throwError(()=>err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           turnstile.reset(this.widgetId());
         },
       });

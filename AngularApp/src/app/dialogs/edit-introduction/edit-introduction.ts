@@ -12,10 +12,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogClose } from '@angular/material/dialog';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { SingletonModes } from '../../services/singleton-modes';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-edit-introduction',
-  imports: [ReactiveFormsModule, MatIcon, MatFormField, MatLabel, MatError, MatProgressSpinner,
+  imports: [ReactiveFormsModule, MatIcon, MatFormField, MatLabel, MatError, WaitSpinner,
     MatInput, MatButton, MatIconButton, MatDialogContent, MatDialogActions, MatDialogClose],
   templateUrl: './edit-introduction.html',
   styleUrl: './edit-introduction.css'
@@ -40,7 +41,7 @@ export class EditIntroduction {
   image = this.introductionForm.get("image");
 
   previewImgSrc = signal<string|undefined>(this.data.imageSrc);
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   imageMaxSize = signal(120);//default 120 KB
   
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
@@ -100,12 +101,12 @@ export class EditIntroduction {
 
   onSubmit(){
     if(this.introductionForm.valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       
       const callbacks = {
         next: (res:{success:boolean, introduction:{title:string,description:string,hasImage:boolean,integrityVersion:number}}) => {
           if(res && res.success){
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             this.dialogRef.close(res.introduction);
           }
         },
@@ -133,7 +134,7 @@ export class EditIntroduction {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         },
       };
 
@@ -153,17 +154,17 @@ export class EditIntroduction {
   }
 
   onDeleteImage(){
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
       
     const callbacks = {
       next: (res:{success:boolean}) => {
         if(res && res.success){
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           this.dialogRef.close("ImageDelete");
         }
       },
       error: (err:any) => {
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
         throw(err);
       },
     };

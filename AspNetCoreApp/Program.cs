@@ -44,28 +44,40 @@ public class Program
         builder.Services.AddDbContext<Identity_DbContext>(opts =>
         {
             opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:IdentityConnection"],
-            new MySqlServerVersion(new Version(8, 0, 42)));
+            new MySqlServerVersion(new Version(8, 0, 42)), options =>
+            {
+                options.EnableRetryOnFailure();
+            });
         });
 
         //******************* Library_DbContext *******************
         builder.Services.AddDbContext<Library_DbContext>(opts =>
         {
             opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:LibraryConnection"],
-            new MySqlServerVersion(new Version(8, 0, 42)));
+            new MySqlServerVersion(new Version(8, 0, 42)), options =>
+            {
+                options.EnableRetryOnFailure();
+            });
         });
 
         //******************* Review_DbContext *******************
         builder.Services.AddDbContext<Review_DbContext>(opts =>
         {
             opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:ReviewConnection"],
-            new MySqlServerVersion(new Version(8, 0, 42)));
+            new MySqlServerVersion(new Version(8, 0, 42)), options =>
+            {
+                options.EnableRetryOnFailure();
+            });
         });
 
         //******************* Notification_DbContext *******************
         builder.Services.AddDbContext<Notification_DbContext>(opts =>
         {
             opts.UseMySql(builder.Configuration["ConnectionStrings_MySql:NotificationConnection"],
-            new MySqlServerVersion(new Version(8, 0, 42)));
+            new MySqlServerVersion(new Version(8, 0, 42)), options =>
+            {
+                options.EnableRetryOnFailure();
+            });
         });
 
 
@@ -286,92 +298,144 @@ public class Program
 
 
         /********************** Migrate Pending DataBases **********************/
-        using (var scope = app.Services.CreateScope())
+        if (args.Length > 0 && args.Contains("SeedDbs"))
         {
-            Identity_DbContext identityDb = scope.ServiceProvider.GetRequiredService<Identity_DbContext>();
-            identityDb.Database.Migrate();
-
-            Library_DbContext libraryDb = scope.ServiceProvider.GetRequiredService<Library_DbContext>();
-            libraryDb.Database.Migrate();
-
-            Review_DbContext reviewDb = scope.ServiceProvider.GetRequiredService<Review_DbContext>();
-            reviewDb.Database.Migrate();
-
-            Notification_DbContext notifDb = scope.ServiceProvider.GetRequiredService<Notification_DbContext>();
-            notifDb.Database.Migrate();
-
-            Console.WriteLine("** All DB Migration Completed! **");
-
-            //************************** Seed DataBases **************************
-            //***** Create "admin" Identity *****
-            UserManager<Identity_UserDbModel> userManager = scope.ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();
-            RoleManager<Identity_RoleDbModel> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Identity_RoleDbModel>>();
-            Identity_UserDbModel? admin = await userManager.FindByNameAsync("admin");
-            if (admin == null)
+            using (var scope = app.Services.CreateScope())
             {
-                string adminPassword = builder.Configuration["Identity:AdminPassword"]!;
-                admin = new Identity_UserDbModel
-                {
-                    UserName = "admin",
-                    UserGuid = Guid.Empty,
-                    Email = "admin@yourdomain.com",
-                    EmailConfirmed = true,
-                    Description = "This identity belongs to the admin of the website."
-                };
-                IdentityResult result = await userManager.CreateAsync(admin, adminPassword);
+                Identity_DbContext identityDb = scope.ServiceProvider.GetRequiredService<Identity_DbContext>();
+                identityDb.Database.Migrate();
 
-                if (!result.Succeeded)
+                Library_DbContext libraryDb = scope.ServiceProvider.GetRequiredService<Library_DbContext>();
+                libraryDb.Database.Migrate();
+
+                Review_DbContext reviewDb = scope.ServiceProvider.GetRequiredService<Review_DbContext>();
+                reviewDb.Database.Migrate();
+
+                Notification_DbContext notifDb = scope.ServiceProvider.GetRequiredService<Notification_DbContext>();
+                notifDb.Database.Migrate();
+
+                Console.WriteLine("** All DB Migration Completed! **");
+
+                //************************** Seed DataBases **************************
+                //***** Create "admin" Identity *****
+                UserManager<Identity_UserDbModel> userManager = scope.ServiceProvider.GetRequiredService<UserManager<Identity_UserDbModel>>();
+                RoleManager<Identity_RoleDbModel> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Identity_RoleDbModel>>();
+
+                Identity_UserDbModel? admin = await userManager.FindByNameAsync("admin");
+                if (admin == null)
                 {
-                    foreach (var error in result.Errors)
+                    string adminPassword = builder.Configuration["Identity:AdminPassword"]!;
+                    admin = new Identity_UserDbModel
                     {
-                        Console.WriteLine(error.Description);
+                        UserName = "admin",
+                        //UserGuid = "",
+                        Email = "admin@yourdomain.com",
+                        EmailConfirmed = true,
+                        Description = "This user account belongs to the admin of the website."
+                    };
+                    IdentityResult result = await userManager.CreateAsync(admin, adminPassword);
+
+                    if (!result.Succeeded)
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            Console.WriteLine(error.Description);
+                        }
+                        return;
                     }
-                    return;
+                }
+
+                Identity_UserDbModel? holibz = await userManager.FindByNameAsync("HoLibz");
+                if (holibz == null)
+                {
+                    string holibzPassword = builder.Configuration["Identity:HoLibzPassword"]!;
+                    holibz = new Identity_UserDbModel
+                    {
+                        UserName = "HoLibz",
+                        UserGuid = Guid.Empty,
+                        Email = "holibz@yourdomain.com",
+                        EmailConfirmed = true,
+                        Description = "This user account belongs to the HoLibz application."
+                    };
+                    IdentityResult result = await userManager.CreateAsync(holibz, holibzPassword);
+
+                    if (!result.Succeeded)
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            Console.WriteLine(error.Description);
+                        }
+                        return;
+                    }
+                }
+
+                //***** Seed Roles *****
+                if (await roleManager.FindByNameAsync("Identity_Admins") == null)
+                {
+                    await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
+                    await userManager.AddToRoleAsync(admin, "Identity_Admins");
+                }
+                if (await roleManager.FindByNameAsync("Backup_Admins") == null)
+                {
+                    await roleManager.CreateAsync(new Identity_RoleDbModel("Backup_Admins") { Description = "Backup Admins" });
+                    await userManager.AddToRoleAsync(admin, "Backup_Admins");
+                }
+
+                //***** Create Library_Owner and Default Library and Shelf for admin and holibz *****
+                var libraryProcess = scope.ServiceProvider.GetRequiredService<Library_Process>();
+                await libraryProcess.CreateNewOwner(libraryDb, admin.UserGuid, admin.NormalizedUserName!);
+                await libraryProcess.CreateNewOwner(libraryDb, holibz.UserGuid, holibz.NormalizedUserName!);
+
+                //for other users
+                var otherUsresInfo = await userManager.Users.Where(u =>
+                    u.UserGuid != admin.UserGuid && u.UserGuid != holibz.UserGuid
+                )
+                .Select(u => new { u.UserGuid, u.NormalizedUserName }).ToListAsync();
+                foreach (var userInfo in otherUsresInfo)
+                {
+                    await libraryProcess.CreateNewOwner(libraryDb, userInfo.UserGuid, userInfo.NormalizedUserName!);
+                }
+
+
+                //***** Create Review_User for admin and holibz *****
+                var reviewProcess = scope.ServiceProvider.GetRequiredService<Review_Process>();
+                await reviewProcess.CreateNewUser(reviewDb, admin.UserGuid, admin.NormalizedUserName!);
+                await reviewProcess.CreateNewUser(reviewDb, holibz.UserGuid, holibz.NormalizedUserName!);
+
+                //for other users
+                foreach (var userInfo in otherUsresInfo)
+                {
+                    await reviewProcess.CreateNewUser(reviewDb, userInfo.UserGuid, userInfo.NormalizedUserName!);
+                }
+
+
+                //***** Create Review_Review for Documents *****
+                var allDocsInfo = await libraryDb.Documents.Select(doc => new
+                {
+                    docGuid = doc.Guid,
+                    ownerGuid = doc.Owner.Guid
+                })
+                .AsSplitQuery()
+                .ToArrayAsync();
+                foreach (var docInfo in allDocsInfo)
+                {
+                    await reviewProcess.CreateNewReview(reviewDb, docInfo.docGuid, docInfo.ownerGuid);
+                }
+
+
+                //***** Create notification User for admin and holibz *****
+                var notifProcess = scope.ServiceProvider.GetRequiredService<Notification_Process>();
+                await notifProcess.CreateNewUser(notifDb, admin.UserGuid);
+                await notifProcess.CreateNewUser(notifDb, holibz.UserGuid);
+
+                //for other users
+                foreach (var userInfo in otherUsresInfo)
+                {
+                    await notifProcess.CreateNewUser(notifDb, userInfo.UserGuid);
                 }
             }
-
-            //***** Seed Roles *****
-            if (await roleManager.FindByNameAsync("Identity_Admins") == null)
-            {
-                await roleManager.CreateAsync(new Identity_RoleDbModel("Identity_Admins") { Description = "Identity Admins" });
-                await userManager.AddToRoleAsync(admin, "Identity_Admins");
-            }
-            if (await roleManager.FindByNameAsync("Backup_Admins") == null)
-            {
-                await roleManager.CreateAsync(new Identity_RoleDbModel("Backup_Admins") { Description = "Backup Admins" });
-                await userManager.AddToRoleAsync(admin, "Backup_Admins");
-            }
-
-            //***** Create Library_Owner and Default Library and Shelf for admin *****
-            var libraryProcess = scope.ServiceProvider.GetRequiredService<Library_Process>();
-            await libraryProcess.CreateNewOwner(libraryDb, admin.UserGuid, admin.NormalizedUserName!);
-
-            //for other user
-            /*var otherUsresInfo = await userManager.Users.Where(u => u.UserGuid != admin.UserGuid)
-            .Select(u => new { u.UserGuid, u.NormalizedUserName }).ToListAsync();
-            foreach (var userInfo in otherUsresInfo)
-            {
-                await libraryProcess.CreateNewOwner(libraryDb, userInfo.UserGuid, userInfo.NormalizedUserName!);
-            }*/
-
-
-            //***** Create Review_User for admin *****
-            var reviewProcess = scope.ServiceProvider.GetRequiredService<Review_Process>();
-            await reviewProcess.CreateNewUser(reviewDb, admin.UserGuid, admin.NormalizedUserName!);
-
-            //for other user
-            /*foreach (var userInfo in otherUsresInfo)
-            {
-                await reviewProcess.CreateNewUser(reviewDb, userInfo.UserGuid, userInfo.NormalizedUserName!);
-            }*/
-
-
-            //***** Create notification User for admin *****
-            var notifProcess = scope.ServiceProvider.GetRequiredService<Notification_Process>();
-            await notifProcess.CreateNewUser(notifDb, admin.UserGuid);
-
-
         }
+
 
 
 

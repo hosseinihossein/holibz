@@ -1,27 +1,31 @@
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService, UserProfileModel } from '../../services/identity-service';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { SingletonModes } from '../../services/singleton-modes';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-edit-image',
-  imports: [MatDialogContent, MatButton,MatDialogActions,MatDialogClose,MatProgressSpinnerModule],
+  imports: [MatDialogContent, MatButton,MatDialogActions,MatDialogClose,WaitSpinner],
   templateUrl: './edit-user-image.html',
   styleUrl: './edit-user-image.css'
 })
 export class EditUserImage {
   readonly editImageDialogRef = inject(MatDialogRef<EditUserImage>);
-  readonly data = inject<{currentImgSrc:string|null}>(MAT_DIALOG_DATA);
+  //readonly data = inject<{currentImgSrc:string|null}>(MAT_DIALOG_DATA);
   readonly identityService = inject(IdentityService);
+  readonly singletonModes = inject(SingletonModes);
   
+  currentImgSrc = computed(()=>this.singletonModes.getUserImageAddress(this.identityService.userModel()));
   selectedFile = signal<File | null>(null);
-  previewImgSrc = signal(this.data.currentImgSrc);
+  previewImgSrc = signal(this.currentImgSrc());
 
   previewImg = viewChild<ElementRef<HTMLImageElement>>("previewImg");
 
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   errorResponse = signal<{message:string}|null>(null);
 
   constructor(){}
@@ -41,7 +45,7 @@ export class EditUserImage {
         // Load the image as a Data URL
         reader.onload = (e)=> {
           if(this.previewImg()){
-            this.previewImgSrc.set(e.target!.result as string ?? this.data.currentImgSrc);
+            this.previewImgSrc.set(e.target!.result as string ?? this.currentImgSrc());
           }
         };
 
@@ -50,13 +54,13 @@ export class EditUserImage {
     }
     else{
       this.selectedFile.set(null);
-      this.previewImgSrc.set(this.data.currentImgSrc);
+      this.previewImgSrc.set(this.currentImgSrc());
     }
   }
 
   onSubmit(){
     if(this.selectedFile()){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
 
       this.identityService.submitUserImage(this.selectedFile()!).subscribe({
         next: res => {
@@ -65,7 +69,7 @@ export class EditUserImage {
             newUserModel.hasImage = res.hasImage;
             newUserModel.integrityVersion = res.integrityVersion;
             this.identityService.updateUserModel(newUserModel);
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
             this.editImageDialogRef.close();
           }
         },
@@ -84,14 +88,14 @@ export class EditUserImage {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
         },
       });
     }
   }
 
   onDelete(){
-    this.displaySubmitSpinner.set(true);
+    this.displayWaitSpinner.set(true);
 
     this.identityService.deleteUserImage().subscribe({
       next: res => {
@@ -99,7 +103,7 @@ export class EditUserImage {
           let newUserModel = new UserProfileModel(this.identityService.userModel());
           newUserModel.hasImage = false;
           this.identityService.updateUserModel(newUserModel);
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           this.editImageDialogRef.close();
         }
       },
@@ -108,7 +112,7 @@ export class EditUserImage {
         console.error("err: "+JSON.stringify(err));
         console.error("err.error: "+JSON.stringify(err.error));
         console.error("err.error.errors: "+JSON.stringify(err.error.errors));
-        this.displaySubmitSpinner.set(false);
+        this.displayWaitSpinner.set(false);
         throw(err);
       },
     });

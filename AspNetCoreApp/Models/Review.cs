@@ -41,6 +41,7 @@ public class Review_CommentDbModel
     public ICollection<Review_UserThumbsUp_DbModel> ThumbsUpsBy { get; set; } = [];
     public ICollection<Review_UserThumbsDown_DbModel> ThumbsDownsBy { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int? ReplyToId { get; set; } = null;
     public Review_CommentDbModel? ReplyTo { get; set; } = null;
     public ICollection<Review_CommentDbModel> Replies { get; set; } = [];
 }
@@ -173,11 +174,12 @@ public class Review_DbContext : DbContext
         .WithOne(c => c.ParentReview)
         .IsRequired(true);
 
-        //************* Review_ReviewDbModel *************
+        //************* Review_CommentDbModel *************
         //************* One-to-Many Comment-to-Replies *************
         modelBuilder.Entity<Review_CommentDbModel>()
         .HasMany(c => c.Replies)
         .WithOne(c => c.ReplyTo)
+        .HasForeignKey(c => c.ReplyToId)
         .IsRequired(false)
         .OnDelete(DeleteBehavior.Cascade);
 
@@ -204,7 +206,7 @@ public class Review_DbContext : DbContext
     }
 }
 
-//*********************** Data Models **************************
+//*********************** Form Models **************************
 public class Review_NewComment_FormModel
 {
     public Guid ParentSubjectGuid { get; set; }
@@ -219,6 +221,8 @@ public class Review_NewReply_FormModel
     [StringLength(1000)]
     public string Text { get; set; } = null!;
 }
+
+//*********************** View Models **************************
 public class Review_Comment_ViewModel
 {
     public Guid Guid { get; set; }
@@ -228,8 +232,8 @@ public class Review_Comment_ViewModel
     public string? ReplyToBrief { get; set; }
     public string? ReplyToUsername { get; set; }
     public string Text { get; set; } = null!;
-    public bool AmIThumbsUp { get; set; } = false;
-    public bool AmIThumbsDown { get; set; } = false;
+    //public bool AmIThumbsUp { get; set; } = false;
+    //public bool AmIThumbsDown { get; set; } = false;
     public int NumberOfThumbsUps { get; set; } = 0;
     public int NumberOfThumbsDowns { get; set; } = 0;
     public int NumberOfReplies { get; set; } = 0;
@@ -237,10 +241,10 @@ public class Review_Comment_ViewModel
 }
 public class Review_Review_ViewModel
 {
-    public bool AmILiked { get; set; } = false;
+    //public bool AmILiked { get; set; } = false;
     public int NumberOfLikes { get; set; } = 0;
     public int TotalNumberOfComments { get; set; } = 0;
-    public Review_Comment_ViewModel[] Comments { get; set; } = [];
+    public Guid[] CommentsGuids { get; set; } = [];
 }
 
 

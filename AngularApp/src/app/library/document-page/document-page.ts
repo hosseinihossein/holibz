@@ -1,4 +1,4 @@
-import { AfterViewChecked, AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal, viewChild, viewChildren } from '@angular/core';
+import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, Renderer2, signal, viewChild, viewChildren } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -10,15 +10,12 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from "@angular/material/menu";
 import { ConfirmDelete } from '../../dialogs/confirm-delete/confirm-delete';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { SingletonModes } from '../../services/singleton-modes';
-import { DocumentService } from '../../services/document-service';
 import { DocumentElement, DocumentElementModel } from './document-elements/document-element/document-element';
 import { MatChip, MatChipSet } from "@angular/material/chips";
 import { EditTags } from '../../dialogs/edit-tags/edit-tags';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { EditElementFormModel, LibraryService, NewElementFormModel, OwnerModel } from '../../services/library-service';
-import { IdentityService, UserProfileModel } from '../../services/identity-service';
-import { DocumentCardModel } from '../document-card/document-card';
-import { ShelfCardModel } from '../shelf-card/shelf-card';
+import {  LibraryService, NewElementFormModel, OwnerModel } from '../../services/library-service';
+import { IdentityService } from '../../services/identity-service';
 import { DatePipe, NgOptimizedImage, ViewportScroller } from '@angular/common';
 import { Result } from '../../dialogs/result/result';
 import { EditHeader } from '../../dialogs/edit-header/edit-header';
@@ -32,19 +29,20 @@ import { DocumentPageService } from './document-page-service';
 import { MatBadge } from "@angular/material/badge";
 import { ConfirmChange } from '../../dialogs/confirm-change/confirm-change';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { EditInput } from '../../dialogs/edit-input/edit-input';
-import { EditTextarea } from '../../dialogs/edit-textarea/edit-textarea';
 import { EditIntroduction } from '../../dialogs/edit-introduction/edit-introduction';
 import { ParentEditor } from '../../dialogs/parent-editor/parent-editor';
 import { ParentShelfModel } from '../new-document-form/new-document-form';
 import { Review } from '../../review/review';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
+import { IconService } from '../../services/icon-service';
+import { BriefUsersList } from '../../dialogs/brief-users-list/brief-users-list';
 
 @Component({
   selector: 'app-document-page',
   imports: [MatSidenavModule, MatExpansionModule, MatTooltip, MatButton, MatIcon,
     MatMenu, MatMenuItem, MatMenuTrigger, DocumentElement, MatChipSet, MatChip, RouterLink,
-    NgOptimizedImage, MatBadge, MatProgressSpinner, Review, DatePipe,MatIconButton],
+    NgOptimizedImage, MatBadge, WaitSpinner, Review, DatePipe,MatIconButton],
   templateUrl: './document-page.html',
   styleUrl: './document-page.css',
   providers: [DocumentPageService]
@@ -62,6 +60,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   documentPageService = inject(DocumentPageService);
   viewportScroller = inject(ViewportScroller);
   clipboard = inject(Clipboard);
+  iconService = inject(IconService);
 
   documentGuid = signal<string|null>(null);
   requestedCommentGuid = signal<string|null>(null);
@@ -81,8 +80,9 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   ownerModel = signal<OwnerModel|null>(null);
   ownerImgSrc = computed(() => this.singleton.getUserImageAddress(this.ownerModel()));
   isMyDocument = computed(()=>this.ownerModel()?.guid === this.identityService.userModel()?.guid);
+  isMyFavorite = signal(false);
 
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
 
   headingElements = signal<HTMLHeadingElement[]>([]);
   introductionHeading = viewChild.required<ElementRef<HTMLHeadingElement>>("introductionHeading");
@@ -190,6 +190,18 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         });
       }
     });
+
+    effect(()=>{
+      if(this.identityService.isAuthenticated() && this.documentGuid()){
+        this.libraryService.isMyFavoriteDocument(this.documentGuid()!).subscribe({
+          next: res =>{
+            if(res){
+              this.isMyFavorite.set(res.isMyFavorite);
+            }
+          },
+        });
+      }
+    });
   }
   
   ngAfterViewInit(): void {
@@ -226,11 +238,11 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
       });
       dialogRef.afterClosed().subscribe(result=>{
         if(result === true){
-          this.displaySubmitSpinner.set(true);
+          this.displayWaitSpinner.set(true);
           this.libraryService.requestDeleteDocument(this.documentPageService.documentPageModel()?.guid!).subscribe({
             next: res => {
               if(res && res.success){
-                this.displaySubmitSpinner.set(false);
+                this.displayWaitSpinner.set(false);
                 this.router.navigate(['/profile']);
               }
             },
@@ -244,7 +256,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
                     JSON.stringify(err)
                   ],
                 }
-              }).afterClosed().subscribe(()=>this.displaySubmitSpinner.set(false));
+              }).afterClosed().subscribe(()=>this.displayWaitSpinner.set(false));
               throw(err);
             },
           });
@@ -267,10 +279,10 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
                   dpm!.tags = res;
                   return new DocumentPageModel(dpm!);
                 });
-                this.documentPageService.unchangedDocumentPageModel.set(
-                  new DocumentPageModel(this.documentPageService.documentPageModel()!)
-                );
-                this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+                  dpm!.tags = res;
+                  return new DocumentPageModel(dpm!);
+                });
               }
             },
             error: err => {
@@ -288,6 +300,19 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
 
   addNewElement(type:"h1" | "h2" | "p" | "img" | "code" | "file" | "link"){
     if(this.documentPageService.documentPageModel()){
+
+      if(this.documentPageService.documentPageModel()!.elements.length >= this.singleton.maxNumberOfElementsInDocument()){
+        this.dialog.open(Result,{data:{
+          status: "warning",
+          title: "Maximum Number Of Elements Reached",
+          description:[
+            "You can not add a new element to this document!",
+            `There can not be more elements than ${this.singleton.maxNumberOfElementsInDocument()} in a document!`,
+          ],
+        }});
+        return;
+      }
+
       let newElementFormModel: NewElementFormModel|null = null;
 
       if(type === "h1" || type === "h2"){
@@ -387,9 +412,10 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
             dpm?.elements.push(res);
             return new DocumentPageModel(dpm!);
           });
-          this.documentPageService.unchangedDocumentPageModel.set(
-            new DocumentPageModel(this.documentPageService.documentPageModel()!)
-          );
+          this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+            dpm?.elements.push(res);
+            return new DocumentPageModel(dpm!);
+          });
           
           setTimeout(()=>{
             this.goToElement(res.guid);
@@ -425,7 +451,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
     if(this.documentPageService.documentPageModel() && 
     this.documentPageService.editedElementFormModels().size > 0 &&
     this.isMyDocument()){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
       this.libraryService.submitEditedElements(this.documentPageService.documentPageModel()!.guid,
         this.documentPageService.getEditElementFormModelArray()).subscribe({
         next: res => {
@@ -434,15 +460,16 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
               dpm!.elements = res.elements;
               return new DocumentPageModel(dpm!);
             });
+            this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+              dpm!.elements = res.elements;
+              return new DocumentPageModel(dpm!);
+            });
 
-            this.documentPageService.unchangedDocumentPageModel.set(
-              new DocumentPageModel(this.documentPageService.documentPageModel()!)
-            );
             this.documentPageService.editedElementFormModels().clear();
 
-            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+            //this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
 
-            this.displaySubmitSpinner.set(false);
+            this.displayWaitSpinner.set(false);
           }
         },
         error: err => {
@@ -484,9 +511,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
           this.documentPageService.documentPageModel.set(
             new DocumentPageModel(this.documentPageService.unchangedDocumentPageModel()!)
           );
-          //console.log(JSON.stringify(this.documentPageService.documentPageModel()?.elements));
-          //console.log(JSON.stringify(this.documentPageService.unchangedDocumentPageModel()?.elements));
-          
+
           this.documentPageService.toggleEditMode();
         }
       });
@@ -497,7 +522,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   }
 
   enterEditMode(){
-    if(this.isMyDocument()){
+    if(this.identityService.isAuthenticated()){
       this.identityService.getCsrf().subscribe({
         next: () => {
           console.log("csrf token recieved successfully.");
@@ -531,7 +556,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
               dpm!.hasImage = false;
               return new DocumentPageModel(dpm!);
             });
-            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+            //this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
           }
           else{
             this.documentPageService.documentPageModel.update(dpm=>{
@@ -548,7 +573,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
               dpm!.integrityVersion = result.integrityVersion;
               return new DocumentPageModel(dpm!);
             });
-            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+            //this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
           }
         }
       });
@@ -574,14 +599,14 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
             dpm!.shelves = resultShelves;
             return new DocumentPageModel(dpm!);
           });
-          this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
+          //this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
         }
       });
     }
   }
 
   addRelatedVersion(){
-    if(this.documentGuid()){
+    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
       this.dialog.open(EditInput, {data:{
         label:"Document Fingerprint",
         value: "",
@@ -589,7 +614,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         minLength: 32,
       }}).afterClosed().subscribe((result:string)=>{
         if(result){
-          this.displaySubmitSpinner.set(true);
+          this.displayWaitSpinner.set(true);
           this.libraryService.requestAddVersionRelationship(this.documentGuid()!, result).subscribe({
             next: res => {
               if(res){
@@ -597,11 +622,12 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
                   dpm!.relatedVersions = res;
                   return new DocumentPageModel(dpm!);
                 });
-                this.documentPageService.unchangedDocumentPageModel.set(
-                  new DocumentPageModel(this.documentPageService.documentPageModel()!)
-                );
-                this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
-                this.displaySubmitSpinner.set(false);
+                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+                  dpm!.relatedVersions = res;
+                  return new DocumentPageModel(dpm!);
+                });
+
+                this.displayWaitSpinner.set(false);
               }
             },
           });
@@ -610,7 +636,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
     }
   }
   editVersionName(){
-    if(this.documentPageService.documentPageModel()){
+    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
       this.dialog.open(EditInput,{data:{
         label:"Edit Document's Version Name",
         value: this.documentPageService.documentPageModel()!.version,
@@ -618,7 +644,7 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
         minLength: 1,
       }}).afterClosed().subscribe((result:string)=>{
         if(result){
-          this.displaySubmitSpinner.set(true);
+          this.displayWaitSpinner.set(true);
           this.libraryService.requestEditVersionName(this.documentGuid()!,result).subscribe({
             next: res => {
               if(res){
@@ -626,11 +652,12 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
                   dpm!.version = res.version;
                   return new DocumentPageModel(dpm!);
                 });
-                this.documentPageService.unchangedDocumentPageModel.set(
-                  new DocumentPageModel(this.documentPageService.documentPageModel()!)
-                );
-                this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
-                this.displaySubmitSpinner.set(false);
+                this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+                  dpm!.version = res.version;
+                  return new DocumentPageModel(dpm!);
+                });
+                
+                this.displayWaitSpinner.set(false);
               }
             }
           });
@@ -639,28 +666,30 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
     }
   }
   createNewVersionOfDocument(){
-    this.dialog.open(EditInput,{data:{
-      label:"New Version Name",
-      value:"",
-      maxLength: 32,
-      minLength: 1,
-    }}).afterClosed().subscribe((result:string)=>{
-      if(result){
-        this.displaySubmitSpinner.set(true);
-        this.libraryService.requestCreateNewDocumentVersion(this.documentGuid()!,result).subscribe({
-          next: res => {
-            if(res){
-              this.displaySubmitSpinner.set(false);
-              this.router.navigate(["/document",res.newVersionGuid]);
-            }
-          },
-        });
-      }
-    });
+    if(this.isMyDocument() && this.documentGuid()){
+      this.dialog.open(EditInput,{data:{
+        label:"New Version Name",
+        value:"",
+        maxLength: 32,
+        minLength: 1,
+      }}).afterClosed().subscribe((result:string)=>{
+        if(result){
+          this.displayWaitSpinner.set(true);
+          this.libraryService.requestCreateNewDocumentVersion(this.documentGuid()!,result).subscribe({
+            next: res => {
+              if(res){
+                this.displayWaitSpinner.set(false);
+                this.router.navigate(["/document",res.newVersionGuid]);
+              }
+            },
+          });
+        }
+      });
+    }
   }
   removeRelatedVersion(){
-    if(this.documentPageService.documentPageModel()){
-      this.displaySubmitSpinner.set(true);
+    if(this.isMyDocument() && this.documentPageService.documentPageModel()){
+      this.displayWaitSpinner.set(true);
       this.libraryService.requestDeleteVersionRelationship(this.documentGuid()!).subscribe({
         next: res => {
           if(res && res.success){
@@ -668,11 +697,12 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
               dpm!.relatedVersions = [];
               return new DocumentPageModel(dpm!);
             });
-            this.documentPageService.unchangedDocumentPageModel.set(
-              new DocumentPageModel(this.documentPageService.documentPageModel()!)
-            );
-            this.libraryService.documentPage_Storage().add(this.documentPageService.documentPageModel()!);
-            this.displaySubmitSpinner.set(false);
+            this.documentPageService.unchangedDocumentPageModel.update(dpm=>{
+              dpm!.relatedVersions = [];
+              return new DocumentPageModel(dpm!);
+            });
+            
+            this.displayWaitSpinner.set(false);
           }
         }
       });
@@ -687,6 +717,29 @@ export class DocumentPage implements AfterViewInit/*, AfterViewChecked*/ {
   copyDocumentGuid(){
     if(this.documentGuid()){
       this.clipboard.copy(this.documentGuid()!);
+    }
+  }
+
+  toggleFavorite(){
+    if(this.identityService.isAuthenticated() && this.documentGuid() && this.documentPageService.documentPageModel()){
+      this.libraryService.requestToToggleFavoriteDocument(this.documentGuid()!).subscribe({
+        next: res => {
+          if(res && res.success){
+            this.isMyFavorite.update(f=>!f);
+          }
+        },
+      });
+    }
+  }
+
+  displayUsersInFavor(){
+    if(this.documentGuid() && this.documentPageService.documentPageModel()){
+      this.dialog.open(BriefUsersList,{data:{
+        label: "Users In Favor",
+        subjectGuid: this.documentGuid(),
+        totalNumberOfItems: this.documentPageService.documentPageModel()!.totalNumberOfUsersInFavor,
+        type: "InFavorOfDocument"
+      }});
     }
   }
   
@@ -706,6 +759,8 @@ export class DocumentPageModel {
     this.elements = documentPageModel.elements.map(a=>new DocumentElementModel(a));
     this.tags = documentPageModel.tags.map(t=>t);
     this.createdAt = documentPageModel.createdAt;
+    //this.isMyFavorite = documentPageModel.isMyFavorite;
+    this.totalNumberOfUsersInFavor = documentPageModel.totalNumberOfUsersInFavor;
   }
 
   guid:string = null!;
@@ -720,4 +775,6 @@ export class DocumentPageModel {
   elements:DocumentElementModel[] = [];
   tags:string[] = [];
   createdAt:Date = null!;
+  //isMyFavorite:boolean = false;
+  totalNumberOfUsersInFavor:number = 0;
 } 

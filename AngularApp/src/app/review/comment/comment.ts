@@ -17,22 +17,23 @@ import { IdentityService } from '../../services/identity-service';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { WindowService } from '../../services/window-service';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-review-comment',
   imports: [MatCardModule, RouterLink, NgOptimizedImage, MatIcon, MatButtonModule, MatTooltip,
-    MatProgressSpinner,MatMenuModule, DatePipe
+    WaitSpinner,MatMenuModule, DatePipe
   ],
   templateUrl: './comment.html',
   styleUrl: './comment.css'
 })
 export class ReviewComment implements OnInit {
-  commentModel = input.required<CommentModel>();
-  submitReply = output<NewReplyFormModel>();
+  commentGuid = input.required<string>();
+  deletedCommentsGuids = input<string[]>();
+
+  submitReply = output<string>();
   displayReplies = output();
   deleteComment = output();
-  thumbsUp = output();
-  thumbsDown = output();
   parentComment = output<string>();
 
   dialog = inject(MatDialog);
@@ -44,23 +45,66 @@ export class ReviewComment implements OnInit {
   identityService  =inject(IdentityService);
   private snackBar = inject(MatSnackBar);
   windowService = inject(WindowService);
+  identitySerice = inject(IdentityService);
 
-  //commentModel = signal<CommentModel>(new CommentModel(null));
+  commentModel = signal<CommentModel|null>(null);
   writerModel = signal<OwnerModel|null>(null);
   userAvatarSrc = computed(()=>this.singletonModes.getUserImageAddress(this.writerModel()));
-  displaySubmitSpinner = signal(false);
-  isMyComment = computed(()=>this.commentModel().writerGuid === this.identityService.userModel()?.guid);
+  displayWaitSpinner = signal(false);
+  isMyComment = computed(()=>this.commentModel()?.writerGuid === this.identityService.userModel()?.guid);
+  iThumbsUp = signal(false);
+  iThumbsDown = signal(false);
 
   constructor(){
     effect(()=>{
+      if(this.commentGuid()){
+        this.reviewService.requestCommentModel(this.commentGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.commentModel.set(res);
+            }
+          },
+        });
+      }
+    });
+
+    effect(()=>{
       if(this.commentModel()){
-        this.libraryService.requestOwnerModel(this.commentModel().writerGuid).subscribe({
+        this.libraryService.requestOwnerModel(this.commentModel()!.writerGuid).subscribe({
           next: res => {
             if(res){
               this.writerModel.set(res);
             }
           },
         });
+      }
+    });
+
+    effect(()=>{
+      if(this.identityService.isAuthenticated() && this.commentGuid()){
+
+        this.reviewService.amIThumbsUp(this.commentGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.iThumbsUp.set(res.iThumbsUp);
+            }
+          },
+        });
+
+        this.reviewService.amIThumbsDown(this.commentGuid()).subscribe({
+          next: res => {
+            if(res){
+              this.iThumbsDown.set(res.iThumbsDown);
+            }
+          },
+        });
+
+      }
+    });
+
+    effect(()=>{
+      if(this.deletedCommentsGuids()?.includes(this.commentGuid())){
+        this.deleteComment.emit();
       }
     });
   }
@@ -78,24 +122,28 @@ export class ReviewComment implements OnInit {
   }
 
   openListOfThumbsUps(){
-    this.dialog.open(BriefUsersList, {
-      data:{label:"Thumb Ups",
-        type:"ThumbsUp",
-        totalNumberOfItems:this.commentModel()?.numberOfThumbsUps, 
-        subjectGuid: this.commentModel().guid
-      },
-      autoFocus:false,
-    });
+    if(this.commentModel()){
+      this.dialog.open(BriefUsersList, {
+        data:{label:"Thumb Ups",
+          type:"ThumbsUp",
+          totalNumberOfItems:this.commentModel()!.numberOfThumbsUps, 
+          subjectGuid: this.commentGuid()
+        },
+        autoFocus:false,
+      });
+    }
   }
   openListOfThumbsDowns(){
-    this.dialog.open(BriefUsersList, {
-      data:{label:"Thumb Downs",
-        type:"ThumbsDown",
-        totalNumberOfItems:this.commentModel()?.numberOfThumbsDowns, 
-        subjectGuid: this.commentModel().guid
-      },
-      autoFocus:false,
-    });
+    if(this.commentModel()){
+      this.dialog.open(BriefUsersList, {
+        data:{label:"Thumb Downs",
+          type:"ThumbsDown",
+          totalNumberOfItems:this.commentModel()!.numberOfThumbsDowns, 
+          subjectGuid: this.commentGuid()
+        },
+        autoFocus:false,
+      });
+    }
   }
 
   showReplies(){
@@ -103,20 +151,100 @@ export class ReviewComment implements OnInit {
   }
 
   onReply(){
-    if(this.identityService.isAuthenticated()){
+    if(this.identityService.isAuthenticated() && this.commentGuid()){
       this.dialog.open(EditTextarea,{data:{label:`Reply to ${this.writerModel()?.username}`}}).afterClosed().subscribe(result=>{
         if(result){
+          this.displayWaitSpinner.set(true);
+
           let replyFormModel = new NewReplyFormModel();
-          replyFormModel.parentCommentGuid = this.commentModel().guid;
+          replyFormModel.parentCommentGuid = this.commentGuid();
           replyFormModel.text = result;
-          this.submitReply.emit(replyFormModel);
+          
+          this.reviewService.postNewReply(replyFormModel).subscribe({
+            next: res => {
+              if(res){
+                this.submitReply.emit(res.replyGuid);
+                this.commentModel.update(cm=>{
+                  cm!.numberOfReplies += 1;
+                  return new CommentModel(cm!);
+                });
+              }
+              this.displayWaitSpinner.set(false);
+            },
+            error: err => {
+              this.displayWaitSpinner.set(false);
+              throw(err);
+            },
+          });
+        }
+      });
+    }
+    else if(!this.identityService.isAuthenticated()){
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
+    }
+  }
+
+  toggleThumbsUp(){
+    if(this.identitySerice.isAuthenticated() && this.commentModel()){
+      this.reviewService.requestToggleThumbsUp(this.commentGuid()).subscribe({
+        next: res => {
+          if(res){
+            this.commentModel.update(cm=>{
+              cm!.numberOfThumbsUps = res.numberOfThumbsUps;
+              cm!.numberOfThumbsDowns = res.numberOfThumbsDowns;
+              return new CommentModel(cm!);
+            });
+          }
+        },
+      });
+      this.iThumbsUp.update(up=>!up);
+      if(this.iThumbsDown() && this.iThumbsUp()){
+        this.iThumbsDown.set(false);
+      }
+    }
+  }
+  toggleThumbsDown(){
+    if(this.identitySerice.isAuthenticated() && this.commentModel()){
+      this.reviewService.requestToggleThumbsDown(this.commentGuid()).subscribe({
+        next: res => {
+          if(res){
+            this.commentModel.update(cm=>{
+              cm!.numberOfThumbsDowns = res.numberOfThumbsDowns;
+              cm!.numberOfThumbsUps = res.numberOfThumbsUps;
+              return new CommentModel(cm!);
+            });
+          }
+        },
+      });
+      this.iThumbsDown.update(dn=>!dn);
+      if(this.iThumbsDown() && this.iThumbsUp()){
+        this.iThumbsUp.set(false);
+      }
+    }
+  }
+
+  onDelete(){
+    if(!this.identityService.isAuthenticated()){
+      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
+      return;
+    }
+
+    if(this.commentModel()?.writerGuid === this.identityService.userModel()?.guid){
+      this.displayWaitSpinner.set(true);
+      this.reviewService.requestDeleteComment(this.commentGuid()).subscribe({
+        next: res => {
+          if(res && res.success){
+            this.displayWaitSpinner.set(false);
+            this.deleteComment.emit();
+          }
         }
       });
     }
     else{
-      this.snackBar.open("Please Login", "Ok", { duration: 5000 });
+      this.snackBar.open("Only the writer delete their comments!", "Ok", { duration: 5000 });
     }
   }
+
 }
 
 export class CommentModel{
@@ -128,8 +256,8 @@ export class CommentModel{
     this.replyToBrief = commentModel.replyToBrief;
     this.replyToUsername = commentModel.replyToUsername;
     this.text = commentModel.text;
-    this.amIThumbsUp = commentModel.amIThumbsUp;
-    this.amIThumbsDown = commentModel.amIThumbsDown;
+    //this.amIThumbsUp = commentModel.amIThumbsUp;
+    //this.amIThumbsDown = commentModel.amIThumbsDown;
     this.numberOfThumbsUps = commentModel.numberOfThumbsUps;
     this.numberOfThumbsDowns = commentModel.numberOfThumbsDowns;
     this.numberOfReplies = commentModel.numberOfReplies;
@@ -142,8 +270,8 @@ export class CommentModel{
   replyToBrief?:string|null = null;
   replyToUsername?:string|null = null;
   text:string = null!;
-  amIThumbsUp:boolean = false;
-  amIThumbsDown:boolean = false;
+  //amIThumbsUp:boolean = false;
+  //amIThumbsDown:boolean = false;
   numberOfThumbsUps:number = 0;
   numberOfThumbsDowns:number = 0;
   numberOfReplies:number = 0;

@@ -12,7 +12,7 @@
     </mat-button-toggle-group>
 
     <mat-form-field>
-        <mat-label>Shelf</mat-label>
+        <mat-label>Shelf(Library)</mat-label>
         <mat-select required formControlName="shelfGuids" multiple>
             <!--@for(libraryTitle of displayedLibraries(); track libraryTitle){-->
             <!--mat-optgroup [label]="libraryTitle"-->
@@ -121,10 +121,8 @@
         </button>
     </div>
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
 </form>
 

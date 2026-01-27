@@ -1,0 +1,60 @@
+<app-generic-list [itemGuids]="genericListItemGuids()" listType="Document" [openSideNav]="false">
+
+    <mat-card>
+        <mat-form-field>
+            <mat-label>Title</mat-label>
+            <input matInput [formControl]="titleFormControl">
+            @if(titleFormControl.invalid && (titleFormControl.dirty || titleFormControl.touched) &&
+            titleFormControl.hasError("maxLength")){
+            <mat-error>
+                Title cannot be more than {{singleton.introductionTitle_MaxLength()}} characters!
+            </mat-error>
+            }
+            @if(titleFormControl.invalid && (titleFormControl.dirty || titleFormControl.touched) &&
+            titleFormControl.hasError("minLength")){
+            <mat-error>
+                Title cannot be less than {{singleton.introductionTitle_MinLength()}} characters!
+            </mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Tags</mat-label>
+            <input placeholder="search tag.." #tagInput [matChipInputFor]="chipGrid" [matAutocomplete]="autoComplete"
+                (input)="onInput()" />
+            <mat-autocomplete #autoComplete (optionSelected)="selectTag($event);tagInput.value='';">
+                @for(tag of suggestedTags(); track tag){
+                @if(!selectedTags().includes(tag)){
+                <mat-option [value]="tag">{{tag}}</mat-option>
+                }
+                }
+            </mat-autocomplete>
+            <mat-chip-grid #chipGrid>
+                @for(tag of selectedTags(); track tag){
+                <mat-chip-row (removed)="removeTag(tag)" class="smallTags">
+                    {{tag}}
+                    <button matChipRemove>
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </mat-chip-row>
+                }
+            </mat-chip-grid>
+        </mat-form-field>
+
+        <mat-button-toggle-group multiple [value]="sortBy()" (change)="onSortBy($event)"
+            style="width: fit-content;margin: 8px auto;display: flex;">
+            <mat-button-toggle value="newest">Newest</mat-button-toggle>
+            <mat-button-toggle value="popular">Most Popular</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <button matButton="" [disabled]="disableSearchButton()" (click)="search()">
+            Search
+        </button>
+
+    </mat-card>
+
+    <mat-paginator [length]="totalNumberOfDocuments()" [pageSize]="pageSize()" [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="handlePageEvent($event)" aria-label="Select page" style="width: fit-content;margin: 50px auto;">
+    </mat-paginator>
+
+</app-generic-list>

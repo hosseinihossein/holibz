@@ -5,10 +5,11 @@ import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { IdentityService } from '../../services/identity-service';
 import { NgOptimizedImage } from '@angular/common';
 import { SingletonModes } from '../../services/singleton-modes';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-account-dropdown',
-  imports: [MatIconButton, MatMenuTrigger, MatIcon, NgOptimizedImage],
+  imports: [MatIconButton, MatMenuTrigger, MatIcon, NgOptimizedImage,MatTooltip],
   templateUrl: './account-dropdown.html',
   styleUrl: './account-dropdown.css'
 })
@@ -19,6 +20,6 @@ export class AccountDropdown {
 
   imgSrc = computed(() => this.singleton.getUserImageAddress(this.identityService.userModel()));
     
-  readonly imgBtn = "padding: 0px; width: 50px; height: 50px; transform: translateY(3px);"
+  readonly imgBtnStyle = "padding: 0px; width: 50px; height: 50px; transform: translateY(3px);"
 
 }

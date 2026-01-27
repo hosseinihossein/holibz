@@ -9,11 +9,12 @@ import { IdentityService } from '../../services/identity-service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Result, ResultDialogInputData } from '../result/result';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 @Component({
   selector: 'app-change-password',
   imports: [MatDialogContent, MatDialogActions, MatFormField, MatInput, MatLabel,
-    MatButton, MatDialogClose, ReactiveFormsModule, MatError, MatProgressSpinnerModule],
+    MatButton, MatDialogClose, ReactiveFormsModule, MatError, WaitSpinner],
   templateUrl: './change-password.html',
   styleUrl: './change-password.css'
 })
@@ -42,23 +43,22 @@ export class ChangePassword {
   newPassword = computed(() => this.changePasswordForm().controls["NewPassword"]);
   repeatNewPassword = computed(() => this.changePasswordForm().controls["RepeatNewPassword"]);
 
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
 
   submitForm(){
     if(this.changePasswordForm().valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
 
       this.identityService.submitChangePassword(this.changePasswordForm().value).subscribe({
         next: res => {
           if(res.success){
-            //this.displaySubmitSpinner.set(false);
             const resultInputData = new ResultDialogInputData();
             resultInputData.status = "success";
             resultInputData.title = "Success";
             resultInputData.description = ["Password changed successfully."];
             const resultDialogRef = this.dialog.open(Result,{data: resultInputData});
             resultDialogRef.afterClosed().subscribe(() => {
-              this.displaySubmitSpinner.set(false);
+              this.displayWaitSpinner.set(false);
               this.changePasswordDialogRef.close();
             });
           }

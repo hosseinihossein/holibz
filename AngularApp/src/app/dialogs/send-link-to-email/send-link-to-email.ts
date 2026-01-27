@@ -10,13 +10,14 @@ import { MatInput } from '@angular/material/input';
 import { MatButton } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Result, ResultDialogInputData } from '../result/result';
+import { WaitSpinner } from '../../shared/wait-spinner/wait-spinner';
 
 declare const turnstile:any;
 
 @Component({
   selector: 'app-send-link-to-email',
   imports: [MatDialogContent, MatDialogActions, MatFormField, MatInput, MatLabel,
-    MatButton, MatDialogClose, ReactiveFormsModule, MatError, MatProgressSpinnerModule],
+    MatButton, MatDialogClose, ReactiveFormsModule, MatError, WaitSpinner],
   templateUrl: './send-link-to-email.html',
   styleUrl: './send-link-to-email.css'
 })
@@ -37,7 +38,7 @@ export class SendLinkToEmail implements AfterViewInit {
     validators:[Validators.required]
   }));
 
-  displaySubmitSpinner = signal(false);
+  displayWaitSpinner = signal(false);
   widgetId = signal("");
 
   dialogTitle = signal("Send Link to Email");
@@ -85,7 +86,7 @@ export class SendLinkToEmail implements AfterViewInit {
 
   requestSendingLinkToEmail(){
     if(this.email().valid && this.cfTurnstile().valid){
-      this.displaySubmitSpinner.set(true);
+      this.displayWaitSpinner.set(true);
 
       const callBacks = {
         next: (res:{success:boolean}) => {
@@ -100,7 +101,7 @@ export class SendLinkToEmail implements AfterViewInit {
             ];
             const resultDialogRef = this.dialog.open(Result,{data: resultInputData});
             resultDialogRef.afterClosed().subscribe(() => {
-              this.displaySubmitSpinner.set(false);
+              this.displayWaitSpinner.set(false);
               this.sendLinkToEmailDialogRef.close();
             });
           }
@@ -120,7 +121,7 @@ export class SendLinkToEmail implements AfterViewInit {
           else{
             throw(err);
           }
-          this.displaySubmitSpinner.set(false);
+          this.displayWaitSpinner.set(false);
           turnstile.reset(this.widgetId());
         }
       }

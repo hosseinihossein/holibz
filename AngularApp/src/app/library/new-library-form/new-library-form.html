@@ -84,10 +84,8 @@
         </button>
     </div>
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
 </form>
 <!--div>{{newLibraryForm().value | json}}</div-->

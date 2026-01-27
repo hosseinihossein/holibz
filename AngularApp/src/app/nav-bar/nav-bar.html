@@ -74,7 +74,7 @@
             <mat-icon>space_dashboard</mat-icon>
             Dashboard
         </a>
-        <a mat-menu-item [routerLink]="['/profile']">
+        <a mat-menu-item [routerLink]="['/profile',identityService.userModel()?.guid]">
             <mat-icon>article_person</mat-icon>
             Profile
         </a>

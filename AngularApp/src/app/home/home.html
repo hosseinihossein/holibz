@@ -1,6 +1,6 @@
-@if(recentlyAddedDocs_ShelfCardModel()){
+<app-home-search></app-home-search>
+
+
 <div id="recentlyAddedDocs-div">
-    <p>Recntly Added Documents:</p>
-    <app-shelf-card [shelfModel]="recentlyAddedDocs_ShelfCardModel()!"></app-shelf-card>
+    <app-shelf-card [shelfGuid]="singleton.RecentlyAddedDocuments_ShelfGuid"></app-shelf-card>
 </div>
-}

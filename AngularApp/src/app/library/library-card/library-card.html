@@ -8,15 +8,15 @@
             account_balance
         </mat-icon>
         }
-        <mat-card-title>{{libraryModel().title}}</mat-card-title>
+        <mat-card-title>{{libraryModel()?.title}}</mat-card-title>
         <mat-card-subtitle>{{ownerModel()?.username}}</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-        <p style="font-size: 12px;">{{libraryModel().description}}</p>
+        <p style="font-size: 12px;">{{libraryModel()?.description}}</p>
         <h4 style="margin: 8px 0;">Shelves:</h4>
         <ul style="margin: 0;padding-left: 16px;">
-            @for(shelfTitle of libraryModel().shelvesTitles; track shelfTitle){
+            @for(shelfTitle of libraryModel()?.shelvesTitles; track shelfTitle){
             <li>{{shelfTitle}}</li>
             }
         </ul>

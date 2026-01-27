@@ -39,13 +39,7 @@ export class AppErrorHandler implements ErrorHandler{
 
         this.snackBar.open(errTypeMessage, "Ok"/*, { duration: 5000 }*/);
         console.error(errTypeMessage, err);
-        console.error("err: ", JSON.stringify(err));
-        if(err?.error){
-            console.error("err.error: ", JSON.stringify(err?.error));
-        }
-        if(err?.error?.errors){
-            console.error("err.error.errors: ", JSON.stringify(err?.error?.errors));
-        }
+        //console.error("err: ", JSON.stringify(err));
     }
     
 }

@@ -1,3 +1,5 @@
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+
 <form [formGroup]="loginForm()" (ngSubmit)="login()">
     <mat-form-field>
         <mat-label>Username or Email</mat-label>
@@ -47,8 +49,10 @@
         }
     </mat-form-field>
 
+    @if(singletonModes.turnstileEnabled()){
     <input hidden formControlName="CfTurnstileResponse" />
     <div id="widget-container"></div>
+    }
 
     @if(loginForm().invalid && loginForm().hasError("loginError")){
     <mat-error>{{loginForm().getError("loginError")}}</mat-error>
@@ -76,10 +80,8 @@
     </div>
     }
 
-    @if(displaySubmitSpinner()){
-    <div id="submit-spinner-layout">
-        <mat-spinner id="submit-spinner"></mat-spinner>
-    </div>
+    @if(displayWaitSpinner()){
+    <app-wait-spinner></app-wait-spinner>
     }
 
 </form>

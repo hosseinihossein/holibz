@@ -5,7 +5,7 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatActionList } from '@angular/material/list';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { AccountDropdown } from "./account-dropdown/account-dropdown";
-import { MatTooltip } from '@angular/material/tooltip';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { DropdownButton } from '../shared/dropdown-button/dropdown-button';
 import { WindowService } from '../services/window-service';
 import { SingletonModes } from '../services/singleton-modes';
@@ -18,7 +18,7 @@ import { MatBadge } from '@angular/material/badge';
 @Component({
   selector: 'app-nav-bar',
   imports: [MatIcon, MatToolbar, MatButton, MatIconButton, MatActionList, MatMenu, MatMenuTrigger, MatMenuItem,
-    DropdownButton, AccountDropdown, MatTooltip, RouterLink,NgOptimizedImage, MatBadge, RouterLink],
+    DropdownButton, AccountDropdown, MatTooltip, RouterLink,NgOptimizedImage, MatBadge],
   templateUrl: './nav-bar.html',
   styleUrl: './nav-bar.css'
 })

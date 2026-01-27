@@ -76,7 +76,7 @@ public class ReviewController : ControllerBase
         {
             r.Id,
             totalLikes = r.LikedBy.Count(),
-            iLiked = myGuid != null && r.LikedBy.Any(ur => ur.User.Guid == myGuid),
+            //iLiked = myGuid != null && r.LikedBy.Any(ur => ur.User.Guid == myGuid),
             totalComments = r.Comments.Count(c => c.ReplyTo == null),
         })
         .AsSplitQuery()
@@ -88,12 +88,17 @@ public class ReviewController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        Review_Comment_ViewModel[] requestedCommentWithParentsModels = [];
+        Guid[] requestedCommentWithParentsModels = [];
         Guid? mainParentCommentGuid = null;
         bool hasRequestedCommentGuid = Guid.TryParseExact(commentGuid, "N", out Guid commentGuid_Guid);
-        while (hasRequestedCommentGuid)
+        if (hasRequestedCommentGuid)
         {
-            Review_Comment_ViewModel? requestedCommentModel =
+            requestedCommentWithParentsModels =
+            (await GetParentCommentsGuids(commentGuid_Guid, subjectGuid_Guid)).ToArray();
+        }
+        /*while (hasRequestedCommentGuid)
+        {
+            Guid? requestedCommentModel =
             await GetRequestedComment(commentGuid_Guid, myGuid);
 
             if (requestedCommentModel is not null)
@@ -115,12 +120,12 @@ public class ReviewController : ControllerBase
                 hasRequestedCommentGuid = false;//breaks the loop
                 break;
             }
-        }
+        }*/
 
         int commentTakeNumber = 10;
-        Review_Comment_ViewModel[] myCommentsModels = [];
-        Review_Comment_ViewModel[] mutualCommentsModels = [];
-        Review_Comment_ViewModel[] othersCommentsModels = [];
+        Guid[] myCommentsModels = [];
+        Guid[] mutualCommentsModels = [];
+        Guid[] othersCommentsModels = [];
         if (myGuid is not null)
         {
             myCommentsModels = await reviewDb.Reviews
@@ -132,20 +137,7 @@ public class ReviewController : ControllerBase
             )
             .OrderBy(c => c.CreatedAt)
             .Take(commentTakeNumber)
-            .Select(c => new Review_Comment_ViewModel()
-            {
-                AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                CreatedAt = c.CreatedAt,
-                Guid = c.Guid,
-                IsReply = false,
-                NumberOfReplies = c.Replies.Count,
-                NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                Text = c.Text,
-                WriterGuid = c.Writer.Guid,
-            })
-            .AsSplitQuery()
+            .Select(c => c.Guid)
             .ToArrayAsync();
 
             if (myCommentsModels.Length < commentTakeNumber)
@@ -161,20 +153,7 @@ public class ReviewController : ControllerBase
                 )
                 .OrderBy(c => c.CreatedAt)
                 .Take(numberOfNeededMutualComments)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
             }
 
@@ -193,20 +172,7 @@ public class ReviewController : ControllerBase
                 )
                 .OrderBy(c => c.CreatedAt)
                 .Take(numberOfNeededOthersComments)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
             }
         }
@@ -220,38 +186,25 @@ public class ReviewController : ControllerBase
             )
             .OrderBy(c => c.CreatedAt)
             .Take(commentTakeNumber)
-            .Select(c => new Review_Comment_ViewModel()
-            {
-                AmIThumbsDown = false,
-                AmIThumbsUp = false,
-                CreatedAt = c.CreatedAt,
-                Guid = c.Guid,
-                IsReply = false,
-                NumberOfReplies = c.Replies.Count,
-                NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                Text = c.Text,
-                WriterGuid = c.Writer.Guid,
-            })
-            .AsSplitQuery()
+            .Select(c => c.Guid)
             .ToArrayAsync();
         }
 
-        Review_Comment_ViewModel[] comments =
+        Guid[] comments =
         [.. requestedCommentWithParentsModels, .. myCommentsModels,
         .. mutualCommentsModels, .. othersCommentsModels];
 
         Review_Review_ViewModel reviewModel = new()
         {
-            AmILiked = reviewDbInfo.iLiked,
-            Comments = comments,
+            //AmILiked = reviewDbInfo.iLiked,
+            CommentsGuids = comments,
             NumberOfLikes = reviewDbInfo.totalLikes,
             TotalNumberOfComments = reviewDbInfo.totalComments,
         };
 
         return Ok(reviewModel);
     }
-    private async Task<Review_Comment_ViewModel?> GetRequestedComment(Guid commentGuid,
+    /*private async Task<Review_Comment_ViewModel?> GetRequestedComment(Guid commentGuid,
     Guid? myGuid)
     {
         Review_Comment_ViewModel? requestedCommentModel = await reviewDb.Comments
@@ -273,23 +226,88 @@ public class ReviewController : ControllerBase
             Text = c.Text,
             WriterGuid = c.Writer.Guid,
         })
-        .AsSplitQuery()
         .FirstOrDefaultAsync();
 
         if (requestedCommentModel is not null && requestedCommentModel.IsReply &&
         requestedCommentModel.ReplyToUsername is not null)
         {
-            /*string? replyToUserName = await userManager.Users
-            .Where(u => u.UserGuid == requestedCommentModel.ReplyToUsername)//use the UserGuid got instead of UserName
-            .Select(u => u.UserName)
-            .FirstOrDefaultAsync();
-            requestedCommentModel.ReplyToUsername = replyToUserName ?? "";*/// replace UserName by UserGuid
+            //string? replyToUserName = await userManager.Users
+            //.Where(u => u.UserGuid == requestedCommentModel.ReplyToUsername)//use the UserGuid got instead of UserName
+            //.Select(u => u.UserName)
+            //.FirstOrDefaultAsync();
+            //requestedCommentModel.ReplyToUsername = replyToUserName ?? "";// replace UserName by UserGuid
             requestedCommentModel.ReplyToUsername = requestedCommentModel.ReplyToUsername.ToLower();
         }
 
         return requestedCommentModel;
-    }
+    }*/
+    private async Task<List<Guid>> GetParentCommentsGuids(Guid commentGuid, Guid parentReviewSubjectGuid)
+    {
+        List<Guid> commentAndParentCommentsGuids = [];
 
+        var parentCommentsGuids = await reviewDb.Comments
+        .Where(c => c.Guid == commentGuid && c.ParentReview.SubjectGuid == parentReviewSubjectGuid)
+        .Select(c => new
+        {
+            parent1Guid = c.ReplyTo == null ? Guid.Empty : c.ReplyTo.Guid,
+            parent2Guid = (c.ReplyTo == null || c.ReplyTo.ReplyTo == null) ? Guid.Empty : c.ReplyTo.ReplyTo.Guid,
+            parent3Guid = (c.ReplyTo == null || c.ReplyTo.ReplyTo == null ||
+                c.ReplyTo.ReplyTo.ReplyTo == null) ? Guid.Empty : c.ReplyTo.ReplyTo.ReplyTo.Guid,
+            parent4Guid = (c.ReplyTo == null || c.ReplyTo.ReplyTo == null ||
+                c.ReplyTo.ReplyTo.ReplyTo == null || c.ReplyTo.ReplyTo.ReplyTo.ReplyTo == null) ?
+                Guid.Empty : c.ReplyTo.ReplyTo.ReplyTo.ReplyTo.Guid,
+            /*parent5Guid = (c.ReplyTo == null || c.ReplyTo.ReplyTo == null || c.ReplyTo.ReplyTo.ReplyTo == null || 
+                c.ReplyTo.ReplyTo.ReplyTo.ReplyTo == null || c.ReplyTo.ReplyTo.ReplyTo.ReplyTo.ReplyTo == null) ? 
+                Guid.Empty : c.ReplyTo.ReplyTo.ReplyTo.ReplyTo.ReplyTo.Guid,*/
+        })
+        .FirstOrDefaultAsync();
+
+        if (parentCommentsGuids == null)
+        {
+            return commentAndParentCommentsGuids;
+        }
+        if (parentCommentsGuids.parent1Guid == Guid.Empty)
+        {
+            commentAndParentCommentsGuids = [commentGuid];
+            return commentAndParentCommentsGuids;
+        }
+        if (parentCommentsGuids.parent2Guid == Guid.Empty)
+        {
+            commentAndParentCommentsGuids = [
+                commentGuid,
+                parentCommentsGuids.parent1Guid,
+            ];
+            return commentAndParentCommentsGuids;
+        }
+        if (parentCommentsGuids.parent3Guid == Guid.Empty)
+        {
+            commentAndParentCommentsGuids = [
+                commentGuid,
+                parentCommentsGuids.parent1Guid,
+                parentCommentsGuids.parent2Guid,
+            ];
+            return commentAndParentCommentsGuids;
+        }
+        if (parentCommentsGuids.parent4Guid == Guid.Empty)
+        {
+            commentAndParentCommentsGuids = [
+                commentGuid,
+                parentCommentsGuids.parent1Guid,
+                parentCommentsGuids.parent2Guid,
+                parentCommentsGuids.parent3Guid,
+            ];
+            return commentAndParentCommentsGuids;
+        }
+
+        commentAndParentCommentsGuids = [
+            commentGuid,
+            parentCommentsGuids.parent1Guid,
+            parentCommentsGuids.parent2Guid,
+            parentCommentsGuids.parent3Guid,
+            .. await GetParentCommentsGuids(parentCommentsGuids.parent4Guid,parentReviewSubjectGuid),
+        ];
+        return commentAndParentCommentsGuids;
+    }
 
 
 
@@ -338,9 +356,9 @@ public class ReviewController : ControllerBase
 
         if (orderBy is null)
         {
-            Review_Comment_ViewModel[] myCommentsModels = [];
-            Review_Comment_ViewModel[] mutualCommentsModels = [];
-            Review_Comment_ViewModel[] othersCommentsModels = [];
+            Guid[] myCommentsModels = [];
+            Guid[] mutualCommentsModels = [];
+            Guid[] othersCommentsModels = [];
             if (myGuid is not null)
             {
                 myCommentsModels = await reviewDb.Reviews
@@ -352,20 +370,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
 
                 if (myCommentsModels.Length < pageSize.Value)
@@ -399,20 +404,7 @@ public class ReviewController : ControllerBase
                     .OrderBy(c => c.CreatedAt)
                     .Skip(numberOfSkipMutualComments)
                     .Take(numberOfNeededMutualComments)
-                    .Select(c => new Review_Comment_ViewModel()
-                    {
-                        AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                        AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                        CreatedAt = c.CreatedAt,
-                        Guid = c.Guid,
-                        IsReply = false,
-                        NumberOfReplies = c.Replies.Count,
-                        NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                        NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                        Text = c.Text,
-                        WriterGuid = c.Writer.Guid,
-                    })
-                    .AsSplitQuery()
+                    .Select(c => c.Guid)
                     .ToArrayAsync();
                 }
 
@@ -449,20 +441,7 @@ public class ReviewController : ControllerBase
                     .OrderBy(c => c.CreatedAt)
                     .Skip(numberOfSkipOtherComments)
                     .Take(numberOfNeededOtherComments)
-                    .Select(c => new Review_Comment_ViewModel()
-                    {
-                        AmIThumbsDown = c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                        AmIThumbsUp = c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                        CreatedAt = c.CreatedAt,
-                        Guid = c.Guid,
-                        IsReply = false,
-                        NumberOfReplies = c.Replies.Count,
-                        NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                        NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                        Text = c.Text,
-                        WriterGuid = c.Writer.Guid,
-                    })
-                    .AsSplitQuery()
+                    .Select(c => c.Guid)
                     .ToArrayAsync();
                 }
             }
@@ -478,24 +457,11 @@ public class ReviewController : ControllerBase
                 .OrderBy(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = false,
-                    AmIThumbsUp = false,
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
             }
 
-            Review_Comment_ViewModel[] selectedComments = [.. myCommentsModels,
+            Guid[] selectedComments = [.. myCommentsModels,
             .. mutualCommentsModels, .. othersCommentsModels];
 
             return Ok(selectedComments);
@@ -504,27 +470,14 @@ public class ReviewController : ControllerBase
         {
             if (orderBy == "Newest")
             {
-                Review_Comment_ViewModel[] commentsModels = await reviewDb.Reviews
+                Guid[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid_Guid)
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = myGuid != null && c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = myGuid != null && c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -532,27 +485,14 @@ public class ReviewController : ControllerBase
 
             if (orderBy == "Oldest")
             {
-                Review_Comment_ViewModel[] commentsModels = await reviewDb.Reviews
+                Guid[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid_Guid)
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
                 .OrderBy(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = myGuid != null && c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = myGuid != null && c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -560,7 +500,7 @@ public class ReviewController : ControllerBase
 
             if (orderBy == "Most Agreed")
             {
-                Review_Comment_ViewModel[] commentsModels = await reviewDb.Reviews
+                Guid[] commentsModels = await reviewDb.Reviews
                 .Where(r => r.SubjectGuid == subjectGuid_Guid)
                 .SelectMany(r => r.Comments)
                 .Where(c => c.ReplyTo == null)
@@ -568,20 +508,7 @@ public class ReviewController : ControllerBase
                 .ThenBy(c => c.CreatedAt)
                 .Skip(pageIndex.Value * pageSize.Value)
                 .Take(pageSize.Value)
-                .Select(c => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = myGuid != null && c.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = myGuid != null && c.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = c.CreatedAt,
-                    Guid = c.Guid,
-                    IsReply = false,
-                    NumberOfReplies = c.Replies.Count,
-                    NumberOfThumbsDowns = c.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = c.ThumbsUpsBy.Count,
-                    Text = c.Text,
-                    WriterGuid = c.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(c => c.Guid)
                 .ToArrayAsync();
 
                 return Ok(commentsModels);
@@ -631,9 +558,9 @@ public class ReviewController : ControllerBase
 
         bunchIndex ??= 0;
 
-        Review_Comment_ViewModel[] myRepliesModels = [];
-        Review_Comment_ViewModel[] mutualRepliesModels = [];
-        Review_Comment_ViewModel[] othersRepliesModels = [];
+        Guid[] myRepliesModels = [];
+        Guid[] mutualRepliesModels = [];
+        Guid[] othersRepliesModels = [];
         if (myGuid is not null)
         {
             myRepliesModels = await reviewDb.Comments
@@ -643,23 +570,7 @@ public class ReviewController : ControllerBase
             .OrderBy(rep => rep.CreatedAt)
             .Skip(bunchIndex.Value * 10)
             .Take(10)
-            .Select(rep => new Review_Comment_ViewModel()
-            {
-                AmIThumbsDown = rep.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                AmIThumbsUp = rep.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                CreatedAt = rep.CreatedAt,
-                Guid = rep.Guid,
-                IsReply = true,
-                NumberOfReplies = rep.Replies.Count,
-                NumberOfThumbsDowns = rep.ThumbsDownsBy.Count,
-                NumberOfThumbsUps = rep.ThumbsUpsBy.Count,
-                ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
-                ReplyToGuid = rep.ReplyTo.Guid,
-                ReplyToUsername = commentDbInfo.writerNormalizedUserName.ToLower(),
-                Text = rep.Text,
-                WriterGuid = rep.Writer.Guid,
-            })
-            .AsSplitQuery()
+            .Select(rep => rep.Guid)
             .ToArrayAsync();
 
             if (myRepliesModels.Length < 10)
@@ -688,23 +599,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(rep => rep.CreatedAt)
                 .Skip(numberOfSkipMutualReplies)
                 .Take(numberOfNeededMutualReplies)
-                .Select(rep => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = rep.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = rep.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = rep.CreatedAt,
-                    Guid = rep.Guid,
-                    IsReply = true,
-                    NumberOfReplies = rep.Replies.Count,
-                    NumberOfThumbsDowns = rep.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = rep.ThumbsUpsBy.Count,
-                    ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
-                    ReplyToGuid = rep.ReplyTo.Guid,
-                    ReplyToUsername = commentDbInfo.writerNormalizedUserName.ToLower(),
-                    Text = rep.Text,
-                    WriterGuid = rep.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(rep => rep.Guid)
                 .ToArrayAsync();
             }
 
@@ -738,23 +633,7 @@ public class ReviewController : ControllerBase
                 .OrderBy(rep => rep.CreatedAt)
                 .Skip(numberOfSkipOthersReplies)
                 .Take(numberOfNeededOthersReplies)
-                .Select(rep => new Review_Comment_ViewModel()
-                {
-                    AmIThumbsDown = rep.ThumbsDownsBy.Any(udn => udn.User.Guid == myGuid),
-                    AmIThumbsUp = rep.ThumbsUpsBy.Any(uup => uup.User.Guid == myGuid),
-                    CreatedAt = rep.CreatedAt,
-                    Guid = rep.Guid,
-                    IsReply = true,
-                    NumberOfReplies = rep.Replies.Count,
-                    NumberOfThumbsDowns = rep.ThumbsDownsBy.Count,
-                    NumberOfThumbsUps = rep.ThumbsUpsBy.Count,
-                    ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
-                    ReplyToGuid = rep.ReplyTo.Guid,
-                    ReplyToUsername = commentDbInfo.writerNormalizedUserName.ToLower(),
-                    Text = rep.Text,
-                    WriterGuid = rep.Writer.Guid,
-                })
-                .AsSplitQuery()
+                .Select(rep => rep.Guid)
                 .ToArrayAsync();
             }
         }
@@ -766,27 +645,11 @@ public class ReviewController : ControllerBase
             .OrderBy(rep => rep.CreatedAt)
             .Skip(bunchIndex.Value * 10)
             .Take(10)
-            .Select(rep => new Review_Comment_ViewModel()
-            {
-                AmIThumbsDown = false,
-                AmIThumbsUp = false,
-                CreatedAt = rep.CreatedAt,
-                Guid = rep.Guid,
-                IsReply = true,
-                NumberOfReplies = rep.Replies.Count,
-                NumberOfThumbsDowns = rep.ThumbsDownsBy.Count,
-                NumberOfThumbsUps = rep.ThumbsUpsBy.Count,
-                ReplyToBrief = rep.ReplyTo!.Text.Substring(0, rep.ReplyTo.Text.Length > 128 ? 128 : rep.ReplyTo.Text.Length),
-                ReplyToGuid = rep.ReplyTo.Guid,
-                ReplyToUsername = commentDbInfo.writerNormalizedUserName.ToLower(),
-                Text = rep.Text,
-                WriterGuid = rep.Writer.Guid,
-            })
-            .AsSplitQuery()
+            .Select(rep => rep.Guid)
             .ToArrayAsync();
         }
 
-        Review_Comment_ViewModel[] repliesModels = [.. myRepliesModels, .. mutualRepliesModels,
+        Guid[] repliesModels = [.. myRepliesModels, .. mutualRepliesModels,
         .. othersRepliesModels];
 
         return Ok(repliesModels);
@@ -858,15 +721,15 @@ public class ReviewController : ControllerBase
             };
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 
-            Review_Comment_ViewModel commentModel = new()
+            /*Review_Comment_ViewModel commentModel = new()
             {
                 CreatedAt = comment.CreatedAt,
                 Guid = comment.Guid,
                 Text = comment.Text,
                 WriterGuid = me.UserGuid,
-            };
+            };*/
 
-            return Ok(commentModel);
+            return Ok(new { commentGuid = comment.Guid });
         }
 
         return BadRequest(ModelState);
@@ -946,7 +809,7 @@ public class ReviewController : ControllerBase
             };
             await notifProcess.CreateNewNotification(notifDb, notifModel);
 
-            int briefLength = parentCommentDbInfo.Text.Length > 128 ? 128 : parentCommentDbInfo.Text.Length;
+            /*int briefLength = parentCommentDbInfo.Text.Length > 128 ? 128 : parentCommentDbInfo.Text.Length;
             Review_Comment_ViewModel replyModel = new()
             {
                 CreatedAt = reply.CreatedAt,
@@ -957,9 +820,9 @@ public class ReviewController : ControllerBase
                 ReplyToBrief = parentCommentDbInfo.Text[..briefLength],
                 ReplyToGuid = formModel.ParentCommentGuid,
                 ReplyToUsername = parentCommentDbInfo.writerNormalizedUserName.ToLower(),
-            };
+            };*/
 
-            return Ok(replyModel);
+            return Ok(new { replyGuid = reply.Guid });
         }
 
         return BadRequest(ModelState);
@@ -1141,8 +1004,8 @@ public class ReviewController : ControllerBase
 
         return Ok(new
         {
-            numberOfThumbUps = totalThumbsUps,
-            numberOfThumbDowns = totalThumbsDowns
+            numberOfThumbsUps = totalThumbsUps,
+            numberOfThumbsDowns = totalThumbsDowns
         });
     }
 
@@ -1220,8 +1083,8 @@ public class ReviewController : ControllerBase
 
         return Ok(new
         {
-            numberOfThumbUps = totalThumbsUps,
-            numberOfThumbDowns = totalThumbsDowns
+            numberOfThumbsUps = totalThumbsUps,
+            numberOfThumbsDowns = totalThumbsDowns
         });
     }
 
@@ -1276,7 +1139,7 @@ public class ReviewController : ControllerBase
 
         List<Guid> likesGuids_MeAndMutual = [];
         List<Guid> likesGuids_Others = [];
-        if (myGuid is not null)
+        if (myGuid is not null && myGuid.HasValue)
         {
             likesGuids_MeAndMutual = await reviewDb.Reviews
             .Where(r => r.SubjectGuid == subjectGuid_Guid)
@@ -1292,7 +1155,7 @@ public class ReviewController : ControllerBase
             .Take(bunchSize)
             .ToListAsync();
 
-            if (reviewDbInfo.iLiked)
+            if (reviewDbInfo.iLiked && bunchIndex == 0)
             {
                 likesGuids_MeAndMutual = [myGuid.Value, .. likesGuids_MeAndMutual];
             }
@@ -1305,7 +1168,7 @@ public class ReviewController : ControllerBase
                 .Select(ul => ul.User)
                 .CountAsync(u =>
                     (filter == null || u.NormalizedUserName.Contains(filter)) &&
-                    u.Followers.Any(ff => ff.Follower.Guid == myGuid)
+                    (u.Guid == myGuid || u.Followers.Any(ff => ff.Follower.Guid == myGuid))
                 );
                 int numberOfSkipOthersLikes = (bunchIndex.Value * bunchSize) - totalNumberOfMeAndMutualLikes;
                 if (numberOfSkipOthersLikes < 0) numberOfSkipOthersLikes = 0;
@@ -1422,7 +1285,7 @@ public class ReviewController : ControllerBase
             .Take(bunchSize)
             .ToListAsync();
 
-            if (commentDbInfo.iThumbsUp)
+            if (commentDbInfo.iThumbsUp && bunchIndex == 0)
             {
                 thumbsUpsGuids_MeAndMutual = [myGuid.Value, .. thumbsUpsGuids_MeAndMutual];
             }
@@ -1435,7 +1298,7 @@ public class ReviewController : ControllerBase
                 .Select(uup => uup.User)
                 .CountAsync(u =>
                     (filter == null || u.NormalizedUserName.Contains(filter)) &&
-                    u.Followers.Any(ff => ff.Follower.Guid == myGuid)
+                    (u.Guid == myGuid || u.Followers.Any(ff => ff.Follower.Guid == myGuid))
                 );
                 int numberOfSkipOthersThumbsUps = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsThumbsUps;
                 if (numberOfSkipOthersThumbsUps < 0) numberOfSkipOthersThumbsUps = 0;
@@ -1551,7 +1414,7 @@ public class ReviewController : ControllerBase
             .Take(bunchSize)
             .ToListAsync();
 
-            if (commentDbInfo.iThumbsDown)
+            if (commentDbInfo.iThumbsDown && bunchIndex == 0)
             {
                 thumbsDownsGuids_MeAndMutual = [myGuid.Value, .. thumbsDownsGuids_MeAndMutual];
             }
@@ -1564,7 +1427,7 @@ public class ReviewController : ControllerBase
                 .Select(udn => udn.User)
                 .CountAsync(u =>
                     (filter == null || u.NormalizedUserName.Contains(filter)) &&
-                    u.Followers.Any(ff => ff.Follower.Guid == myGuid)
+                    (u.Guid == myGuid || u.Followers.Any(ff => ff.Follower.Guid == myGuid))
                 );
                 int numberOfSkipOthersThumbsDowns = (bunchIndex.Value * bunchSize) - totalNumberOfMyFollowingsThumbsDowns;
                 if (numberOfSkipOthersThumbsDowns < 0) numberOfSkipOthersThumbsDowns = 0;
@@ -1615,6 +1478,76 @@ public class ReviewController : ControllerBase
         .ToArrayAsync();
 
         return Ok(thumbsDownsOwnerModels);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> AmILiked([FromQuery][StringLength(32)] string subjectGuid)
+    {
+        if (!Guid.TryParseExact(subjectGuid, "N", out Guid subjectGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        bool iLiked = await reviewDb.Users
+        .Where(u => u.Guid == myGuid)
+        .SelectMany(u => u.GiveLikes)
+        .Select(ul => ul.Review)
+        .AnyAsync(r => r.SubjectGuid == subjectGuid_Guid);
+
+        return Ok(new { iLiked });
+    }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> AmIThumbsUp([FromQuery][StringLength(32)] string commentGuid)
+    {
+        if (!Guid.TryParseExact(commentGuid, "N", out Guid commentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        bool iThumbsUp = await reviewDb.Users
+        .Where(u => u.Guid == myGuid)
+        .SelectMany(u => u.GiveThumbsUps)
+        .Select(uup => uup.Comment)
+        .AnyAsync(c => c.Guid == commentGuid_Guid);
+
+        return Ok(new { iThumbsUp });
+    }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> AmIThumbsDown([FromQuery][StringLength(32)] string commentGuid)
+    {
+        if (!Guid.TryParseExact(commentGuid, "N", out Guid commentGuid_Guid))
+        {
+            ModelState.AddModelError("Parse Guid", "Couldn't parse the specified guid!");
+            return BadRequest(ModelState);
+        }
+
+        Guid myGuid = await userManager.Users
+        .Where(u => u.NormalizedUserName == userManager.NormalizeName(User.Identity!.Name))
+        .Select(u => u.UserGuid)
+        .FirstAsync();
+
+        bool iThumbsDown = await reviewDb.Users
+        .Where(u => u.Guid == myGuid)
+        .SelectMany(u => u.GiveThumbsDowns)
+        .Select(udn => udn.Comment)
+        .AnyAsync(c => c.Guid == commentGuid_Guid);
+
+        return Ok(new { iThumbsDown });
     }
 
 }

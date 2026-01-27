@@ -56,19 +56,7 @@ public class Identity_RoleDbModel : IdentityRole<int>
     public string Description { get; set; } = string.Empty;
 }
 
-//*********************************** data models ************************************
-public class Identity_UserProfile_ViewModel
-{
-    public Guid Guid { get; set; }
-    public string Username { get; set; } = null!;
-    public string? Description { get; set; }
-    public bool HasImage { get; set; }
-    public int IntegrityVersion { get; set; }
-    public string? Email { get; set; }
-    public bool? DisplayEmailPublicly { get; set; }
-    public string[]? Roles { get; set; } = [];
-}
-
+//*********************************** Form models ************************************
 public class Identity_LoginFormModel
 {
     public string? ReturnUrl { get; set; } = string.Empty;
@@ -80,7 +68,7 @@ public class Identity_LoginFormModel
     public string Password { get; set; } = string.Empty;
 
     [StringLength(2048)]
-    public string CfTurnstileResponse { get; set; } = string.Empty;
+    public string? CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_EmailValidationFormModel
@@ -91,7 +79,7 @@ public class Identity_EmailValidationFormModel
     public string Email { get; set; } = string.Empty;
 
     [StringLength(2048)]
-    public string CfTurnstileResponse { get; set; } = string.Empty;
+    public string? CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_SignupFormModel
@@ -107,7 +95,7 @@ public class Identity_SignupFormModel
     public string Password { get; set; } = string.Empty;
 
     [StringLength(2048)]
-    public string CfTurnstileResponse { get; set; } = string.Empty;
+    public string? CfTurnstileResponse { get; set; } = string.Empty;
 }
 
 public class Identity_ChangePasswordFormModel
@@ -166,6 +154,7 @@ public class UsersListFilter_FormModel
     public string? SortDirection { get; set; } = null;
 }
 
+//*********************************** View models ************************************
 public class UsersList_ViewModel
 {
     //public string? ImageAddress { get; set; } = null;
@@ -179,6 +168,17 @@ public class UsersList_ViewModel
     public DateTime CreatedAt { get; set; }
 }
 
+public class Identity_UserProfile_ViewModel
+{
+    public Guid Guid { get; set; }
+    public string Username { get; set; } = null!;
+    public string? Description { get; set; }
+    public bool HasImage { get; set; }
+    public int IntegrityVersion { get; set; }
+    public string? Email { get; set; }
+    public bool? DisplayEmailPublicly { get; set; }
+    public string[]? Roles { get; set; } = [];
+}
 
 
 /******************************** Custom Token Provider *******************************/
